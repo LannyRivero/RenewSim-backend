@@ -81,4 +81,20 @@ class CorrelationIdFilterTest {
         verify(chain).doFilter(req, res);
         assertThat(MDC.get(CorrelationIdFilter.MDC_KEY)).isNull();
     }
+
+    @Test
+    @DisplayName("Puts correlation id in MDC and clears after")
+    void putsAndClearsMdc() throws Exception {
+        var filter = new CorrelationIdFilter();
+        var req = mock(HttpServletRequest.class);
+        var res = mock(HttpServletResponse.class);
+        var chain = mock(FilterChain.class);
+
+        when(req.getHeader(CorrelationIdFilter.HEADER)).thenReturn(null);
+
+        filter.doFilter(req, res, chain);
+
+        verify(chain, times(1)).doFilter(req, res);
+        assertThat(MDC.get(CorrelationIdFilter.MDC_KEY)).isNull();
+    }
 }
