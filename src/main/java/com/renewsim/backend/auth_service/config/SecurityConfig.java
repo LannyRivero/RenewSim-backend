@@ -27,6 +27,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final SecurityHeadersFilter securityHeadersFilter;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final LoginRateLimitingFilter loginRateLimitingFilter;
 
@@ -35,10 +36,7 @@ public class SecurityConfig {
         return new CorrelationIdFilter();
     }
 
-    @Bean
-    public SecurityHeadersFilter securityHeadersFilter() {
-        return new SecurityHeadersFilter();
-    }
+
 
     @Bean
     public AuthNoCacheFilter authNoCacheFilter() {
@@ -83,7 +81,7 @@ public class SecurityConfig {
             );
 
         http.addFilterBefore(correlationIdFilter(), SecurityContextHolderFilter.class);
-        http.addFilterAfter(securityHeadersFilter(), CorrelationIdFilter.class);
+        http.addFilterAfter(securityHeadersFilter, CorrelationIdFilter.class);
         http.addFilterAfter(authNoCacheFilter(), SecurityHeadersFilter.class);
         http.addFilterAfter(loginRateLimitingFilter, AuthNoCacheFilter.class);
         http.addFilterAfter(jwtAuthenticationFilter, LoginRateLimitingFilter.class);
