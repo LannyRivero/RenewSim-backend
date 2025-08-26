@@ -1,11 +1,11 @@
 package com.renewsim.backend.auth_service.config;
-
 import com.renewsim.backend.auth_service.infrastructure.AuthNoCacheFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.JwtAuthenticationFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimitingFilter;
+import com.renewsim.backend.auth_service.infrastructure.security.SecurityHeadersFilter;
+import com.renewsim.backend.shared.observability.CorrelationIdFilter;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,11 +17,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.filter.ForwardedHeaderFilter;
-
-import java.time.Duration;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -30,83 +27,66 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final SecurityHeadersFilter securityHeadersFilter;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final LoginRateLimitingFilter loginRateLimitingFilter;
 
-    @Value("${cors.allowed-origins}")
-    private String allowedOrigins;
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(withDefaults())
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
-                        .requestMatchers("/actuator/health", "/error").permitAll()
-                        .anyRequest().authenticated())
-
-                .headers(h -> h
-                        .contentSecurityPolicy(csp -> csp.policyDirectives(
-                                "default-src 'none'; " +
-                                        "frame-ancestors 'none'; " +
-                                        "base-uri 'self'; " +
-                                        "form-action 'self'; " +
-                                        "img-src 'self' data:; " +
-                                        "style-src 'self'; " +
-                                        "font-src 'self' data:; " +
-                                        "script-src 'self'; " +
-                                        "connect-src 'self'; " +
-                                        "block-all-mixed-content; " +
-                                        "upgrade-insecure-requests"))
-                        .frameOptions(frame -> frame.deny())
-                        .referrerPolicy(ref -> ref.policy(
-                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                        .httpStrictTransportSecurity(hsts -> hsts
-                                .includeSubDomains(true)
-                                .preload(true)
-                                .maxAgeInSeconds(Duration.ofDays(365).toSeconds()))
-                        .contentTypeOptions(withDefaults())
-                        .addHeaderWriter((req, res) -> res.setHeader("Permissions-Policy",
-                                "geolocation=(), microphone=(), camera=()")))
-
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(loginRateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(authNoCacheFilter(), UsernamePasswordAuthenticationFilter.class)
-
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((req, res, e) -> {
-                            res.setStatus(401);
-                            res.setContentType("application/json");
-                            res.setHeader("Cache-Control", "no-store");
-                            res.setHeader("Pragma", "no-cache");
-                            res.setDateHeader("Expires", 0L);
-                            res.getWriter().write("""
-                                    {"status":401,"error":"Unauthorized","message":"Authentication required"}
-                                    """);
-                        })
-                        .accessDeniedHandler((req, res, e) -> {
-                            res.setStatus(403);
-                            res.setContentType("application/json");
-                            res.setHeader("Cache-Control", "no-store");
-                            res.setHeader("Pragma", "no-cache");
-                            res.setDateHeader("Expires", 0L);
-                            res.getWriter().write("""
-                                    {"status":403,"error":"Forbidden","message":"Insufficient permissions"}
-                                    """);
-                        }));
-
-        return http.build();
+    public CorrelationIdFilter correlationIdFilter() {
+        return new CorrelationIdFilter();
     }
+
+
 
     @Bean
     public AuthNoCacheFilter authNoCacheFilter() {
         return new AuthNoCacheFilter();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(withDefaults())
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                .requestMatchers("/actuator/health", "/error").permitAll()
+                .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((req, res, e) -> {
+                    res.setStatus(401);
+                    res.setContentType("application/json");
+                    res.setHeader("Cache-Control", "no-store");
+                    res.setHeader("Pragma", "no-cache");
+                    res.setDateHeader("Expires", 0L);
+                    res.getWriter().write("""
+                        {"status":401,"error":"Unauthorized","message":"Authentication required"}
+                        """);
+                })
+                .accessDeniedHandler((req, res, e) -> {
+                    res.setStatus(403);
+                    res.setContentType("application/json");
+                    res.setHeader("Cache-Control", "no-store");
+                    res.setHeader("Pragma", "no-cache");
+                    res.setDateHeader("Expires", 0L);
+                    res.getWriter().write("""
+                        {"status":403,"error":"Forbidden","message":"Insufficient permissions"}
+                        """);
+                })
+            );
+
+        http.addFilterBefore(correlationIdFilter(), SecurityContextHolderFilter.class);
+        http.addFilterAfter(securityHeadersFilter, CorrelationIdFilter.class);
+        http.addFilterAfter(authNoCacheFilter(), SecurityHeadersFilter.class);
+        http.addFilterAfter(loginRateLimitingFilter, AuthNoCacheFilter.class);
+        http.addFilterAfter(jwtAuthenticationFilter, LoginRateLimitingFilter.class);
+
+        return http.build();
     }
 
     @Bean
@@ -119,22 +99,9 @@ public class SecurityConfig {
         return cfg.getAuthenticationManager();
     }
 
-    /*@Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        var cfg = new CorsConfiguration();
-        cfg.setAllowedOrigins(List.of(allowedOrigins.split("\\s*,\\s*")));
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        cfg.setAllowedHeaders(List.of("*"));
-        cfg.setAllowCredentials(true);
-        cfg.setMaxAge(3600L);
-
-        var source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
-        return source;
-    }*/
-
     @Bean
     public ForwardedHeaderFilter forwardedHeaderFilter() {
         return new ForwardedHeaderFilter();
     }
 }
+
