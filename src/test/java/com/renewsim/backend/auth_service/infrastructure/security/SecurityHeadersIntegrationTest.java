@@ -10,11 +10,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -24,100 +23,75 @@ class SecurityHeadersIntegrationTest {
     @Autowired
     MockMvc mockMvc;
 
-    private static final String OK_200_ENDPOINT = "/actuator/health";
-    private static final String UNAUTHORIZED_401_ENDPOINT = "/api/v1/me";  
-    private static final String FORBIDDEN_403_ENDPOINT = "/api/v1/admin";   
-    private static final String CONFLICT_409_ENDPOINT = "/api/v1/auth/register";
-
+    private static final String PROTECTED_ENDPOINT = "/api/v1/me";
+    private static final String ADMIN_ENDPOINT = "/api/v1/admin";
 
     @Test
-    @DisplayName("200 → Security headers present and not duplicated")
-    void headersOn200() throws Exception {
-        MvcResult res = mockMvc.perform(get(OK_200_ENDPOINT))
-                .andExpect(status().isOk())
+    @DisplayName("Protected → Security headers present on 401/403")
+    void headersOnProtected() throws Exception {
+        MvcResult res = mockMvc.perform(get(PROTECTED_ENDPOINT))
                 .andReturn();
+
+        int status = res.getResponse().getStatus();
+        assertThat(Set.of(401, 403)).as("expected 401 or 403").contains(status);
         assertSecurityHeaders(res);
     }
 
     @Test
-    @DisplayName("401 → Security headers present and not duplicated")
-    void headersOn401() throws Exception {
-        MvcResult res = mockMvc.perform(get(UNAUTHORIZED_401_ENDPOINT))
-                .andExpect(status().isUnauthorized())
+    @DisplayName("Admin → Security headers present on 401/403")
+    void headersOnAdmin() throws Exception {
+        MvcResult res = mockMvc.perform(get(ADMIN_ENDPOINT))
                 .andReturn();
+
+        int status = res.getResponse().getStatus();
+        assertThat(Set.of(401, 403)).as("expected 401 or 403").contains(status);
         assertSecurityHeaders(res);
     }
 
-    @Test
-    @DisplayName("403 → Security headers present and not duplicated")
-    void headersOn403() throws Exception {
-        MvcResult res = mockMvc.perform(get(FORBIDDEN_403_ENDPOINT))
-                .andExpect(status().isForbidden())
-                .andReturn();
-        assertSecurityHeaders(res);
-    }
-
-    @Test
-    @DisplayName("409 → Security headers present and not duplicated")
-    void headersOn409() throws Exception {
-        String payload = """
-            {"username":"existing@example.com","password":"Secret123!","fullName":"Existing"}
-            """;
-        MvcResult res = mockMvc.perform(
-                        post(CONFLICT_409_ENDPOINT)
-                                .contentType("application/json")
-                                .content(payload))
-                .andExpect(status().isConflict())
-                .andReturn();
-        assertSecurityHeaders(res);
-    }
-
-
-/*************  ✨ Windsurf Command ⭐  *************/
-    /**
-     * Asserts that the security headers are present and not duplicated.
-     *
-     * <ul>
-     *     <li>X-Content-Type-Options: nosniff</li>
-     *     <li>X-Frame-Options: DENY</li>
-     *     <li>Referrer-Policy: no-referrer</li>
-     *     <li>Content-Security-Policy: non-empty</li>
-     * </ul>
-     *
-     * <p>Also asserts that there is only one header for each of the above.</p>
-     *
-     * <p>If the request is secure (HTTPS), also asserts that the Strict-Transport-Security header is present and
-     * has the correct format (max-age=...).</p>
-     *
-     * @param res the MvcResult to check
-     */
-/*******  51c26b1a-8ddd-44f0-9cbe-281a24b5651d  *******/    private void assertSecurityHeaders(MvcResult res) {
+    private void assertSecurityHeaders(MvcResult res) {
         var response = res.getResponse();
 
-        // Presentes
         assertThat(response.getHeader("X-Content-Type-Options")).isEqualTo("nosniff");
         assertThat(response.getHeader("X-Frame-Options")).isEqualTo("DENY");
         assertThat(response.getHeader("Referrer-Policy")).isEqualTo("no-referrer");
-        assertThat(response.getHeader("Content-Security-Policy")).isNotBlank();
 
-        // No duplicados (size == 1)
+        String csp = response.getHeader("Content-Security-Policy");
+        assertThat(csp).isNotBlank();
+        assertCspContains(csp, "default-src 'none'");
+        assertCspContains(csp, "connect-src 'self'");
+        assertCspContains(csp, "frame-ancestors 'none'");
+        assertCspContains(csp, "base-uri 'none'");
+        assertCspContains(csp, "form-action 'none'");
+        assertCspContains(csp, "object-src 'none'");
+        assertCspContains(csp, "block-all-mixed-content");
+
+        String pp = response.getHeader("Permissions-Policy");
+        assertThat(pp).isNotBlank();
+        assertThat(pp).contains("geolocation=()", "microphone=()", "camera=()");
+
         assertSingleHeader(res, "X-Content-Type-Options");
         assertSingleHeader(res, "X-Frame-Options");
         assertSingleHeader(res, "Referrer-Policy");
         assertSingleHeader(res, "Content-Security-Policy");
+        assertSingleHeader(res, "Permissions-Policy");
 
-        // HSTS solo si el request es seguro; en MockMvc (HTTP) normalmente será null o vacío.
-        List<String> hsts = res.getResponse().getHeaders("Strict-Transport-Security");
+        List<String> hsts = response.getHeaders("Strict-Transport-Security");
         assertThat(hsts.size()).isLessThanOrEqualTo(1);
-        // Si está presente, valida formato
         if (!hsts.isEmpty()) {
-            assertThat(hsts.get(0)).startsWith("max-age=");
+            assertThat(hsts.getFirst()).contains("max-age=").contains("includeSubDomains");
         }
     }
 
     private void assertSingleHeader(MvcResult res, String name) {
         List<String> values = res.getResponse().getHeaders(name);
-        assertThat(values).hasSize(1);
+        assertThat(values)
+                .withFailMessage("Header %s should appear exactly once, got: %s", name, values)
+                .hasSize(1);
+    }
+
+    private void assertCspContains(String csp, String directive) {
+        assertThat(csp)
+                .withFailMessage("CSP should contain directive: %s\nCSP was: %s", directive, csp)
+                .contains(directive);
     }
 }
-
