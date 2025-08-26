@@ -1,40 +1,88 @@
-<configuration>
+<configuration scan="true" scanPeriod="60 seconds">
 
-    <!-- Console pattern con correlationId -->
-    <property name="CONSOLE_PATTERN"
-              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - corr=%X{correlationId} - %msg%n"/>
+    <!-- Paths -->
+    <property name="LOG_DIR" value="logs"/>
+    <property name="LOG_FILE" value="${LOG_DIR}/application.log"/>
 
-    <!-- File pattern con correlationId -->
-    <property name="FILE_PATTERN"
-              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - corr=%X{correlationId} - %msg%n"/>
+    <!-- Pattern (ISO-8601 + MDC correlationId con fallback) -->
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level %logger{36} traceId=%X{correlationId:-N/A} - %msg%n"/>
 
-    <!-- File appender con rotación diaria (7 días) -->
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/application.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/application-%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>7</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <pattern>${FILE_PATTERN}</pattern>
-        </encoder>
-    </appender>
-
-    <!-- Console appender -->
+    <!-- Console (sin condicionales aquí) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>${CONSOLE_PATTERN}</pattern>
+            <!-- Si quieres colores, cambia a %highlight como en dev -->
+            <pattern>${LOG_PATTERN}</pattern>
         </encoder>
     </appender>
 
-    <!-- Ejemplo de logger específico (ajusta al package real de tu app) -->
+    <!-- File rolling diario + compresión + tope -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/application-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <maxHistory>14</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Async wrappers -->
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>8192</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="CONSOLE"/>
+    </appender>
+
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>16384</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="FILE"/>
+    </appender>
+
+    <conversionRule conversionWord="ex" converterClass="ch.qos.logback.classic.pattern.ThrowableProxyConverter"/>
+
+    <!-- Loggers -->
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.hibernate.SQL" level="WARN"/>
     <logger name="com.renewsim" level="DEBUG"/>
 
-    <!-- Root logger -->
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-    </root>
+    <!-- DEV / LOCAL -->
+    <springProfile name="dev,local">
+        <!-- Patrón con colores solo para consola en dev/local -->
+        <appender name="CONSOLE_DEV" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36})
+                    traceId=%X{correlationId:-N/A} - %msg%n</pattern>
+            </encoder>
+        </appender>
+        <appender name="ASYNC_CONSOLE_DEV" class="ch.qos.logback.classic.AsyncAppender">
+            <queueSize>8192</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <neverBlock>true</neverBlock>
+            <appender-ref ref="CONSOLE_DEV"/>
+        </appender>
+
+        <root level="DEBUG">
+            <appender-ref ref="ASYNC_CONSOLE_DEV"/>
+            <appender-ref ref="ASYNC_FILE"/>
+        </root>
+    </springProfile>
+
+    <!-- Otros perfiles (test, prod, etc.) -->
+    <springProfile name="!dev,!local">
+        <root level="INFO">
+            <appender-ref ref="ASYNC_CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
+        </root>
+    </springProfile>
 
 </configuration>
+
+
 

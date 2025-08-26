@@ -70,7 +70,7 @@ class LoginRateLimitingFilterIT {
                 .andExpect(header().string("Pragma", "no-cache"))
                 .andExpect(header().string("Expires", "0"));
 
-        long sleepMs = props.getWindow().toMillis() + 250; // pequeño margen
+        long sleepMs = props.getWindow().toMillis() + 250; 
         Thread.sleep(sleepMs);
 
         mockMvc.perform(req).andExpect(status().isUnauthorized());

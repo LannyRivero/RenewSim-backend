@@ -21,17 +21,16 @@ import java.nio.charset.StandardCharsets;
 public class LoginRateLimitingFilter extends OncePerRequestFilter {
 
     private final SecurityRateLimitProperties props;
-    private final LoginRateLimiter limiter;
+    private final LoginRateLimiter limiter;     
     private final ObjectMapper objectMapper;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    public LoginRateLimitingFilter(SecurityRateLimitProperties props, ObjectMapper objectMapper) {
+    public LoginRateLimitingFilter(SecurityRateLimitProperties props,
+                                   ObjectMapper objectMapper,
+                                   LoginRateLimiter limiter) {
         this.props = props;
         this.objectMapper = objectMapper;
-        // Adapt: Duration -> seconds
-        int windowSeconds = Math.toIntExact(props.getWindow().toSeconds());
-        int maxAttempts = props.getMaxAttempts();
-        this.limiter = new LoginRateLimiter(windowSeconds, maxAttempts);
+        this.limiter = limiter;
     }
 
     @Override
@@ -53,12 +52,11 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
 
         if (!limiter.allow(key)) {
             int retry = Math.max(
-                Math.toIntExact(props.getRetryAfter().toSeconds()),
-                limiter.secondsUntilWindowReset()
+                    Math.toIntExact(props.getRetryAfter().toSeconds()),
+                    limiter.secondsUntilWindowReset()
             );
             res.setStatus(HttpStatus.TOO_MANY_REQUESTS.value()); // 429
             res.setHeader("Retry-After", String.valueOf(retry));
-            // Defensa en profundidad para respuestas de auth:
             res.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
             res.setHeader("Pragma", "no-cache");
             res.setHeader("Expires", "0");
@@ -83,7 +81,6 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
                     }
                 }
             } catch (Exception ignored) {
-                // deliberately ignore parsing errors to avoid leaking info/timing
             }
         }
         return ip;
@@ -98,3 +95,4 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
         return request.getRemoteAddr() != null ? request.getRemoteAddr() : "0.0.0.0";
     }
 }
+

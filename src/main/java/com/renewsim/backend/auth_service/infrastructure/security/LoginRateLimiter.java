@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-final class LoginRateLimiter {
+public final class LoginRateLimiter {   // ← public
 
     private static final class WindowCounter {
         final long windowStartEpochSec;
@@ -19,11 +19,12 @@ final class LoginRateLimiter {
     private final int windowSeconds;
     private final int maxAttempts;
 
-    LoginRateLimiter(int windowSeconds, int maxAttempts) {
+    public LoginRateLimiter(int windowSeconds, int maxAttempts) { 
         this.windowSeconds = windowSeconds;
         this.maxAttempts = maxAttempts;
     }
-    boolean allow(String key) {
+
+    public boolean allow(String key) {
         Objects.requireNonNull(key, "key");
         final long nowSec = Instant.now().getEpochSecond();
         final long windowStart = nowSec - (nowSec % windowSeconds);
@@ -39,14 +40,15 @@ final class LoginRateLimiter {
         WindowCounter wc = counters.get(key);
         return wc.count.get() <= maxAttempts;
     }
-    int secondsUntilWindowReset() {
+
+    public int secondsUntilWindowReset() {
         final long nowSec = Instant.now().getEpochSecond();
         final long nextWindowStart = nowSec - (nowSec % windowSeconds) + windowSeconds;
         long delta = nextWindowStart - nowSec;
         return (int) Math.max(0, delta);
     }
 
-    void resetAll() {
+    public void resetAll() {
         counters.clear();
     }
 }
