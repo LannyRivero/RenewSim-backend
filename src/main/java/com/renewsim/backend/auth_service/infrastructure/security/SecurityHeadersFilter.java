@@ -12,23 +12,22 @@ import java.io.IOException;
 @Component
 public class SecurityHeadersFilter extends OncePerRequestFilter {
 
-    private static final String CSP =
-            "default-src 'none'; " +
+    private static final String CSP = "default-src 'none'; " +
             "connect-src 'self'; " +
             "frame-ancestors 'none'; " +
             "base-uri 'none'; " +
+            "form-action 'none'; " +
             "object-src 'none'; " +
             "block-all-mixed-content";
 
     private static final String HSTS = "max-age=31536000; includeSubDomains";
 
-    private static final String PERMISSIONS_POLICY =
-            "geolocation=(), microphone=(), camera=()";
+    private static final String PERMISSIONS_POLICY = "geolocation=(), microphone=(), camera=()";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain)
+            HttpServletResponse response,
+            FilterChain chain)
             throws ServletException, IOException {
 
         response.setHeader("X-Content-Type-Options", "nosniff");
@@ -37,8 +36,7 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         response.setHeader("Content-Security-Policy", CSP);
         response.setHeader("Permissions-Policy", PERMISSIONS_POLICY);
 
-        boolean https =
-                request.isSecure()
+        boolean https = request.isSecure()
                 || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
         if (https) {
             response.setHeader("Strict-Transport-Security", HSTS);
@@ -47,5 +45,3 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
 }
-
-
