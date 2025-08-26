@@ -16,15 +16,14 @@ public class AuthNoCacheFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain)
+            HttpServletResponse response,
+            FilterChain chain)
             throws ServletException, IOException {
         try {
             chain.doFilter(request, response);
         } finally {
-            final String path = request.getRequestURI(); 
+            final String path = request.getRequestURI();
             if (MATCHER.match(AUTH_PATTERN, path)) {
-                // Valores exactos que esperan los tests
                 response.setHeader("Cache-Control", "no-store, max-age=0");
                 response.setHeader("Pragma", "no-cache");
                 response.setHeader("Expires", "0");
@@ -32,5 +31,3 @@ public class AuthNoCacheFilter extends OncePerRequestFilter {
         }
     }
 }
-
-
