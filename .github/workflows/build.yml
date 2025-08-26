@@ -31,11 +31,34 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'maven'  
+          cache: 'maven'
 
+      # Build + Unit & IT tests + Jacoco
       - name: Build & test (with JaCoCo)
+        run: mvn -B -ntp -Dspring.profiles.active=test clean verify jacoco:report
+
+      # ✅ Gate: SecurityRateLimitPropertiesBindingTest must exist AND pass (0 failures/errors)
+      - name: Ensure binding test executed and passed
         run: |
-          mvn -B -ntp clean verify jacoco:report
+          set -euo pipefail
+
+          # Busca el reporte Surefire de ese test
+          REPORT_FILE=$(ls -1 **/target/surefire-reports/TEST-*.xml | grep -E "SecurityRateLimitPropertiesBindingTest" || true)
+
+          if [ -z "${REPORT_FILE}" ]; then
+            echo "::error::Missing SecurityRateLimitPropertiesBindingTest report in surefire-reports"
+            exit 1
+          fi
+
+          echo "Found report: ${REPORT_FILE}"
+          # Verifica que el test se ejecutó y pasó con 0 failures y 0 errors
+          if ! grep -Eq 'tests="[1-9][0-9]*".*failures="0".*errors="0"' "${REPORT_FILE}"; then
+            echo "::error::SecurityRateLimitPropertiesBindingTest did not pass successfully"
+            echo "---- Report content ----"
+            cat "${REPORT_FILE}" || true
+            echo "------------------------"
+            exit 1
+          fi
 
       - name: Upload surefire & failsafe reports (always)
         if: ${{ always() }}
@@ -52,3 +75,4 @@ jobs:
         with:
           name: jacoco-report
           path: target/site/jacoco
+
