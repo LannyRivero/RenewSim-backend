@@ -87,5 +87,3 @@ class SecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 }
-
-
