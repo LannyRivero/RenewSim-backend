@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class LoginRateLimitingFilterUnitTest {
 
     @Test
-    @DisplayName("IP_USER: no consumes body when buffer is empty (buildKey should not break request body)")
+    @DisplayName("IP_USER: does not consume body when buffer is empty (buildKey should not break request body)")
     void ipUser_doesNotConsumeEmptyBody() throws ServletException, IOException {
         SecurityRateLimitProperties props = new SecurityRateLimitProperties();
         props.setEnabled(true);
@@ -29,7 +29,12 @@ class LoginRateLimitingFilterUnitTest {
         props.setRetryAfter(Duration.ofSeconds(3));
         props.setLoginPath("/api/v1/auth/login");
 
-        LoginRateLimitingFilter filter = new LoginRateLimitingFilter(props, new ObjectMapper());
+        LoginRateLimiter limiter = new LoginRateLimiter(
+                Math.toIntExact(props.getWindow().toSeconds()),
+                props.getMaxAttempts()
+        );
+
+        LoginRateLimitingFilter filter = new LoginRateLimitingFilter(props, new ObjectMapper(), limiter);
 
         MockHttpServletRequest raw = new MockHttpServletRequest("POST", "/api/v1/auth/login");
         raw.setRemoteAddr("127.0.0.1");
@@ -37,15 +42,15 @@ class LoginRateLimitingFilterUnitTest {
         raw.setContent(new byte[0]); // vacío
 
         ContentCachingRequestWrapper wrapped = new ContentCachingRequestWrapper(raw);
-
         MockHttpServletResponse res = new MockHttpServletResponse();
         FilterChain chain = new MockFilterChain();
 
         filter.doFilter(wrapped, res, chain);
 
         assertThat(wrapped.getContentAsByteArray()).isEmpty();
-        assertThat(res.getStatus()).isIn(0, 200); // 0 = no escrito; depende del chain
+        assertThat(res.getStatus()).isIn(0, 200);
     }
 }
+
 
 
