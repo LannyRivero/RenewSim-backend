@@ -24,26 +24,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @TestPropertySource(properties = {
-        "auth.rate-limiting.enabled=true",
-        "auth.rate-limiting.strategy=IP_USER",
-        "auth.rate-limiting.max-attempts=2",
-        "auth.rate-limiting.window-seconds=3",
-        "auth.rate-limiting.retry-after-seconds=3",
-        "auth.rate-limiting.login-path=/api/v1/auth/login"
+        // ✅ Prefijo nuevo + Duration
+        "security.rate-limiting.enabled=true",
+        "security.rate-limiting.strategy=IP_USER",
+        "security.rate-limiting.max-attempts=2",
+        "security.rate-limiting.window=3s",
+        "security.rate-limiting.retry-after=3s",
+        "security.rate-limiting.login-path=/api/v1/auth/login"
 })
 class LoginRateLimitingFilterIT {
 
-    @Autowired
-    MockMvc mockMvc;
+    @Autowired MockMvc mockMvc;
+    @Autowired ObjectMapper objectMapper;
+    @Autowired SecurityRateLimitProperties props;
 
-    @Autowired
-    ObjectMapper objectMapper;
-
-    @Autowired
-    SecurityRateLimitProperties props;
-
-    @MockBean
-    AuthUseCase authUseCase;
+    @MockBean AuthUseCase authUseCase;
 
     private String jsonBody(String usernameOrEmail, String password) throws Exception {
         var dto = new java.util.HashMap<String, Object>();
@@ -54,17 +49,13 @@ class LoginRateLimitingFilterIT {
     }
 
     @Test
-    @DisplayName("N+1 intentos dentro de ventana → 429; tras ventana → vuelve a 401/200 normal")
+    @DisplayName("N+1 attempts within window → 429; after window → back to 401/200")
     void rateLimit_then_reset_window() throws Exception {
-        when(authUseCase.login(any()))
-                .thenThrow(new BadCredentialsException("invalid"));
+        when(authUseCase.login(any())).thenThrow(new BadCredentialsException("invalid"));
         String body = jsonBody("john.doe", "InvalidPwd#123");
 
         var req = post("/api/v1/auth/login")
-                .with(r -> {
-                    r.setRemoteAddr("127.0.0.1");
-                    return r;
-                })
+                .with(r -> { r.setRemoteAddr("127.0.0.1"); return r; })
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(body);
@@ -79,9 +70,9 @@ class LoginRateLimitingFilterIT {
                 .andExpect(header().string("Pragma", "no-cache"))
                 .andExpect(header().string("Expires", "0"));
 
-        Thread.sleep((props.getWindowSeconds() + 1L) * 1000);
+        long sleepMs = props.getWindow().toMillis() + 250; 
+        Thread.sleep(sleepMs);
 
         mockMvc.perform(req).andExpect(status().isUnauthorized());
     }
-
 }
