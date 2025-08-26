@@ -1,10 +1,10 @@
 package com.renewsim.backend.auth_service.config;
+
 import com.renewsim.backend.auth_service.infrastructure.AuthNoCacheFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.JwtAuthenticationFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimitingFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.SecurityHeadersFilter;
 import com.renewsim.backend.shared.observability.CorrelationIdFilter;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,8 +36,6 @@ public class SecurityConfig {
         return new CorrelationIdFilter();
     }
 
-
-
     @Bean
     public AuthNoCacheFilter authNoCacheFilter() {
         return new AuthNoCacheFilter();
@@ -61,9 +59,10 @@ public class SecurityConfig {
                 .authenticationEntryPoint((req, res, e) -> {
                     res.setStatus(401);
                     res.setContentType("application/json");
-                    res.setHeader("Cache-Control", "no-store");
+                    // No-cache EXACT strings (stable for tests/clients)
+                    res.setHeader("Cache-Control", "no-store, max-age=0");
                     res.setHeader("Pragma", "no-cache");
-                    res.setDateHeader("Expires", 0L);
+                    res.setHeader("Expires", "0");
                     res.getWriter().write("""
                         {"status":401,"error":"Unauthorized","message":"Authentication required"}
                         """);
@@ -71,20 +70,30 @@ public class SecurityConfig {
                 .accessDeniedHandler((req, res, e) -> {
                     res.setStatus(403);
                     res.setContentType("application/json");
-                    res.setHeader("Cache-Control", "no-store");
+                    res.setHeader("Cache-Control", "no-store, max-age=0");
                     res.setHeader("Pragma", "no-cache");
-                    res.setDateHeader("Expires", 0L);
+                    res.setHeader("Expires", "0");
                     res.getWriter().write("""
                         {"status":403,"error":"Forbidden","message":"Insufficient permissions"}
                         """);
                 })
             );
 
+        // 1) CorrelationId → before everything
         http.addFilterBefore(correlationIdFilter(), SecurityContextHolderFilter.class);
+
+        // 2) SecurityHeaders → after CorrelationId
         http.addFilterAfter(securityHeadersFilter, CorrelationIdFilter.class);
+
+        // 3) AuthNoCache → after SecurityHeaders (only affects /api/v1/auth/**)
         http.addFilterAfter(authNoCacheFilter(), SecurityHeadersFilter.class);
+
+        // 4) LoginRateLimiting → after AuthNoCache (only login path internally)
         http.addFilterAfter(loginRateLimitingFilter, AuthNoCacheFilter.class);
-        http.addFilterAfter(jwtAuthenticationFilter, LoginRateLimitingFilter.class);
+
+        // 5) JwtAuthentication → before UsernamePasswordAuthenticationFilter
+        http.addFilterBefore(jwtAuthenticationFilter,
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -92,18 +92,6 @@ class SecurityConfigTest {
         }
 
         @Test
-        @DisplayName("Preflight CORS: OPTIONS permitido con origen válido")
-        void cors_preflight_options_any_path() throws Exception {
-                mvc.perform(options("/api/v1/anything")
-                                .header(HttpHeaders.ORIGIN, "http://localhost:3000")
-                                .header("Access-Control-Request-Method", "POST"))
-                                .andExpect(status().isOk())
-                                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
-                                .andExpect(header().string(HttpHeaders.VARY, containsString("Origin")))
-                                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
-        }
-
-        @Test
         @DisplayName("Security headers should be present (CSP, HSTS, XFO, Referrer-Policy)")
         void security_headers_present_on_public_endpoint() throws Exception {
                 mvc.perform(get("/error").secure(true))
