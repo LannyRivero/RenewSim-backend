@@ -28,20 +28,23 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
     public LoginRateLimitingFilter(SecurityRateLimitProperties props, ObjectMapper objectMapper) {
         this.props = props;
         this.objectMapper = objectMapper;
-        this.limiter = new LoginRateLimiter(props.getWindowSeconds(), props.getMaxAttempts());
+        // Adapt: Duration -> seconds
+        int windowSeconds = Math.toIntExact(props.getWindow().toSeconds());
+        int maxAttempts = props.getMaxAttempts();
+        this.limiter = new LoginRateLimiter(windowSeconds, maxAttempts);
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        if (!props.isEnabled())
-            return true;
-        String path = request.getRequestURI(); 
+        if (!props.isEnabled()) return true;
+        String path = request.getRequestURI();
         return !pathMatcher.match(props.getLoginPath(), path);
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
+
         ContentCachingRequestWrapper wrapped = (req instanceof ContentCachingRequestWrapper)
                 ? (ContentCachingRequestWrapper) req
                 : new ContentCachingRequestWrapper(req);
@@ -49,9 +52,13 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
         String key = buildKey(wrapped);
 
         if (!limiter.allow(key)) {
-            int retry = Math.max(props.getRetryAfterSeconds(), limiter.secondsUntilWindowReset());
+            int retry = Math.max(
+                Math.toIntExact(props.getRetryAfter().toSeconds()),
+                limiter.secondsUntilWindowReset()
+            );
             res.setStatus(HttpStatus.TOO_MANY_REQUESTS.value()); // 429
             res.setHeader("Retry-After", String.valueOf(retry));
+            // Defensa en profundidad para respuestas de auth:
             res.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
             res.setHeader("Pragma", "no-cache");
             res.setHeader("Expires", "0");
@@ -76,6 +83,7 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
                     }
                 }
             } catch (Exception ignored) {
+                // deliberately ignore parsing errors to avoid leaking info/timing
             }
         }
         return ip;
