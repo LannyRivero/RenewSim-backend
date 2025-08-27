@@ -26,7 +26,7 @@ public final class JwtTokenProvider implements TokenProvider {
     JwtTokenProvider(SecurityJwtProperties props, Clock clock) {
         this.props = Objects.requireNonNull(props, "SecurityJwtProperties is required");
         this.clock = (clock != null) ? clock : Clock.systemUTC();
-        this.key = resolveKey(props); 
+        this.key = resolveKey(props);
     }
 
     @Override
@@ -42,10 +42,10 @@ public final class JwtTokenProvider implements TokenProvider {
 
         Map<String, Object> claims = new HashMap<>(4);
         if (user.roles() != null && !user.roles().isEmpty()) {
-            claims.put("roles", user.roles());
+            claims.put("roles", Set.copyOf(user.roles()));
         }
         if (user.scopes() != null && !user.scopes().isEmpty()) {
-            claims.put("scopes", user.scopes());
+            claims.put("scopes", Set.copyOf(user.scopes()));
         }
 
         return Jwts.builder()
@@ -57,13 +57,14 @@ public final class JwtTokenProvider implements TokenProvider {
                 .setNotBefore(Date.from(nbf))
                 .setExpiration(Date.from(exp))
                 .addClaims(claims)
-                .signWith(key, SignatureAlgorithm.HS256) 
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
     @Override
     public Optional<AuthenticatedUser> validate(String token) {
-        if (token == null || token.isBlank()) return Optional.empty();
+        if (token == null || token.isBlank())
+            return Optional.empty();
 
         try {
             JwtParserBuilder builder = Jwts.parserBuilder()
@@ -73,7 +74,8 @@ public final class JwtTokenProvider implements TokenProvider {
                     .setClock(() -> Date.from(Instant.now(clock)));
 
             long skew = props.clockSkewOrZero();
-            if (skew > 0) builder.setAllowedClockSkewSeconds(skew);
+            if (skew > 0)
+                builder.setAllowedClockSkewSeconds(skew);
 
             Jws<Claims> jws = builder.build().parseClaimsJws(token);
 
@@ -84,7 +86,8 @@ public final class JwtTokenProvider implements TokenProvider {
 
             Claims c = jws.getBody();
             String subject = c.getSubject();
-            if (subject == null || subject.isBlank()) return Optional.empty();
+            if (subject == null || subject.isBlank())
+                return Optional.empty();
 
             Set<String> roles = toStringSet(c.get("roles"));
             Set<String> scopes = toStringSet(c.get("scopes"));
