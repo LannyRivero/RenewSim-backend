@@ -12,18 +12,18 @@ import java.io.IOException;
 @Component
 public class SecurityHeadersFilter extends OncePerRequestFilter {
 
-    private static final String CSP =
-            "default-src 'none'; " +
-            "connect-src 'self'; " +
-            "frame-ancestors 'none'; " +
-            "base-uri 'none'; " +
-            "object-src 'none'; " +
-            "block-all-mixed-content";
+    private static final String CSP = String.join(" ",
+            "default-src 'none';",
+            "connect-src 'self';",
+            "frame-ancestors 'none';",
+            "base-uri 'none';",
+            "form-action 'none';",
+            "object-src 'none';",
+            "block-all-mixed-content"
+    );
 
     private static final String HSTS = "max-age=31536000; includeSubDomains";
-
-    private static final String PERMISSIONS_POLICY =
-            "geolocation=(), microphone=(), camera=()";
+    private static final String PERMISSIONS_POLICY = "geolocation=(), microphone=(), camera=()";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -31,21 +31,25 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
                                     FilterChain chain)
             throws ServletException, IOException {
 
-        response.setHeader("X-Content-Type-Options", "nosniff");
-        response.setHeader("X-Frame-Options", "DENY");
-        response.setHeader("Referrer-Policy", "no-referrer");
-        response.setHeader("Content-Security-Policy", CSP);
-        response.setHeader("Permissions-Policy", PERMISSIONS_POLICY);
+        setIfAbsent(response, "X-Content-Type-Options", "nosniff");
+        setIfAbsent(response, "X-Frame-Options", "DENY");
+        setIfAbsent(response, "Referrer-Policy", "no-referrer");
+        setIfAbsent(response, "Content-Security-Policy", CSP);
+        setIfAbsent(response, "Permissions-Policy", PERMISSIONS_POLICY);
 
-        boolean https =
-                request.isSecure()
+        boolean https = request.isSecure()
                 || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
         if (https) {
-            response.setHeader("Strict-Transport-Security", HSTS);
+            setIfAbsent(response, "Strict-Transport-Security", HSTS);
         }
 
         chain.doFilter(request, response);
+    }   
+
+    private void setIfAbsent(HttpServletResponse res, String name, String value) {
+        if (!res.containsHeader(name)) {
+            res.setHeader(name, value);
+        }
     }
 }
-
 

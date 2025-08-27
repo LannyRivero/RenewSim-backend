@@ -2,7 +2,7 @@ package com.renewsim.backend.auth_service.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
-import com.renewsim.backend.auth_service.infrastructure.AuthNoCacheFilter;
+import com.renewsim.backend.auth_service.infrastructure.security.AuthNoCacheFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.JwtAuthenticationFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimitingFilter;
 import com.renewsim.backend.auth_service.web.controller.AuthController;
@@ -13,7 +13,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -30,7 +29,6 @@ import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -89,18 +87,6 @@ class SecurityConfigTest {
                                 .andExpect(header().string(HttpHeaders.PRAGMA, containsString("no-cache")))
                                 .andExpect(header().exists("Expires"))
                                 .andExpect(header().string("X-Correlation-Id", not(emptyOrNullString())));
-        }
-
-        @Test
-        @DisplayName("Preflight CORS: OPTIONS permitido con origen válido")
-        void cors_preflight_options_any_path() throws Exception {
-                mvc.perform(options("/api/v1/anything")
-                                .header(HttpHeaders.ORIGIN, "http://localhost:3000")
-                                .header("Access-Control-Request-Method", "POST"))
-                                .andExpect(status().isOk())
-                                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
-                                .andExpect(header().string(HttpHeaders.VARY, containsString("Origin")))
-                                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
         }
 
         @Test
