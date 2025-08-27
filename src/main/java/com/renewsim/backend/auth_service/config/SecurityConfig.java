@@ -38,45 +38,43 @@ public class SecurityConfig {
 
     @Bean
     public AuthNoCacheFilter authNoCacheFilter() {
-        return new AuthNoCacheFilter(); 
+        return new AuthNoCacheFilter();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(withDefaults())
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
-                .requestMatchers("/actuator/health", "/error").permitAll()
-                .anyRequest().authenticated()
-            )
-            .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((req, res, e) -> {
-                    res.setStatus(401);
-                    res.setContentType("application/json");
-                    res.setHeader("Cache-Control", "no-store, max-age=0");
-                    res.setHeader("Pragma", "no-cache");
-                    res.setHeader("Expires", "0");
-                    res.getWriter().write("""
-                        {"status":401,"error":"Unauthorized","message":"Authentication required"}
-                        """);
-                })
-                .accessDeniedHandler((req, res, e) -> {
-                    res.setStatus(403);
-                    res.setContentType("application/json");
-                    res.setHeader("Cache-Control", "no-store, max-age=0");
-                    res.setHeader("Pragma", "no-cache");
-                    res.setHeader("Expires", "0");
-                    res.getWriter().write("""
-                        {"status":403,"error":"Forbidden","message":"Insufficient permissions"}
-                        """);
-                })
-            );
+                .cors(withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                        .requestMatchers("/actuator/health", "/error").permitAll()
+                        .anyRequest().authenticated())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, e) -> {
+                            res.setStatus(401);
+                            res.setContentType("application/json");
+                            res.setHeader("Cache-Control", "no-store, max-age=0");
+                            res.setHeader("Pragma", "no-cache");
+                            res.setHeader("Expires", "0");
+                            res.getWriter().write("""
+                                    {"status":401,"error":"Unauthorized","message":"Authentication required"}
+                                    """);
+                        })
+                        .accessDeniedHandler((req, res, e) -> {
+                            res.setStatus(403);
+                            res.setContentType("application/json");
+                            res.setHeader("Cache-Control", "no-store, max-age=0");
+                            res.setHeader("Pragma", "no-cache");
+                            res.setHeader("Expires", "0");
+                            res.getWriter().write("""
+                                    {"status":403,"error":"Forbidden","message":"Insufficient permissions"}
+                                    """);
+                        }));
 
         // 1) Correlation first (MDC & response)
         http.addFilterBefore(correlationIdFilter(), SecurityContextHolderFilter.class);
@@ -92,9 +90,8 @@ public class SecurityConfig {
 
         // 5) JWT auth before UsernamePasswordAuthenticationFilter
         http.addFilterBefore(
-            jwtAuthenticationFilter,
-            org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class
-        );
+                jwtAuthenticationFilter,
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -114,4 +111,3 @@ public class SecurityConfig {
         return new ForwardedHeaderFilter();
     }
 }
-
