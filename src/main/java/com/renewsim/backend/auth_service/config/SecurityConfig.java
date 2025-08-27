@@ -55,7 +55,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
                         .requestMatchers("/actuator/health", "/error").permitAll()
                         .anyRequest().authenticated())
-                .headers(h -> h.cacheControl(HeadersConfigurer.CacheControlConfig::disable))        
+                .headers(h -> h.cacheControl(HeadersConfigurer.CacheControlConfig::disable))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, e) -> {
                             res.setStatus(401);
@@ -92,8 +92,7 @@ public class SecurityConfig {
 
         // 5) JWT auth before UsernamePasswordAuthenticationFilter
         http.addFilterBefore(
-                jwtAuthenticationFilter,
-                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+                jwtAuthenticationFilter, LoginRateLimitingFilter.class);
 
         return http.build();
     }
