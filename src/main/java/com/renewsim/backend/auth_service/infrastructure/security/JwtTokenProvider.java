@@ -13,7 +13,8 @@ import java.security.Key;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static com.renewsim.backend.auth_service.infrastructure.security.JwtClaimUtils.toStringSet;
 
 @Component
 public final class JwtTokenProvider implements TokenProvider {
@@ -120,13 +121,4 @@ public final class JwtTokenProvider implements TokenProvider {
         throw new IllegalStateException("No JWT secret configured (secretBase64 or secret required).");
     }
 
-    private static Set<String> toStringSet(Object claim) {
-        if (claim instanceof Collection<?> collection) {
-            return collection.stream()
-                    .filter(Objects::nonNull)
-                    .map(Object::toString)
-                    .collect(Collectors.toSet());
-        }
-        return Collections.emptySet();
-    }
 }
