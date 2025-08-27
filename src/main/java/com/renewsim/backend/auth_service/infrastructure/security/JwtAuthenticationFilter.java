@@ -28,24 +28,23 @@ import java.util.regex.Pattern;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BEARER = "Bearer ";
-    private static final Pattern BEARER_PATTERN =
-            Pattern.compile("^Bearer\\s+(.+)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern BEARER_PATTERN = Pattern.compile("^Bearer\\s+(.+)$", Pattern.CASE_INSENSITIVE);
 
     private final TokenProvider tokenProvider;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        return path.startsWith("/auth/login")
-            || path.startsWith("/auth/register")
-            || path.startsWith("/actuator/health")
-            || path.startsWith("/actuator/info");
+        String p = request.getRequestURI();
+        return p.startsWith("/api/v1/auth/login")
+                || p.startsWith("/api/v1/auth/register")
+                || p.startsWith("/actuator/health")
+                || p.startsWith("/actuator/info");
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain chain) throws ServletException, IOException {
         try {
             if (SecurityContextHolder.getContext().getAuthentication() != null) {
                 log.debug("Authentication already present, skipping JWT validation.");
@@ -90,8 +89,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void setAuthentication(AuthenticatedUser user, HttpServletRequest request) {
-        Collection<GrantedAuthority> authorities =
-                AuthorityMapper.mapToAuthorities(user.roles(), user.scopes());
+        Collection<GrantedAuthority> authorities = AuthorityMapper.mapToAuthorities(user.roles(), user.scopes());
 
         var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -103,5 +101,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 }
-
-
