@@ -24,7 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @TestPropertySource(properties = {
-        // ✅ Prefijo nuevo + Duration
         "security.rate-limiting.enabled=true",
         "security.rate-limiting.strategy=IP_USER",
         "security.rate-limiting.max-attempts=2",
