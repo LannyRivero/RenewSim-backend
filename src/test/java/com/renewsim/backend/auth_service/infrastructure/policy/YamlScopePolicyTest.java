@@ -13,9 +13,9 @@ class YamlScopePolicyTest {
     @DisplayName("scopesFor(USER) should return configured scopes")
     void testShouldReturnConfiguredScopes_ForKnownRole() {
         YamlScopePolicy policy = new YamlScopePolicy();
-        Map<String, List<String>> map = new HashMap<>();
-        map.put("USER", List.of("simulation:read", "profile:read"));
-        map.put("ADMIN", List.of("admin:write"));
+        Map<RoleName, Set<String>> map = new HashMap<>();
+        map.put(RoleName.USER, Set.of("simulation:read", "profile:read"));
+        map.put(RoleName.ADMIN, Set.of("admin:write"));
         policy.setRoleScopes(map);
 
         Set<String> scopes = policy.scopesFor(RoleName.USER);
@@ -28,7 +28,7 @@ class YamlScopePolicyTest {
     @DisplayName("scopesFor(unknown) should return empty set")
     void testShouldReturnEmptySet_ForUnknownRole() {
        YamlScopePolicy policy = new YamlScopePolicy();
-        policy.setRoleScopes(Map.of("USER", List.of("simulation:read")));
+        policy.setRoleScopes(Map.of(RoleName.USER, Set.of("simulation:read")));
 
         Set<String> scopes = policy.scopesFor(RoleName.ADMIN);
 
@@ -40,7 +40,7 @@ class YamlScopePolicyTest {
     void testShouldReturnDefensiveCopy() {
         YamlScopePolicy policy = new YamlScopePolicy();
         policy.setRoleScopes(new HashMap<>(Map.of(
-                "USER", new ArrayList<>(List.of("simulation:read"))
+                RoleName.USER, new HashSet<>(Set.of("simulation:read"))
         )));
 
         Set<String> first = policy.scopesFor(RoleName.USER);
