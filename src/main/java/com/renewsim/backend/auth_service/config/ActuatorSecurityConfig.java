@@ -13,7 +13,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class ActuatorSecurityConfig {
 
     @Bean
-    @Order(0) 
+    @Order(0)
     public SecurityFilterChain actuatorSecurityFilterChain(
             HttpSecurity http,
             SecurityHeadersFilter securityHeadersFilter
@@ -24,9 +24,12 @@ public class ActuatorSecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(withDefaults());
 
-        http.addFilterAfter(securityHeadersFilter,
-                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(
+                securityHeadersFilter,
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class
+        );
 
         return http.build();
     }
 }
+

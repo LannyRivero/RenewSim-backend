@@ -38,7 +38,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthNoCacheFilter authNoCacheFilter() {
-        return new AuthNoCacheFilter();
+        return new AuthNoCacheFilter(); 
     }
 
     @Bean
@@ -59,7 +59,6 @@ public class SecurityConfig {
                 .authenticationEntryPoint((req, res, e) -> {
                     res.setStatus(401);
                     res.setContentType("application/json");
-                    // No-cache EXACT strings (stable for tests/clients)
                     res.setHeader("Cache-Control", "no-store, max-age=0");
                     res.setHeader("Pragma", "no-cache");
                     res.setHeader("Expires", "0");
@@ -79,21 +78,23 @@ public class SecurityConfig {
                 })
             );
 
-        // 1) CorrelationId → before everything
+        // 1) Correlation first (MDC & response)
         http.addFilterBefore(correlationIdFilter(), SecurityContextHolderFilter.class);
 
-        // 2) SecurityHeaders → after CorrelationId
+        // 2) Security headers after correlation
         http.addFilterAfter(securityHeadersFilter, CorrelationIdFilter.class);
 
-        // 3) AuthNoCache → after SecurityHeaders (only affects /api/v1/auth/**)
+        // 3) No-cache for auth endpoints only
         http.addFilterAfter(authNoCacheFilter(), SecurityHeadersFilter.class);
 
-        // 4) LoginRateLimiting → after AuthNoCache (only login path internally)
+        // 4) Rate limiting for POST /api/v1/auth/login only
         http.addFilterAfter(loginRateLimitingFilter, AuthNoCacheFilter.class);
 
-        // 5) JwtAuthentication → before UsernamePasswordAuthenticationFilter
-        http.addFilterBefore(jwtAuthenticationFilter,
-                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+        // 5) JWT auth before UsernamePasswordAuthenticationFilter
+        http.addFilterBefore(
+            jwtAuthenticationFilter,
+            org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class
+        );
 
         return http.build();
     }
