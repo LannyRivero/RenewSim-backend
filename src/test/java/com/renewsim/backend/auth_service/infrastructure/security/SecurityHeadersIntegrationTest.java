@@ -1,21 +1,43 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
+import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
+import com.renewsim.backend.auth_service.config.MethodSecurityTestConfig;
+import com.renewsim.backend.auth_service.config.SecurityConfig;
+import com.renewsim.backend.auth_service.config.SecurityTestBeans;
+import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
+import com.renewsim.backend.auth_service.support.TestSecuredController;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-@SpringBootTest
+@SpringBootTest(classes = {
+        TestSecuredController.class,
+        SecurityConfig.class,
+        SecurityTestBeans.class,
+        MethodSecurityTestConfig.class
+})
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class SecurityHeadersIntegrationTest {
@@ -23,15 +45,49 @@ class SecurityHeadersIntegrationTest {
     @Autowired
     MockMvc mockMvc;
 
+    @MockBean
+    TokenProvider tokenProvider;
+
+    @MockBean
+    LoginRateLimitingFilter loginRateLimitingFilter;
+
+    private static final String OK_ENDPOINT = "/test-secure/admin";
     private static final String PROTECTED_ENDPOINT = "/api/v1/me";
     private static final String ADMIN_ENDPOINT = "/api/v1/admin";
+
+    private static String bearer(String token) {
+        return "Bearer " + token;
+    }
+
+    @BeforeEach
+    void allowFilterChain() throws Exception {
+        doAnswer(inv -> {
+            ServletRequest req = inv.getArgument(0);
+            ServletResponse res = inv.getArgument(1);
+            FilterChain chain = inv.getArgument(2);
+            chain.doFilter(req, res);
+            return null;
+        }).when(loginRateLimitingFilter).doFilter(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("200 OK → Security headers presentes")
+    void headersOn200() throws Exception {
+        Mockito.when(tokenProvider.validate(anyString()))
+                .thenReturn(Optional.of(new AuthenticatedUser("john", Set.of("ADMIN"), Set.of())));
+
+        MvcResult res = mockMvc.perform(get(OK_ENDPOINT)
+                .header(HttpHeaders.AUTHORIZATION, bearer("fake-token")))
+                .andReturn();
+
+        assertThat(res.getResponse().getStatus()).isEqualTo(200);
+        assertSecurityHeaders(res);
+    }
 
     @Test
     @DisplayName("Protected → Security headers present on 401/403")
     void headersOnProtected() throws Exception {
-        MvcResult res = mockMvc.perform(get(PROTECTED_ENDPOINT))
-                .andReturn();
-
+        MvcResult res = mockMvc.perform(get(PROTECTED_ENDPOINT)).andReturn();
         int status = res.getResponse().getStatus();
         assertThat(Set.of(401, 403)).as("expected 401 or 403").contains(status);
         assertSecurityHeaders(res);
@@ -40,12 +96,24 @@ class SecurityHeadersIntegrationTest {
     @Test
     @DisplayName("Admin → Security headers present on 401/403")
     void headersOnAdmin() throws Exception {
-        MvcResult res = mockMvc.perform(get(ADMIN_ENDPOINT))
-                .andReturn();
-
+        MvcResult res = mockMvc.perform(get(ADMIN_ENDPOINT)).andReturn();
         int status = res.getResponse().getStatus();
         assertThat(Set.of(401, 403)).as("expected 401 or 403").contains(status);
         assertSecurityHeaders(res);
+    }
+
+    @Test
+    @DisplayName("HTTPS simulado → HSTS presente una sola vez")
+    void hstsWhenHttps() throws Exception {
+        MvcResult res = mockMvc.perform(get(PROTECTED_ENDPOINT)
+                .header("X-Forwarded-Proto", "https"))
+                .andReturn();
+
+        var hsts = res.getResponse().getHeaders("Strict-Transport-Security");
+        assertThat(hsts.size()).isLessThanOrEqualTo(1);
+        if (!hsts.isEmpty()) {
+            assertThat(hsts.getFirst()).contains("max-age=").contains("includeSubDomains");
+        }
     }
 
     private void assertSecurityHeaders(MvcResult res) {
@@ -91,7 +159,7 @@ class SecurityHeadersIntegrationTest {
 
     private void assertCspContains(String csp, String directive) {
         assertThat(csp)
-                .withFailMessage("CSP should contain directive: %s\nCSP was: %s", directive, csp)
+                .withFailMessage("CSP should contain directive: %s%nCSP was: %s", directive, csp)
                 .contains(directive);
     }
 }
