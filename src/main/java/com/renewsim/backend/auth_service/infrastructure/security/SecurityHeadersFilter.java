@@ -19,16 +19,19 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
             "base-uri 'none';",
             "form-action 'none';",
             "object-src 'none';",
-            "block-all-mixed-content"
-    );
+            "block-all-mixed-content");
 
     private static final String HSTS = "max-age=31536000; includeSubDomains";
     private static final String PERMISSIONS_POLICY = "geolocation=(), microphone=(), camera=()";
 
+    private static final String CORP = "same-origin";
+    private static final String COOP = "same-origin";
+    private static final String XPCDP = "none";
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain)
+            HttpServletResponse response,
+            FilterChain chain)
             throws ServletException, IOException {
 
         setIfAbsent(response, "X-Content-Type-Options", "nosniff");
@@ -37,6 +40,10 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         setIfAbsent(response, "Content-Security-Policy", CSP);
         setIfAbsent(response, "Permissions-Policy", PERMISSIONS_POLICY);
 
+        setIfAbsent(response, "Cross-Origin-Resource-Policy", CORP);
+        setIfAbsent(response, "Cross-Origin-Opener-Policy", COOP);
+        setIfAbsent(response, "X-Permitted-Cross-Domain-Policies", XPCDP);
+
         boolean https = request.isSecure()
                 || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
         if (https) {
@@ -44,7 +51,7 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         }
 
         chain.doFilter(request, response);
-    }   
+    }
 
     private void setIfAbsent(HttpServletResponse res, String name, String value) {
         if (!res.containsHeader(name)) {
@@ -52,4 +59,3 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         }
     }
 }
-
