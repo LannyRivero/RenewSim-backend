@@ -43,6 +43,8 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         setIfAbsent(response, "Cross-Origin-Resource-Policy", CORP);
         setIfAbsent(response, "Cross-Origin-Opener-Policy", COOP);
         setIfAbsent(response, "X-Permitted-Cross-Domain-Policies", XPCDP);
+        setIfAbsent(response, "Permissions-Policy", "geolocation=(), microphone=(), camera=(), fullscreen=()");
+
 
         boolean https = request.isSecure()
                 || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
