@@ -1,5 +1,7 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
+import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
+import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,11 +16,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
-import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
-
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,14 +27,14 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final String BEARER = "Bearer ";
+    private static final String BEARER_PREFIX = "Bearer ";
     private static final Pattern BEARER_PATTERN = Pattern.compile("^Bearer\\s+(.+)$", Pattern.CASE_INSENSITIVE);
 
     private final TokenProvider tokenProvider;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String p = request.getRequestURI();
+        final String p = request.getRequestURI();
         return p.startsWith("/api/v1/auth/login")
                 || p.startsWith("/api/v1/auth/register")
                 || p.startsWith("/actuator/health")
@@ -44,28 +44,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain chain) throws ServletException, IOException {
+            FilterChain chain)
+            throws ServletException, IOException {
         try {
             if (SecurityContextHolder.getContext().getAuthentication() != null) {
-                log.debug("Authentication already present, skipping JWT validation.");
+                if (log.isDebugEnabled()) {
+                    log.debug("Authentication already present, skipping JWT validation.");
+                }
                 return;
             }
 
-            final String rawHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-            if (rawHeader == null || rawHeader.isBlank()) {
-                log.debug("No Authorization header present.");
-                return;
-            }
-
-            String token = extractBearerToken(rawHeader.trim());
+            final String token = extractBearerToken(request);
             if (token == null || token.isBlank()) {
-                log.debug("Authorization header is not a Bearer token.");
+                if (log.isDebugEnabled()) {
+                    log.debug("No Bearer token found in Authorization header.");
+                }
                 return;
             }
 
-            Optional<AuthenticatedUser> validatedUser = tokenProvider.validate(token);
-            if (validatedUser.isPresent()) {
-                setAuthentication(validatedUser.get(), request);
+            final Optional<AuthenticatedUser> validated = tokenProvider.validate(token);
+            if (validated.isPresent()) {
+                setAuthentication(validated.get(), request);
             } else {
                 log.warn("JWT validation failed: token is invalid, expired, or has incorrect claims.");
             }
@@ -77,11 +76,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private String extractBearerToken(String header) {
-        if (header.regionMatches(true, 0, BEARER, 0, BEARER.length())) {
-            return header.substring(BEARER.length()).trim();
+    private String extractBearerToken(HttpServletRequest req) {
+        String h = req.getHeader(HttpHeaders.AUTHORIZATION);
+        if (h == null)
+            return null;
+
+        h = h.trim();
+        if (h.length() >= BEARER_PREFIX.length() &&
+                h.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
+            return h.substring(BEARER_PREFIX.length()).trim();
         }
-        Matcher m = BEARER_PATTERN.matcher(header);
+
+        Matcher m = BEARER_PATTERN.matcher(h);
         if (m.matches()) {
             return m.group(1).trim();
         }
@@ -91,12 +97,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void setAuthentication(AuthenticatedUser user, HttpServletRequest request) {
         Collection<GrantedAuthority> authorities = AuthorityMapper.mapToAuthorities(user.roles(), user.scopes());
 
-        var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null,
+                authorities);
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         if (log.isDebugEnabled()) {
-            log.debug("Authenticated user '{}' with authorities: {}", user.username(),
+            log.debug("Authenticated user '{}' with authorities: {}",
+                    user.username(),
                     authorities.stream().map(GrantedAuthority::getAuthority).toList());
         }
     }
