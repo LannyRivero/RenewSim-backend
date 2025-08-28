@@ -18,6 +18,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.filter.ForwardedHeaderFilter;
 
@@ -92,7 +93,7 @@ public class SecurityConfig {
 
         // 5) JWT auth before UsernamePasswordAuthenticationFilter
         http.addFilterBefore(
-                jwtAuthenticationFilter, LoginRateLimitingFilter.class);
+                jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

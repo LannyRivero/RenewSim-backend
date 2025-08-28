@@ -19,25 +19,25 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @RequiredArgsConstructor
 public class ActuatorSecurityConfigProd {
 
-    private final SecurityHeadersFilter securityHeadersFilter;
+        private final SecurityHeadersFilter securityHeadersFilter;
 
-    @Bean
-    @Order(0)
-    public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http,
-            SecurityHeadersFilter securityHeadersFilter,
-            JwtAuthenticationFilter jwtAuthenticationFilter,
-            CorrelationIdFilter correlationIdFilter) throws Exception {
-        http
-                .securityMatcher("/actuator/**")
-                .authorizeHttpRequests(reg -> reg
-                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
-                        .anyRequest().hasAuthority("SCOPE_actuator:read"))
-                .csrf(csrf -> csrf.disable())
-                .cors(withDefaults());
+        @Bean
+        @Order(0)
+        public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http,
+                        SecurityHeadersFilter securityHeadersFilter,
+                        JwtAuthenticationFilter jwtAuthenticationFilter,
+                        CorrelationIdFilter correlationIdFilter) throws Exception {
+                http
+                                .securityMatcher("/actuator/**")
+                                .authorizeHttpRequests(reg -> reg
+                                                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                                                .anyRequest().hasAuthority("SCOPE_actuator:read"))
+                                .csrf(csrf -> csrf.disable())
+                                .cors(withDefaults());
+                http.addFilterBefore(correlationIdFilter, SecurityContextHolderFilter.class);
+                http.addFilterAfter(securityHeadersFilter, CorrelationIdFilter.class);
+                http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        http.addFilterBefore(correlationIdFilter, SecurityContextHolderFilter.class);
-        http.addFilterAfter(securityHeadersFilter, CorrelationIdFilter.class);
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
+                return http.build();
+        }
 }
