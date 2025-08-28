@@ -22,7 +22,7 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
             "block-all-mixed-content");
 
     private static final String HSTS = "max-age=31536000; includeSubDomains";
-    private static final String PERMISSIONS_POLICY = "geolocation=(), microphone=(), camera=()";
+    private static final String PERMISSIONS_POLICY = "geolocation=(), microphone=(), camera=(), fullscreen=()";
 
     private static final String CORP = "same-origin";
     private static final String COOP = "same-origin";
@@ -43,7 +43,6 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         setIfAbsent(response, "Cross-Origin-Resource-Policy", CORP);
         setIfAbsent(response, "Cross-Origin-Opener-Policy", COOP);
         setIfAbsent(response, "X-Permitted-Cross-Domain-Policies", XPCDP);
-        setIfAbsent(response, "Permissions-Policy", "geolocation=(), microphone=(), camera=(), fullscreen=()");
 
 
         boolean https = request.isSecure()
