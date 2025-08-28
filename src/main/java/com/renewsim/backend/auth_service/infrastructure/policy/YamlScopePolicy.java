@@ -21,28 +21,19 @@ public class YamlScopePolicy implements ScopePolicy {
         return roleScopes;
     }
 
-    public void setRoleScopes(Map<RoleName, Set<String>> source) {
-        if (source == null || source.isEmpty()) {
-            this.roleScopes = Map.of();
-            return;
-        }
-        Map<RoleName, Set<String>> tmp = new EnumMap<>(RoleName.class);
-        source.forEach((role, scopes) -> {
-            Set<String> normalized = (scopes == null ? Set.<String>of() : scopes).stream()
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .peek(this::validateScopeFormat)
-                    .collect(Collectors.toCollection(LinkedHashSet::new)); 
-            tmp.put(role, Set.copyOf(normalized)); 
-        });
-        this.roleScopes = Collections.unmodifiableMap(tmp);
+    public void setRoleScopes(Map<RoleName, Set<String>> map) {
+        Map<RoleName, Set<String>> validated = map.entrySet().stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().stream().peek(this::validateScopeFormat)
+                                .collect(Collectors.toUnmodifiableSet())));
+        this.roleScopes = validated;
     }
 
     private void validateScopeFormat(String scope) {
         if (!SCOPE_PATTERN.matcher(scope).matches()) {
             throw new IllegalArgumentException(
-                "Invalid scope format: " + scope + " (expected 'domain:action', lowercase letters only)"
-            );
+                    "Invalid scope format: " + scope + " (expected 'domain:action', lowercase letters only)");
         }
     }
 
