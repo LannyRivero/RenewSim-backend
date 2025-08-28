@@ -2,7 +2,7 @@
 bin/
 build/
 target/
-out/
+
 *.class
 
 # ⚙️ Ignorar configuraciones específicas de Maven y Gradle
