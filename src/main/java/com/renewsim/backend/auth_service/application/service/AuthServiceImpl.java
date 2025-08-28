@@ -16,11 +16,15 @@ import com.renewsim.backend.shared.exception.ResourceConflictException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,6 +34,7 @@ import java.util.stream.Collectors;
 public class AuthServiceImpl implements AuthUseCase {
 
     private static final String INVALID_MSG = "Invalid username or password";
+    private static final String MDC_KEY = "correlationId";
 
     private final UserAccountGateway userGateway;
     private final RoleProvider roleProvider;
@@ -40,34 +45,40 @@ public class AuthServiceImpl implements AuthUseCase {
 
     @Override
     public AuthResponseDTO login(AuthRequestDTO request) {
-        UserSnapshot user = userGateway.findByUsername(request.getUsername())
+        final String normUsername = normalize(request.getUsername());
+
+        UserSnapshot user = userGateway.findByUsername(normUsername)
                 .orElseThrow(() -> {
-                    log.warn("Login failed: bad credentials for username [{}]", request.getUsername());
+                    log.warn("Login failed: bad credentials user={} corr={}", normUsername, MDC.get(MDC_KEY));
                     return new AuthenticationException(INVALID_MSG);
                 });
 
         if (!passwordEncoder.matches(request.getPassword(), user.passwordHash())) {
-            log.warn("Login failed: bad credentials for username [{}]", request.getUsername());
+            log.warn("Login failed: bad credentials user={} corr={}", normUsername, MDC.get(MDC_KEY));
             throw new AuthenticationException(INVALID_MSG);
         }
 
-        Set<String> roleNames = user.roles().stream().map(Enum::name).collect(Collectors.toSet());
+        Set<String> roleNames = user.roles().stream()
+                .map(Enum::name)
+                .collect(Collectors.toUnmodifiableSet());
+
         Set<String> scopes = user.roles().stream()
                 .flatMap(r -> scopePolicy.scopesFor(r).stream())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toUnmodifiableSet());
 
         String token = tokenProvider.generate(new AuthenticatedUser(user.username(), roleNames, scopes));
-        log.info("Login success for username [{}]", request.getUsername());
+        log.info("Login success user={} corr={}", normUsername, MDC.get(MDC_KEY));
 
         return buildResponse(token, user.username(), roleNames, scopes);
     }
 
     @Override
+    @Transactional
     public AuthResponseDTO register(AuthRequestDTO request) {
-        String username = request.getUsername();
+        final String normUsername = normalize(request.getUsername());
 
-        if (userGateway.existsByUsername(username)) {
-            log.warn("Register failed: username already exists [{}]", username);
+        if (userGateway.existsByUsername(normUsername)) {
+            log.warn("Register failed: username exists user={} corr={}", normUsername, MDC.get(MDC_KEY));
             throw new ResourceConflictException("Username already exists");
         }
 
@@ -75,28 +86,49 @@ public class AuthServiceImpl implements AuthUseCase {
         Set<RoleName> roles = Set.of(defaultRole);
 
         String hash = passwordEncoder.encode(request.getPassword());
-        userGateway.createUser(username, hash, roles);
 
-        Set<String> roleNames = roles.stream().map(Enum::name).collect(Collectors.toSet());
-        Set<String> scopes = scopePolicy.scopesFor(defaultRole);
+        try {
+            userGateway.createUser(normUsername, hash, roles);
+        } catch (DataIntegrityViolationException ex) {
+            log.warn("Register conflict (race) user={} corr={} reason={}", normUsername, MDC.get(MDC_KEY),
+                    ex.getMessage());
+            throw new ResourceConflictException("Username already exists");
+        }
 
-        String token = tokenProvider.generate(new AuthenticatedUser(username, roleNames, scopes));
-        log.info("Register success for username [{}] with default role [{}]", username, defaultRole.name());
+        Set<String> roleNames = roles.stream()
+                .map(Enum::name)
+                .collect(Collectors.toUnmodifiableSet());
 
-        return buildResponse(token, username, roleNames, scopes);
+        Set<String> scopes = scopePolicy.scopesFor(defaultRole)
+                .stream()
+                .collect(Collectors.toUnmodifiableSet());
+
+        String token = tokenProvider.generate(new AuthenticatedUser(normUsername, roleNames, scopes));
+        log.info("Register success user={} role={} corr={}", normUsername, defaultRole.name(), MDC.get(MDC_KEY));
+
+        return buildResponse(token, normUsername, roleNames, scopes);
     }
 
     private AuthResponseDTO buildResponse(String token, String username, Set<String> roles, Set<String> scopes) {
         Instant now = Instant.now(clock);
         long expiresIn = tokenProvider.expiresInSeconds();
 
+        Set<String> rolesCopy = Set.copyOf(roles);
+        Set<String> scopesCopy = Set.copyOf(scopes);
+
         return AuthResponseDTO.builder()
                 .token(token)
                 .tokenType("Bearer")
                 .expiresAt(now.plusSeconds(expiresIn))
                 .username(username)
-                .roles(roles)
-                .scopes(scopes)
+                .roles(rolesCopy)
+                .scopes(scopesCopy)
                 .build();
+    }
+
+    private String normalize(String username) {
+        if (username == null)
+            return null;
+        return username.trim().toLowerCase(Locale.ROOT);
     }
 }

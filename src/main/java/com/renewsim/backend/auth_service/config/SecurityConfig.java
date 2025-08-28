@@ -18,6 +18,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.filter.ForwardedHeaderFilter;
 
@@ -55,7 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
                         .requestMatchers("/actuator/health", "/error").permitAll()
                         .anyRequest().authenticated())
-                .headers(h -> h.cacheControl(HeadersConfigurer.CacheControlConfig::disable))        
+                .headers(h -> h.cacheControl(HeadersConfigurer.CacheControlConfig::disable))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, e) -> {
                             res.setStatus(401);
@@ -92,8 +93,7 @@ public class SecurityConfig {
 
         // 5) JWT auth before UsernamePasswordAuthenticationFilter
         http.addFilterBefore(
-                jwtAuthenticationFilter,
-                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+                jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
