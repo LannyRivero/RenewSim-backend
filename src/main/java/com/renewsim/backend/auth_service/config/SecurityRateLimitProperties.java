@@ -17,7 +17,9 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "security.rate-limiting")
 public class SecurityRateLimitProperties {
 
-    public enum Strategy { IP, IP_USER }
+    public enum Strategy {
+        IP, IP_USER
+    }
 
     private boolean enabled = true;
 
@@ -36,5 +38,16 @@ public class SecurityRateLimitProperties {
     @NotBlank
     @Pattern(regexp = "^/.*", message = "loginPath must start with '/'")
     private String loginPath = "/api/v1/auth/login";
-}
 
+    public int getWindowSeconds() {
+        return Math.toIntExact(window.getSeconds());
+    }
+
+    public int getRetryAfterSeconds() {
+        return Math.toIntExact(retryAfter.getSeconds());
+    }
+
+    public int getThreshold() {
+        return maxAttempts;
+    }
+}
