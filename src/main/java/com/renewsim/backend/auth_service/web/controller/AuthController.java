@@ -21,24 +21,14 @@ public class AuthController {
 
     @PostMapping(value = "/login", consumes = "application/json")
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO request) {
-        // ❌ no try/catch genérico
         AuthResponseDTO body = authUseCase.login(request);
-        return ResponseEntity.ok()
-                .cacheControl(CacheControl.noStore().mustRevalidate().cachePrivate().noTransform())
-                .header(HttpHeaders.PRAGMA, "no-cache")
-                .header(HttpHeaders.EXPIRES, "0")
-                .body(body);
+        return ResponseEntity.ok(body);
     }
 
     @PostMapping(value = "/register", consumes = "application/json")
     public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody AuthRequestDTO request) {
-        // ❌ no try/catch genérico
         AuthResponseDTO body = authUseCase.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .cacheControl(CacheControl.noStore().mustRevalidate().cachePrivate().noTransform())
-                .header(HttpHeaders.PRAGMA, "no-cache")
-                .header(HttpHeaders.EXPIRES, "0")
-                .body(body);
+        return ResponseEntity.ok(body);
     }
     
 }
