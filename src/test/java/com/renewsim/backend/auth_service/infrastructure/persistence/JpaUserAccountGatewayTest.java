@@ -1,5 +1,5 @@
 package com.renewsim.backend.auth_service.infrastructure.persistence;
-import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway.UserSnapshot;
+import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.role.Role;
 import com.renewsim.backend.role.RoleName;
 import com.renewsim.backend.role.RoleRepository;
@@ -25,7 +25,7 @@ class JpaUserAccountGatewayTest {
     @Mock private RoleRepository roleRepository;
 
     @InjectMocks
-    private JpaUserAccountGateway gateway;
+    private JpaUserAccountGatewayTest gateway;
 
     private Role roleUser;
 

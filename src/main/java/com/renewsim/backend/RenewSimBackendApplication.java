@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -17,6 +18,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 
 
 @SpringBootApplication
+@EnableFeignClients(basePackages = "com.renewsim.backend.auth_service.infrastructure.client")
 @EnableMethodSecurity
 @EnableCaching 
 @ConfigurationPropertiesScan
