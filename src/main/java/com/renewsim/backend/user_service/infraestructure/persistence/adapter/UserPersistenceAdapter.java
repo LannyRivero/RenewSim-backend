@@ -9,6 +9,7 @@ import com.renewsim.backend.user_service.application.port.out.ExistsUserPort;
 import com.renewsim.backend.user_service.application.port.out.LoadUserPort;
 import com.renewsim.backend.user_service.application.port.out.SaveUserPort;
 import com.renewsim.backend.user_service.domain.model.User;
+import com.renewsim.backend.user_service.infraestructure.mapper.UserMapper;
 import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;
 
 import java.util.Optional;
