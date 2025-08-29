@@ -1,10 +1,11 @@
 package com.renewsim.backend.auth_service.application;
 
-
 import com.renewsim.backend.auth_service.application.port.out.*;
 import com.renewsim.backend.auth_service.application.service.AuthServiceImpl;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
+import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
+
 import com.renewsim.backend.role.RoleName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
