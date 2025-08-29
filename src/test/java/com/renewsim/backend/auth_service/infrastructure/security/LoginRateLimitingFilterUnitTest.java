@@ -31,10 +31,12 @@ class LoginRateLimitingFilterUnitTest {
 
         LoginRateLimiter limiter = new LoginRateLimiter(
                 Math.toIntExact(props.getWindow().toSeconds()),
-                props.getMaxAttempts()
-        );
+                props.getMaxAttempts());
 
-        LoginRateLimitingFilter filter = new LoginRateLimitingFilter(props, new ObjectMapper(), limiter);
+        LoginRateLimitingFilter filter = new LoginRateLimitingFilter(
+                limiter,
+                new ObjectMapper(),
+                props);
 
         MockHttpServletRequest raw = new MockHttpServletRequest("POST", "/api/v1/auth/login");
         raw.setRemoteAddr("127.0.0.1");
@@ -51,6 +53,3 @@ class LoginRateLimitingFilterUnitTest {
         assertThat(res.getStatus()).isIn(0, 200);
     }
 }
-
-
-
