@@ -2,6 +2,9 @@ package com.renewsim.backend.user_service.infraestructure.persistence.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
@@ -99,4 +102,16 @@ public class UserEntity {
     public void setRolesCsv(String rolesCsv) {
         this.rolesCsv = rolesCsv;
     }
+
+    public Set<String> getRoles() {
+        return Arrays.stream(rolesCsv.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    public void setRoles(Set<String> roles) {
+        this.rolesCsv = String.join(",", roles);
+    }
+
 }
