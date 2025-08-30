@@ -25,7 +25,7 @@ public class CreateUserService implements CreateUserUseCase {
     @Override
     public UserResponse createUser(UserCreateRequest req) {
         String username = UserPolicy.normalizeUsername(req.username());
-        String email = req.email().trim().toLowerCase();
+        String email = UserPolicy.normalizeEmail(req.email());
 
         if (existsUserPort.existsByUsernameOrEmail(username, email)) {
             throw new DataIntegrityViolationException("User with same username or email already exists");
