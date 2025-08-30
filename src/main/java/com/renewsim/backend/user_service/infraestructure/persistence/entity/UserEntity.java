@@ -7,10 +7,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "users", uniqueConstraints = {
+@Table(name = "users", 
+    indexes = {
+        @Index(name = "idx_users_username", columnList = "username"),
+        @Index(name = "idx_users_email", columnList = "email"),
+        @Index(name = "idx_users_enabled", columnList = "enabled")
+        },
+    uniqueConstraints = {
         @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
         @UniqueConstraint(name = "uk_users_email", columnNames = "email")
-})
+        })
 public class UserEntity {
 
     @Id
