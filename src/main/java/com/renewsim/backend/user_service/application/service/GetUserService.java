@@ -17,8 +17,8 @@ public class GetUserService implements GetUserUseCase {
     private final LoadUserPort loadUserPort;
 
     @Override
-    public UserResponse getById(long id) {
-        return loadUserPort.loadById(id)
+    public UserResponse getUserById(Long id) {
+        return loadUserPort.loadUserById(id)
                 .map(UserMapper::toResponse)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }

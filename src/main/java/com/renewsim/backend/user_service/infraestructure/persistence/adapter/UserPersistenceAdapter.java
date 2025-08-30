@@ -21,13 +21,13 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Exist
     private final com.renewsim.backend.user_service.infraestructure.persistence.repo.UserJpaRepository repo;
 
     @Override
-    public Optional<User> loadById(long id) {
+    public Optional<User> loadUserById(Long id) {
         return repo.findById(id).map(UserMapper::toDomain);
     }
 
     @Override
     @Transactional
-    public User save(User user) {
+    public User saveUser(User user) {
         UserEntity entity = UserMapper.toEntity(user);
         UserEntity saved = repo.save(entity);
         return UserMapper.toDomain(saved);

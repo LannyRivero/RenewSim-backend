@@ -23,7 +23,7 @@ public class CreateUserService implements CreateUserUseCase {
     private final ExistsUserPort existsUserPort;
 
     @Override
-    public UserResponse create(UserCreateRequest req) {
+    public UserResponse createUser(UserCreateRequest req) {
         String username = UserPolicy.normalizeUsername(req.username());
         String email = req.email().trim().toLowerCase();
 
@@ -40,7 +40,7 @@ public class CreateUserService implements CreateUserUseCase {
                 null,
                 null);
 
-        User saved = saveUserPort.save(user);
+        User saved = saveUserPort.saveUser(user);
         return UserMapper.toResponse(saved);
     }
 }

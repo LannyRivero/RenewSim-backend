@@ -16,6 +16,7 @@ import com.renewsim.backend.user_service.application.port.in.GetUserUseCase;
 import com.renewsim.backend.user_service.application.port.in.ListUsersUseCase;
 import com.renewsim.backend.user_service.dto.PageResponse;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
+import com.renewsim.backend.user_service.dto.UserFilterRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
 
 import jakarta.validation.Valid;
@@ -33,14 +34,14 @@ public class UserController {
     @PostMapping
     @PreAuthorize("hasAuthority('SCOPE_user:write') or hasRole('ADMIN')")
     public ResponseEntity<UserResponse> create(@Valid @RequestBody UserCreateRequest req) {
-        UserResponse created = createUserUseCase.create(req);
+        UserResponse created = createUserUseCase.createUser(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN')")
     public ResponseEntity<UserResponse> get(@PathVariable long id) {
-        return ResponseEntity.ok(getUserUseCase.getById(id));
+        return ResponseEntity.ok(getUserUseCase.getUserById(id));
     }
 
     @GetMapping
@@ -51,7 +52,7 @@ public class UserController {
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) Boolean enabled) {
-        return ResponseEntity.ok(listUsersUseCase.list(page, size, username, email, enabled));
+        return ResponseEntity.ok(listUsersUseCase.listUsers(page, size, new UserFilterRequest(username, email, enabled)));
     }
 
 }
