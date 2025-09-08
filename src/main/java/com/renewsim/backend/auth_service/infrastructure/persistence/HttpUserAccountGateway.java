@@ -6,6 +6,7 @@ import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.role.RoleName;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -28,15 +29,13 @@ public class HttpUserAccountGateway implements UserAccountGateway {
 
         Set<RoleName> roles = external.roles().stream()
                 .map(RoleName::valueOf)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toUnmodifiableSet());
 
-        UserSnapshot internal = new UserSnapshot(
+        return Optional.of(new UserSnapshot(
                 external.username(),
                 external.passwordHash(),
                 roles,
-                true);
-
-        return Optional.of(internal);
+                true));
     }
 
     @Override
@@ -45,12 +44,23 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     }
 
     @Override
-    public void createUser(String username, String passwordHash, Set<RoleName> roles) {
-        ExternalUserSnapshot external = new ExternalUserSnapshot(
+    public UserSnapshot createUser(String username, String passwordHash, Set<RoleName> roles) {
+
+        ExternalUserSnapshot request = new ExternalUserSnapshot(
                 username,
                 passwordHash,
-                roles.stream().map(Enum::name).collect(Collectors.toSet()) // Enum → String
+                roles.stream().map(Enum::name).collect(Collectors.toUnmodifiableSet()) // Enum → String
         );
-        userServiceClient.createUser(external);
+        ExternalUserSnapshot created = userServiceClient.createUser(request);
+
+        Set<RoleName> mappedRoles = created.roles().stream()
+                .map(RoleName::valueOf)
+                .collect(Collectors.toUnmodifiableSet());
+
+        return new UserSnapshot(
+                created.username(),
+                created.passwordHash(),
+                mappedRoles,
+                true);
     }
 }

@@ -11,7 +11,7 @@ public interface UserAccountGateway {
 
     boolean existsByUsername(String username);
 
-    void createUser(String username, String passwordHash, Set<RoleName> roles);
+    UserSnapshot createUser(String username, String passwordHash, Set<RoleName> roles);
 
     
 }
