@@ -10,6 +10,7 @@ import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.role.RoleName;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.shared.exception.ResourceConflictException;
+import static com.renewsim.backend.auth_service.domain.error.AuthErrorCode.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,7 +33,8 @@ public class AuthServiceImpl implements AuthUseCase {
                 authValidator.validateCredentials(request);
 
                 UserSnapshot user = userAccountGateway.findByUsername(request.getUsername())
-                                .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+                                .orElseThrow(() -> new AuthenticationException(AUTH_INVALID_CREDENTIALS.code() + ": "
+                                                + AUTH_INVALID_CREDENTIALS.defaultMessage()));
 
                 authValidator.validateUserEnable(user.enabled());
 
@@ -48,7 +50,8 @@ public class AuthServiceImpl implements AuthUseCase {
 
                 // 2-Verificar si existe el usuario
                 if (userAccountGateway.existsByUsername(request.getUsername())) {
-                        throw new ResourceConflictException("Username already exists" + request.getUsername());
+                        throw new ResourceConflictException(
+                                        AUTH_USERNAME_CONFLICT.code() + ": " + AUTH_USERNAME_CONFLICT.defaultMessage());
                 }
                 // 3- Crear el usuario con rol por defecto ROLE_USER
                 UserSnapshot user = userAccountGateway.createUser(
