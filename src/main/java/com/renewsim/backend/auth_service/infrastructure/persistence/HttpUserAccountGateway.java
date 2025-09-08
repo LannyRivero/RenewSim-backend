@@ -7,6 +7,7 @@ import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.role.RoleName;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class HttpUserAccountGateway implements UserAccountGateway {
 
     private final UserServiceClient userServiceClient;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public Optional<UserSnapshot> findByUsername(String username) {
@@ -44,7 +46,9 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     }
 
     @Override
-    public UserSnapshot createUser(String username, String passwordHash, Set<RoleName> roles) {
+    public UserSnapshot createUser(String username, String rawPassword, Set<RoleName> roles) {
+
+        String passwordHash = passwordEncoder.encode(rawPassword);
 
         ExternalUserSnapshot request = new ExternalUserSnapshot(
                 username,
