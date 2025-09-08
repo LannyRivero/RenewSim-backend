@@ -5,7 +5,9 @@ import com.renewsim.backend.auth_service.application.port.out.ScopePolicy;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.service.AuthServiceImpl;
+import com.renewsim.backend.auth_service.domain.AuthValidator;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
+import com.renewsim.backend.auth_service.domain.TokenTimeService;
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
@@ -39,11 +41,11 @@ class AuthServiceImplTest extends UnitTestBase {
     @Mock private TokenProvider tokenProvider;
     @Mock private RoleProvider roleProvider;
     @Mock private ScopePolicy scopePolicy;
-    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private AuthValidator authValidator;
+    @Mock private TokenTimeService tokenTimeService;
 
     private AuthServiceImpl authService;
 
-    private Clock fixedClock;
     private Instant baseInstant;
 
     private AuthRequestDTO loginReq;
@@ -53,20 +55,19 @@ class AuthServiceImplTest extends UnitTestBase {
     @BeforeEach
     void setUp() {
         baseInstant = Instant.parse("2025-01-01T00:00:00Z");
-        fixedClock = Clock.fixed(baseInstant, ZoneOffset.UTC);
 
         authService = new AuthServiceImpl(
                 userAccountGateway,
-                roleProvider,
-                scopePolicy,
-                passwordEncoder,
                 tokenProvider,
-                fixedClock
+                scopePolicy,
+                authValidator,
+                tokenTimeService
         );
+
 
         loginReq = new AuthRequestDTO("john", "secret");
         john = new AuthenticatedUser("john", Set.of("USER"), Set.of("simulation:read"));
-        snapshot = new UserSnapshot("john", "$2a$10$abcdefgHashed", Set.of(RoleName.USER));
+        snapshot = new UserSnapshot().active("john", "abcdefgHashed", Set.of(RoleName.USER));
     }
 
     @AfterEach
@@ -78,7 +79,6 @@ class AuthServiceImplTest extends UnitTestBase {
     @DisplayName("login → returns AuthResponseDTO with token when credentials are valid")
     void login_ok() {
         when(userAccountGateway.findByUsername("john")).thenReturn(Optional.of(snapshot));
-        when(passwordEncoder.matches("secret", "$2a$10$abcdefgHashed")).thenReturn(true);
         when(scopePolicy.scopesFor(RoleName.USER)).thenReturn(Set.of("read"));
         when(tokenProvider.generate(any(AuthenticatedUser.class))).thenReturn("jwt-token");
         when(tokenProvider.expiresInSeconds()).thenReturn(3600L);
@@ -93,7 +93,6 @@ class AuthServiceImplTest extends UnitTestBase {
         assertThat(res.getExpiresAt()).isEqualTo(baseInstant.plusSeconds(3600));
 
         verify(userAccountGateway).findByUsername("john");
-        verify(passwordEncoder).matches("secret", "$2a$10$abcdefgHashed");
         verify(scopePolicy).scopesFor(RoleName.USER);
         verify(tokenProvider).generate(argThat(au ->
                 au.username().equals("john") &&
@@ -106,14 +105,12 @@ class AuthServiceImplTest extends UnitTestBase {
     @DisplayName("login → throws on invalid credentials")
     void login_invalid() {
         when(userAccountGateway.findByUsername("john")).thenReturn(Optional.of(snapshot));
-        when(passwordEncoder.matches("bad", "$2a$10$abcdefgHashed")).thenReturn(false);
 
         assertThatThrownBy(() -> authService.login(new AuthRequestDTO("john", "bad")))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessageContaining("Invalid username or password");
 
         verify(userAccountGateway).findByUsername("john");
-        verify(passwordEncoder).matches("bad", "$2a$10$abcdefgHashed");
         verifyNoInteractions(scopePolicy, tokenProvider, roleProvider);
     }
 
@@ -127,7 +124,7 @@ class AuthServiceImplTest extends UnitTestBase {
                 .hasMessageContaining("Username already exists");
 
         verify(userAccountGateway).existsByUsername("john");
-        verifyNoInteractions(roleProvider, scopePolicy, passwordEncoder, tokenProvider);
+        verifyNoInteractions(roleProvider, scopePolicy, userAccountGateway, tokenProvider);
     }
 
     @Test
@@ -135,7 +132,6 @@ class AuthServiceImplTest extends UnitTestBase {
     void register_ok() {
         when(userAccountGateway.existsByUsername("john")).thenReturn(false);
         when(roleProvider.defaultRole()).thenReturn(RoleName.USER);
-        when(passwordEncoder.encode("secret")).thenReturn("$2a$10$hash");
         when(scopePolicy.scopesFor(RoleName.USER)).thenReturn(Set.of("simulation:read"));
         when(tokenProvider.generate(any(AuthenticatedUser.class))).thenReturn("jwt-token");
         when(tokenProvider.expiresInSeconds()).thenReturn(3600L);
@@ -150,7 +146,6 @@ class AuthServiceImplTest extends UnitTestBase {
 
         verify(userAccountGateway).existsByUsername("john");
         verify(roleProvider).defaultRole();
-        verify(passwordEncoder).encode("secret");
         verify(userAccountGateway).createUser("john", "$2a$10$hash", Set.of(RoleName.USER));
         verify(scopePolicy).scopesFor(RoleName.USER);
         verify(tokenProvider).generate(any(AuthenticatedUser.class));
