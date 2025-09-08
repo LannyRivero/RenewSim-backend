@@ -33,7 +33,8 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         UserSnapshot internal = new UserSnapshot(
                 external.username(),
                 external.passwordHash(),
-                roles);
+                roles,
+                true);
 
         return Optional.of(internal);
     }
