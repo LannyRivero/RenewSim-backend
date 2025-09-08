@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -24,6 +25,9 @@ class HttpUserAccountGatewayTest {
 
     @Mock
     private UserServiceClient userServiceClient;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private HttpUserAccountGateway gateway;
@@ -66,12 +70,27 @@ class HttpUserAccountGatewayTest {
     }
 
     @Test
-    @DisplayName("createUser() should call UserServiceClient with mapped snapshot")
+    @DisplayName("createUser() should hash password and call UserServiceClient with mapped snapshot")
     void testCreateUser() {
-        gateway.createUser("john", "$hash", Set.of(RoleName.USER));
+        // Given
+        String rawPassword = "secret";
+        String hashedPassword = "$2a$10$hashed";
+        when(passwordEncoder.encode(rawPassword)).thenReturn(hashedPassword);
 
+        var externalCreated = new ExternalUserSnapshot("john", hashedPassword, Set.of("USER"));
+        when(userServiceClient.createUser(any(ExternalUserSnapshot.class))).thenReturn(externalCreated);
+
+        // When
+        UserSnapshot result = gateway.createUser("john", rawPassword, Set.of(RoleName.USER));
+
+        // Then
+        assertThat(result.username()).isEqualTo("john");
+        assertThat(result.passwordHash()).isEqualTo(hashedPassword);
+        assertThat(result.roles()).containsExactly(RoleName.USER);
+
+        verify(passwordEncoder).encode(rawPassword);
         verify(userServiceClient).createUser(argThat(snapshot -> snapshot.username().equals("john") &&
-                snapshot.passwordHash().equals("$hash") &&
+                snapshot.passwordHash().equals(hashedPassword) &&
                 snapshot.roles().contains("USER")));
     }
 }
