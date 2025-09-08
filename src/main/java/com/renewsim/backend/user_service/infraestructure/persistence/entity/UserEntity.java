@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "users", 
     indexes = {
@@ -30,12 +33,14 @@ public class UserEntity {
     private String email;
 
     @Column(nullable = false)
-    private boolean enabled;
+    private boolean enabled = true;
 
-    @Column(nullable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(nullable = false)
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
     @Column(nullable = false, length = 512)

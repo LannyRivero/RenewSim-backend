@@ -3,6 +3,9 @@ package com.renewsim.backend.auth_service.domain;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class TokenTimeService {
 
     private static final int EXPIRATION_MINUTES = 60;
