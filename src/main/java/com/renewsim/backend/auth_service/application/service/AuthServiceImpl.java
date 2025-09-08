@@ -55,20 +55,24 @@ public class AuthServiceImpl implements AuthUseCase {
 
         Set<String> scopes = scopePolicy.getScopes(user.roles());
 
-        AuthenticatedUser authenticatedUser = AuthenticatedUser(
+        Set<String> roleNames = user.roles().stream()
+                .map(Enum::name)
+                .collect(Collectors.toUnmodifiableSet());
+
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser(
                 user.username(),
-                user.roles(),
-                scopes,
-                expireAt);
+                roleNames,
+                scopes
+                );
 
         String token = tokenProvider.generate(authenticatedUser);
 
         return AuthResponseDTO.builder()
             .token(token)
             .tokenType("Bearer")
-            .expiresAt(expiresAt)
+            .expiresAt(expireAt)
             .username(user.username())
-            .roles(user.roles())
+            .roles(roleNames)
             .scopes(scopes)
             .build();
 
