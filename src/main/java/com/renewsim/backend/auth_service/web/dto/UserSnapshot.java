@@ -6,7 +6,8 @@ import java.util.Set;
 public record UserSnapshot(
     String username,
     String passwordHash,
-    Set<RoleName> roles
+    Set<RoleName> roles,
+    boolean enabled
 ) {}
 
 

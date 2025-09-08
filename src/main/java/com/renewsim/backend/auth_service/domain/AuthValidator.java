@@ -17,7 +17,7 @@ public class AuthValidator {
         }
     }
 
-    public void calidateUserEnable(boolean enabled) {
+    public void validateUserEnable(boolean enabled) {
         if (!enabled) {
             throw new AuthenticationException("User is disabled");
         }
