@@ -67,7 +67,7 @@ class AuthServiceImplTest extends UnitTestBase {
 
         loginReq = new AuthRequestDTO("john", "secret");
         john = new AuthenticatedUser("john", Set.of("USER"), Set.of("simulation:read"));
-        snapshot = new UserSnapshot().active("john", "abcdefgHashed", Set.of(RoleName.USER));
+        UserSnapshot snapshot = UserSnapshot.active("john", "hash", Set.of(RoleName.USER));
     }
 
     @AfterEach
