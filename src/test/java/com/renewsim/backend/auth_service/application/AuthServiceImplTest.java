@@ -15,6 +15,7 @@ import com.renewsim.backend.role.RoleName;
 import com.renewsim.backend.shared.exception.ResourceConflictException;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.testutil.UnitTestBase;
+import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,7 +68,8 @@ class AuthServiceImplTest extends UnitTestBase {
 
         loginReq = new AuthRequestDTO("john", "secret");
         john = new AuthenticatedUser("john", Set.of("USER"), Set.of("simulation:read"));
-        UserSnapshot snapshot = UserSnapshot.active("john", "hash", Set.of(RoleName.USER));
+        UserSnapshot user = UserSnapshotMother.activeUser("john", Set.of(RoleName.USER));
+
     }
 
     @AfterEach

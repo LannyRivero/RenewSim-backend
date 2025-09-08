@@ -6,6 +6,8 @@ import com.renewsim.backend.auth_service.domain.TokenTimeService;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.role.RoleName;
+import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +30,8 @@ class AuthResponseMapperTest {
     @DisplayName("Should build AuthResponseDTO correctly from UserSnapshot")
     void shouldBuildAuthResponseCorrectly() {
         // Given
-        UserSnapshot user = UserSnapshot.active("john", "hash", Set.of(RoleName.USER));
+        UserSnapshot user = UserSnapshotMother.activeUser("john", Set.of(RoleName.USER));
+
         Instant fixedExpireAt = Instant.parse("2025-01-01T00:00:00Z");
 
         when(tokenTimeService.calculateExpiration()).thenReturn(fixedExpireAt);
