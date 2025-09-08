@@ -1,5 +1,6 @@
 package com.renewsim.backend.auth_service.application.service;
 
+import com.renewsim.backend.auth_service.application.mapper.AuthResponseMapper;
 import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
 import com.renewsim.backend.auth_service.application.port.out.ScopePolicy;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
@@ -28,10 +29,8 @@ import java.util.stream.Collectors;
 public class AuthServiceImpl implements AuthUseCase {
 
         private final UserAccountGateway userAccountGateway;
-        private final TokenProvider tokenProvider;
-        private final ScopePolicy scopePolicy;
         private final AuthValidator authValidator;
-        private final TokenTimeService tokenTimeService;
+        private final AuthResponseMapper authResponseMapper;
 
         @Override
         public AuthResponseDTO login(AuthRequestDTO request) {
@@ -43,30 +42,7 @@ public class AuthServiceImpl implements AuthUseCase {
 
                 authValidator.validateUserEnable(user.enabled());
 
-                Instant expireAt = tokenTimeService.calculateExpiration();
-
-                Set<String> scopes = scopePolicy.getScopes(user.roles());
-
-                Set<String> roleNames = user.roles().stream()
-                                .map(Enum::name)
-                                .collect(Collectors.toUnmodifiableSet());
-
-                AuthenticatedUser authenticatedUser = new AuthenticatedUser(
-                                user.username(),
-                                roleNames,
-                                scopes);
-
-                String token = tokenProvider.generate(authenticatedUser);
-
-                return AuthResponseDTO.builder()
-                                .token(token)
-                                .tokenType("Bearer")
-                                .expiresAt(expireAt)
-                                .username(user.username())
-                                .roles(roleNames)
-                                .scopes(scopes)
-                                .build();
-
+                return authResponseMapper.toAuthResponseDTO(user);
         }
 
         @Override
@@ -86,35 +62,7 @@ public class AuthServiceImpl implements AuthUseCase {
                                 request.getPassword(),
                                 Set.of(RoleName.USER));
 
-                // 4- calcular tiempo de expiracion del token
-                Instant expireAt = tokenTimeService.calculateExpiration();
+                return authResponseMapper.toAuthResponseDTO(user);
 
-                // 5-Calcular scopes a partir d e roles
-                Set<String> scopes = scopePolicy.getScopes(user.roles());
-
-                // 6-Convertir roles a String
-                Set<String> roleNames = user.roles().stream()
-                                .map(Enum::name)
-                                .collect(Collectors.toUnmodifiableSet());
-
-                // 7-Crear AuthenticatedUser para el TokenProvider
-
-                AuthenticatedUser authenticatedUser = new AuthenticatedUser(
-                                user.username(),
-                                roleNames,
-                                scopes);
-                //8-Generar el token
-                String token = tokenProvider.generate(authenticatedUser);
-
-                //9-Devolver respuesta
-                return AuthResponseDTO.builder()
-                        .token(token)
-                        .tokenType("Bearer")
-                        .expiresAt(expireAt)
-                        .username(user.username())
-                        .roles(roleNames)
-                        .scopes(scopes)
-                        .build();
         }
-
 }
