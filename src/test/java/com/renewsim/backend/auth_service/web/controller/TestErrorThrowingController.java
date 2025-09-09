@@ -29,10 +29,11 @@ class TestErrorThrowingController {
         throw new RuntimeException(new AccessDeniedException("nope"));
     }
 
-    @GetMapping("/conflict")
-    public void conflict() {
-        throw new ResourceConflictException("user exists");
-    }
+   @GetMapping("/conflict")
+public void conflict() {
+    throw new ResourceConflictException("AUTH_USERNAME_CONFLICT", "user exists");
+}
+
 
     @GetMapping("/generic")
     public void generic() {
