@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.renewsim.backend.user_service.application.port.in.CreateUserUseCase;
+import com.renewsim.backend.user_service.application.port.in.ExistsUserUseCase;
 import com.renewsim.backend.user_service.application.port.in.GetUserUseCase;
 import com.renewsim.backend.user_service.application.port.in.ListUsersUseCase;
 import com.renewsim.backend.user_service.dto.PageResponse;
@@ -26,8 +27,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
-
     private final CreateUserUseCase createUserUseCase;
+    private final ExistsUserUseCase existsUserUseCase;
     private final GetUserUseCase getUserUseCase;
     private final ListUsersUseCase listUsersUseCase;
 
@@ -52,7 +53,15 @@ public class UserController {
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) Boolean enabled) {
-        return ResponseEntity.ok(listUsersUseCase.listUsers(page, size, new UserFilterRequest(username, email, enabled)));
+        return ResponseEntity
+                .ok(listUsersUseCase.listUsers(page, size, new UserFilterRequest(username, email, enabled)));
+    }
+
+    @GetMapping("/exists")
+    public ResponseEntity<Boolean> exists(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String email) {
+        return ResponseEntity.ok(existsUserUseCase.existsByUsernameOrEmail(username, email));
     }
 
 }
