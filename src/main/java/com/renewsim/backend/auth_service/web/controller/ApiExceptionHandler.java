@@ -4,6 +4,9 @@ import com.renewsim.backend.shared.dto.ErrorResponse;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.shared.exception.ResourceConflictException;
 import jakarta.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,6 +27,7 @@ import java.util.Map;
 public class ApiExceptionHandler {
 
         private static final String CORRELATION_KEY = "correlationId";
+        private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
         @ExceptionHandler({ AuthenticationException.class, BadCredentialsException.class })
         public ResponseEntity<ErrorResponse> handleAuth401(Exception ex, HttpServletRequest req) {
@@ -69,7 +73,14 @@ public class ApiExceptionHandler {
 
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handle500(Exception ex, HttpServletRequest req) {
-                return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "Unexpected error", req, null);
+                log.error("❌ Unexpected error at {} {} [correlationId={}]",
+                                req.getMethod(), req.getRequestURI(), MDC.get(CORRELATION_KEY), ex);
+
+                return build(HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Internal Server Error",
+                                "Unexpected error",
+                                req,
+                                null);
         }
 
         private ResponseEntity<ErrorResponse> build(HttpStatus status, String error, String message,

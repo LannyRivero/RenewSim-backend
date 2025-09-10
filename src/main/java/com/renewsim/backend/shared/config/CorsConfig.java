@@ -15,7 +15,11 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource(CorsProperties props) {
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowCredentials(props.isAllowCredentials());
-        cfg.setAllowedOrigins(props.getAllowedOrigins());     
+
+        if(props.getAllowedOrigins() != null && !props.getAllowedOrigins().isEmpty()){
+            cfg.setAllowedOriginPatterns(props.getAllowedOrigins());
+        }
+
         cfg.setAllowedMethods(props.getAllowedMethods());
         cfg.setAllowedHeaders(props.getAllowedHeaders());
         cfg.setExposedHeaders(props.getExposedHeaders());    
