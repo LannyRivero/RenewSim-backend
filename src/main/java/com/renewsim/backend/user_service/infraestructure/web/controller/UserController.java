@@ -45,6 +45,16 @@ public class UserController {
         return ResponseEntity.ok(getUserUseCase.getUserById(id));
     }
 
+    @GetMapping("/by-username")
+    public ResponseEntity<UserResponse> getByUsername(@RequestParam String username) {
+        var filters = new UserFilterRequest(username, null, null);
+        var results = listUsersUseCase.listUsers(0, 1, filters);
+        if (results.content().isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(results.content().get(0));
+    }
+
     @GetMapping
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN')")
     public ResponseEntity<PageResponse<UserResponse>> list(

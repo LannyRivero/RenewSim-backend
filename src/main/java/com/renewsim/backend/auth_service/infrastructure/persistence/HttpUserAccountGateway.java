@@ -42,7 +42,7 @@ public class HttpUserAccountGateway implements UserAccountGateway {
 
     @Override
     public boolean existsByUsername(String username) {
-        return userServiceClient.existsByUsername(username);
+        return userServiceClient.existsByUsernameOrEmail(username, null);
     }
 
     @Override

@@ -54,6 +54,8 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                        .requestMatchers("/api/v1/users/exists").permitAll() 
+                        .requestMatchers("/api/v1/users/by-username").permitAll()
                         .requestMatchers("/actuator/health", "/error").permitAll()
                         .anyRequest().authenticated())
                 .headers(h -> h.cacheControl(HeadersConfigurer.CacheControlConfig::disable))
