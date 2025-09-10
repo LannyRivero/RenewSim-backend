@@ -103,6 +103,32 @@ public final class JwtTokenProvider implements TokenProvider {
         return props.expirationSeconds();
     }
 
+    public String generateServiceToken(String serviceName, Set<String> scopes) {
+        Objects.requireNonNull(serviceName, "serviceName must not be null");        
+
+        Instant now = Instant.now(clock);
+        Instant exp = now.plusSeconds(300); //token de servicio cortos 5 minutos
+
+        Map<String, Object> claims = new HashMap<>(2);
+        claims.put("roles", Set.of("SERVICE_AUTH"));
+        if (scopes != null && !scopes.isEmpty()) {
+            claims.put("scopes", Set.copyOf(scopes));
+            
+        }
+
+        return Jwts.builder()
+                .setId(UUID.randomUUID().toString())
+                .setIssuer(props.issuer())
+                .setAudience(props.audience())
+                .setSubject(serviceName)
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(exp))
+                .addClaims(claims)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+
+    }
+
     // -------------------------
     // Helpers
     // -------------------------
