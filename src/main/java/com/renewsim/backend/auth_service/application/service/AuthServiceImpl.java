@@ -34,8 +34,11 @@ public class AuthServiceImpl implements AuthUseCase {
 
                 authValidator.validateCredentials(request);
 
-                UserSnapshot user = userAccountGateway.findByUsername(request.getUsername())
-                                .or(() -> userAccountGateway.findByEmail(request.getUsername()))
+                String loginInput = request.getUsername();
+
+                UserSnapshot user = (loginInput.contains("@")
+                                ? userAccountGateway.findByEmail(loginInput)
+                                : userAccountGateway.findByUsername(loginInput))
                                 .orElseThrow(() -> new AuthenticationException(
                                                 ErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS)));
 

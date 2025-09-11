@@ -7,8 +7,8 @@ import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.role.RoleName;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -17,14 +17,21 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class HttpUserAccountGateway implements UserAccountGateway {
 
     private final UserServiceClient userServiceClient;
 
     @Override
-    public Optional<UserSnapshot> findByUsername(String username) {
+    public Optional<UserSnapshot> findByEmail(String email) {
         try {
-            ExternalUserSnapshot external = userServiceClient.findByUsername(username);
+            ExternalUserSnapshot external = userServiceClient.getCredentials(null, email);
+
+            log.info("DEBUG ExternalUserSnapshot: username={}, email={}, passwordHash={}",
+                    external.username(),
+                    external.email(),
+                    external.passwordHash());
+
             return Optional.ofNullable(mapToSnapshot(external));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
@@ -32,9 +39,15 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     }
 
     @Override
-    public Optional<UserSnapshot> findByEmail(String email) {
+    public Optional<UserSnapshot> findByUsername(String username) {
         try {
-            ExternalUserSnapshot external = userServiceClient.findByEmail(email);
+            ExternalUserSnapshot external = userServiceClient.getCredentials(username, null);
+
+            log.info("DEBUG ExternalUserSnapshot: username={}, email={}, passwordHash={}",
+                    external.username(),
+                    external.email(),
+                    external.passwordHash());
+
             return Optional.ofNullable(mapToSnapshot(external));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
@@ -60,9 +73,10 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         return mapToSnapshot(created);
     }
 
-    //  Helper para evitar duplicación de código
+    // Helper para evitar duplicación de código
     private UserSnapshot mapToSnapshot(ExternalUserSnapshot external) {
-        if (external == null) return null;
+        if (external == null)
+            return null;
 
         Set<RoleName> roles = external.roles().stream()
                 .map(RoleName::valueOf)
@@ -73,8 +87,6 @@ public class HttpUserAccountGateway implements UserAccountGateway {
                 external.passwordHash(),
                 external.email(),
                 roles,
-                true
-        );
+                true);
     }
 }
-

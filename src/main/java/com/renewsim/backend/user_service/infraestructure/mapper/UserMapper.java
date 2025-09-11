@@ -61,7 +61,7 @@ public final class UserMapper {
                 Set.of("USER"),
                 Instant.now(),
                 Instant.now(),
-                request.password());
+                request.passwordHash());
     }
 
     private static Set<String> csvToSet(String csv) {
