@@ -6,6 +6,7 @@ import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway
 import com.renewsim.backend.auth_service.domain.AuthValidator;
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
+import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.role.RoleName;
 import com.renewsim.backend.shared.error.ErrorMessageFactory;
@@ -43,25 +44,27 @@ public class AuthServiceImpl implements AuthUseCase {
         }
 
         @Override
-        @Transactional
-        public AuthResponseDTO register(AuthRequestDTO request) {
+@Transactional
+public AuthResponseDTO register(RegisterRequestDTO request) {
 
-                // 1- validamos datos de entrada
-                authValidator.validateCredentials(request);
+    // 1- Validar credenciales mínimas
+    authValidator.validateCredentials(request);
 
-                // 2-Verificar si existe el usuario
-                if (userAccountGateway.existsByUsername(request.getUsername())) {
-                        throw new ResourceConflictException(
-                                        AUTH_USERNAME_CONFLICT.code(),
-                                        AUTH_USERNAME_CONFLICT.defaultMessage());
-                }
-                // 3- Crear el usuario con rol por defecto ROLE_USER
-                UserSnapshot user = userAccountGateway.createUser(
-                                request.getUsername(),
-                                request.getPassword(),
-                                Set.of(RoleName.USER));
+    // 2- Verificar si existe el usuario
+    if (userAccountGateway.existsByUsername(request.getUsername())) {
+        throw new ResourceConflictException(
+                AUTH_USERNAME_CONFLICT.code(),
+                AUTH_USERNAME_CONFLICT.defaultMessage());
+    }
 
-                return authResponseMapper.toAuthResponseDTO(user);
+    // 3- Crear el usuario con rol por defecto ROLE_USER
+    UserSnapshot user = userAccountGateway.createUser(
+            request.getUsername(),
+            request.getPassword(),
+            request.getEmail(), // 👈 nuevo campo
+            Set.of(RoleName.USER));
 
-        }
+    return authResponseMapper.toAuthResponseDTO(user);
+}
+
 }

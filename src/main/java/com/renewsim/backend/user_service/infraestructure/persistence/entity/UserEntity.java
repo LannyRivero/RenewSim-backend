@@ -10,16 +10,14 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@Table(name = "users", 
-    indexes = {
+@Table(name = "users", indexes = {
         @Index(name = "idx_users_username", columnList = "username"),
         @Index(name = "idx_users_email", columnList = "email"),
         @Index(name = "idx_users_enabled", columnList = "enabled")
-        },
-    uniqueConstraints = {
+}, uniqueConstraints = {
         @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
         @UniqueConstraint(name = "uk_users_email", columnNames = "email")
-        })
+})
 public class UserEntity {
 
     @Id
@@ -31,6 +29,9 @@ public class UserEntity {
 
     @Column(nullable = false, length = 128)
     private String email;
+
+    @Column(nullable = false, length = 255)
+    private String password;
 
     @Column(nullable = false)
     private boolean enabled = true;
@@ -80,6 +81,14 @@ public class UserEntity {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public boolean isEnabled() {

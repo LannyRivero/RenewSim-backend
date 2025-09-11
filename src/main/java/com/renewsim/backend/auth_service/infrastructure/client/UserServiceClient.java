@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
 
-@FeignClient(name = "user-service", url = "${user-service.url}")
+@FeignClient(name = "user-service", url = "${user-service.url}", configuration = FeignAuthConfig.class)
 public interface UserServiceClient {
 
     @GetMapping("/api/v1/users/by-username")

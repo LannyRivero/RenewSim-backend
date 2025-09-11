@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
+import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
 
 @RestController
 @RequestMapping(value = "/api/v1/auth", produces = "application/json")
@@ -23,9 +24,9 @@ public class AuthController {
     }
 
     @PostMapping(value = "/register", consumes = "application/json")
-    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody AuthRequestDTO request) {
+    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
         AuthResponseDTO body = authUseCase.register(request);
         return ResponseEntity.ok(body);
     }
-    
+
 }

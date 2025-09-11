@@ -2,7 +2,8 @@ package com.renewsim.backend.role;
 
 public enum RoleName {
     USER("User"),
-    ADMIN("Administrator");
+    ADMIN("Administrator"),
+    SERVICE_AUTH("Service Auth");
 
     private final String displayName;
 

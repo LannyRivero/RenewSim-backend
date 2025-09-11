@@ -36,6 +36,7 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         return Optional.of(new UserSnapshot(
                 external.username(),
                 external.passwordHash(),
+                external.email(),
                 roles,
                 true));
     }
@@ -46,13 +47,14 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     }
 
     @Override
-    public UserSnapshot createUser(String username, String rawPassword, Set<RoleName> roles) {
+    public UserSnapshot createUser(String username, String rawPassword, String email, Set<RoleName> roles) {
 
         String passwordHash = passwordEncoder.encode(rawPassword);
 
         ExternalUserSnapshot request = new ExternalUserSnapshot(
                 username,
                 passwordHash,
+                email,
                 roles.stream().map(Enum::name).collect(Collectors.toUnmodifiableSet()) // Enum → String
         );
         ExternalUserSnapshot created = userServiceClient.createUser(request);
@@ -64,6 +66,7 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         return new UserSnapshot(
                 created.username(),
                 created.passwordHash(),
+                created.email(),
                 mappedRoles,
                 true);
     }

@@ -1,7 +1,6 @@
 package com.renewsim.backend.user_service.dto;
 
 import jakarta.validation.constraints.*;
-import java.util.Set;
 
 public record UserCreateRequest(
 
@@ -9,5 +8,7 @@ public record UserCreateRequest(
 
         @NotBlank @Email(message = "Email must be valid") @Size(max = 255, message = "Email must be at most 255 characters") String email,
 
-        @NotEmpty(message = "At least one role must be provided") Set<@Pattern(regexp = "^[A-Z_]{3,32}$", message = "Role must be uppercase letters/underscores 3-32 chars") String> roles) {
+        @NotBlank(message = "Password is required") @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters") String passwordHash
+
+) {
 }

@@ -33,7 +33,7 @@ public class UserController {
     private final ListUsersUseCase listUsersUseCase;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('SCOPE_user:write') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_user:write') or hasRole('ADMIN') or hasRole('SERVICE_AUTH')")
     public ResponseEntity<UserResponse> create(@Valid @RequestBody UserCreateRequest req) {
         UserResponse created = createUserUseCase.createUser(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);

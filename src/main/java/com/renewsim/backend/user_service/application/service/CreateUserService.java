@@ -36,9 +36,10 @@ public class CreateUserService implements CreateUserUseCase {
                 username,
                 email,
                 true,
-                Set.copyOf(req.roles()),
+                Set.of("USER"),
                 null,
-                null);
+                null,
+                req.passwordHash());
 
         User saved = saveUserPort.saveUser(user);
         return UserMapper.toResponse(saved);
