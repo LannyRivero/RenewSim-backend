@@ -1,6 +1,5 @@
 package com.renewsim.backend.auth_service.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
 import com.renewsim.backend.auth_service.infrastructure.security.AuthNoCacheFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.JwtAuthenticationFilter;
@@ -56,8 +55,6 @@ class SecurityConfigTest {
         private JwtAuthenticationFilter jwtAuthenticationFilter;
         @MockBean
         private LoginRateLimitingFilter loginRateLimitingFilter;
-
-        private final ObjectMapper mapper = new ObjectMapper();
 
         @BeforeEach
         void setUp() {
