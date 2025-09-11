@@ -17,6 +17,7 @@ import com.renewsim.backend.user_service.application.port.in.GetUserUseCase;
 import com.renewsim.backend.user_service.application.port.in.ListUsersUseCase;
 import com.renewsim.backend.user_service.dto.PageResponse;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
+import com.renewsim.backend.user_service.dto.UserCredentialsDTO;
 import com.renewsim.backend.user_service.dto.UserFilterRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
 
@@ -54,6 +55,34 @@ public class UserController {
         }
         return ResponseEntity.ok(results.content().get(0));
     }
+
+    @GetMapping("/by-email")
+    public ResponseEntity<UserResponse> getByEmail(@RequestParam String email) {
+        var filters = new UserFilterRequest(null, email, null);
+        var results = listUsersUseCase.listUsers(0, 1, filters);
+        if (results.content().isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(results.content().get(0));
+    }
+
+    @GetMapping("/internal/credentials")
+@PreAuthorize("hasRole('SERVICE_AUTH')")
+public ResponseEntity<UserCredentialsDTO> getCredentials(
+        @RequestParam(required = false) String username,
+        @RequestParam(required = false) String email) {
+
+    var user = getUserUseCase.getDomainUserByUsernameOrEmail(username, email);
+
+    return ResponseEntity.ok(new UserCredentialsDTO(
+            user.username(),
+            user.email(),
+            user.passwordHash(), 
+            user.roles(),
+            user.enabled()
+    ));
+}
+
 
     @GetMapping
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN')")

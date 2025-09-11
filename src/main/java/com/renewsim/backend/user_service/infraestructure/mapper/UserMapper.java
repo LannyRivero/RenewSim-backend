@@ -24,7 +24,7 @@ public final class UserMapper {
                 csvToSet(e.getRolesCsv()),
                 e.getCreatedAt(),
                 e.getUpdatedAt(),
-                e.getPassword());
+                e.getPasswordHash());
     }
 
     public static UserEntity toEntity(User d) {
@@ -36,7 +36,7 @@ public final class UserMapper {
         e.setRolesCsv(setToCsv(d.roles()));
         e.setCreatedAt(d.createdAt());
         e.setUpdatedAt(d.updatedAt());
-        e.setPassword(d.passwordHash());
+        e.setPasswordHash(d.passwordHash());
         return e;
     }
 
@@ -61,7 +61,7 @@ public final class UserMapper {
                 Set.of("USER"),
                 Instant.now(),
                 Instant.now(),
-                request.passwordHash());
+                request.password());
     }
 
     private static Set<String> csvToSet(String csv) {

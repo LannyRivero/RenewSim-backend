@@ -29,6 +29,14 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Exist
         return repo.findById(id).map(UserMapper::toDomain);
     }
 
+    public Optional<User> loadUserByUsername(String username) {
+        return repo.findByUsernameIgnoreCase(username).map(UserMapper::toDomain);
+    }
+
+    public Optional<User> loadUserByEmail(String email) {
+        return repo.findByEmailIgnoreCase(email).map(UserMapper::toDomain);
+    }
+
     @Override
     @Transactional
     public User saveUser(User user) {
@@ -47,3 +55,4 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Exist
         return p.map(UserMapper::toDomain);
     }
 }
+

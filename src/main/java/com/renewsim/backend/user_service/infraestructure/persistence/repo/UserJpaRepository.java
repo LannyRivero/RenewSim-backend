@@ -1,5 +1,7 @@
 package com.renewsim.backend.user_service.infraestructure.persistence.repo;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
@@ -9,6 +11,11 @@ import com.renewsim.backend.user_service.infraestructure.persistence.entity.User
 public interface UserJpaRepository extends JpaRepository<UserEntity, Long> {
 
     boolean existsByUsernameIgnoreCaseOrEmailIgnoreCase(String username, String email);
+    
+
+    Optional<UserEntity> findByUsernameIgnoreCase(String username);
+
+    Optional<UserEntity> findByEmailIgnoreCase(String email);
 
     @Query("""
                 select u from UserEntity u

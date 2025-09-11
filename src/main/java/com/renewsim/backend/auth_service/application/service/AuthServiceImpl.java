@@ -35,36 +35,40 @@ public class AuthServiceImpl implements AuthUseCase {
                 authValidator.validateCredentials(request);
 
                 UserSnapshot user = userAccountGateway.findByUsername(request.getUsername())
+                                .or(() -> userAccountGateway.findByEmail(request.getUsername()))
                                 .orElseThrow(() -> new AuthenticationException(
                                                 ErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS)));
 
                 authValidator.validateUserEnable(user.enabled());
 
+                authValidator.validatePassword(request.getPassword(), user.passwordHash());
+
                 return authResponseMapper.toAuthResponseDTO(user);
         }
 
         @Override
-@Transactional
-public AuthResponseDTO register(RegisterRequestDTO request) {
+        @Transactional
+        public AuthResponseDTO register(RegisterRequestDTO request) {
 
-    // 1- Validar credenciales mínimas
-    authValidator.validateCredentials(request);
+                // 1- Validar credenciales mínimas
+                authValidator.validateCredentials(request);
 
-    // 2- Verificar si existe el usuario
-    if (userAccountGateway.existsByUsername(request.getUsername())) {
-        throw new ResourceConflictException(
-                AUTH_USERNAME_CONFLICT.code(),
-                AUTH_USERNAME_CONFLICT.defaultMessage());
-    }
+                // 2- Verificar si existe el usuario
+                if (userAccountGateway.existsByUsername(request.getUsername())) {
+                        throw new ResourceConflictException(
+                                        AUTH_USERNAME_CONFLICT.code(),
+                                        AUTH_USERNAME_CONFLICT.defaultMessage());
+                }
+                String passwordHash = authValidator.encodePassword(request.getPassword());
 
-    // 3- Crear el usuario con rol por defecto ROLE_USER
-    UserSnapshot user = userAccountGateway.createUser(
-            request.getUsername(),
-            request.getPassword(),
-            request.getEmail(), // 👈 nuevo campo
-            Set.of(RoleName.USER));
+                // 3- Crear el usuario con rol por defecto ROLE_USER
+                UserSnapshot user = userAccountGateway.createUser(
+                                request.getUsername(),
+                                passwordHash,
+                                request.getEmail(),
+                                Set.of(RoleName.USER));
 
-    return authResponseMapper.toAuthResponseDTO(user);
-}
+                return authResponseMapper.toAuthResponseDTO(user);
+        }
 
 }

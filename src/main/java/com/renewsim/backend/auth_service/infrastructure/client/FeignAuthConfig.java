@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Bean;
 
 import com.renewsim.backend.auth_service.infrastructure.security.JwtTokenProvider;
 
-import feign.Request;
 import feign.RequestInterceptor;
 
 public class FeignAuthConfig {
