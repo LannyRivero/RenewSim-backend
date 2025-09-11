@@ -7,7 +7,7 @@ public class BCryptGenerator {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
         // Cambia esta contraseña por la que quieras usar
-        String rawPassword = "daniel";
+        String rawPassword = "admin123";
 
         // Genera el hash
         String encodedPassword = encoder.encode(rawPassword);
