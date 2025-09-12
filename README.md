@@ -16,13 +16,19 @@
 
 ## 🧾 Descripción
 
-**RenewSim** es el backend de un simulador de energías renovables que permite calcular generación, eficiencia y retorno de inversión de proyectos basados en energía solar, eólica e hidroeléctrica. Desarrollado en Java 17 + Spring Boot, el proyecto cuenta con autenticación segura, arquitectura limpia, cobertura de pruebas y despliegue automático.
+**RenewSim** es el backend de un simulador de energías renovables que permite calcular generación, eficiencia y retorno de inversión de proyectos basados en energía solar, eólica e hidroeléctrica.
+Cuenta con autenticación segura basada en JWT (roles + scopes), arquitectura limpia y cobertura de pruebas garantizada en CI/CD.
 
-[![Build Status](https://github.com/Simulador-Energia-Renovable/RenewSim-backend/actions/workflows/build.yml/badge.svg)](https://github.com/Simulador-Energia-Renovable/RenewSim-backend/actions)
-[![Coverage](https://img.shields.io/badge/Coverage-94%25-brightgreen)](https://github.com/Simulador-Energia-Renovable/RenewSim-backend)
+
+![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?logo=springboot)
+![Maven](https://img.shields.io/badge/Maven-3.9-blue?logo=apachemaven)
+![Coverage](https://img.shields.io/badge/Coverage-70%25+-green?logo=Codecov)
+
+[![CI - Build & Test](https://github.com/<USER>/<REPO>/actions/workflows/ci.yml/badge.svg)](https://github.com/<USER>/<REPO>/actions/workflows/ci.yml)
+[![CD - Docker](https://github.com/<USER>/<REPO>/actions/workflows/cd.yml/badge.svg)](https://github.com/<USER>/<REPO>/actions/workflows/cd.yml)
 
 ---
-
 ## 🚀 Tecnologías utilizadas
 
 - Java 17 / Java 21
@@ -30,8 +36,9 @@
 - JWT Authentication con Keycloak
 - MySQL (producción) · H2 (test)
 - JaCoCo (coverage) · Maven
-- GitHub Actions (CI/CD)
-
+- GitHub Actions (CI/CD con coverage gate + Docker)
+  
+---
 ### 🧪 Testing QA
 
 - **JUnit 5** + **Mockito** para unit testing
@@ -46,15 +53,25 @@
 ```bash
 git clone https://github.com/Simulador-Energia-Renovable/RenewSim-backend.git
 cd RenewSim-backend
+
 ```
 
-2. Configura tu base de datos en el archivo `.env` o `application.properties`.
-  Edita src/main/resources/application.properties o utiliza un archivo .env.
+2. Configura la base de datos en application.yml o con variables de entorno (DATABASE_USERNAME, DATABASE_PASSWORD).
 
-4. Levanta la aplicación:
-   ```bash
-   ./mvnw spring-boot:run
-   ```
+3. Arrancar en modo desarrollo (MySQL local):
+   
+```bash
+
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+```
+
+4. Arrancar con Docker:
+   
+```bash
+docker build -t renewsim-backend .
+docker run -p 8080:8080 renewsim-backend
+```
 
 ---
 
@@ -152,27 +169,29 @@ jobs:
 ## 📂 Estructura del proyecto
 
 ```bash
+
 src/main/java/com/renewsim/backend
-├── config          # Configuración de seguridad y base de datos
-├── exception       # Manejo de excepciones globales
-├── role            # Gestión de roles de usuario
-├── simulation      # Lógica de simulaciones de energía renovable
-├── user            # Gestión de usuarios
-└── security        # Seguridad OAuth2 y JWT
+├── auth_service        # Autenticación y JWT
+├── user_service        # Gestión de usuarios
+├── simulation_service  # Simulación de energías renovables
+├── shared             # Excepciones y utilidades comunes
+└── config   
 ```
 
 ---
 
 ## 🌐 Endpoints principales
 
-| Método | Ruta                          | Descripción                     |
-|--------|-------------------------------|----------------------------------|
-| POST   | `/api/v1/auth/login`           | Login de usuario                |
-| POST   | `/api/v1/auth/register`        | Registro de usuario             |
-| GET    | `/api/v1/users/me`             | Datos del usuario autenticado   |
-| PUT    | `/api/v1/users/change-password`| Cambiar contraseña              |
-| GET    | `/api/v1/simulation/user`      | Historial de simulaciones       |
-| POST   | `/api/v1/simulation`           | Crear nueva simulación          |
+| Método | Ruta                         | Descripción                    |
+| ------ | ---------------------------- | ------------------------------ |
+| POST   | `/api/v1/auth/login`         | Login de usuario               |
+| POST   | `/api/v1/auth/register`      | Registro de usuario            |
+| GET    | `/api/v1/users/{id}`         | Consultar usuario por ID       |
+| GET    | `/api/v1/users/by-username`  | Consultar usuario por username |
+| GET    | `/api/v1/users/by-email`     | Consultar usuario por email    |
+| GET    | `/api/v1/simulation/history` | Historial de simulaciones      |
+| POST   | `/api/v1/simulation`         | Crear nueva simulación         |
+
 
 ---
 
