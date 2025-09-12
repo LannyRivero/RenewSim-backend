@@ -6,19 +6,23 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.slf4j.MDC;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class MDCFilter implements Filter {
 
     private static final String TRACE_ID = "traceId";
-    private static final String USER_ID = "userId";
-    private static final String IP_ADDRESS = "ip";
+    private static final String USERNAME = "username";
+    private static final String ROLES = "roles";
+    private static final String IP = "ip";
     private static final String PATH = "path";
 
     @Override
@@ -28,24 +32,24 @@ public class MDCFilter implements Filter {
         try {
             HttpServletRequest httpReq = (HttpServletRequest) request;
 
-            // Generar un traceId único por request
-            String traceId = UUID.randomUUID().toString();
-            MDC.put(TRACE_ID, traceId);
+            // traceId único por request
+            MDC.put(TRACE_ID, UUID.randomUUID().toString());
 
-            // IP del cliente
-            String ip = httpReq.getRemoteAddr();
-            MDC.put(IP_ADDRESS, ip);
-
-            // Path de la request
+            // IP y path
+            MDC.put(IP, httpReq.getRemoteAddr());
             MDC.put(PATH, httpReq.getRequestURI());
 
-            // (Opcional) Si tienes sesión o seguridad activada:
-            HttpSession session = httpReq.getSession(false);
-            if (session != null) {
-                Object userAttr = session.getAttribute("userId");
-                if (userAttr != null) {
-                    MDC.put(USER_ID, userAttr.toString());
-                }
+            // Usuario autenticado (si lo hay)
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()
+                    && !"anonymousUser".equals(authentication.getPrincipal())) {
+
+                MDC.put(USERNAME, authentication.getName());
+
+                String roles = authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.joining(","));
+                MDC.put(ROLES, roles);
             }
 
             chain.doFilter(request, response);
@@ -54,4 +58,5 @@ public class MDCFilter implements Filter {
         }
     }
 }
+
 
