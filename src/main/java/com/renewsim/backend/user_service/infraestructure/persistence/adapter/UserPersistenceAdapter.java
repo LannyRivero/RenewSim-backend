@@ -2,11 +2,13 @@ package com.renewsim.backend.user_service.infraestructure.persistence.adapter;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.user_service.application.port.out.ExistsUserPort;
 import com.renewsim.backend.user_service.application.port.out.LoadUserPort;
 import com.renewsim.backend.user_service.application.port.out.SaveUserPort;
@@ -40,9 +42,16 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Exist
     @Override
     @Transactional
     public User saveUser(User user) {
-        UserEntity entity = UserMapper.toEntity(user);
-        UserEntity saved = repo.save(entity);
-        return UserMapper.toDomain(saved);
+        try {
+            UserEntity entity = UserMapper.toEntity(user);
+            UserEntity saved = repo.save(entity);
+            return UserMapper.toDomain(saved);
+
+        } catch (DataIntegrityViolationException ex) {
+            throw new UserAlreadyExistsException(
+                    "User with username '" + user.username() + "' or email '" + user.email() + "' already exists");
+        }
+
     }
 
     @Override
@@ -55,4 +64,3 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Exist
         return p.map(UserMapper::toDomain);
     }
 }
-

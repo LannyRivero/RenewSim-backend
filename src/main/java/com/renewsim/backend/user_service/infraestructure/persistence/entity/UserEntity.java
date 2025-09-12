@@ -24,7 +24,7 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 64)
+    @Column(nullable = false, length = 50)
     private String username;
 
     @Column(nullable = false, length = 128)
@@ -44,8 +44,8 @@ public class UserEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    @Column(nullable = false, length = 512)
-    private String rolesCsv;
+    @Column(nullable = false, length = 1024)
+    private String rolesCsv = "";
 
     @PrePersist
     void prePersist() {
@@ -132,6 +132,34 @@ public class UserEntity {
 
     public void setRoles(Set<String> roles) {
         this.rolesCsv = String.join(",", roles);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof UserEntity))
+            return false;
+        UserEntity that = (UserEntity) o;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "UserEntity{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", enabled=" + enabled +
+                ", roles=" + getRoles() +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
     }
 
 }
