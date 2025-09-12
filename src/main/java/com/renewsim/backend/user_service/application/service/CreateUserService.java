@@ -1,6 +1,8 @@
 package com.renewsim.backend.user_service.application.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,7 @@ import com.renewsim.backend.user_service.infraestructure.mapper.UserMapper;
 
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CreateUserService implements CreateUserUseCase {
@@ -24,10 +27,13 @@ public class CreateUserService implements CreateUserUseCase {
 
     @Override
     public UserResponse createUser(UserCreateRequest req) {
+        log.info("Start creating user with email={} username={}", req.email(), req.username());
+
         String username = UserPolicy.normalizeUsername(req.username());
         String email = UserPolicy.normalizeEmail(req.email());
 
         if (existsUserPort.existsByUsernameOrEmail(username, email)) {
+            log.warn("User creation failed: username={} or email={} already exists", username, email);
             throw new DataIntegrityViolationException("User with same username or email already exists");
         }
 
@@ -40,8 +46,14 @@ public class CreateUserService implements CreateUserUseCase {
                 null,
                 null,
                 req.passwordHash());
+        try {
+            User saved = saveUserPort.saveUser(user);
+            log.info("User created successfully id={} username={}", saved.id(), saved.username());
+            return UserMapper.toResponse(saved);
+        } catch (Exception e) {
+            log.error("Unexpected error while creating user email={} username={}", email, username, e);
+            throw e;
+        }
 
-        User saved = saveUserPort.saveUser(user);
-        return UserMapper.toResponse(saved);
     }
 }
