@@ -17,6 +17,13 @@ public class ListUsersService implements ListUsersUseCase {
     private final SearchUserPort searchUserPort; 
     @Override
     public PageResponse<UserResponse> listUsers(int page, int size, UserFilterRequest filters) {
+           if (page < 0) {
+        throw new IllegalArgumentException("Page index must not be negative");
+    }
+    if (size <= 0) {
+        throw new IllegalArgumentException("Page size must be greater than zero");
+    }
+        
         var p = searchUserPort.search(filters.username(), filters.email(), filters.enabled(), page, size);
 
         var content = p.getContent().stream()
