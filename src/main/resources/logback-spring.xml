@@ -5,8 +5,8 @@
     <property name="LOG_FILE" value="${LOG_DIR}/application.log"/>
 
     <!-- Pattern (ISO-8601 + MDC traceId con fallback + stacktrace) -->
-<property name="LOG_PATTERN"
-          value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level %logger{36} traceId=%X{traceId:-N/A} user=%X{username:-N/A} roles=%X{roles:-N/A} ip=%X{ip:-N/A} path=%X{path:-N/A} - %msg%n%ex{full}"/>
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level %logger{36} traceId=%X{traceId:-N/A} username=%X{username:-N/A} roles=%X{roles:-N/A} ip=%X{ip:-N/A} path=%X{path:-N/A} - %msg%n%ex{full}"/>
 
     <!-- Console -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -47,6 +47,7 @@
     <logger name="org.springframework" level="INFO"/>
     <logger name="org.springframework.security" level="INFO"/>
     <logger name="org.hibernate.SQL" level="WARN"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
     <logger name="com.renewsim" level="DEBUG"/>
 
     <!-- DEV / LOCAL -->
@@ -54,10 +55,13 @@
         <!-- Patrón con colores solo para consola en dev/local -->
         <appender name="CONSOLE_DEV" class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
-                <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36})
-                    traceId=%X{traceId:-N/A} - %msg%n%ex{full}</pattern>
+                <pattern>
+                    %d{HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36})
+                    traceId=%X{traceId:-N/A} username=%X{username:-N/A} roles=%X{roles:-N/A} - %msg%n%ex{full}
+                </pattern>
             </encoder>
         </appender>
+
         <appender name="ASYNC_CONSOLE_DEV" class="ch.qos.logback.classic.AsyncAppender">
             <queueSize>8192</queueSize>
             <discardingThreshold>0</discardingThreshold>
@@ -90,7 +94,9 @@
             <totalSizeCap>2GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level traceId=%X{traceId:-N/A} - %msg%n%ex{full}</pattern>
+            <pattern>
+                %d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level traceId=%X{traceId:-N/A} username=%X{username:-N/A} ip=%X{ip:-N/A} - %msg%n%ex{full}
+            </pattern>
         </encoder>
     </appender>
 
@@ -99,6 +105,7 @@
     </logger>
 
 </configuration>
+
 
 
 
