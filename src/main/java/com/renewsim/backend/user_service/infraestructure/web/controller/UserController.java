@@ -47,6 +47,7 @@ public class UserController {
     }
 
     @GetMapping("/by-username")
+    @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN') )")
     public ResponseEntity<UserResponse> getByUsername(@RequestParam String username) {
         var filters = new UserFilterRequest(username, null, null);
         var results = listUsersUseCase.listUsers(0, 1, filters);
@@ -57,6 +58,7 @@ public class UserController {
     }
 
     @GetMapping("/by-email")
+    @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN')")
     public ResponseEntity<UserResponse> getByEmail(@RequestParam String email) {
         var filters = new UserFilterRequest(null, email, null);
         var results = listUsersUseCase.listUsers(0, 1, filters);
@@ -67,22 +69,20 @@ public class UserController {
     }
 
     @GetMapping("/internal/credentials")
-@PreAuthorize("hasRole('SERVICE_AUTH')")
-public ResponseEntity<UserCredentialsDTO> getCredentials(
-        @RequestParam(required = false) String username,
-        @RequestParam(required = false) String email) {
+    @PreAuthorize("hasRole('SERVICE_AUTH')")
+    public ResponseEntity<UserCredentialsDTO> getCredentials(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String email) {
 
-    var user = getUserUseCase.getDomainUserByUsernameOrEmail(username, email);
+        var user = getUserUseCase.getDomainUserByUsernameOrEmail(username, email);
 
-    return ResponseEntity.ok(new UserCredentialsDTO(
-            user.username(),
-            user.email(),
-            user.passwordHash(), 
-            user.roles(),
-            user.enabled()
-    ));
-}
-
+        return ResponseEntity.ok(new UserCredentialsDTO(
+                user.username(),
+                user.email(),
+                user.passwordHash(),
+                user.roles(),
+                user.enabled()));
+    }
 
     @GetMapping
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN')")
@@ -97,6 +97,7 @@ public ResponseEntity<UserCredentialsDTO> getCredentials(
     }
 
     @GetMapping("/exists")
+    @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN')")
     public ResponseEntity<Boolean> exists(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String email) {

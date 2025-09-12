@@ -18,8 +18,7 @@ import java.util.UUID;
 public class LoggingMDCFilter implements Filter {
 
     private static final String TRACE_ID = "traceId";
-    private static final String USER = "user";
-    private static final String ROLES = "roles";
+
     private static final String IP = "ip";
     private static final String PATH = "path";
 
@@ -40,7 +39,7 @@ public class LoggingMDCFilter implements Filter {
             // usuario autenticado (si existe)
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.isAuthenticated()) {
-                MDC.put("username", auth.getName()); // 👈 aquí solo el nombre
+                MDC.put("username", auth.getName()); 
                 MDC.put("roles", auth.getAuthorities().toString());
             } else {
                 MDC.put("username", "N/A");
