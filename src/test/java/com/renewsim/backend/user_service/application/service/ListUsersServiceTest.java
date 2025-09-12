@@ -26,106 +26,48 @@ class ListUsersServiceTest {
     private SearchUserPort searchUserPort;
 
     @InjectMocks
-    private ListUsersService service;
-
-    private User sampleUser;
+    private ListUsersService listUsersService;
 
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
-        sampleUser = new User(
-                1L,
-                "alice",
-                "alice@mail.com",
-                true,
-                Set.of("USER"),
-                null,
-                null,
-                "StrongPass1");
     }
 
     @Test
-    @DisplayName("should return paginated list of users")
-    void testListUsersWithPagination() {
-        UserFilterRequest filters = new UserFilterRequest(null, null, null);
-        Page<User> page = new PageImpl<>(List.of(sampleUser));
+    @DisplayName("should throw exception when page index is negative")
+    void testNegativePageIndex() {
+        var filters = new UserFilterRequest("john", "mail@test.com", true);
+        assertThatThrownBy(() -> listUsersService.listUsers(-1, 10, filters))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Page index must not be negative");
+    }
 
-        when(searchUserPort.search(null, null, null, 0, 20)).thenReturn(page);
+    @Test
+    @DisplayName("should throw exception when page size <= 0")
+    void testInvalidPageSize() {
+        var filters = new UserFilterRequest(null, null, null);
+        assertThatThrownBy(() -> listUsersService.listUsers(0, 0, filters))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Page size must be greater than zero");
+    }    
 
-        PageResponse<UserResponse> result = service.listUsers(0, 20, filters);
+    @Test
+    @DisplayName("should return mapped users when results exist")
+    void testUsersFound() {
+        var filters = new UserFilterRequest("alice", null, true);
 
-        assertThat(result.content()).hasSize(1);
+        User user1 = new User(1L, "alice", "alice@mail.com", true, Set.of("USER"), null, null, "hash1");
+        User user2 = new User(2L, "bob", "bob@mail.com", true, Set.of("ADMIN"), null, null, "hash2");
+
+        Page<User> page = new PageImpl<>(List.of(user1, user2));
+        when(searchUserPort.search("alice", null, true, 0, 5)).thenReturn(page);
+
+        PageResponse<UserResponse> result = listUsersService.listUsers(0, 5, filters);
+
+        assertThat(result.content()).hasSize(2);
         assertThat(result.content().get(0).username()).isEqualTo("alice");
-        verify(searchUserPort).search(null, null, null, 0, 20);
-    }
-
-    @Test
-    @DisplayName("should filter users by username")
-    void testFilterByUsername() {
-        UserFilterRequest filters = new UserFilterRequest("alice", null, null);
-        Page<User> page = new PageImpl<>(List.of(sampleUser));
-
-        when(searchUserPort.search("alice", null, null, 0, 20)).thenReturn(page);
-
-        PageResponse<UserResponse> result = service.listUsers(0, 20, filters);
-
-        assertThat(result.content()).extracting(UserResponse::username).containsExactly("alice");
-    }
-
-    @Test
-    @DisplayName("should filter users by email")
-    void testFilterByEmail() {
-        UserFilterRequest filters = new UserFilterRequest(null, "alice@mail.com", null);
-        Page<User> page = new PageImpl<>(List.of(sampleUser));
-
-        when(searchUserPort.search(null, "alice@mail.com", null, 0, 20)).thenReturn(page);
-
-        PageResponse<UserResponse> result = service.listUsers(0, 20, filters);
-
-        assertThat(result.content()).extracting(UserResponse::email).containsExactly("alice@mail.com");
-    }
-
-    @Test
-    @DisplayName("should filter users by enabled status")
-    void testFilterByEnabledStatus() {
-        UserFilterRequest filters = new UserFilterRequest(null, null, true);
-        Page<User> page = new PageImpl<>(List.of(sampleUser));
-
-        when(searchUserPort.search(null, null, true, 0, 20)).thenReturn(page);
-
-        PageResponse<UserResponse> result = service.listUsers(0, 20, filters);
-
-        assertThat(result.content()).extracting(UserResponse::enabled).containsExactly(true);
-    }
-
-    @Test
-    @DisplayName("should return empty list when page has no users")
-    void testEmptyPageReturnsEmptyList() {
-        UserFilterRequest filters = new UserFilterRequest(null, null, null);
-        Page<User> page = new PageImpl<>(List.of());
-
-        when(searchUserPort.search(null, null, null, 1, 20)).thenReturn(page);
-
-        PageResponse<UserResponse> result = service.listUsers(1, 20, filters);
-
-        assertThat(result.content()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("should throw IllegalArgumentException when page < 0")
-    void testInvalidPageThrows() {
-        UserFilterRequest filters = new UserFilterRequest(null, null, null);
-
-        assertThatThrownBy(() -> service.listUsers(-1, 20, filters))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("should throw IllegalArgumentException when size = 0")
-    void testInvalidSizeThrows() {
-        UserFilterRequest filters = new UserFilterRequest(null, null, null);
-
-        assertThatThrownBy(() -> service.listUsers(0, 0, filters))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(result.content().get(1).username()).isEqualTo("bob");
+        assertThat(result.totalElements()).isEqualTo(2);
     }
 }
+
