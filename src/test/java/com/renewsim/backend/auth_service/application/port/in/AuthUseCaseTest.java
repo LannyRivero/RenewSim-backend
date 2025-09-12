@@ -3,6 +3,7 @@ package com.renewsim.backend.auth_service.application.port.in;
 
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
+import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -32,10 +33,9 @@ class AuthUseCaseTest {
         assertEquals(expectedResponse, result);
         verify(authUseCase).login(request);
     }
-
     @Test
     void testRegisterReturnsAuthResponse() {
-        AuthRequestDTO request = new AuthRequestDTO();
+        RegisterRequestDTO request = new RegisterRequestDTO();
         AuthResponseDTO expectedResponse = mock(AuthResponseDTO.class);
         when(authUseCase.register(request)).thenReturn(expectedResponse);
 
@@ -45,6 +45,7 @@ class AuthUseCaseTest {
         assertEquals(expectedResponse, result);
         verify(authUseCase).register(request);
     }
+    
 
     @Test
     void testLoginWithNullRequest() {

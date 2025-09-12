@@ -10,7 +10,8 @@ public record User(
         boolean enabled,
         Set<String> roles,
         Instant createdAt,
-        Instant updatedAt) {
+        Instant updatedAt,
+        String passwordHash) {
     public User {
         if (roles != null) {
             roles = Set.copyOf(roles);

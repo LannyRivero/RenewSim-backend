@@ -9,9 +9,11 @@ public interface UserAccountGateway {
 
     Optional<UserSnapshot> findByUsername(String username);
 
+    Optional<UserSnapshot> findByEmail(String email);
+
     boolean existsByUsername(String username);
 
-    UserSnapshot createUser(String username, String rawPassword, Set<RoleName> roles);
+    UserSnapshot createUser(String username, String rawPassword, String email, Set<RoleName> roles);
 
     
 }

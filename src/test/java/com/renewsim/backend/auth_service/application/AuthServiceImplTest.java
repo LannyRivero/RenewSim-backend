@@ -6,6 +6,7 @@ import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway
 import com.renewsim.backend.auth_service.domain.AuthValidator;
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
+import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.role.RoleName;
 import com.renewsim.backend.shared.exception.AuthenticationException;
@@ -29,9 +30,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest extends UnitTestBase {
 
-    @Mock private UserAccountGateway userAccountGateway;
-    @Mock private AuthValidator authValidator;
-    @Mock private AuthResponseMapper authResponseMapper;
+    @Mock
+    private UserAccountGateway userAccountGateway;
+    @Mock
+    private AuthValidator authValidator;
+    @Mock
+    private AuthResponseMapper authResponseMapper;
 
     private AuthServiceImpl authService;
     private AuthRequestDTO loginReq;
@@ -86,13 +90,12 @@ class AuthServiceImplTest extends UnitTestBase {
     @DisplayName("register → throws when username already exists")
     void register_username_exists() {
         when(userAccountGateway.existsByUsername("john")).thenReturn(true);
-
-        assertThatThrownBy(() -> authService.register(new AuthRequestDTO("john", "secret")))
+        assertThatThrownBy(() -> authService.register(new RegisterRequestDTO("john", "secret", "john@email.com")))
                 .isInstanceOf(ResourceConflictException.class)
                 .hasMessageContaining("Username already exists");
-
-        verify(authValidator).validateCredentials(any(AuthRequestDTO.class));
+        verify(authValidator).validateCredentials(any(RegisterRequestDTO.class));
         verify(userAccountGateway).existsByUsername("john");
+        verifyNoInteractions(authResponseMapper);
         verifyNoInteractions(authResponseMapper);
     }
 
@@ -100,7 +103,7 @@ class AuthServiceImplTest extends UnitTestBase {
     @DisplayName("register → creates user and maps response via mapper")
     void register_ok() {
         when(userAccountGateway.existsByUsername("john")).thenReturn(false);
-        when(userAccountGateway.createUser("john", "secret", Set.of(RoleName.USER)))
+        when(userAccountGateway.createUser("john", "secret", "john@email.com", Set.of(RoleName.USER)))
                 .thenReturn(snapshot);
         when(authResponseMapper.toAuthResponseDTO(any(UserSnapshot.class)))
                 .thenReturn(AuthResponseDTO.builder()
@@ -109,19 +112,16 @@ class AuthServiceImplTest extends UnitTestBase {
                         .roles(Set.of("USER"))
                         .scopes(Set.of("simulation:read"))
                         .build());
-
-        var res = authService.register(new AuthRequestDTO("john", "secret"));
+        var res = authService.register(new RegisterRequestDTO("john", "secret", "john@email.com"));
 
         assertThat(res).isNotNull();
         assertThat(res.getUsername()).isEqualTo("john");
         assertThat(res.getToken()).isEqualTo("jwt-token");
         assertThat(res.getRoles()).containsExactly("USER");
         assertThat(res.getScopes()).containsExactly("simulation:read");
-
-        verify(authValidator).validateCredentials(any(AuthRequestDTO.class));
+        verify(authValidator).validateCredentials(any(RegisterRequestDTO.class));
         verify(userAccountGateway).existsByUsername("john");
-        verify(userAccountGateway).createUser("john", "secret", Set.of(RoleName.USER));
+        verify(userAccountGateway).createUser("john", "secret", "john@email.com", Set.of(RoleName.USER));
         verify(authResponseMapper).toAuthResponseDTO(snapshot);
     }
 }
-

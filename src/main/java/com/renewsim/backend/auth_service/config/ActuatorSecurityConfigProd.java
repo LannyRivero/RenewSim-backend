@@ -19,8 +19,6 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @RequiredArgsConstructor
 public class ActuatorSecurityConfigProd {
 
-        private final SecurityHeadersFilter securityHeadersFilter;
-
         @Bean
         @Order(0)
         public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http,
