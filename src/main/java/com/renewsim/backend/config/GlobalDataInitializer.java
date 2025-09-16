@@ -84,12 +84,33 @@ public class GlobalDataInitializer implements CommandLineRunner {
 
     private void initTechnologies() {
         List<TechnologyComparison> defaultTechnologies = List.of(
-                new TechnologyComparison("Solar PV", 0.18, 800.0, 50.0,
-                        "Low land impact, recyclable panels", 100.0, 1200.0, "SOLAR"),
-                new TechnologyComparison("Wind Turbine", 0.35, 1200.0, 80.0,
-                        "Noise, visual impact", 250.0, 3000.0, "WIND"),
-                new TechnologyComparison("Hydroelectric", 0.45, 1500.0, 100.0,
-                        "Affects river ecosystems", 400.0, 5000.0, "HYDRO")
+                // 🌞 Solar
+                new TechnologyComparison("Solar PV Monocrystalline", 0.20, 950.0, 40.0,
+                        "High efficiency, recyclable panels", 120.0, 1400.0, "SOLAR"),
+                new TechnologyComparison("Solar PV Polycrystalline", 0.17, 750.0, 35.0,
+                        "Lower efficiency but cheaper", 100.0, 1200.0, "SOLAR"),
+                new TechnologyComparison("Solar Thermal Collector", 0.50, 1100.0, 60.0,
+                        "Requires water system, good for heating", 150.0, 1600.0, "SOLAR"),
+
+                // 🌬️ Wind
+                new TechnologyComparison("Onshore Wind Turbine (2 MW)", 0.35, 1200.0, 80.0,
+                        "Noise and visual impact", 250.0, 3000.0, "WIND"),
+                new TechnologyComparison("Offshore Wind Turbine (5 MW)", 0.45, 2200.0, 150.0,
+                        "Marine impact, expensive but stable", 450.0, 6000.0, "WIND"),
+
+                // 💧 Hydro
+                new TechnologyComparison("Small Hydro Plant (10 MW)", 0.40, 1000.0, 70.0,
+                        "Local river impact", 200.0, 2500.0, "HYDRO"),
+                new TechnologyComparison("Large Hydro Plant (100 MW)", 0.50, 3000.0, 200.0,
+                        "High environmental impact", 800.0, 9000.0, "HYDRO"),
+
+                // 🌱 Biomass
+                new TechnologyComparison("Biomass Power Plant", 0.30, 1300.0, 90.0,
+                        "CO₂ neutral if sustainable", 180.0, 2700.0, "BIOMASS"),
+
+                // 🌍 Geothermal
+                new TechnologyComparison("Geothermal Plant (Deep)", 0.45, 2500.0, 120.0,
+                        "Stable base load, high drilling cost", 500.0, 7000.0, "GEOTHERMAL")
         );
 
         defaultTechnologies.forEach(tech -> {
