@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.in.CreateUserUseCase;
 import com.renewsim.backend.user_service.application.port.in.ExistsUserUseCase;
 import com.renewsim.backend.user_service.application.port.in.GetUserUseCase;
@@ -55,12 +56,12 @@ public class UserController {
 
     @Operation(summary = "Buscar usuario por username", description = "Requiere rol **ADMIN** o scope **user:read**", security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/by-username")
-    @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN') )")
+    @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN')")
     public ResponseEntity<UserResponse> getByUsername(@RequestParam String username) {
         var filters = new UserFilterRequest(username, null, null);
         var results = listUsersUseCase.listUsers(0, 1, filters);
         if (results.content().isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new UserNotFoundException("User with username '" + username + "' not found");
         }
         return ResponseEntity.ok(results.content().get(0));
     }
@@ -72,7 +73,7 @@ public class UserController {
         var filters = new UserFilterRequest(null, email, null);
         var results = listUsersUseCase.listUsers(0, 1, filters);
         if (results.content().isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new UserNotFoundException("User with email '" + email + "' not found");
         }
         return ResponseEntity.ok(results.content().get(0));
     }

@@ -3,10 +3,9 @@ package com.renewsim.backend.user_service.application.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
+import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.in.GetUserUseCase;
 import com.renewsim.backend.user_service.application.port.out.LoadUserPort;
 import com.renewsim.backend.user_service.domain.model.User;
@@ -26,7 +25,7 @@ public class GetUserService implements GetUserUseCase {
 
         return loadUserPort.loadUserById(id)
                 .map(UserMapper::toResponse)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
     }
 
     @Override
@@ -40,13 +39,13 @@ public class GetUserService implements GetUserUseCase {
             log.info("Fetching user by username={}", username);
             return loadUserPort.loadUserByUsername(username)
                     .map(UserMapper::toResponse)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                    .orElseThrow(() -> new UserNotFoundException("User with username '" + username + "' not found"));
         }
 
         log.info("Fetching user by email={}", email);
         return loadUserPort.loadUserByEmail(email)
                 .map(UserMapper::toResponse)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User with email '" + email + "' not found"));
     }
 
     @Override
@@ -55,6 +54,6 @@ public class GetUserService implements GetUserUseCase {
         return (username != null && !username.isBlank()
                 ? loadUserPort.loadUserByUsername(username)
                 : loadUserPort.loadUserByEmail(email))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                  .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 }
