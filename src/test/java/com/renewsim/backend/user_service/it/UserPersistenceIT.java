@@ -56,7 +56,7 @@ class UserPersistenceIT {
 
     @BeforeEach
     void cleanDb() {
-        repo.deleteAll(); // limpia entre tests
+        repo.deleteAll();
     }
 
     // ---------------------------
@@ -67,8 +67,8 @@ class UserPersistenceIT {
     void testSaveAndRetrieveUser() {
         User user = new User(null, "alice", "alice@mail.com", true, Set.of("USER"), null, null, "StrongPass1");
 
-        User saved = persistenceAdapter.saveUser(user);
-        Optional<User> found = persistenceAdapter.loadUserById(saved.id());
+        User saved = persistenceAdapter.save(user);
+        Optional<User> found = persistenceAdapter.findById(saved.id());
 
         assertThat(found).isPresent();
         assertThat(found.get().username()).isEqualTo("alice");
@@ -81,9 +81,9 @@ class UserPersistenceIT {
     @Test
     @DisplayName("should find user by username (ignore case)")
     void testFindByUsernameIgnoreCase() {
-        persistenceAdapter.saveUser(new User(null, "bob", "bob@mail.com", true, Set.of("USER"), null, null, "StrongPass1"));
+        persistenceAdapter.save(new User(null, "bob", "bob@mail.com", true, Set.of("USER"), null, null, "StrongPass1"));
 
-        Optional<User> found = persistenceAdapter.loadUserByUsername("BOB");
+        Optional<User> found = persistenceAdapter.findByUsername("BOB");
 
         assertThat(found).isPresent();
         assertThat(found.get().email()).isEqualTo("bob@mail.com");
@@ -95,9 +95,10 @@ class UserPersistenceIT {
     @Test
     @DisplayName("should find user by email (ignore case)")
     void testFindByEmailIgnoreCase() {
-        persistenceAdapter.saveUser(new User(null, "charlie", "charlie@mail.com", true, Set.of("USER"), null, null, "StrongPass1"));
+        persistenceAdapter
+                .save(new User(null, "charlie", "charlie@mail.com", true, Set.of("USER"), null, null, "StrongPass1"));
 
-        Optional<User> found = persistenceAdapter.loadUserByEmail("CHARLIE@mail.com");
+        Optional<User> found = persistenceAdapter.findByEmail("CHARLIE@mail.com");
 
         assertThat(found).isPresent();
         assertThat(found.get().username()).isEqualTo("charlie");
@@ -109,11 +110,12 @@ class UserPersistenceIT {
     @Test
     @DisplayName("should throw exception when saving duplicate email")
     void testDuplicateUserThrowsException() {
-        persistenceAdapter.saveUser(new User(null, "diana", "diana@mail.com", true, Set.of("USER"), null, null, "StrongPass1"));
+        persistenceAdapter
+                .save(new User(null, "diana", "diana@mail.com", true, Set.of("USER"), null, null, "StrongPass1"));
 
         User duplicate = new User(null, "diana2", "diana@mail.com", true, Set.of("USER"), null, null, "StrongPass2");
 
-        assertThatThrownBy(() -> persistenceAdapter.saveUser(duplicate))
+        assertThatThrownBy(() -> persistenceAdapter.save(duplicate))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("already exists");
     }
@@ -127,6 +129,3 @@ class UserPersistenceIT {
         }
     }
 }
-
-
-
