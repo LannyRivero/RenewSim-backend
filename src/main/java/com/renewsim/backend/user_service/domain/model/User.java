@@ -36,7 +36,7 @@ public record User(
                 username,
                 email,
                 true,
-                roles != null ? Set.copyOf(roles) : Set.of("USER"),
+                roles != null ? Set.copyOf(roles) : Set.of(),
                 Instant.now(),
                 Instant.now(),
                 passwordHash);
