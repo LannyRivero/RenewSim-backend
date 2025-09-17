@@ -20,6 +20,7 @@ import com.renewsim.backend.user_service.infraestructure.mapper.UserMapper;
 public class GetUserService implements GetUserUseCase {
 
     private final UserRepositoryPort userRepositoryPort;
+    private final UserMapper mapper;
 
     @Override
     public UserResponse getUserById(Long id) {
@@ -28,7 +29,7 @@ public class GetUserService implements GetUserUseCase {
         try {
             log.info("Fetching user by id={}", id);
             return userRepositoryPort.findById(id)
-                    .map(UserMapper::toResponse)
+                    .map(mapper::toResponse)
                     .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
         } finally {
             org.slf4j.MDC.clear();
@@ -49,13 +50,13 @@ public class GetUserService implements GetUserUseCase {
             if (username != null && !username.isBlank()) {
                 log.info("Fetching user by username={}", username);
                 return userRepositoryPort.findByUsername(username)
-                        .map(UserMapper::toResponse)
+                        .map(mapper::toResponse)
                         .orElseThrow(() -> new UserNotFoundException("User with username '" + username + "' not found"));
             }
 
             log.info("Fetching user by email={}", email);
             return userRepositoryPort.findByEmail(email)
-                    .map(UserMapper::toResponse)
+                    .map(mapper::toResponse)
                     .orElseThrow(() -> new UserNotFoundException("User with email '" + email + "' not found"));
         } finally {
             org.slf4j.MDC.clear();

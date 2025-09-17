@@ -24,6 +24,7 @@ import java.util.Set;
 public class CreateUserService implements CreateUserUseCase {
 
     private final UserRepositoryPort userRepositoryPort;
+    private final UserMapper mapper;
 
     private static final String DEFAULT_ROLE = "USER";
 
@@ -59,7 +60,7 @@ public class CreateUserService implements CreateUserUseCase {
 
             User saved = userRepositoryPort.save(user);
             log.info("User created successfully id={} username={}", saved.id(), saved.username());
-            return UserMapper.toResponse(saved);
+            return mapper.toResponse(saved);
 
         } catch (UserAlreadyExistsException e) {
             throw e; 

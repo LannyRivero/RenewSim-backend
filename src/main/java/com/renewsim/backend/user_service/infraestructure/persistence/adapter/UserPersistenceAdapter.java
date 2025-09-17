@@ -25,20 +25,21 @@ import java.util.Optional;
 public class UserPersistenceAdapter implements UserRepositoryPort {
 
     private final UserJpaRepository repo;
+       private final UserMapper mapper;
 
     @Override
     public Optional<User> findById(Long id) {
-        return repo.findById(id).map(UserMapper::toDomain);
+        return repo.findById(id).map(mapper::toDomain);
     }
 
     @Override
     public Optional<User> findByUsername(String username) {
-        return repo.findByUsernameIgnoreCase(username).map(UserMapper::toDomain);
+        return repo.findByUsernameIgnoreCase(username).map(mapper::toDomain);
     }
 
     @Override
     public Optional<User> findByEmail(String email) {
-        return repo.findByEmailIgnoreCase(email).map(UserMapper::toDomain);
+        return repo.findByEmailIgnoreCase(email).map(mapper::toDomain);
     }
 
     @Override
@@ -58,22 +59,22 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
 
     @Override
     public List<User> findAll() {
-        return repo.findAll().stream().map(UserMapper::toDomain).toList();
+        return repo.findAll().stream().map(mapper::toDomain).toList();
     }
 
     @Override
     public Page<User> search(UserFilterRequest filter, Pageable pageable) {
         var p = repo.search(filter.username(), filter.email(), filter.enabled(), pageable);
-        return p.map(UserMapper::toDomain);
+        return p.map(mapper::toDomain);
     }
 
     @Override
     @Transactional
     public User save(User user) {
         try {
-            UserEntity entity = UserMapper.toEntity(user);
+            UserEntity entity = mapper.toEntity(user);
             UserEntity saved = repo.save(entity);
-            return UserMapper.toDomain(saved);
+            return mapper.toDomain(saved);
         } catch (DataIntegrityViolationException ex) {
             String message = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : "";
             log.warn("Integrity violation while saving user {}: {}", user.username(), message);

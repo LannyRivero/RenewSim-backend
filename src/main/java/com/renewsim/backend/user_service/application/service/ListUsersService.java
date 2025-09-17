@@ -25,6 +25,7 @@ import java.util.List;
 public class ListUsersService implements ListUsersUseCase {
 
     private final UserRepositoryPort userRepositoryPort;
+    private final UserMapper mapper;
 
     @Override
     public PageResponse<UserResponse> listUsers(int page, int size, UserFilterRequest filters) {
@@ -51,7 +52,7 @@ public class ListUsersService implements ListUsersUseCase {
             log.info("Retrieved {} users out of total {}", 
                     resultPage.getNumberOfElements(), resultPage.getTotalElements());
 
-            return PageMapper.toPageResponse(resultPage, UserMapper::toResponse);
+            return PageMapper.toPageResponse(resultPage, mapper::toResponse);
 
         } finally {
             MDC.clear();
@@ -64,7 +65,7 @@ public class ListUsersService implements ListUsersUseCase {
         try {
             log.info("Fetching all users");
             return userRepositoryPort.findAll().stream()
-                    .map(UserMapper::toResponse)
+                    .map(mapper::toResponse)
                     .toList();
         } finally {
             MDC.clear();
