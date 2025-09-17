@@ -13,6 +13,7 @@ import java.sql.DatabaseMetaData;
 import org.springframework.boot.CommandLineRunner;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
@@ -20,6 +21,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @SpringBootApplication
 @EnableFeignClients(basePackages = "com.renewsim.backend.auth_service.infrastructure.client")
 @EnableMethodSecurity
+@EnableAspectJAutoProxy
 @EnableCaching 
 @ConfigurationPropertiesScan
 public class RenewSimBackendApplication {
