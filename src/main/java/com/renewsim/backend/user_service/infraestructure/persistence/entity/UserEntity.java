@@ -24,10 +24,10 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 50)
+    @Column(unique = true, nullable = false, length = 32)
     private String username;
 
-    @Column(nullable = false, length = 128)
+    @Column(unique =  true, nullable = false, length = 255)
     private String email;
 
     @Column(name = "password", nullable = false, length = 255)

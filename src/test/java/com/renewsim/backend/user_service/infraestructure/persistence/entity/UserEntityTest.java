@@ -80,4 +80,37 @@ class UserEntityTest {
         assertThat(str).contains("john@example.com");
         assertThat(str).contains("USER");
     }
+
+    @Test
+    @DisplayName("prePersist should initialize createdAt, updatedAt and enabled=true")
+    void testPrePersist() {
+        UserEntity entity = new UserEntity();
+        entity.prePersist();
+        assertThat(entity.isEnabled()).isTrue();
+        assertThat(entity.getCreatedAt()).isNotNull();
+        assertThat(entity.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("preUpdate should update updatedAt but not createdAt")
+    void testPreUpdate() throws InterruptedException {
+        UserEntity entity = new UserEntity();
+        entity.prePersist();
+        Instant createdAt = entity.getCreatedAt();
+
+        Thread.sleep(5);
+        entity.preUpdate();
+
+        assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
+        assertThat(entity.getUpdatedAt()).isAfter(createdAt);
+    }
+
+    @Test
+    @DisplayName("equals should return false when comparing with different class")
+    void testEqualsDifferentClass() {
+        UserEntity e1 = new UserEntity();
+        e1.setId(1L);
+        assertThat(e1.equals("string")).isFalse();
+    }
+
 }
