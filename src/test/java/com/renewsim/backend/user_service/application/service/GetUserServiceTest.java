@@ -1,6 +1,7 @@
 package com.renewsim.backend.user_service.application.service;
 
-import com.renewsim.backend.user_service.application.port.out.LoadUserPort;
+import com.renewsim.backend.shared.exception.UserNotFoundException;
+import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +21,8 @@ import static org.mockito.Mockito.*;
 class GetUserServiceTest {
 
     @Mock
-    private LoadUserPort loadUserPort;
+
+    private UserRepositoryPort userRepositoryPort;
 
     @InjectMocks
     private GetUserService service;
@@ -47,7 +49,7 @@ class GetUserServiceTest {
     @Test
     @DisplayName("should return UserResponse when user is found by id")
     void testUserFoundById() {
-        when(loadUserPort.loadUserById(1L)).thenReturn(Optional.of(sampleUser));
+        when(userRepositoryPort.findById(1L)).thenReturn(Optional.of(sampleUser));
 
         UserResponse result = service.getUserById(1L);
 
@@ -57,33 +59,33 @@ class GetUserServiceTest {
     }
 
     @Test
-    @DisplayName("should throw ResponseStatusException 404 when user not found by id")
-    void testUserNotFoundThrowsResponseStatusException() {
-        when(loadUserPort.loadUserById(99L)).thenReturn(Optional.empty());
+    @DisplayName("should throw UserNotFoundException 404 when user not found by id")
+    void testUserNotFoundThrowsUserNotFoundException() {
+        when(userRepositoryPort.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getUserById(99L))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404 NOT_FOUND");
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining("User with id 99 not found");
     }
 
     @Test
-    @DisplayName("should throw ResponseStatusException 404 when id is null")
+    @DisplayName("should throw UserNotFoundException 404 when id is null")
     void testGetUserByIdWithNullId() {
-        when(loadUserPort.loadUserById(null)).thenReturn(Optional.empty());
+        when(userRepositoryPort.findById(null)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getUserById(null))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404 NOT_FOUND");
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining("User with id null not found");
     }
 
     @Test
     @DisplayName("should return 404 when id is negative")
     void testGetUserByIdWithNegativeId() {
-        when(loadUserPort.loadUserById(-1L)).thenReturn(Optional.empty());
+        when(userRepositoryPort.findById(-1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getUserById(-1L))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404 NOT_FOUND");
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining("User with id -1 not found");
     }
 
     // ---------------------------
@@ -100,7 +102,7 @@ class GetUserServiceTest {
     @Test
     @DisplayName("should return user when found by username")
     void testGetUserByUsername() {
-        when(loadUserPort.loadUserByUsername("alice")).thenReturn(Optional.of(sampleUser));
+        when(userRepositoryPort.findByUsername("alice")).thenReturn(Optional.of(sampleUser));
 
         UserResponse result = service.getUserByUsernameOrEmail("alice", null);
 
@@ -110,7 +112,7 @@ class GetUserServiceTest {
     @Test
     @DisplayName("should return user when found by email")
     void testGetUserByEmail() {
-        when(loadUserPort.loadUserByEmail("alice@mail.com")).thenReturn(Optional.of(sampleUser));
+        when(userRepositoryPort.findByEmail("alice@mail.com")).thenReturn(Optional.of(sampleUser));
 
         UserResponse result = service.getUserByUsernameOrEmail(null, "alice@mail.com");
 
@@ -120,21 +122,21 @@ class GetUserServiceTest {
     @Test
     @DisplayName("should throw 404 when user not found by username")
     void testUserNotFoundByUsername() {
-        when(loadUserPort.loadUserByUsername("ghost")).thenReturn(Optional.empty());
+        when(userRepositoryPort.findByUsername("ghost")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getUserByUsernameOrEmail("ghost", null))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404 NOT_FOUND");
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining("User with username 'ghost' not found");
     }
 
     @Test
     @DisplayName("should throw 404 when user not found by email")
     void testUserNotFoundByEmail() {
-        when(loadUserPort.loadUserByEmail("ghost@mail.com")).thenReturn(Optional.empty());
+        when(userRepositoryPort.findByEmail("ghost@mail.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getUserByUsernameOrEmail(null, "ghost@mail.com"))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404 NOT_FOUND");
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining("User with email 'ghost@mail.com' not found");
     }
 
     // ---------------------------
@@ -143,7 +145,7 @@ class GetUserServiceTest {
     @Test
     @DisplayName("should return domain User when found by username")
     void testGetDomainUserByUsername() {
-        when(loadUserPort.loadUserByUsername("alice")).thenReturn(Optional.of(sampleUser));
+        when(userRepositoryPort.findByUsername("alice")).thenReturn(Optional.of(sampleUser));
 
         User result = service.getDomainUserByUsernameOrEmail("alice", null);
 
@@ -153,10 +155,10 @@ class GetUserServiceTest {
     @Test
     @DisplayName("should throw 404 when domain user not found")
     void testGetDomainUserNotFound() {
-        when(loadUserPort.loadUserByEmail("unknown@mail.com")).thenReturn(Optional.empty());
+        when(userRepositoryPort.findByEmail("unknown@mail.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getDomainUserByUsernameOrEmail(null, "unknown@mail.com"))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404 NOT_FOUND");
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining("User with email 'unknown@mail.com' not found");
     }
 }
