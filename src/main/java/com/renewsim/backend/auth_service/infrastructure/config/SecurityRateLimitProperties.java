@@ -1,4 +1,4 @@
-package com.renewsim.backend.auth_service.config;
+package com.renewsim.backend.auth_service.infrastructure.config;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

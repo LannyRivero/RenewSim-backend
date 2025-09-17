@@ -1,8 +1,9 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.auth_service.config.SecurityRateLimitProperties;
 import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
+import com.renewsim.backend.auth_service.infrastructure.config.SecurityRateLimitProperties;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

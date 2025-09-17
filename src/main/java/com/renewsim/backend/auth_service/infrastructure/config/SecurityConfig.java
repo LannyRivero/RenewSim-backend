@@ -1,4 +1,4 @@
-package com.renewsim.backend.auth_service.config;
+package com.renewsim.backend.auth_service.infrastructure.config;
 
 import com.renewsim.backend.auth_service.infrastructure.security.AuthNoCacheFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.CustomUserDetailsService;

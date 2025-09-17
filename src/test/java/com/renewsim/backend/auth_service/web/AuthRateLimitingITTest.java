@@ -1,7 +1,7 @@
 package com.renewsim.backend.auth_service.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.auth_service.config.SecurityRateLimitProperties;
+import com.renewsim.backend.auth_service.infrastructure.config.SecurityRateLimitProperties;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
