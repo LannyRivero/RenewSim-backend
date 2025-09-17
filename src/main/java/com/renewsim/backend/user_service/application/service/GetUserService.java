@@ -2,12 +2,12 @@ package com.renewsim.backend.user_service.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.in.GetUserUseCase;
-import com.renewsim.backend.user_service.application.port.out.LoadUserPort;
+import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserResponse;
 import com.renewsim.backend.user_service.infraestructure.mapper.UserMapper;
@@ -15,15 +15,16 @@ import com.renewsim.backend.user_service.infraestructure.mapper.UserMapper;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class GetUserService implements GetUserUseCase {
 
-    private final LoadUserPort loadUserPort;
+    private final UserRepositoryPort userRepositoryPort;
 
     @Override
     public UserResponse getUserById(Long id) {
         log.info("Fetching user by id={}", id);
 
-        return loadUserPort.loadUserById(id)
+        return userRepositoryPort.findById(id)
                 .map(UserMapper::toResponse)
                 .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
     }
@@ -37,13 +38,13 @@ public class GetUserService implements GetUserUseCase {
 
         if (username != null && !username.isBlank()) {
             log.info("Fetching user by username={}", username);
-            return loadUserPort.loadUserByUsername(username)
+            return userRepositoryPort.findByUsername(username)
                     .map(UserMapper::toResponse)
                     .orElseThrow(() -> new UserNotFoundException("User with username '" + username + "' not found"));
         }
 
         log.info("Fetching user by email={}", email);
-        return loadUserPort.loadUserByEmail(email)
+        return userRepositoryPort.findByEmail(email)
                 .map(UserMapper::toResponse)
                 .orElseThrow(() -> new UserNotFoundException("User with email '" + email + "' not found"));
     }
@@ -51,9 +52,18 @@ public class GetUserService implements GetUserUseCase {
     @Override
     public User getDomainUserByUsernameOrEmail(String username, String email) {
         log.info("Fetching domain user by username={} or email={}", username, email);
-        return (username != null && !username.isBlank()
-                ? loadUserPort.loadUserByUsername(username)
-                : loadUserPort.loadUserByEmail(email))
-                  .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        if (username != null && !username.isBlank()) {
+            return userRepositoryPort.findByUsername(username)
+                    .orElseThrow(() -> new UserNotFoundException("User with username '" + username + "' not found"));
+        }
+
+        if (email != null && !email.isBlank()) {
+            return userRepositoryPort.findByEmail(email)
+                    .orElseThrow(() -> new UserNotFoundException("User with email '" + email + "' not found"));
+        }
+
+        throw new IllegalArgumentException("Either username or email must be provided");
     }
 }
+
