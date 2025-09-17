@@ -1,6 +1,6 @@
 package com.renewsim.backend.user_service.application.service;
 
-import com.renewsim.backend.user_service.application.port.out.SearchUserPort;
+import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.PageResponse;
 import com.renewsim.backend.user_service.dto.UserFilterRequest;
@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Set;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.*;
 class ListUsersServiceTest {
 
     @Mock
-    private SearchUserPort searchUserPort;
+    private UserRepositoryPort userRepositoryPort;
 
     @InjectMocks
     private ListUsersService listUsersService;
@@ -49,18 +50,18 @@ class ListUsersServiceTest {
         assertThatThrownBy(() -> listUsersService.listUsers(0, 0, filters))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Page size must be greater than zero");
-    }    
+    }
 
     @Test
     @DisplayName("should return mapped users when results exist")
     void testUsersFound() {
         var filters = new UserFilterRequest("alice", null, true);
 
-        User user1 = new User(1L, "alice", "alice@mail.com", true, Set.of("USER"), null, null, "hash1");
-        User user2 = new User(2L, "bob", "bob@mail.com", true, Set.of("ADMIN"), null, null, "hash2");
+        User user1 = new User(1L, "alice", "alice@mail.com", true, Set.of("USER"), null, null, "hashed1");
+        User user2 = new User(2L, "bob", "bob@mail.com", true, Set.of("ADMIN"), null, null, "hashed2");
 
         Page<User> page = new PageImpl<>(List.of(user1, user2));
-        when(searchUserPort.search("alice", null, true, 0, 5)).thenReturn(page);
+        when(userRepositoryPort.search(filters, PageRequest.of(0, 5))).thenReturn(page);
 
         PageResponse<UserResponse> result = listUsersService.listUsers(0, 5, filters);
 
@@ -70,4 +71,3 @@ class ListUsersServiceTest {
         assertThat(result.totalElements()).isEqualTo(2);
     }
 }
-
