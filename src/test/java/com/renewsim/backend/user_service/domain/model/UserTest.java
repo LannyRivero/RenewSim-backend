@@ -10,11 +10,11 @@ import static org.assertj.core.api.Assertions.*;
 class UserTest {
 
     @Test
-    @DisplayName("should allow null roles without throwing exception")
+    @DisplayName("should default roles to empty set when null is provided")
     void testUserWithNullRoles() {
         User user = new User(1L, "john", "john@mail.com", true, null, null, null, "hash123");
 
-        assertThat(user.roles()).isNull();
+        assertThat(user.roles()).isEmpty();
         assertThat(user.username()).isEqualTo("john");
     }
 
@@ -37,6 +37,7 @@ class UserTest {
         assertThat(user.roles()).isEmpty();
     }
 
+    // Invariants
     @Test
     @DisplayName("should throw when username is null")
     void testUsernameNull() {
@@ -44,6 +45,7 @@ class UserTest {
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("Username cannot be null");
     }
+
     @Test
     @DisplayName("should throw when username is blank")
     void testUsernameBlank() {
@@ -76,8 +78,7 @@ class UserTest {
                 .hasMessage("Password must be at least 6 characters long");
     }
 
-    // 🔹 Factory method tests
-
+    // Factory method tests
     @Test
     @DisplayName("factory create() should build valid user with defaults")
     void testCreateUserValid() {
@@ -99,3 +100,4 @@ class UserTest {
         assertThat(user.roles()).isEmpty();
     }
 }
+

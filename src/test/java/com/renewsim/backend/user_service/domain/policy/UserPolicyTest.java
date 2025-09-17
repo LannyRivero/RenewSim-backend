@@ -31,6 +31,18 @@ class UserPolicyTest {
         assertThat(UserPolicy.normalizeUsername("bob")).isEqualTo("bob");
     }
 
+    @Test
+    @DisplayName("normalizeUsername should handle empty string")
+    void normalizeUsername_emptyString() {
+        assertThat(UserPolicy.normalizeUsername("")).isEqualTo("");
+    }
+
+    @Test
+    @DisplayName("normalizeUsername should trim to empty when only spaces")
+    void normalizeUsername_onlySpaces() {
+        assertThat(UserPolicy.normalizeUsername("   ")).isEqualTo("");
+    }
+
     // ---------------------------
     // Email normalization
     // ---------------------------
@@ -50,6 +62,18 @@ class UserPolicyTest {
     @DisplayName("normalizeEmail should handle already normalized email")
     void normalizeEmail_alreadyNormalized() {
         assertThat(UserPolicy.normalizeEmail("user@mail.com")).isEqualTo("user@mail.com");
+    }
+
+    @Test
+    @DisplayName("normalizeEmail should handle empty string")
+    void normalizeEmail_emptyString() {
+        assertThat(UserPolicy.normalizeEmail("")).isEqualTo("");
+    }
+
+    @Test
+    @DisplayName("normalizeEmail should trim to empty when only spaces")
+    void normalizeEmail_onlySpaces() {
+        assertThat(UserPolicy.normalizeEmail("   ")).isEqualTo("");
     }
 
     // ---------------------------
@@ -90,4 +114,19 @@ class UserPolicyTest {
         assertThatThrownBy(() -> UserPolicy.validatePaswordStrength("WeakPassword"))
                 .isInstanceOf(InvalidUserDataException.class);
     }
+
+    @Test
+    @DisplayName("validatePasswordStrength should throw when valid pattern but too short")
+    void validatePasswordStrength_shortValidPattern() {
+        assertThatThrownBy(() -> UserPolicy.validatePaswordStrength("A1"))
+                .isInstanceOf(InvalidUserDataException.class);
+    }
+
+    @Test
+    @DisplayName("validatePasswordStrength should accept valid password with symbols")
+    void validatePasswordStrength_withSymbols() {
+        assertThatCode(() -> UserPolicy.validatePaswordStrength("Strong#Pass1"))
+                .doesNotThrowAnyException();
+    }
 }
+

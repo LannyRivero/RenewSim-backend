@@ -13,10 +13,9 @@ public record User(
         Instant createdAt,
         Instant updatedAt,
         String passwordHash) {
+
     public User {
-        if (roles != null) {
-            roles = Set.copyOf(roles);
-        }
+        roles = (roles == null) ? Set.of() : Set.copyOf(roles);
 
         Objects.requireNonNull(username, "Username cannot be null");
         Objects.requireNonNull(email, "Email cannot be null");
@@ -35,11 +34,12 @@ public record User(
                 null,
                 username,
                 email,
-                true,
-                roles != null ? Set.copyOf(roles) : Set.of(),
+                true, 
+                roles,
                 Instant.now(),
                 Instant.now(),
-                passwordHash);
-
+                passwordHash
+        );
     }
 }
+
