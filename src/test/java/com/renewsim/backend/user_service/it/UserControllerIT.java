@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(GlobalExceptionHandler.class) // 👈 asegura que el handler esté en contexto
+@Import(GlobalExceptionHandler.class) 
 class UserControllerIT {
 
     @Autowired
