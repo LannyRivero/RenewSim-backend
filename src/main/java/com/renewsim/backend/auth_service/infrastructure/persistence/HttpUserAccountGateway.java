@@ -27,14 +27,16 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         try {
             ExternalUserSnapshot external = userServiceClient.getCredentials(null, email);
 
-            log.info("DEBUG ExternalUserSnapshot: username={}, email={}, passwordHash={}",
+            log.debug("Fetched ExternalUserSnapshot: username={}, email={}",
                     external.username(),
-                    external.email(),
-                    external.passwordHash());
+                    external.email());
 
             return Optional.ofNullable(mapToSnapshot(external));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
+        } catch (FeignException e) {
+            log.error("Error fetching user by email={} from UserServiceClient", email, e);
+            throw e;
         }
     }
 
@@ -43,14 +45,16 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         try {
             ExternalUserSnapshot external = userServiceClient.getCredentials(username, null);
 
-            log.info("DEBUG ExternalUserSnapshot: username={}, email={}, passwordHash={}",
+            log.debug("Fetched ExternalUserSnapshot: username={}, email={}",
                     external.username(),
-                    external.email(),
-                    external.passwordHash());
+                    external.email());
 
             return Optional.ofNullable(mapToSnapshot(external));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
+        } catch (FeignException e) {
+            log.error("Error fetching user by username={} from UserServiceClient", username, e);
+            throw e;
         }
     }
 

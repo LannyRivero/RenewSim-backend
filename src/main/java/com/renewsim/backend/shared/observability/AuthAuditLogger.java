@@ -25,12 +25,13 @@ public final class AuthAuditLogger {
                 currentCorrelationId());
     }
 
-    public static void infoLogout(String username, String clientIp) {
-        log.info("auth_logout username={} clientIp={} correlationId={}",
-                safe(username),
-                safe(clientIp),
-                currentCorrelationId());
-    }
+    public static void infoAuthLogout(String username, String clientIp) {
+    log.info("auth_logout username={} clientIp={} correlationId={}",
+            safeUsername(username),
+            safe(clientIp),
+            currentCorrelationId());
+}
+
 
     public static String currentCorrelationId() {
         String c = MDC.get(CorrelationIdFilter.MDC_KEY);
