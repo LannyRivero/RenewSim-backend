@@ -4,8 +4,15 @@ import java.util.List;
 import java.util.Optional;
 
 import com.renewsim.backend.user_service.domain.model.User;
-import com.renewsim.backend.user_service.dto.UserSearchCriteria;
+import com.renewsim.backend.user_service.dto.UserFilterRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+/**
+ * Outbound port for accessing and persisting users.
+ *
+ * Defines all persistence operations related to the User aggregate.
+ */
 public interface UserRepositoryPort {
 
     User save(User user);
@@ -20,7 +27,8 @@ public interface UserRepositoryPort {
 
     List<User> findAll();
 
-    List<User> search(UserSearchCriteria criteria);
+    Page<User> search(UserFilterRequest filter, Pageable pageable);
 
     void deleteById(Long id);
 }
+
