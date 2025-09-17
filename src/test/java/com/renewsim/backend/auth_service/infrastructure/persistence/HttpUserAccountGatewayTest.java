@@ -35,7 +35,7 @@ class HttpUserAccountGatewayTest {
     @Test
     @DisplayName("findByUsername() should map ExternalUserSnapshot → UserSnapshot")
     void testFindByUsername() {
-        var external = new ExternalUserSnapshot("john", "$hash", "USER");
+        var external = new ExternalUserSnapshot("john", "$hash", "john@example.com", Set.of("USER"));
         when(userServiceClient.findByUsername("john")).thenReturn(external);
 
         Optional<UserSnapshot> opt = gateway.findByUsername("john");
@@ -57,17 +57,7 @@ class HttpUserAccountGatewayTest {
         assertThat(opt).isEmpty();
         verify(userServiceClient).findByUsername("missing");
     }
-
-    @Test
-    @DisplayName("existsByUsername() should delegate to UserServiceClient")
-    void testExistsByUsername() {
-        when(userServiceClient.existsByUsername("john")).thenReturn(true);
-
-        boolean exists = gateway.existsByUsername("john");
-
-        assertThat(exists).isTrue();
-        verify(userServiceClient).existsByUsername("john");
-    }
+    
 
     @Test
     @DisplayName("createUser() should hash password and call UserServiceClient with mapped snapshot")
@@ -77,11 +67,11 @@ class HttpUserAccountGatewayTest {
         String hashedPassword = "$2a$10$hashed";
         when(passwordEncoder.encode(rawPassword)).thenReturn(hashedPassword);
 
-        var externalCreated = new ExternalUserSnapshot("john", hashedPassword, "USER");
+        var externalCreated = new ExternalUserSnapshot("john", hashedPassword, "john@example.com", Set.of("USER"));
         when(userServiceClient.createUser(any(ExternalUserSnapshot.class))).thenReturn(externalCreated);
 
         // When
-        UserSnapshot result = gateway.createUser("john", rawPassword, Set.of(RoleName.USER));
+        UserSnapshot result = gateway.createUser("john", "john@example.com", rawPassword, Set.of(RoleName.USER));
 
         // Then
         assertThat(result.username()).isEqualTo("john");
