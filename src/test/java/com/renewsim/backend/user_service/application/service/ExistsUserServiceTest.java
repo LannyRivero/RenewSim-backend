@@ -1,6 +1,5 @@
 package com.renewsim.backend.user_service.application.service;
 
-import com.renewsim.backend.user_service.application.port.out.ExistsUserPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -8,13 +7,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
+
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ExistsUserServiceTest {
 
     @Mock
-    private ExistsUserPort existsUserPort;
+    private UserRepositoryPort userRepositoryPort;
 
     @InjectMocks
     private ExistsUserService service;
@@ -25,35 +26,55 @@ class ExistsUserServiceTest {
     }
 
     @Test
-    @DisplayName("should return true when user exists by username or email")
-    void testExistsUserReturnsTrue() {
-        when(existsUserPort.existsByUsernameOrEmail("alice", "alice@mail.com")).thenReturn(true);
+    @DisplayName("should return true when user exists by username")
+    void testExistsUserByUsernameReturnsTrue() {
+        when(userRepositoryPort.existsByUsername("alice")).thenReturn(true);
 
-        boolean result = service.existsByUsernameOrEmail("alice", "alice@mail.com");
+        boolean result = service.existsByUsernameOrEmail("alice", null);
 
         assertThat(result).isTrue();
-        verify(existsUserPort).existsByUsernameOrEmail("alice", "alice@mail.com");
+        verify(userRepositoryPort).existsByUsername("alice");
     }
 
     @Test
-    @DisplayName("should return false when user does not exist by username or email")
-    void testExistsUserReturnsFalse() {
-        when(existsUserPort.existsByUsernameOrEmail("bob", "bob@mail.com")).thenReturn(false);
+    @DisplayName("should return true when user exists by email")
+    void testExistsUserByEmailReturnsTrue() {
+        when(userRepositoryPort.existsByEmail("alice@mail.com")).thenReturn(true);
 
-        boolean result = service.existsByUsernameOrEmail("bob", "bob@mail.com");
+        boolean result = service.existsByUsernameOrEmail(null, "alice@mail.com");
+
+        assertThat(result).isTrue();
+        verify(userRepositoryPort).existsByEmail("alice@mail.com");
+    }
+
+    @Test
+    @DisplayName("should return false when user does not exist by username")
+    void testExistsUserByUsernameReturnsFalse() {
+        when(userRepositoryPort.existsByUsername("bob")).thenReturn(false);
+
+        boolean result = service.existsByUsernameOrEmail("bob", null);
 
         assertThat(result).isFalse();
-        verify(existsUserPort).existsByUsernameOrEmail("bob", "bob@mail.com");
+        verify(userRepositoryPort).existsByUsername("bob");
     }
 
     @Test
-    @DisplayName("should propagate exception thrown by ExistsUserPort")
+    @DisplayName("should throw IllegalArgumentException when both username and email are null")
+    void testExistsUserThrowsWhenBothNull() {
+        assertThatThrownBy(() -> service.existsByUsernameOrEmail(null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Either username or email must be provided");
+    }
+
+    @Test
+    @DisplayName("should propagate exception thrown by UserRepositoryPort")
     void testExistsUserPropagatesException() {
-        when(existsUserPort.existsByUsernameOrEmail("charlie", "charlie@mail.com"))
+        when(userRepositoryPort.existsByUsername("charlie"))
                 .thenThrow(new RuntimeException("DB error"));
 
-        assertThatThrownBy(() -> service.existsByUsernameOrEmail("charlie", "charlie@mail.com"))
+        assertThatThrownBy(() -> service.existsByUsernameOrEmail("charlie", null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("DB error");
     }
 }
+
