@@ -1,7 +1,6 @@
 package com.renewsim.backend.user_service.application.service;
 
-import com.renewsim.backend.user_service.application.port.out.ExistsUserPort;
-import com.renewsim.backend.user_service.application.port.out.SaveUserPort;
+import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
@@ -22,10 +21,7 @@ import static org.mockito.Mockito.*;
 class CreateUserServiceTest {
 
     @Mock
-    private SaveUserPort saveUserPort;
-
-    @Mock
-    private ExistsUserPort existsUserPort;
+    private UserRepositoryPort userRepositoryPort;
 
     @InjectMocks
     private CreateUserService service;
@@ -45,18 +41,19 @@ class CreateUserServiceTest {
 
         User savedUser = new User(1L, "alice", "alice@mail.com", true, Set.of("USER"), null, null, "StrongPass1");
 
-        when(existsUserPort.existsByUsernameOrEmail("alice", "alice@mail.com")).thenReturn(false);
-        when(saveUserPort.saveUser(any(User.class))).thenReturn(savedUser);
+        when(userRepositoryPort.existsByUsername("alice")).thenReturn(false);
+        when(userRepositoryPort.existsByEmail("alice@mail.com")).thenReturn(false);
+        when(userRepositoryPort.save(any(User.class))).thenReturn(savedUser);
 
         UserResponse result = service.createUser(request);
 
         assertThat(result).isNotNull();
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.username()).isEqualTo("alice");
-        assertThat(result.email()).isEqualTo("alice@mail.com"); 
+        assertThat(result.email()).isEqualTo("alice@mail.com");
         assertThat(result.roles()).contains("USER");
 
-        verify(saveUserPort).saveUser(any(User.class));
+        verify(userRepositoryPort).save(any(User.class));
     }
 
     // ---------------------------
@@ -67,7 +64,8 @@ class CreateUserServiceTest {
     void testDuplicateUserThrowsDataIntegrityViolationException() {
         UserCreateRequest request = new UserCreateRequest("bob", "bob@mail.com", "StrongPass1");
 
-        when(existsUserPort.existsByUsernameOrEmail("bob", "bob@mail.com")).thenReturn(true);
+        when(userRepositoryPort.existsByUsername("bob")).thenReturn(true);
+        when(userRepositoryPort.existsByEmail("bob@mail.com")).thenReturn(false);
 
         assertThatThrownBy(() -> service.createUser(request))
                 .isInstanceOf(DataIntegrityViolationException.class)
@@ -82,8 +80,9 @@ class CreateUserServiceTest {
     void testPersistenceErrorThrowsDataIntegrityViolationException() {
         UserCreateRequest request = new UserCreateRequest("charlie", "charlie@mail.com", "StrongPass1");
 
-        when(existsUserPort.existsByUsernameOrEmail("charlie", "charlie@mail.com")).thenReturn(false);
-        when(saveUserPort.saveUser(any(User.class)))
+        when(userRepositoryPort.existsByUsername("charlie")).thenReturn(false);
+        when(userRepositoryPort.existsByEmail("charlie@mail.com")).thenReturn(false);
+        when(userRepositoryPort.save(any(User.class)))
                 .thenThrow(new DataIntegrityViolationException("constraint violation"));
 
         assertThatThrownBy(() -> service.createUser(request))
@@ -100,8 +99,9 @@ class CreateUserServiceTest {
 
         User savedUser = new User(2L, "diana", "diana@mail.com", true, Set.of("USER"), null, null, "StrongPass1");
 
-        when(existsUserPort.existsByUsernameOrEmail("diana", "diana@mail.com")).thenReturn(false);
-        when(saveUserPort.saveUser(any(User.class))).thenReturn(savedUser);
+        when(userRepositoryPort.existsByUsername("diana")).thenReturn(false);
+        when(userRepositoryPort.existsByEmail("diana@mail.com")).thenReturn(false);
+        when(userRepositoryPort.save(any(User.class))).thenReturn(savedUser);
 
         UserResponse result = service.createUser(request);
 
@@ -118,12 +118,13 @@ class CreateUserServiceTest {
 
         User savedUser = new User(3L, "eve", "eve@mail.com", true, Set.of("USER"), null, null, "StrongPass1");
 
-        when(existsUserPort.existsByUsernameOrEmail("eve", "eve@mail.com")).thenReturn(false);
-        when(saveUserPort.saveUser(any(User.class))).thenReturn(savedUser);
+        when(userRepositoryPort.existsByUsername("eve")).thenReturn(false);
+        when(userRepositoryPort.existsByEmail("eve@mail.com")).thenReturn(false);
+        when(userRepositoryPort.save(any(User.class))).thenReturn(savedUser);
 
         UserResponse result = service.createUser(request);
 
         assertThat(result.email()).isEqualTo("eve@mail.com");
-        verify(saveUserPort).saveUser(any(User.class));
+        verify(userRepositoryPort).save(any(User.class));
     }
 }
