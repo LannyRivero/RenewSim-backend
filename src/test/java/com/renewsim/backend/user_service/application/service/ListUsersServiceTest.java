@@ -1,5 +1,6 @@
 package com.renewsim.backend.user_service.application.service;
 
+import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.PageResponse;
@@ -39,7 +40,7 @@ class ListUsersServiceTest {
     void testNegativePageIndex() {
         var filters = new UserFilterRequest("john", "mail@test.com", true);
         assertThatThrownBy(() -> listUsersService.listUsers(-1, 10, filters))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InvalidUserDataException.class)
                 .hasMessageContaining("Page index must not be negative");
     }
 
@@ -48,7 +49,7 @@ class ListUsersServiceTest {
     void testInvalidPageSize() {
         var filters = new UserFilterRequest(null, null, null);
         assertThatThrownBy(() -> listUsersService.listUsers(0, 0, filters))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InvalidUserDataException.class)
                 .hasMessageContaining("Page size must be greater than zero");
     }
 
