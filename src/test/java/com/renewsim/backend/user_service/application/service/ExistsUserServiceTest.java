@@ -7,7 +7,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
+
+import jakarta.persistence.criteria.CriteriaBuilder.In;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -59,10 +62,10 @@ class ExistsUserServiceTest {
     }
 
     @Test
-    @DisplayName("should throw IllegalArgumentException when both username and email are null")
+    @DisplayName("should throw InvalidUserDataException when both username and email are null")
     void testExistsUserThrowsWhenBothNull() {
         assertThatThrownBy(() -> service.existsByUsernameOrEmail(null, null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InvalidUserDataException.class)
                 .hasMessageContaining("Either username or email must be provided");
     }
 

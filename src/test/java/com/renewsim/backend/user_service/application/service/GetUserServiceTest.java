@@ -1,5 +1,6 @@
 package com.renewsim.backend.user_service.application.service;
 
+import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
@@ -91,10 +92,10 @@ class GetUserServiceTest {
     // getUserByUsernameOrEmail
     // ---------------------------
     @Test
-    @DisplayName("should throw IllegalArgumentException when both username and email are null")
+    @DisplayName("should throw InvalidUserDataException when both username and email are null")
     void testGetUserByUsernameOrEmailBothNull() {
         assertThatThrownBy(() -> service.getUserByUsernameOrEmail(null, null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InvalidUserDataException.class)
                 .hasMessageContaining("Either username or email must be provided");
     }
 

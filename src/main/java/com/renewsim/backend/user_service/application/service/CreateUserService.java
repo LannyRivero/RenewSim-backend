@@ -2,10 +2,10 @@ package com.renewsim.backend.user_service.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.user_service.application.port.in.CreateUserUseCase;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
@@ -33,7 +33,8 @@ public class CreateUserService implements CreateUserUseCase {
 
         if (userRepositoryPort.existsByUsername(username) || userRepositoryPort.existsByEmail(email)) {
             log.warn("User creation failed: username={} or email={} already exists", username, email);
-            throw new DataIntegrityViolationException("User with same username or email already exists");
+            throw new UserAlreadyExistsException("User with username '" + username + "' or email '" + email + "' already exists");
+
         }
 
         User user = new User(

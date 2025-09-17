@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.in.GetUserUseCase;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
@@ -33,7 +34,8 @@ public class GetUserService implements GetUserUseCase {
     public UserResponse getUserByUsernameOrEmail(String username, String email) {
         if ((username == null || username.isBlank()) && (email == null || email.isBlank())) {
             log.warn("Invalid request: both username and email are null/blank");
-            throw new IllegalArgumentException("Either username or email must be provided");
+            throw new InvalidUserDataException("Either username or email must be provided");
+
         }
 
         if (username != null && !username.isBlank()) {
@@ -63,7 +65,8 @@ public class GetUserService implements GetUserUseCase {
                     .orElseThrow(() -> new UserNotFoundException("User with email '" + email + "' not found"));
         }
 
-        throw new IllegalArgumentException("Either username or email must be provided");
+        throw new InvalidUserDataException("Either username or email must be provided");
+
     }
 }
 

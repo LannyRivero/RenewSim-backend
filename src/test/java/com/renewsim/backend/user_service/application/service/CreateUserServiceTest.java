@@ -1,5 +1,6 @@
 package com.renewsim.backend.user_service.application.service;
 
+import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
@@ -60,7 +61,7 @@ class CreateUserServiceTest {
     // Duplicate user
     // ---------------------------
     @Test
-    @DisplayName("should throw DataIntegrityViolationException when username or email already exists")
+    @DisplayName("should throw UserAlreadyExistsException when username or email already exists")
     void testDuplicateUserThrowsDataIntegrityViolationException() {
         UserCreateRequest request = new UserCreateRequest("bob", "bob@mail.com", "StrongPass1");
 
@@ -68,7 +69,7 @@ class CreateUserServiceTest {
         when(userRepositoryPort.existsByEmail("bob@mail.com")).thenReturn(false);
 
         assertThatThrownBy(() -> service.createUser(request))
-                .isInstanceOf(DataIntegrityViolationException.class)
+                .isInstanceOf(UserAlreadyExistsException.class)
                 .hasMessageContaining("already exists");
     }
 

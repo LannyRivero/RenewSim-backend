@@ -3,6 +3,7 @@ package com.renewsim.backend.user_service.application.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.user_service.application.port.in.ExistsUserUseCase;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 
@@ -28,7 +29,7 @@ public class ExistsUserService implements ExistsUserUseCase {
         if (email != null) {
             return userRepositoryPort.existsByEmail(email);
         }
-        throw new IllegalArgumentException("Either username or email must be provided");
+        throw new InvalidUserDataException("Either username or email must be provided");
     }
 }
 
