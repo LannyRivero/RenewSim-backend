@@ -1,12 +1,13 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
-import com.renewsim.backend.auth_service.config.SecurityJwtProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.renewsim.backend.auth_service.infrastructure.config.SecurityJwtProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

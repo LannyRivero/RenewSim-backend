@@ -1,4 +1,4 @@
-package com.renewsim.backend.auth_service.config;
+package com.renewsim.backend.auth_service.infrastructure.config;
 
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimiter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

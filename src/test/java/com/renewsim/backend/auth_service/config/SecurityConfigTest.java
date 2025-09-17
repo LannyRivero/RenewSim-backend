@@ -1,6 +1,7 @@
 package com.renewsim.backend.auth_service.config;
 
 import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
+import com.renewsim.backend.auth_service.infrastructure.config.SecurityConfig;
 import com.renewsim.backend.auth_service.infrastructure.security.AuthNoCacheFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.JwtAuthenticationFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimitingFilter;

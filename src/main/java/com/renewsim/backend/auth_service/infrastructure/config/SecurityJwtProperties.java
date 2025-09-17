@@ -1,4 +1,4 @@
-package com.renewsim.backend.auth_service.config;
+package com.renewsim.backend.auth_service.infrastructure.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.lang.Nullable;

@@ -1,0 +1,129 @@
+package com.renewsim.backend.user_service.infraestructure.mapper;
+
+import com.renewsim.backend.user_service.domain.model.User;
+import com.renewsim.backend.user_service.dto.UserCreateRequest;
+import com.renewsim.backend.user_service.dto.UserResponse;
+import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.time.Instant;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.*;
+
+class UserMapperTest {
+
+    @Test
+    @DisplayName("should map User domain to UserResponse DTO")
+    void testMapUserToUserResponse() {
+        User user = new User(
+                1L,
+                "alice",
+                "alice@mail.com",
+                true,
+                Set.of("USER", "ADMIN"),
+                Instant.now(),
+                Instant.now(),
+                "hashedPass");
+
+        UserResponse dto = UserMapper.toResponse(user);
+
+        assertThat(dto).isNotNull();
+        assertThat(dto.id()).isEqualTo(1L);
+        assertThat(dto.username()).isEqualTo("alice");
+        assertThat(dto.email()).isEqualTo("alice@mail.com");
+        assertThat(dto.enabled()).isTrue();
+        assertThat(dto.roles()).containsExactlyInAnyOrder("USER", "ADMIN");
+    }
+
+    @Test
+    @DisplayName("should map UserCreateRequest DTO to User domain with default USER role")
+    void testMapUserCreateRequestToUser() {
+        UserCreateRequest request = new UserCreateRequest("bob", "bob@mail.com", "StrongPass1");
+
+        User user = UserMapper.toDomain(request);
+
+        assertThat(user).isNotNull();
+        assertThat(user.id()).isNull();
+        assertThat(user.username()).isEqualTo("bob");
+        assertThat(user.email()).isEqualTo("bob@mail.com");
+        assertThat(user.roles()).containsExactly("USER");
+        assertThat(user.passwordHash()).isEqualTo("StrongPass1");
+    }
+
+    @Test
+    @DisplayName("should map UserEntity to User domain and rolesCsv to Set")
+    void testMapUserEntityToDomain() {
+        UserEntity entity = new UserEntity();
+        entity.setId(10L);
+        entity.setUsername("charlie");
+        entity.setEmail("charlie@mail.com");
+        entity.setEnabled(false);
+        entity.setRolesCsv("USER,ADMIN,USER");
+        entity.setCreatedAt(Instant.now());
+        entity.setUpdatedAt(Instant.now());
+        entity.setPasswordHash("hashed");
+
+        User user = UserMapper.toDomain(entity);
+
+        assertThat(user.id()).isEqualTo(10L);
+        assertThat(user.username()).isEqualTo("charlie");
+        assertThat(user.roles()).containsExactlyInAnyOrder("USER", "ADMIN");
+    }
+
+    @Test
+    @DisplayName("should map User domain to UserEntity and roles to CSV")
+    void testMapUserDomainToEntity() {
+        User user = new User(
+                20L,
+                "diana",
+                "diana@mail.com",
+                true,
+                Set.of("ADMIN", "USER"),
+                Instant.now(),
+                Instant.now(),
+                "hash");
+
+        UserEntity entity = UserMapper.toEntity(user);
+
+        assertThat(entity.getId()).isEqualTo(20L);
+        assertThat(entity.getUsername()).isEqualTo("diana");
+        assertThat(entity.getEmail()).isEqualTo("diana@mail.com");
+        assertThat(entity.getRolesCsv()).contains("ADMIN").contains("USER");
+    }
+
+    @Test
+    @DisplayName("should return empty set when rolesCsv is null or blank")
+    void testCsvToSetWithNullOrBlank() {
+        UserEntity entity1 = new UserEntity();
+        entity1.setRolesCsv(null);
+
+        UserEntity entity2 = new UserEntity();
+        entity2.setRolesCsv("");
+
+        User user1 = UserMapper.toDomain(entity1);
+        User user2 = UserMapper.toDomain(entity2);
+
+        assertThat(user1.roles()).isEmpty();
+        assertThat(user2.roles()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("should return empty string when roles set is null or empty")
+    void testSetToCsvWithNullOrEmpty() {
+        User user = new User(
+                30L,
+                "eve",
+                "eve@mail.com",
+                true,
+                Set.of(),
+                Instant.now(),
+                Instant.now(),
+                "hash");
+
+        UserEntity entity = UserMapper.toEntity(user);
+
+        assertThat(entity.getRolesCsv()).isEqualTo("");
+    }
+}

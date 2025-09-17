@@ -1,17 +1,21 @@
 <configuration scan="true" scanPeriod="60 seconds">
 
     <!-- Paths -->
-    <property name="LOG_DIR" value="logs"/>
+    <property name="LOG_DIR" value="${SPRING_LOG_DIR:-logs}"/>
     <property name="LOG_FILE" value="${LOG_DIR}/application.log"/>
 
-    <!-- Pattern (ISO-8601 + MDC correlationId con fallback) -->
+    <!-- Pattern (ISO-8601 + MDC traceId con fallback + stacktrace) -->
     <property name="LOG_PATTERN"
-              value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level %logger{36} traceId=%X{correlationId:-N/A} - %msg%n"/>
+          value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level %logger{36} 
+          traceId=%X{traceId:-N/A} username=%X{username:-N/A} roles=%X{roles:-N/A} 
+          ip=%X{ip:-N/A} path=%X{path:-N/A} action=%X{action:-N/A} 
+          page=%X{page:-N/A} size=%X{size:-N/A} 
+          usernameFilter=%X{usernameFilter:-N/A} emailFilter=%X{emailFilter:-N/A} enabledFilter=%X{enabledFilter:-N/A} 
+          - %msg%n%ex{full}"/>
 
-    <!-- Console (sin condicionales aquí) -->
+    <!-- Console -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <!-- Si quieres colores, cambia a %highlight como en dev -->
             <pattern>${LOG_PATTERN}</pattern>
         </encoder>
     </appender>
@@ -44,12 +48,11 @@
         <appender-ref ref="FILE"/>
     </appender>
 
-    <conversionRule conversionWord="ex" converterClass="ch.qos.logback.classic.pattern.ThrowableProxyConverter"/>
-
-    <!-- Loggers -->
+    <!-- Loggers base -->
     <logger name="org.springframework" level="INFO"/>
     <logger name="org.springframework.security" level="INFO"/>
     <logger name="org.hibernate.SQL" level="WARN"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
     <logger name="com.renewsim" level="DEBUG"/>
 
     <!-- DEV / LOCAL -->
@@ -57,16 +60,25 @@
         <!-- Patrón con colores solo para consola en dev/local -->
         <appender name="CONSOLE_DEV" class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
-                <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36})
-                    traceId=%X{correlationId:-N/A} - %msg%n</pattern>
+                <pattern>
+                    %d{HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36})
+                    traceId=%X{traceId:-N/A} username=%X{username:-N/A} roles=%X{roles:-N/A}
+                    action=%X{action:-N/A} page=%X{page:-N/A} size=%X{size:-N/A}
+                    usernameFilter=%X{usernameFilter:-N/A} emailFilter=%X{emailFilter:-N/A} enabledFilter=%X{enabledFilter:-N/A}
+                    - %msg%n%ex{full}
+                </pattern>
+
             </encoder>
         </appender>
+
         <appender name="ASYNC_CONSOLE_DEV" class="ch.qos.logback.classic.AsyncAppender">
             <queueSize>8192</queueSize>
             <discardingThreshold>0</discardingThreshold>
             <neverBlock>true</neverBlock>
             <appender-ref ref="CONSOLE_DEV"/>
         </appender>
+
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
 
         <root level="DEBUG">
             <appender-ref ref="ASYNC_CONSOLE_DEV"/>
@@ -82,24 +94,28 @@
         </root>
     </springProfile>
 
+    <!-- Auditoría de autenticación -->
     <appender name="AUTH_AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-  <file>${LOG_DIR}/auth-audit.log</file>
-  <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-    <fileNamePattern>${LOG_DIR}/auth-audit-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-    <maxHistory>30</maxHistory>
-    <totalSizeCap>2GB</totalSizeCap>
-  </rollingPolicy>
-  <encoder>
-    <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level traceId=%X{correlationId:-N/A} - %msg%n</pattern>
-  </encoder>
-</appender>
+        <file>${LOG_DIR}/auth-audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/auth-audit-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>
+                %d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level traceId=%X{traceId:-N/A} username=%X{username:-N/A} ip=%X{ip:-N/A} - %msg%n%ex{full}
+            </pattern>
+        </encoder>
+    </appender>
 
-<logger name="AUTH_AUDIT" level="INFO" additivity="false">
-  <appender-ref ref="AUTH_AUDIT_FILE"/>
-</logger>
-
+    <logger name="AUTH_AUDIT" level="INFO" additivity="false">
+        <appender-ref ref="AUTH_AUDIT_FILE"/>
+    </logger>
 
 </configuration>
+
+
 
 
 

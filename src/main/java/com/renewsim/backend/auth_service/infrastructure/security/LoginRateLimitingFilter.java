@@ -1,7 +1,7 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.auth_service.config.SecurityRateLimitProperties;
+import com.renewsim.backend.auth_service.infrastructure.config.SecurityRateLimitProperties;
 import com.renewsim.backend.shared.web.ClientIpExtractor;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

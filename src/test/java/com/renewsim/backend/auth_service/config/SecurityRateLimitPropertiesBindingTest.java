@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
+import com.renewsim.backend.auth_service.infrastructure.config.SecurityRateLimitProperties;
+
 class SecurityRateLimitPropertiesBindingTest {
 
     private final ApplicationContextRunner context = new ApplicationContextRunner()

@@ -1,7 +1,8 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
-import com.renewsim.backend.auth_service.config.SecurityJwtProperties;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
+import com.renewsim.backend.auth_service.infrastructure.config.SecurityJwtProperties;
+
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.DisplayName;

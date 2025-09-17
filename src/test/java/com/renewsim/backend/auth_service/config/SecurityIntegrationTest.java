@@ -2,6 +2,7 @@ package com.renewsim.backend.auth_service.config;
 
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
+import com.renewsim.backend.auth_service.infrastructure.config.SecurityConfig;
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimitingFilter;
 import com.renewsim.backend.auth_service.support.TestSecuredController;
 import jakarta.annotation.Resource;
