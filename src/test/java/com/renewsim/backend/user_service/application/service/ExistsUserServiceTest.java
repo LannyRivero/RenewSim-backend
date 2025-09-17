@@ -10,7 +10,6 @@ import org.mockito.MockitoAnnotations;
 import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 
-import jakarta.persistence.criteria.CriteriaBuilder.In;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.user_service.application.port.in.CreateUserUseCase;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
@@ -24,36 +25,49 @@ public class CreateUserService implements CreateUserUseCase {
 
     private final UserRepositoryPort userRepositoryPort;
 
+    private static final String DEFAULT_ROLE = "USER";
+
     @Override
     public UserResponse createUser(UserCreateRequest req) {
-        log.info("Start creating user with email={} username={}", req.email(), req.username());
+        if (req.username() == null || req.username().isBlank() ||
+            req.email() == null || req.email().isBlank() ||
+            req.passwordHash() == null || req.passwordHash().isBlank()) {
+            throw new InvalidUserDataException("Username, email and password must be provided");
+        }
 
         String username = UserPolicy.normalizeUsername(req.username());
         String email = UserPolicy.normalizeEmail(req.email());
 
-        if (userRepositoryPort.existsByUsername(username) || userRepositoryPort.existsByEmail(email)) {
-            log.warn("User creation failed: username={} or email={} already exists", username, email);
-            throw new UserAlreadyExistsException("User with username '" + username + "' or email '" + email + "' already exists");
-
-        }
-
-        User user = new User(
-                null,
-                username,
-                email,
-                true,
-                Set.of("USER"),
-                null,
-                null,
-                req.passwordHash());
-
         try {
+            log.info("Start creating user with email={} username={}", email, username);
+
+            if (userRepositoryPort.existsByUsername(username) || userRepositoryPort.existsByEmail(email)) {
+                log.warn("User creation failed: username={} or email={} already exists", username, email);
+                throw new UserAlreadyExistsException("User with username '" + username + "' or email '" + email + "' already exists");
+            }
+
+            User user = new User(
+                    null,
+                    username,
+                    email,
+                    true,
+                    Set.of(DEFAULT_ROLE),
+                    null,
+                    null,
+                    req.passwordHash()
+            );
+
             User saved = userRepositoryPort.save(user);
             log.info("User created successfully id={} username={}", saved.id(), saved.username());
             return UserMapper.toResponse(saved);
+
+        } catch (UserAlreadyExistsException e) {
+            throw e; 
         } catch (Exception e) {
             log.error("Unexpected error while creating user email={} username={}", email, username, e);
             throw e;
+        } finally {
+            
         }
     }
 }
