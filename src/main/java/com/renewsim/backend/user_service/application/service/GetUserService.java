@@ -23,50 +23,66 @@ public class GetUserService implements GetUserUseCase {
 
     @Override
     public UserResponse getUserById(Long id) {
-        log.info("Fetching user by id={}", id);
-
-        return userRepositoryPort.findById(id)
-                .map(UserMapper::toResponse)
-                .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+        org.slf4j.MDC.put("action", "getUserById");
+        org.slf4j.MDC.put("userId", String.valueOf(id));
+        try {
+            log.info("Fetching user by id={}", id);
+            return userRepositoryPort.findById(id)
+                    .map(UserMapper::toResponse)
+                    .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+        } finally {
+            org.slf4j.MDC.clear();
+        }
     }
 
     @Override
     public UserResponse getUserByUsernameOrEmail(String username, String email) {
-        if ((username == null || username.isBlank()) && (email == null || email.isBlank())) {
-            log.warn("Invalid request: both username and email are null/blank");
-            throw new InvalidUserDataException("Either username or email must be provided");
+        org.slf4j.MDC.put("action", "getUserByUsernameOrEmail");
+        org.slf4j.MDC.put("username", username);
+        org.slf4j.MDC.put("email", email);
+        try {
+            if ((username == null || username.isBlank()) && (email == null || email.isBlank())) {
+                log.warn("Invalid request: both username and email are null/blank");
+                throw new InvalidUserDataException("Either username or email must be provided");
+            }
 
-        }
+            if (username != null && !username.isBlank()) {
+                log.info("Fetching user by username={}", username);
+                return userRepositoryPort.findByUsername(username)
+                        .map(UserMapper::toResponse)
+                        .orElseThrow(() -> new UserNotFoundException("User with username '" + username + "' not found"));
+            }
 
-        if (username != null && !username.isBlank()) {
-            log.info("Fetching user by username={}", username);
-            return userRepositoryPort.findByUsername(username)
+            log.info("Fetching user by email={}", email);
+            return userRepositoryPort.findByEmail(email)
                     .map(UserMapper::toResponse)
-                    .orElseThrow(() -> new UserNotFoundException("User with username '" + username + "' not found"));
+                    .orElseThrow(() -> new UserNotFoundException("User with email '" + email + "' not found"));
+        } finally {
+            org.slf4j.MDC.clear();
         }
-
-        log.info("Fetching user by email={}", email);
-        return userRepositoryPort.findByEmail(email)
-                .map(UserMapper::toResponse)
-                .orElseThrow(() -> new UserNotFoundException("User with email '" + email + "' not found"));
     }
 
     @Override
     public User getDomainUserByUsernameOrEmail(String username, String email) {
-        log.info("Fetching domain user by username={} or email={}", username, email);
+        org.slf4j.MDC.put("action", "getDomainUserByUsernameOrEmail");
+        org.slf4j.MDC.put("username", username);
+        org.slf4j.MDC.put("email", email);
+        try {
+            log.info("Fetching domain user by username={} or email={}", username, email);
 
-        if (username != null && !username.isBlank()) {
-            return userRepositoryPort.findByUsername(username)
-                    .orElseThrow(() -> new UserNotFoundException("User with username '" + username + "' not found"));
+            if (username != null && !username.isBlank()) {
+                return userRepositoryPort.findByUsername(username)
+                        .orElseThrow(() -> new UserNotFoundException("User with username '" + username + "' not found"));
+            }
+
+            if (email != null && !email.isBlank()) {
+                return userRepositoryPort.findByEmail(email)
+                        .orElseThrow(() -> new UserNotFoundException("User with email '" + email + "' not found"));
+            }
+
+            throw new InvalidUserDataException("Either username or email must be provided");
+        } finally {
+            org.slf4j.MDC.clear();
         }
-
-        if (email != null && !email.isBlank()) {
-            return userRepositoryPort.findByEmail(email)
-                    .orElseThrow(() -> new UserNotFoundException("User with email '" + email + "' not found"));
-        }
-
-        throw new InvalidUserDataException("Either username or email must be provided");
-
     }
 }
-
