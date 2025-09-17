@@ -3,11 +3,17 @@ package com.renewsim.backend.user_service.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Filter request object for listing users with optional conditions.
+ */
 public record UserFilterRequest(
 
-        @Size(min = 3, max = 64, message = "Username filter must be between 3 and 64 characters") String username,
+        @Size(min = 3, max = 64, message = "Username filter must be between 3 and 64 characters")
+        String username,
 
-        @Email(message = "Email must be valid") String email,
+        @Email(message = "Email must be valid")
+        String email,
 
-        Boolean enabled) {
-}
+        Boolean enabled
+) { }
+

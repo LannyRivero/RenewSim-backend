@@ -2,6 +2,11 @@ package com.renewsim.backend.user_service.dto;
 
 import java.util.List;
 
+/**
+ * Generic pagination response wrapper.
+ *
+ * @param <T> the type of elements in the page
+ */
 public record PageResponse<T>(
     List<T> content,
     int page,
@@ -10,4 +15,5 @@ public record PageResponse<T>(
     int totalPages,
     boolean last
 ) {}
+
 
