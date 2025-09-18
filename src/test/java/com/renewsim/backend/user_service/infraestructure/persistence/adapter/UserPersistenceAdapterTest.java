@@ -27,6 +27,9 @@ class UserPersistenceAdapterTest {
     @Mock
     private UserJpaRepository repo;
 
+    @Mock
+    private UserMapper mapper; // ✅ ahora lo mockeamos
+
     @InjectMocks
     private UserPersistenceAdapter adapter;
 
@@ -34,10 +37,15 @@ class UserPersistenceAdapterTest {
     @DisplayName("save should persist user successfully")
     void saveOk() {
         User domainUser = new User(null, "alice", "alice@mail.com", true, Set.of("USER"), null, null, "secret");
-        UserEntity entity = UserMapper.toEntity(domainUser);
+        UserEntity entity = new UserEntity();
         entity.setId(1L);
+        entity.setUsername("alice");
+        entity.setEmail("alice@mail.com");
 
+        when(mapper.toEntity(any(User.class))).thenReturn(entity);
         when(repo.save(any(UserEntity.class))).thenReturn(entity);
+        when(mapper.toDomain(any(UserEntity.class))).thenReturn(
+                new User(1L, "alice", "alice@mail.com", true, Set.of("USER"), null, null, "secret"));
 
         User saved = adapter.save(domainUser);
 
@@ -46,6 +54,8 @@ class UserPersistenceAdapterTest {
         assertThat(saved.email()).isEqualTo("alice@mail.com");
 
         verify(repo, times(1)).save(any(UserEntity.class));
+        verify(mapper, times(1)).toEntity(any(User.class));
+        verify(mapper, times(1)).toDomain(any(UserEntity.class));
     }
 
     @Test
@@ -53,7 +63,9 @@ class UserPersistenceAdapterTest {
     void saveDuplicate() {
         User domainUser = new User(null, "bob", "bob@mail.com", true, Set.of("USER"), null, null, "secret");
 
-        when(repo.save(any(UserEntity.class))).thenThrow(new DataIntegrityViolationException("Duplicate entry uk_user_email"));
+        when(mapper.toEntity(any(User.class))).thenReturn(new UserEntity());
+        when(repo.save(any(UserEntity.class)))
+                .thenThrow(new DataIntegrityViolationException("Duplicate entry uk_user_email"));
 
         assertThatThrownBy(() -> adapter.save(domainUser))
                 .isInstanceOf(UserAlreadyExistsException.class)
