@@ -1,4 +1,4 @@
-package com.renewsim.backend.role.dto;
+package com.renewsim.backend.role_service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

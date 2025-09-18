@@ -2,6 +2,8 @@ package com.renewsim.backend.role.dto;
 
 import org.junit.jupiter.api.Test;
 
+import com.renewsim.backend.role_service.dto.RoleDTO;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class RoleDTOTest {

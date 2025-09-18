@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.renewsim.backend.exception.UserNotFoundException;
-import com.renewsim.backend.role.dto.RoleDTO;
+import com.renewsim.backend.role_service.dto.RoleDTO;
 import com.renewsim.backend.user.dto.UserRequestDTO;
 import com.renewsim.backend.user.dto.UserResponseDTO;
 
