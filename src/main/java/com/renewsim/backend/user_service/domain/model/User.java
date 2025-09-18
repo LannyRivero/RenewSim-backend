@@ -1,5 +1,7 @@
 package com.renewsim.backend.user_service.domain.model;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
+
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
@@ -9,14 +11,16 @@ public record User(
         String username,
         String email,
         boolean enabled,
-        Set<String> roles,
+        Set<RoleName> roles,
         Instant createdAt,
         Instant updatedAt,
         String passwordHash) {
 
     public User {
+        // Defensive copy + fallback
         roles = (roles == null) ? Set.of() : Set.copyOf(roles);
 
+        // Invariants
         Objects.requireNonNull(username, "Username cannot be null");
         Objects.requireNonNull(email, "Email cannot be null");
         Objects.requireNonNull(passwordHash, "Password cannot be null");
@@ -29,7 +33,7 @@ public record User(
         }
     }
 
-    public static User create(String username, String email, String passwordHash, Set<String> roles) {
+    public static User create(String username, String email, String passwordHash, Set<RoleName> roles) {
         return new User(
                 null,
                 username,
@@ -42,4 +46,3 @@ public record User(
         );
     }
 }
-

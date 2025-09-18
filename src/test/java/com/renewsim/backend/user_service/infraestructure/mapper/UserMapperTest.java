@@ -1,5 +1,7 @@
 package com.renewsim.backend.user_service.infraestructure.mapper;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.role_service.infrastructure.persistence.RoleEntity;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
@@ -24,7 +26,7 @@ class UserMapperTest {
                 "alice",
                 "alice@mail.com",
                 true,
-                Set.of("USER", "ADMIN"),
+                Set.of(RoleName.USER, RoleName.ADMIN),
                 Instant.now(),
                 Instant.now(),
                 "hashedPass");
@@ -50,7 +52,7 @@ class UserMapperTest {
         assertThat(user.id()).isNull();
         assertThat(user.username()).isEqualTo("bob");
         assertThat(user.email()).isEqualTo("bob@mail.com");
-        assertThat(user.roles()).containsExactly("USER");
+        assertThat(user.roles()).containsExactly(RoleName.USER);
         assertThat(user.passwordHash()).isEqualTo("StrongPass1");
     }
 
@@ -61,8 +63,11 @@ class UserMapperTest {
         entity.setId(10L);
         entity.setUsername("charlie");
         entity.setEmail("charlie@mail.com");
-        entity.setEnabled(false);
-        entity.setRolesCsv("USER,ADMIN,USER");
+        RoleEntity userRole = new RoleEntity();
+        userRole.setName(RoleName.USER);
+        RoleEntity adminRole = new RoleEntity();
+        adminRole.setName(RoleName.ADMIN);
+        entity.setRoles(Set.of(userRole, adminRole));
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
         entity.setPasswordHash("hashed");
@@ -71,7 +76,7 @@ class UserMapperTest {
 
         assertThat(user.id()).isEqualTo(10L);
         assertThat(user.username()).isEqualTo("charlie");
-        assertThat(user.roles()).containsExactlyInAnyOrder("USER", "ADMIN");
+        assertThat(user.roles()).containsExactlyInAnyOrder(RoleName.USER, RoleName.ADMIN);
     } 
 
     

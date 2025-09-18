@@ -3,6 +3,8 @@ package com.renewsim.backend.user_service.domain.model;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
+
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
@@ -21,11 +23,11 @@ class UserTest {
     @Test
     @DisplayName("should copy roles into unmodifiable set when provided")
     void testUserWithRoles() {
-        Set<String> roles = Set.of("USER", "ADMIN");
+        Set<RoleName> roles = Set.of(RoleName.USER, RoleName.ADMIN);
         User user = new User(2L, "alice", "alice@mail.com", true, roles, null, null, "hash456");
 
-        assertThat(user.roles()).containsExactlyInAnyOrder("USER", "ADMIN");
-        assertThatThrownBy(() -> user.roles().add("NEW_ROLE"))
+        assertThat(user.roles()).containsExactlyInAnyOrder(RoleName.USER, RoleName.ADMIN);
+        assertThatThrownBy(() -> user.roles().add(RoleName.SERVICE_AUTH))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
@@ -82,14 +84,14 @@ class UserTest {
     @Test
     @DisplayName("factory create() should build valid user with defaults")
     void testCreateUserValid() {
-        User user = User.create("john", "john@mail.com", "secure123", Set.of("USER"));
+        User user = User.create("john", "john@mail.com", "secure123", Set.of(RoleName.USER));
 
         assertThat(user.username()).isEqualTo("john");
         assertThat(user.email()).isEqualTo("john@mail.com");
         assertThat(user.enabled()).isTrue();
         assertThat(user.createdAt()).isNotNull();
         assertThat(user.updatedAt()).isNotNull();
-        assertThat(user.roles()).containsExactly("USER");
+        assertThat(user.roles()).containsExactly(RoleName.USER);
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.renewsim.backend.user_service.application.service;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
@@ -40,7 +41,7 @@ class CreateUserServiceTest {
     void testCreateValidUser() {
         UserCreateRequest request = new UserCreateRequest("Alice", "Alice@Mail.com", "StrongPass1");
 
-        User savedUser = new User(1L, "alice", "alice@mail.com", true, Set.of("USER"), null, null, "StrongPass1");
+        User savedUser = new User(1L, "alice", "alice@mail.com", true, Set.of(RoleName.USER), null, null, "StrongPass1");
 
         when(userRepositoryPort.existsByUsername("alice")).thenReturn(false);
         when(userRepositoryPort.existsByEmail("alice@mail.com")).thenReturn(false);
@@ -98,7 +99,7 @@ class CreateUserServiceTest {
     void testUserGetsDefaultRole() {
         UserCreateRequest request = new UserCreateRequest("diana", "Diana@Mail.com", "StrongPass1");
 
-        User savedUser = new User(2L, "diana", "diana@mail.com", true, Set.of("USER"), null, null, "StrongPass1");
+        User savedUser = new User(2L, "diana", "diana@mail.com", true, Set.of(RoleName.USER), null, null, "StrongPass1");
 
         when(userRepositoryPort.existsByUsername("diana")).thenReturn(false);
         when(userRepositoryPort.existsByEmail("diana@mail.com")).thenReturn(false);
@@ -117,7 +118,7 @@ class CreateUserServiceTest {
     void testEmailIsNormalized() {
         UserCreateRequest request = new UserCreateRequest("eve", " Eve@MAIL.COM ", "StrongPass1");
 
-        User savedUser = new User(3L, "eve", "eve@mail.com", true, Set.of("USER"), null, null, "StrongPass1");
+        User savedUser = new User(3L, "eve", "eve@mail.com", true, Set.of(RoleName.USER), null, null, "StrongPass1");
 
         when(userRepositoryPort.existsByUsername("eve")).thenReturn(false);
         when(userRepositoryPort.existsByEmail("eve@mail.com")).thenReturn(false);
