@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -24,6 +25,8 @@ public class MDCFilter implements Filter {
     private static final String ROLES = "roles";
     private static final String IP = "ip";
     private static final String PATH = "path";
+    private static final String METHOD = "method";
+    private static final String USER_AGENT = "userAgent";
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -32,14 +35,28 @@ public class MDCFilter implements Filter {
         try {
             HttpServletRequest httpReq = (HttpServletRequest) request;
 
-            // traceId único por request
-            MDC.put(TRACE_ID, UUID.randomUUID().toString());
+            // --- TraceId (propagado si existe, generado si no) ---
+            String traceId = Optional.ofNullable(httpReq.getHeader("X-Trace-Id"))
+                    .filter(id -> !id.isBlank())
+                    .orElse(UUID.randomUUID().toString());
+            MDC.put(TRACE_ID, traceId);
 
-            // IP y path
-            MDC.put(IP, httpReq.getRemoteAddr());
+            // --- Client IP (X-Forwarded-For > RemoteAddr) ---
+            String clientIp = Optional.ofNullable(httpReq.getHeader("X-Forwarded-For"))
+                    .map(ip -> ip.split(",")[0].trim())
+                    .orElse(httpReq.getRemoteAddr());
+            MDC.put(IP, clientIp);
+
+            // --- Request Path ---
             MDC.put(PATH, httpReq.getRequestURI());
 
-            // Usuario autenticado (si lo hay)
+            // --- HTTP Method ---
+            MDC.put(METHOD, httpReq.getMethod());
+
+            // --- User-Agent ---
+            MDC.put(USER_AGENT, Optional.ofNullable(httpReq.getHeader("User-Agent")).orElse("N/A"));
+
+            // --- User info (if authenticated) ---
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.isAuthenticated()
                     && !"anonymousUser".equals(authentication.getPrincipal())) {
@@ -53,10 +70,14 @@ public class MDCFilter implements Filter {
             }
 
             chain.doFilter(request, response);
+
         } finally {
             MDC.clear();
         }
     }
 }
+
+
+
 
 

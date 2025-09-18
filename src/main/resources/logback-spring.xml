@@ -4,14 +4,18 @@
     <property name="LOG_DIR" value="${SPRING_LOG_DIR:-logs}"/>
     <property name="LOG_FILE" value="${LOG_DIR}/application.log"/>
 
-    <!-- Pattern (ISO-8601 + MDC traceId con fallback + stacktrace) -->
+    <!-- MDC blocks -->
+    <property name="MDC_CORE"
+              value="traceId=%X{traceId:-N/A} username=%X{username:-N/A} roles=%X{roles:-N/A} 
+                     ip=%X{ip:-N/A} path=%X{path:-N/A} method=%X{method:-N/A} userAgent=%X{userAgent:-N/A}"/>
+
+    <property name="MDC_CUSTOM"
+              value="action=%X{action:-N/A} page=%X{page:-N/A} size=%X{size:-N/A} 
+                     usernameFilter=%X{usernameFilter:-N/A} emailFilter=%X{emailFilter:-N/A} enabledFilter=%X{enabledFilter:-N/A}"/>
+
+    <!-- Global pattern -->
     <property name="LOG_PATTERN"
-          value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level %logger{36} 
-          traceId=%X{traceId:-N/A} username=%X{username:-N/A} roles=%X{roles:-N/A} 
-          ip=%X{ip:-N/A} path=%X{path:-N/A} action=%X{action:-N/A} 
-          page=%X{page:-N/A} size=%X{size:-N/A} 
-          usernameFilter=%X{usernameFilter:-N/A} emailFilter=%X{emailFilter:-N/A} enabledFilter=%X{enabledFilter:-N/A} 
-          - %msg%n%ex{full}"/>
+              value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level %logger{36} ${MDC_CORE} ${MDC_CUSTOM} - %msg%n%ex{full}"/>
 
     <!-- Console -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -62,12 +66,8 @@
             <encoder>
                 <pattern>
                     %d{HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36})
-                    traceId=%X{traceId:-N/A} username=%X{username:-N/A} roles=%X{roles:-N/A}
-                    action=%X{action:-N/A} page=%X{page:-N/A} size=%X{size:-N/A}
-                    usernameFilter=%X{usernameFilter:-N/A} emailFilter=%X{emailFilter:-N/A} enabledFilter=%X{enabledFilter:-N/A}
-                    - %msg%n%ex{full}
+                    ${MDC_CORE} ${MDC_CUSTOM} - %msg%n%ex{full}
                 </pattern>
-
             </encoder>
         </appender>
 
@@ -104,7 +104,7 @@
         </rollingPolicy>
         <encoder>
             <pattern>
-                %d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level traceId=%X{traceId:-N/A} username=%X{username:-N/A} ip=%X{ip:-N/A} - %msg%n%ex{full}
+                %d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level ${MDC_CORE} - %msg%n
             </pattern>
         </encoder>
     </appender>
@@ -114,6 +114,7 @@
     </logger>
 
 </configuration>
+
 
 
 

@@ -13,7 +13,7 @@ import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.domain.service.UserPolicy;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
-import com.renewsim.backend.user_service.infraestructure.mapper.UserMapper;
+import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
 
 import java.util.Set;
 
@@ -24,6 +24,7 @@ import java.util.Set;
 public class CreateUserService implements CreateUserUseCase {
 
     private final UserRepositoryPort userRepositoryPort;
+    private final UserServiceMapper mapper;
 
     private static final String DEFAULT_ROLE = "USER";
 
@@ -59,7 +60,7 @@ public class CreateUserService implements CreateUserUseCase {
 
             User saved = userRepositoryPort.save(user);
             log.info("User created successfully id={} username={}", saved.id(), saved.username());
-            return UserMapper.toResponse(saved);
+            return mapper.toResponse(saved);
 
         } catch (UserAlreadyExistsException e) {
             throw e; 
