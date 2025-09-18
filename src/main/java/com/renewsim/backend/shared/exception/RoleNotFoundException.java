@@ -1,4 +1,4 @@
-package com.renewsim.backend.exception;
+package com.renewsim.backend.shared.exception;
 
 public class RoleNotFoundException extends ResourceNotFoundException {
     public RoleNotFoundException(String roleName) {
