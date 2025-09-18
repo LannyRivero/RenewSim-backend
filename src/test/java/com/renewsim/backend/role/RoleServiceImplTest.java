@@ -8,6 +8,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;

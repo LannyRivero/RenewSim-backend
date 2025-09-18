@@ -2,6 +2,8 @@ package com.renewsim.backend.role;
 
 import org.junit.jupiter.api.Test;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.DisplayName;

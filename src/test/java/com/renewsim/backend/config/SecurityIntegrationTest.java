@@ -22,8 +22,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.renewsim.backend.role.Role;
-import com.renewsim.backend.role.RoleName;
 import com.renewsim.backend.role.RoleRepository;
+import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.technologyComparison.TechnologyComparison;
 import com.renewsim.backend.technologyComparison.TechnologyComparisonRepository;
 import com.renewsim.backend.user.User;

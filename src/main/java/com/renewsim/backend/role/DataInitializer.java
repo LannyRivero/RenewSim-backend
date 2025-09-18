@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
+
 import java.util.List;
 
 @Component

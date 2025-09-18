@@ -1,7 +1,7 @@
 package com.renewsim.backend.testutil.mothers;
 
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
-import com.renewsim.backend.role.RoleName;
+import com.renewsim.backend.role_service.domain.model.RoleName;
 
 import java.util.Set;
 

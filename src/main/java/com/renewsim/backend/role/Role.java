@@ -3,6 +3,8 @@ package com.renewsim.backend.role;
 import jakarta.persistence.*;
 import java.util.Objects;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
+
 @Entity
 @Table(name = "roles")
 public class Role {

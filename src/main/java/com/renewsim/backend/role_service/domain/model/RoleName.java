@@ -1,4 +1,4 @@
-package com.renewsim.backend.role;
+package com.renewsim.backend.role_service.domain.model;
 
 public enum RoleName {
     USER("User"),
@@ -14,4 +14,13 @@ public enum RoleName {
     public String getDisplayName() {
         return displayName;
     }
+
+    /**
+     * Returns the authority name following Spring Security convention.
+     * Example: ROLE_USER, ROLE_ADMIN, ROLE_SERVICE_AUTH
+     */
+    public String asAuthority() {
+        return "ROLE_" + this.name();
+    }
 }
+

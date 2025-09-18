@@ -1,7 +1,7 @@
 package com.renewsim.backend.user;
 
 import com.renewsim.backend.role.Role;
-import com.renewsim.backend.role.RoleName;
+import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.simulation.SimulationMapper;
 import com.renewsim.backend.user.dto.UserRequestDTO;
 import com.renewsim.backend.user.dto.UserResponseDTO;

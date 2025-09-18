@@ -1,7 +1,7 @@
 package com.renewsim.backend.util;
 
 import com.renewsim.backend.role.Role;
-import com.renewsim.backend.role.RoleName;
+import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.user.User;
 
 import java.util.Set;

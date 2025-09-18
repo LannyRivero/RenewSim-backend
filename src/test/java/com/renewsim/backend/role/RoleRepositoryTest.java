@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
+
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
