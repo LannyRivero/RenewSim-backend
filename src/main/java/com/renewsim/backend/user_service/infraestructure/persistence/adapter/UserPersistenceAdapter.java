@@ -5,7 +5,7 @@ import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserFilterRequest;
-import com.renewsim.backend.user_service.infraestructure.mapper.UserMapper;
+import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
 import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;
 import com.renewsim.backend.user_service.infraestructure.persistence.repo.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ import java.util.Optional;
 public class UserPersistenceAdapter implements UserRepositoryPort {
 
     private final UserJpaRepository repo;
-       private final UserMapper mapper;
+       private final UserServiceMapper mapper;
 
     @Override
     public Optional<User> findById(Long id) {

@@ -13,7 +13,7 @@ import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort
 import com.renewsim.backend.user_service.dto.PageResponse;
 import com.renewsim.backend.user_service.dto.UserFilterRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
-import com.renewsim.backend.user_service.infraestructure.mapper.UserMapper;
+import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
 import com.renewsim.backend.shared.mapper.PageMapper;
 
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.List;
 public class ListUsersService implements ListUsersUseCase {
 
     private final UserRepositoryPort userRepositoryPort;
-    private final UserMapper mapper;
+    private final UserServiceMapper mapper;
 
     @Override
     public PageResponse<UserResponse> listUsers(int page, int size, UserFilterRequest filters) {

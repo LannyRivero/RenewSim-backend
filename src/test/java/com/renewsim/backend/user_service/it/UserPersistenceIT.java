@@ -2,6 +2,7 @@ package com.renewsim.backend.user_service.it;
 
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.user_service.domain.model.User;
+import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
 import com.renewsim.backend.user_service.infraestructure.persistence.adapter.UserPersistenceAdapter;
 import com.renewsim.backend.user_service.infraestructure.persistence.repo.UserJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -150,8 +151,8 @@ class UserPersistenceIT {
     @TestConfiguration
     static class Config {
         @Bean
-        UserPersistenceAdapter persistenceAdapter(UserJpaRepository repo) {
-            return new UserPersistenceAdapter(repo);
+        UserPersistenceAdapter persistenceAdapter(UserJpaRepository repo, UserServiceMapper mapper) {
+            return new UserPersistenceAdapter(repo, mapper);
         }
     }
 }

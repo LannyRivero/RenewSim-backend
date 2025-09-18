@@ -11,7 +11,7 @@ import com.renewsim.backend.user_service.application.port.in.GetUserUseCase;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserResponse;
-import com.renewsim.backend.user_service.infraestructure.mapper.UserMapper;
+import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
 
 @Slf4j
 @Service
@@ -20,7 +20,7 @@ import com.renewsim.backend.user_service.infraestructure.mapper.UserMapper;
 public class GetUserService implements GetUserUseCase {
 
     private final UserRepositoryPort userRepositoryPort;
-    private final UserMapper mapper;
+    private final UserServiceMapper mapper;
 
     @Override
     public UserResponse getUserById(Long id) {

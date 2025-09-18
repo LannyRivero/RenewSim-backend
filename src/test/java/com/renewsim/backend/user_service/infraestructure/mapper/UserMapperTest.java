@@ -14,7 +14,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.*;
 
 class UserMapperTest {
-    private final UserMapper mapper = Mappers.getMapper(UserMapper.class);
+    private final UserServiceMapper mapper = Mappers.getMapper(UserServiceMapper.class);
 
     @Test
     @DisplayName("should map User domain to UserResponse DTO")

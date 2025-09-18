@@ -3,7 +3,7 @@ package com.renewsim.backend.user_service.infraestructure.persistence.adapter;
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.domain.model.User;
-import com.renewsim.backend.user_service.infraestructure.mapper.UserMapper;
+import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
 import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;
 import com.renewsim.backend.user_service.infraestructure.persistence.repo.UserJpaRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +18,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,7 +28,7 @@ class UserPersistenceAdapterTest {
     private UserJpaRepository repo;
 
     @Mock
-    private UserMapper mapper; // ✅ ahora lo mockeamos
+    private UserServiceMapper mapper; 
 
     @InjectMocks
     private UserPersistenceAdapter adapter;

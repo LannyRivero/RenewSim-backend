@@ -11,16 +11,18 @@ import org.mapstruct.ReportingPolicy;
 import java.util.Set;
 
 @Mapper(
-        componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.IGNORE
+    componentModel = "spring",
+    implementationName = "UserServiceMapperImpl",
+    unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
-public interface UserMapper {
+public interface UserServiceMapper {
 
-    // -------- Entity <-> Domain --------
-    @Mapping(target = "roles", expression = "java(csvToSet(entity.getRolesCsv()))")
+    // -------- Entity -> Domain --------
+    @Mapping(target = "roles", source = "rolesCsv")  // Usa csvToSet automáticamente
     User toDomain(UserEntity entity);
 
-    @Mapping(target = "rolesCsv", expression = "java(setToCsv(domain.roles()))")
+    // -------- Domain -> Entity --------
+    @Mapping(target = "rolesCsv", source = "roles")  // Usa setToCsv automáticamente
     UserEntity toEntity(User domain);
 
     // -------- Domain -> DTO --------
@@ -51,4 +53,5 @@ public interface UserMapper {
                 : set.stream().sorted().collect(java.util.stream.Collectors.joining(","));
     }
 }
+
 
