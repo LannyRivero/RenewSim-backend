@@ -1,4 +1,4 @@
-package com.renewsim.backend.role_service.infrastructure.persistence;
+package com.renewsim.backend.role_service.infrastructure.persistence.entity;
 
 import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;

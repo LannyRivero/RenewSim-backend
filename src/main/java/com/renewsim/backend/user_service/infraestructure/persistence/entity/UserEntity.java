@@ -1,9 +1,10 @@
 package com.renewsim.backend.user_service.infraestructure.persistence.entity;
 
-import com.renewsim.backend.role_service.infrastructure.persistence.RoleEntity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
+import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 
 import java.time.Instant;
 import java.util.HashSet;
