@@ -1,4 +1,4 @@
-package com.renewsim.backend.config;
+package com.renewsim.backend.shared.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;

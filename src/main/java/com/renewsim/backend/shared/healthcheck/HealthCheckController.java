@@ -1,4 +1,4 @@
-package com.renewsim.backend.healthcheck;
+package com.renewsim.backend.shared.healthcheck;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

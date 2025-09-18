@@ -1,4 +1,4 @@
-package com.renewsim.backend.config;
+package com.renewsim.backend.shared.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
