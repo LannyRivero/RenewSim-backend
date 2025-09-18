@@ -10,35 +10,27 @@ class RoleDTOTest {
 
     @Test
     void testShouldCreateRoleDTOWithBuilder() {
-        RoleDTO roleDTO = RoleDTO.builder()
-                .id(1L)
-                .name("ADMIN")
-                .build();
+        RoleDTO roleDTO = new RoleDTO(1L, "ADMIN");
 
         assertNotNull(roleDTO);
-        assertEquals(1L, roleDTO.getId());
-        assertEquals("ADMIN", roleDTO.getName());
+        assertEquals(1L, roleDTO.id());
+        assertEquals("ADMIN", roleDTO.name());
     }
 
     @Test
     void testShouldSetAndGetFields() {
-        RoleDTO roleDTO = new RoleDTO();
-        roleDTO.setId(2L);
-        roleDTO.setName("USER");
+        RoleDTO roleDTO = new RoleDTO(2L, "USER");
 
-        assertEquals(2L, roleDTO.getId());
-        assertEquals("USER", roleDTO.getName());
+        assertEquals(2L, roleDTO.id());
+        assertEquals("USER", roleDTO.name());
     }
 
     @Test
     void testShouldHaveToStringRepresentation() {
-        RoleDTO roleDTO = RoleDTO.builder()
-                .id(3L)
-                .name("MODERATOR")
-                .build();
+        RoleDTO roleDTO = new RoleDTO(3L, "MODERATOR");
 
         String toString = roleDTO.toString();
         assertTrue(toString.contains("id=3"));
         assertTrue(toString.contains("name=MODERATOR"));
     }
-}
+ }

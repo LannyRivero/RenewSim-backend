@@ -24,9 +24,9 @@ public class RoleController {
     private final DeleteRoleUseCase deleteRoleUseCase;
 
     public RoleController(CreateRoleUseCase createRoleUseCase,
-                          GetRolesUseCase getRolesUseCase,
-                          AssignRoleUseCase assignRoleUseCase,
-                          DeleteRoleUseCase deleteRoleUseCase) {
+            GetRolesUseCase getRolesUseCase,
+            AssignRoleUseCase assignRoleUseCase,
+            DeleteRoleUseCase deleteRoleUseCase) {
         this.createRoleUseCase = createRoleUseCase;
         this.getRolesUseCase = getRolesUseCase;
         this.assignRoleUseCase = assignRoleUseCase;
@@ -39,9 +39,9 @@ public class RoleController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleDTO> createRole(@Valid @RequestBody RoleDTO request) {
-        RoleDTO created = createRoleUseCase.createRole(request);
-        return ResponseEntity.created(URI.create("/api/v1/roles/" + created.getId()))
-                             .body(created);
+        RoleDTO created = createRoleUseCase.create(request); // ✅ usar create()
+        return ResponseEntity.created(URI.create("/api/v1/roles/" + created.id()))
+                .body(created);
     }
 
     // ----------------------
@@ -50,17 +50,17 @@ public class RoleController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<RoleDTO>> getAllRoles() {
-        return ResponseEntity.ok(getRolesUseCase.getAllRoles());
+        return ResponseEntity.ok(getRolesUseCase.getAll());
     }
 
     // ----------------------
-    // PUT /roles/{id}/assign
+    // PUT /roles/{roleId}/assign/{userId}
     // ----------------------
-    @PutMapping("/{id}/assign")
+    @PutMapping("/{roleId}/assign/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> assignRoleToUser(@PathVariable Long id,
-                                                 @Valid @RequestBody UpdateRolesRequestDTO request) {
-        assignRoleUseCase.assignRoleToUser(id, request.getUserId());
+    public ResponseEntity<Void> assignRoleToUser(@PathVariable Long roleId,
+            @PathVariable Long userId) {
+        assignRoleUseCase.assignRoleToUser(roleId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -70,8 +70,7 @@ public class RoleController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
-        deleteRoleUseCase.deleteRole(id);
+        deleteRoleUseCase.delete(id); // ✅ usar delete()
         return ResponseEntity.noContent().build();
     }
 }
-

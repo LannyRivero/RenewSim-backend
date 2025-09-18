@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -27,28 +26,27 @@ public class RoleServiceImpl implements
     }
 
     @Override
-    public RoleDTO createRole(RoleDTO request) {
-        Role role = new Role(RoleName.valueOf(request.getName()));
+    public RoleDTO create(RoleDTO request) {
+        Role role = new Role(null, RoleName.valueOf(request.name()));
         Role saved = roleRepositoryPort.save(role);
-        return new RoleDTO(saved.getId(), saved.getName().name());
+        return new RoleDTO(saved.id(), saved.name().name());
     }
 
     @Override
-    public List<RoleDTO> getAllRoles() {
+    public List<RoleDTO> getAll() {
         return roleRepositoryPort.findAll()
                 .stream()
-                .map(role -> new RoleDTO(role.getId(), role.getName().name()))
-                .collect(Collectors.toList());
+                .map(role -> new RoleDTO(role.id(), role.name().name()))
+                .toList();
     }
 
     @Override
     public void assignRoleToUser(Long roleId, Long userId) {
-        // TODO: Integrar con UserService
         throw new UnsupportedOperationException("Assign role to user not yet implemented");
     }
 
     @Override
-    public void deleteRole(Long roleId) {
+    public void delete(Long roleId) {
         roleRepositoryPort.deleteById(roleId);
     }
 }

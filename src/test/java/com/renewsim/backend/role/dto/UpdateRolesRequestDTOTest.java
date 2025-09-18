@@ -2,6 +2,8 @@ package com.renewsim.backend.role.dto;
 
 import org.junit.jupiter.api.Test;
 
+import com.renewsim.backend.role_service.dto.UpdateRolesRequestDTO;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -9,34 +11,28 @@ import static org.junit.jupiter.api.Assertions.*;
 class UpdateRolesRequestDTOTest {
 
     @Test
-    void testShouldCreateUpdateRolesRequestDTOWithBuilder() {
-        UpdateRolesRequestDTO dto = UpdateRolesRequestDTO.builder()
-                .roles(List.of("ADMIN", "USER"))
-                .build();
+    void testShouldCreateUpdateRolesRequestDTO() {
+        UpdateRolesRequestDTO dto = new UpdateRolesRequestDTO(List.of("ADMIN", "USER"));
 
         assertNotNull(dto);
-        assertEquals(2, dto.getRoles().size());
-        assertTrue(dto.getRoles().contains("ADMIN"));
-        assertTrue(dto.getRoles().contains("USER"));
+        assertEquals(2, dto.roles().size());
+        assertTrue(dto.roles().contains("ADMIN"));
+        assertTrue(dto.roles().contains("USER"));
     }
 
     @Test
     void testShouldSetAndGetRoles() {
-        UpdateRolesRequestDTO dto = new UpdateRolesRequestDTO();
-        dto.setRoles(List.of("USER"));
+        UpdateRolesRequestDTO dto = new UpdateRolesRequestDTO(List.of("USER"));
 
-        assertEquals(1, dto.getRoles().size());
-        assertEquals("USER", dto.getRoles().get(0));
+        assertEquals(1, dto.roles().size());
+        assertEquals("USER", dto.roles().get(0));
     }
 
     @Test
     void testShouldHaveToStringRepresentation() {
-        UpdateRolesRequestDTO dto = UpdateRolesRequestDTO.builder()
-                .roles(List.of("ADMIN"))
-                .build();
+        UpdateRolesRequestDTO dto = new UpdateRolesRequestDTO(List.of("ADMIN"));
 
         String toString = dto.toString();
         assertTrue(toString.contains("roles=[ADMIN]"));
     }
 }
-
