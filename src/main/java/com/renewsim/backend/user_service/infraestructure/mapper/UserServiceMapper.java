@@ -1,7 +1,6 @@
 package com.renewsim.backend.user_service.infraestructure.mapper;
 
-import com.renewsim.backend.role_service.domain.model.RoleName;
-import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
+import com.renewsim.backend.role_service.infrastructure.mapper.RoleServiceMapper;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
@@ -10,21 +9,13 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
-import java.util.Set;
-
-@Mapper(
-    componentModel = "spring",
-    implementationName = "UserServiceMapperImpl",
-    unmappedTargetPolicy = ReportingPolicy.IGNORE
-)
+@Mapper(componentModel = "spring", uses = RoleServiceMapper.class, implementationName = "UserServiceMapperImpl", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserServiceMapper {
 
     // -------- Entity -> Domain --------
-    @Mapping(target = "roles", expression = "java(toDomainRoles(entity.getRoles()))")
     User toDomain(UserEntity entity);
 
     // -------- Domain -> Entity --------
-    @Mapping(target = "roles", expression = "java(toEntityRoles(domain.getRoles()))")
     UserEntity toEntity(User domain);
 
     // -------- Domain -> DTO --------
@@ -37,23 +28,4 @@ public interface UserServiceMapper {
     @Mapping(target = "createdAt", expression = "java(java.time.Instant.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.Instant.now())")
     User toDomain(UserCreateRequest request);
-
-    // -------- Helpers --------
-    default Set<RoleName> toDomainRoles(Set<RoleEntity> entities) {
-        if (entities == null) return Set.of();
-        return entities.stream()
-                .map(RoleEntity::getName) // RoleEntity → RoleName
-                .collect(java.util.stream.Collectors.toUnmodifiableSet());
-    }
-
-    default Set<RoleEntity> toEntityRoles(Set<RoleName> roles) {
-        if (roles == null) return Set.of();
-        return roles.stream()
-                .map(roleName -> {
-                    RoleEntity entity = new RoleEntity();
-                    entity.setName(roleName);
-                    return entity;
-                })
-                .collect(java.util.stream.Collectors.toSet());
-    }
 }
