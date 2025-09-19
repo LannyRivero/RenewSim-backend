@@ -18,7 +18,7 @@ public class RoleEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true, length = 50)
     private RoleName name;
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
