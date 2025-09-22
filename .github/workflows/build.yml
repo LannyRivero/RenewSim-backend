@@ -16,11 +16,13 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     env:
       SPRING_PROFILES_ACTIVE: test
       JWT_SECRET_BASE64: TzEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYwMTIzNDU2Nzg5YWJjZGVm
+      TESTCONTAINERS_RYUK_DISABLED: true
+      TESTCONTAINERS_CHECKS_DISABLE: true
 
     steps:
       - name: Checkout repository
@@ -33,16 +35,14 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Build + Unit & IT tests + Jacoco
-      - name: Build & test (with JaCoCo)
+      # Build + Unit & IT tests + JaCoCo + Testcontainers
+      - name: Build & test (with JaCoCo & Testcontainers)
         run: mvn -B -ntp -Dspring.profiles.active=test clean verify jacoco:report
 
-      # ✅ Gate: SecurityRateLimitPropertiesBindingTest must exist AND pass (0 failures/errors)
+      # ✅ Gate: SecurityRateLimitPropertiesBindingTest must exist AND pass
       - name: Ensure binding test executed and passed
         run: |
           set -euo pipefail
-
-          # Busca el reporte Surefire de ese test
           REPORT_FILE=$(ls -1 **/target/surefire-reports/TEST-*.xml | grep -E "SecurityRateLimitPropertiesBindingTest" || true)
 
           if [ -z "${REPORT_FILE}" ]; then
@@ -51,12 +51,9 @@ jobs:
           fi
 
           echo "Found report: ${REPORT_FILE}"
-          # Verifica que el test se ejecutó y pasó con 0 failures y 0 errors
           if ! grep -Eq 'tests="[1-9][0-9]*".*failures="0".*errors="0"' "${REPORT_FILE}"; then
             echo "::error::SecurityRateLimitPropertiesBindingTest did not pass successfully"
-            echo "---- Report content ----"
             cat "${REPORT_FILE}" || true
-            echo "------------------------"
             exit 1
           fi
 
@@ -75,4 +72,3 @@ jobs:
         with:
           name: jacoco-report
           path: target/site/jacoco
-
