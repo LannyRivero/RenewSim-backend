@@ -5,6 +5,7 @@ import com.renewsim.backend.role_service.application.port.in.CreateRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.DeleteRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.GetRolesUseCase;
 import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.role_service.dto.RoleCreateRequestDTO;
 import com.renewsim.backend.role_service.dto.RoleDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -56,11 +57,11 @@ public class RoleController {
             }
     )
     public ResponseEntity<RoleDTO> createRole(
-            @Valid @RequestBody RoleDTO request) {
-        RoleDTO created = createRoleUseCase.create(request);
-        return ResponseEntity.created(URI.create("/api/v1/roles/" + created.id()))
-                .body(created);
-    }
+        @Valid @RequestBody RoleCreateRequestDTO request) {
+    RoleDTO created = createRoleUseCase.create(new RoleDTO(null, request.name()));
+    return ResponseEntity.created(URI.create("/api/v1/roles/" + created.id()))
+            .body(created);
+}
 
     // ----------------------
     // GET /roles
