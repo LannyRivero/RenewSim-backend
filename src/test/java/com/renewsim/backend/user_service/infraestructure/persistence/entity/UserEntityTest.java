@@ -3,6 +3,9 @@ package com.renewsim.backend.user_service.infraestructure.persistence.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
+
 import java.time.Instant;
 import java.util.Set;
 
@@ -15,20 +18,23 @@ class UserEntityTest {
     void testRolesConversion() {
         UserEntity entity = new UserEntity();
 
-        // set roles
-        entity.setRoles(Set.of("USER", "ADMIN"));
-        assertThat(entity.getRolesCsv()).contains("USER").contains("ADMIN");
+        RoleEntity userRole = new RoleEntity();
+        userRole.setName(RoleName.USER);
+        RoleEntity adminRole = new RoleEntity();
+        adminRole.setName(RoleName.ADMIN);
+        entity.setRoles(Set.of(userRole, adminRole));
+        Set<RoleEntity> roles = entity.getRoles();
+        assertThat(roles).hasSize(2);
+        assertThat(roles).extracting("name").containsExactlyInAnyOrder(RoleName.USER, RoleName.ADMIN);
 
-        // get roles
-        Set<String> roles = entity.getRoles();
-        assertThat(roles).containsExactlyInAnyOrder("USER", "ADMIN");
+        assertThat(roles).extracting("name").containsExactlyInAnyOrder(RoleName.USER, RoleName.ADMIN);
     }
 
     @Test
     @DisplayName("should handle empty rolesCsv gracefully")
     void testEmptyRoles() {
         UserEntity entity = new UserEntity();
-        entity.setRolesCsv("");
+        entity.setRoles(Set.of());
         assertThat(entity.getRoles()).isEmpty();
     }
 
@@ -72,7 +78,10 @@ class UserEntityTest {
         entity.setEnabled(true);
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
-        entity.setRoles(Set.of("USER"));
+        
+        RoleEntity userRole = new RoleEntity();
+        userRole.setName(RoleName.USER);
+        entity.setRoles(Set.of(userRole));
 
         String str = entity.toString();
 

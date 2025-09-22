@@ -1,5 +1,6 @@
 package com.renewsim.backend.user_service.application.service;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
@@ -37,7 +38,7 @@ class GetUserServiceTest {
                 "alice",
                 "alice@mail.com",
                 true,
-                Set.of("USER"),
+                Set.of(RoleName.USER),
                 null,
                 null,
                 "StrongPass1");

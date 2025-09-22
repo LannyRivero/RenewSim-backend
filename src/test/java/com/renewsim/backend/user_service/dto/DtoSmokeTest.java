@@ -3,6 +3,8 @@ package com.renewsim.backend.user_service.dto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
+
 import java.util.List;
 import java.util.Set;
 
@@ -37,14 +39,14 @@ class DtoSmokeTest {
                 "john",
                 "john@example.com",
                 "securePass",
-                Set.of("USER", "ADMIN"),
+                Set.of(RoleName.USER, RoleName.ADMIN),
                 true
         );
 
         assertThat(dto.username()).isEqualTo("john");
         assertThat(dto.email()).isEqualTo("john@example.com");
         assertThat(dto.passwordHash()).isEqualTo("securePass");
-        assertThat(dto.roles()).contains("USER", "ADMIN");
+        assertThat(dto.roles()).contains(RoleName.USER, RoleName.ADMIN);
         assertThat(dto.enabled()).isTrue();
     }
 

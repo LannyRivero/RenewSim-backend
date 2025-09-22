@@ -14,6 +14,7 @@ import com.renewsim.backend.user_service.domain.service.UserPolicy;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
 import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
+import com.renewsim.backend.role_service.domain.model.RoleName;
 
 import java.util.Set;
 
@@ -26,7 +27,7 @@ public class CreateUserService implements CreateUserUseCase {
     private final UserRepositoryPort userRepositoryPort;
     private final UserServiceMapper mapper;
 
-    private static final String DEFAULT_ROLE = "USER";
+    private static final RoleName DEFAULT_ROLE = RoleName.USER;
 
     @Override
     public UserResponse createUser(UserCreateRequest req) {
@@ -44,31 +45,23 @@ public class CreateUserService implements CreateUserUseCase {
 
             if (userRepositoryPort.existsByUsername(username) || userRepositoryPort.existsByEmail(email)) {
                 log.warn("User creation failed: username={} or email={} already exists", username, email);
-                throw new UserAlreadyExistsException("User with username '" + username + "' or email '" + email + "' already exists");
+                throw new UserAlreadyExistsException(
+                        "User with username '" + username + "' or email '" + email + "' already exists"
+                );
             }
 
-            User user = new User(
-                    null,
-                    username,
-                    email,
-                    true,
-                    Set.of(DEFAULT_ROLE),
-                    null,
-                    null,
-                    req.passwordHash()
-            );
+            //  Usa la factory del dominio
+            User user = User.create(username, email, req.passwordHash(), Set.of(DEFAULT_ROLE));
 
             User saved = userRepositoryPort.save(user);
             log.info("User created successfully id={} username={}", saved.id(), saved.username());
             return mapper.toResponse(saved);
 
         } catch (UserAlreadyExistsException e) {
-            throw e; 
+            throw e;
         } catch (Exception e) {
             log.error("Unexpected error while creating user email={} username={}", email, username, e);
             throw e;
-        } finally {
-            
         }
     }
 }

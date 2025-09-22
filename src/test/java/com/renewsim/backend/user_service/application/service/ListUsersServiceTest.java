@@ -1,5 +1,6 @@
 package com.renewsim.backend.user_service.application.service;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
@@ -58,8 +59,8 @@ class ListUsersServiceTest {
     void testUsersFound() {
         var filters = new UserFilterRequest("alice", null, true);
 
-        User user1 = new User(1L, "alice", "alice@mail.com", true, Set.of("USER"), null, null, "hashed1");
-        User user2 = new User(2L, "bob", "bob@mail.com", true, Set.of("ADMIN"), null, null, "hashed2");
+        User user1 = new User(1L, "alice", "alice@mail.com", true, Set.of(RoleName.USER), null, null, "hashed1");
+        User user2 = new User(2L, "bob", "bob@mail.com", true, Set.of(RoleName.ADMIN), null, null, "hashed2");
 
         Page<User> page = new PageImpl<>(List.of(user1, user2));
         when(userRepositoryPort.search(filters, PageRequest.of(0, 5))).thenReturn(page);

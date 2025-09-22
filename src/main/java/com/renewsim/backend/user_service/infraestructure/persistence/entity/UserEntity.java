@@ -1,13 +1,15 @@
 package com.renewsim.backend.user_service.infraestructure.persistence.entity;
 
 import jakarta.persistence.*;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
+import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
+
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "users", indexes = {
@@ -27,7 +29,7 @@ public class UserEntity {
     @Column(unique = true, nullable = false, length = 32)
     private String username;
 
-    @Column(unique =  true, nullable = false, length = 255)
+    @Column(unique = true, nullable = false, length = 255)
     private String email;
 
     @Column(name = "password", nullable = false, length = 255)
@@ -44,21 +46,20 @@ public class UserEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    @Column(nullable = false, length = 1024)
-    private String rolesCsv = "";
+    // Nueva relación con RoleEntity
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"),
+            uniqueConstraints = @UniqueConstraint(
+                    name = "uk_user_roles_user_id_role_id",
+                    columnNames = {"user_id", "role_id"}
+            )
+    )
+    private Set<RoleEntity> roles = new HashSet<>();
 
-    @PrePersist
-    void prePersist() {
-        createdAt = Instant.now();
-        updatedAt = createdAt;
-        enabled = true;
-    }
-
-    @PreUpdate
-    void preUpdate() {
-        updatedAt = Instant.now();
-    }
-
+    // --- Getters & Setters ---
     public Long getId() {
         return id;
     }
@@ -115,38 +116,25 @@ public class UserEntity {
         this.updatedAt = updatedAt;
     }
 
-    public String getRolesCsv() {
-        return rolesCsv;
+    public Set<RoleEntity> getRoles() {
+        return roles;
     }
 
-    public void setRolesCsv(String rolesCsv) {
-        this.rolesCsv = rolesCsv;
+    public void setRoles(Set<RoleEntity> roles) {
+        this.roles = roles;
     }
 
-    public Set<String> getRoles() {
-        return Arrays.stream(rolesCsv.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toUnmodifiableSet());
-    }
-
-    public void setRoles(Set<String> roles) {
-        this.rolesCsv = String.join(",", roles);
-    }
-
+    // --- equals, hashCode, toString ---
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (!(o instanceof UserEntity))
-            return false;
-        UserEntity that = (UserEntity) o;
+        if (this == o) return true;
+        if (!(o instanceof UserEntity that)) return false;
         return id != null && id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hashCode(id);
     }
 
     @Override
@@ -156,10 +144,22 @@ public class UserEntity {
                 ", username='" + username + '\'' +
                 ", email='" + email + '\'' +
                 ", enabled=" + enabled +
-                ", roles=" + getRoles() +
+                ", roles=" + roles +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';
     }
 
+    @PrePersist
+    public void prePersist() {
+        this.enabled = true;
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+    
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = Instant.now();
+    }
 }
+

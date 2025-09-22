@@ -1,7 +1,8 @@
 package com.renewsim.backend.auth_service.web.dto;
 
-import com.renewsim.backend.role.RoleName;
 import java.util.Set;
+
+import com.renewsim.backend.role_service.domain.model.RoleName;
 
 public record UserSnapshot(
         String username,

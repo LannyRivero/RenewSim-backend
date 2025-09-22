@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,7 +17,9 @@ import com.renewsim.backend.user_service.application.port.in.CreateUserUseCase;
 import com.renewsim.backend.user_service.application.port.in.ExistsUserUseCase;
 import com.renewsim.backend.user_service.application.port.in.GetUserUseCase;
 import com.renewsim.backend.user_service.application.port.in.ListUsersUseCase;
+import com.renewsim.backend.user_service.application.port.in.UpdateUserRolesUseCase;
 import com.renewsim.backend.user_service.dto.PageResponse;
+import com.renewsim.backend.user_service.dto.UpdateUserRolesRequestDTO;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.dto.UserCredentialsDTO;
 import com.renewsim.backend.user_service.dto.UserFilterRequest;
@@ -38,6 +41,7 @@ public class UserController {
     private final ExistsUserUseCase existsUserUseCase;
     private final GetUserUseCase getUserUseCase;
     private final ListUsersUseCase listUsersUseCase;
+    private final UpdateUserRolesUseCase updateUserRolesUseCase;
 
     @Operation(summary = "Crear usuario", description = "Requiere rol **ADMIN** o scope **user:write**", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping
@@ -117,4 +121,16 @@ public class UserController {
         return ResponseEntity.ok(existsUserUseCase.existsByUsernameOrEmail(username, email));
     }
 
+
+    @Operation(summary = "Actualizar roles de un usuario",
+            description = "Requiere rol **ADMIN**",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @PutMapping("/{id}/roles")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> updateUserRoles(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserRolesRequestDTO request) {
+        updateUserRolesUseCase.updateUserRoles(id, request);
+        return ResponseEntity.noContent().build();
+    }
 }

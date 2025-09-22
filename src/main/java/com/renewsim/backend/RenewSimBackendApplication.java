@@ -19,7 +19,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 
 
 @SpringBootApplication
-@EnableFeignClients(basePackages = "com.renewsim.backend.auth_service.infrastructure.client")
+@EnableFeignClients(basePackages = "com.renewsim.backend")
 @EnableMethodSecurity
 @EnableAspectJAutoProxy
 @EnableCaching 

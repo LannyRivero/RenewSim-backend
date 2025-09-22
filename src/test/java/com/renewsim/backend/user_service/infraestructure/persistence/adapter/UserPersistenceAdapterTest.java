@@ -1,5 +1,6 @@
 package com.renewsim.backend.user_service.infraestructure.persistence.adapter;
 
+import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.domain.model.User;
@@ -36,7 +37,7 @@ class UserPersistenceAdapterTest {
     @Test
     @DisplayName("save should persist user successfully")
     void saveOk() {
-        User domainUser = new User(null, "alice", "alice@mail.com", true, Set.of("USER"), null, null, "secret");
+        User domainUser = new User(null, "alice", "alice@mail.com", true, Set.of(RoleName.USER), null, null, "secret");
         UserEntity entity = new UserEntity();
         entity.setId(1L);
         entity.setUsername("alice");
@@ -45,7 +46,7 @@ class UserPersistenceAdapterTest {
         when(mapper.toEntity(any(User.class))).thenReturn(entity);
         when(repo.save(any(UserEntity.class))).thenReturn(entity);
         when(mapper.toDomain(any(UserEntity.class))).thenReturn(
-                new User(1L, "alice", "alice@mail.com", true, Set.of("USER"), null, null, "secret"));
+                new User(1L, "alice", "alice@mail.com", true, Set.of(RoleName.USER), null, null, "secret"));
 
         User saved = adapter.save(domainUser);
 
@@ -61,7 +62,7 @@ class UserPersistenceAdapterTest {
     @Test
     @DisplayName("save should throw UserAlreadyExistsException on duplicate constraint")
     void saveDuplicate() {
-        User domainUser = new User(null, "bob", "bob@mail.com", true, Set.of("USER"), null, null, "secret");
+        User domainUser = new User(null, "bob", "bob@mail.com", true, Set.of(RoleName.USER), null, null, "secret");
 
         when(mapper.toEntity(any(User.class))).thenReturn(new UserEntity());
         when(repo.save(any(UserEntity.class)))
