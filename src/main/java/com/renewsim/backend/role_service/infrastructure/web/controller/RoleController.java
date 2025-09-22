@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -52,16 +54,16 @@ public class RoleController {
             responses = {
                     @ApiResponse(responseCode = "201", description = "Role created successfully",
                             content = @Content(schema = @Schema(implementation = RoleDTO.class))),
-                    @ApiResponse(responseCode = "409", description = "Role already exists",
-                            content = @Content)
+                    @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
+                    @ApiResponse(responseCode = "409", description = "Role already exists", content = @Content)
             }
     )
     public ResponseEntity<RoleDTO> createRole(
-        @Valid @RequestBody RoleCreateRequestDTO request) {
-    RoleDTO created = createRoleUseCase.create(new RoleDTO(null, request.name()));
-    return ResponseEntity.created(URI.create("/api/v1/roles/" + created.id()))
-            .body(created);
-}
+            @Valid @RequestBody RoleCreateRequestDTO request) {
+        RoleDTO created = createRoleUseCase.create(new RoleDTO(null, request.name()));
+        return ResponseEntity.created(URI.create("/api/v1/roles/" + created.id()))
+                .body(created);
+    }
 
     // ----------------------
     // GET /roles
@@ -90,12 +92,13 @@ public class RoleController {
             description = "Checks if a role exists by its name. Accessible to ADMIN and SERVICE_AUTH.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "True if role exists, false otherwise",
-                            content = @Content(schema = @Schema(implementation = Boolean.class)))
+                            content = @Content(schema = @Schema(implementation = Boolean.class))),
+                    @ApiResponse(responseCode = "400", description = "Validation error", content = @Content)
             }
     )
     public ResponseEntity<Boolean> existsRole(
             @Parameter(description = "Role name to check", example = "ADMIN")
-            @PathVariable String name) {
+            @PathVariable @NotBlank(message = "Role name cannot be blank") String name) {
         try {
             RoleName roleName = RoleName.valueOf(name.toUpperCase());
             return ResponseEntity.ok(getRolesUseCase.getAll().stream()
@@ -115,12 +118,13 @@ public class RoleController {
             description = "Assigns a role to a specific user. Only ADMINs can access this endpoint.",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Role assigned successfully"),
-                    @ApiResponse(responseCode = "404", description = "User or role not found")
+                    @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "User or role not found", content = @Content)
             }
     )
     public ResponseEntity<Void> assignRoleToUser(
-            @Parameter(description = "Role ID") @PathVariable Long roleId,
-            @Parameter(description = "User ID") @PathVariable Long userId) {
+            @Parameter(description = "Role ID") @PathVariable @NotNull(message = "Role ID cannot be null") Long roleId,
+            @Parameter(description = "User ID") @PathVariable @NotNull(message = "User ID cannot be null") Long userId) {
         assignRoleUseCase.assignRoleToUser(roleId, userId);
         return ResponseEntity.noContent().build();
     }
@@ -135,13 +139,16 @@ public class RoleController {
             description = "Deletes a role by its ID. Only ADMINs or users with 'roles:write' authority can access this endpoint.",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Role deleted successfully"),
-                    @ApiResponse(responseCode = "404", description = "Role not found")
+                    @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
+                    @ApiResponse(responseCode = "404", description = "Role not found", content = @Content)
             }
     )
     public ResponseEntity<Void> deleteRole(
-            @Parameter(description = "Role ID to delete") @PathVariable Long id) {
+            @Parameter(description = "Role ID to delete")
+            @PathVariable @NotNull(message = "Role ID cannot be null") Long id) {
         deleteRoleUseCase.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
+
 
