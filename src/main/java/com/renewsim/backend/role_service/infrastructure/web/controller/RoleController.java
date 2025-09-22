@@ -1,15 +1,16 @@
 package com.renewsim.backend.role_service.infrastructure.web.controller;
 
-import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
 import com.renewsim.backend.role_service.application.port.in.AssignRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.CreateRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.DeleteRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.GetRolesUseCase;
+import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.role_service.dto.RoleDTO;
+
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
@@ -24,9 +25,9 @@ public class RoleController {
     private final DeleteRoleUseCase deleteRoleUseCase;
 
     public RoleController(CreateRoleUseCase createRoleUseCase,
-            GetRolesUseCase getRolesUseCase,
-            AssignRoleUseCase assignRoleUseCase,
-            DeleteRoleUseCase deleteRoleUseCase) {
+                          GetRolesUseCase getRolesUseCase,
+                          AssignRoleUseCase assignRoleUseCase,
+                          DeleteRoleUseCase deleteRoleUseCase) {
         this.createRoleUseCase = createRoleUseCase;
         this.getRolesUseCase = getRolesUseCase;
         this.assignRoleUseCase = assignRoleUseCase;
@@ -39,7 +40,7 @@ public class RoleController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleDTO> createRole(@Valid @RequestBody RoleDTO request) {
-        RoleDTO created = createRoleUseCase.create(request); // ✅ usar create()
+        RoleDTO created = createRoleUseCase.create(request);
         return ResponseEntity.created(URI.create("/api/v1/roles/" + created.id()))
                 .body(created);
     }
@@ -54,12 +55,27 @@ public class RoleController {
     }
 
     // ----------------------
+    // GET /roles/exists/{name}
+    // ----------------------
+    @GetMapping("/exists/{name}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SERVICE_AUTH')")
+    public ResponseEntity<Boolean> existsRole(@PathVariable String name) {
+        try {
+            RoleName roleName = RoleName.valueOf(name.toUpperCase());
+            return ResponseEntity.ok(getRolesUseCase.getAll().stream()
+                    .anyMatch(r -> r.name().equalsIgnoreCase(roleName.name())));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    // ----------------------
     // PUT /roles/{roleId}/assign/{userId}
     // ----------------------
     @PutMapping("/{roleId}/assign/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> assignRoleToUser(@PathVariable Long roleId,
-            @PathVariable Long userId) {
+                                                 @PathVariable Long userId) {
         assignRoleUseCase.assignRoleToUser(roleId, userId);
         return ResponseEntity.noContent().build();
     }
@@ -70,7 +86,7 @@ public class RoleController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
-        deleteRoleUseCase.delete(id); // ✅ usar delete()
+        deleteRoleUseCase.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
