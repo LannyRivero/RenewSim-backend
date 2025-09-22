@@ -6,7 +6,6 @@ import com.renewsim.backend.role_service.application.port.in.DeleteRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.GetRolesUseCase;
 import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.role_service.dto.RoleDTO;
-
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,29 +33,21 @@ public class RoleController {
         this.deleteRoleUseCase = deleteRoleUseCase;
     }
 
-    // ----------------------
-    // POST /roles
-    // ----------------------
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('roles:write')")
     public ResponseEntity<RoleDTO> createRole(@Valid @RequestBody RoleDTO request) {
         RoleDTO created = createRoleUseCase.create(request);
         return ResponseEntity.created(URI.create("/api/v1/roles/" + created.id()))
                 .body(created);
     }
 
-    // ----------------------
-    // GET /roles
-    // ----------------------
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ResponseEntity<List<RoleDTO>> getAllRoles() {
         return ResponseEntity.ok(getRolesUseCase.getAll());
     }
 
-    // ----------------------
-    // GET /roles/exists/{name}
-    // ----------------------
+   
     @GetMapping("/exists/{name}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SERVICE_AUTH')")
     public ResponseEntity<Boolean> existsRole(@PathVariable String name) {
@@ -69,9 +60,7 @@ public class RoleController {
         }
     }
 
-    // ----------------------
-    // PUT /roles/{roleId}/assign/{userId}
-    // ----------------------
+    
     @PutMapping("/{roleId}/assign/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> assignRoleToUser(@PathVariable Long roleId,
@@ -80,13 +69,12 @@ public class RoleController {
         return ResponseEntity.noContent().build();
     }
 
-    // ----------------------
-    // DELETE /roles/{id}
-    // ----------------------
+   
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('roles:write')")
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
         deleteRoleUseCase.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
+
