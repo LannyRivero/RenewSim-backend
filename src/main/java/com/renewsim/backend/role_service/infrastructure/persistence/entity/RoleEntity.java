@@ -10,7 +10,11 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
-@Table(name = "roles")
+@Table(
+    name = "roles",
+    indexes = {
+        @Index(name = "idx_role_name", columnList = "name", unique = true)
+    })
 public class RoleEntity {
 
     @Id
@@ -27,7 +31,13 @@ public class RoleEntity {
     public RoleEntity() {}
 
     public RoleEntity(RoleName name) {
-        this.name = name;
+        this.name = Objects.requireNonNull(name, "RoleName cannot be null");
+    }
+
+    public RoleEntity(Long id, RoleName name) {
+        this.id = id;
+        this.name = Objects.requireNonNull(name, "RoleName cannot be null");
+
     }
 
     public Long getId() {
@@ -43,7 +53,7 @@ public class RoleEntity {
     }
 
     public void setName(RoleName name) {
-        this.name = name;
+        this.name = Objects.requireNonNull(name, "RoleName cannot be null");
     }
 
     public Set<UserEntity> getUsers() {
