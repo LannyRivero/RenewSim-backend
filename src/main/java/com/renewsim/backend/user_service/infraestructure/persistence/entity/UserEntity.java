@@ -47,16 +47,9 @@ public class UserEntity {
     private Instant updatedAt;
 
     // Nueva relación con RoleEntity
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"),
-            uniqueConstraints = @UniqueConstraint(
-                    name = "uk_user_roles_user_id_role_id",
-                    columnNames = {"user_id", "role_id"}
-            )
-    )
+    @ManyToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"), uniqueConstraints = @UniqueConstraint(name = "uk_user_roles_user_id_role_id", columnNames = {
+            "user_id", "role_id" }))
     private Set<RoleEntity> roles = new HashSet<>();
 
     // --- Getters & Setters ---
@@ -127,8 +120,10 @@ public class UserEntity {
     // --- equals, hashCode, toString ---
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof UserEntity that)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof UserEntity that))
+            return false;
         return id != null && id.equals(that.id);
     }
 
@@ -156,10 +151,9 @@ public class UserEntity {
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
     }
-    
+
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
     }
 }
-

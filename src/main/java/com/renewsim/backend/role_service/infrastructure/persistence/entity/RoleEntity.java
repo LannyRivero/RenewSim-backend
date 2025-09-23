@@ -10,11 +10,9 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
-@Table(
-    name = "roles",
-    indexes = {
+@Table(name = "roles", indexes = {
         @Index(name = "idx_role_name", columnList = "name", unique = true)
-    })
+})
 public class RoleEntity {
 
     @Id
@@ -28,7 +26,8 @@ public class RoleEntity {
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     private Set<UserEntity> users = new HashSet<>();
 
-    public RoleEntity() {}
+    public RoleEntity() {
+    }
 
     public RoleEntity(RoleName name) {
         this.name = Objects.requireNonNull(name, "RoleName cannot be null");
@@ -67,14 +66,16 @@ public class RoleEntity {
     // equals & hashCode basados en name para evitar duplicados
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof RoleEntity that)) return false;
-        return name == that.name;
+        if (this == o)
+            return true;
+        if (!(o instanceof RoleEntity that))
+            return false;
+        return Objects.equals(id, that.id) && name == that.name;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(id, name);
     }
 
     @Override
@@ -82,4 +83,3 @@ public class RoleEntity {
         return "RoleEntity{name=" + name + '}';
     }
 }
-
