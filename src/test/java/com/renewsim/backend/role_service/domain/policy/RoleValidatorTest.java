@@ -34,8 +34,7 @@ class RoleValidatorTest {
 
         RoleAlreadyExistsException exception = assertThrows(
                 RoleAlreadyExistsException.class,
-                () -> roleValidator.validateRoleDoesNotExist(RoleName.ADMIN)
-        );
+                () -> roleValidator.validateRoleDoesNotExist(RoleName.ADMIN));
 
         assertTrue(exception.getMessage().contains("Role already exists"));
         verify(roleRepositoryPort).findByName(RoleName.ADMIN);
@@ -57,8 +56,7 @@ class RoleValidatorTest {
 
         RoleNotFoundException exception = assertThrows(
                 RoleNotFoundException.class,
-                () -> roleValidator.validateRoleExists(99L)
-        );
+                () -> roleValidator.validateRoleExists(99L));
 
         assertTrue(exception.getMessage().contains("Role with id=99 not found"));
         verify(roleRepositoryPort).findById(99L);
@@ -73,5 +71,32 @@ class RoleValidatorTest {
         assertDoesNotThrow(() -> roleValidator.validateRoleExists(1L));
         verify(roleRepositoryPort).findById(1L);
     }
-}
 
+    @Test
+    @DisplayName("validateNotRemovingLastAdmin should throw when trying to remove the last ADMIN")
+    void validateNotRemovingLastAdmin_lastAdmin_throwsException() {
+        long totalAdmins = 1;
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> roleValidator.validateNotRemovingLastAdmin(totalAdmins, RoleName.ADMIN));
+
+        assertEquals("Cannot remove the last ADMIN role", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("validateNotRemovingLastAdmin should pass when more than one ADMIN exists")
+    void validateNotRemovingLastAdmin_multipleAdmins_passes() {
+        long totalAdmins = 2;
+
+        assertDoesNotThrow(() -> roleValidator.validateNotRemovingLastAdmin(totalAdmins, RoleName.ADMIN));
+    }
+
+    @Test
+    @DisplayName("validateNotRemovingLastAdmin should pass when removing a non-ADMIN role")
+    void validateNotRemovingLastAdmin_nonAdmin_passes() {
+        long totalAdmins = 1;
+
+        assertDoesNotThrow(() -> roleValidator.validateNotRemovingLastAdmin(totalAdmins, RoleName.USER));
+    }
+}
