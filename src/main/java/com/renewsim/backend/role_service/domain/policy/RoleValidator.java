@@ -1,10 +1,13 @@
 package com.renewsim.backend.role_service.domain.policy;
 
+import org.springframework.stereotype.Component;
+
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
 import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.shared.exception.RoleAlreadyExistsException;
 import com.renewsim.backend.shared.exception.RoleNotFoundException;
 
+@Component
 public class RoleValidator {
     private final RoleRepositoryPort roleRepositoryPort;
 
