@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -47,10 +48,11 @@ public class RoleController {
     // POST /roles
     // ----------------------
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('roles:write')")
+    @PreAuthorize("hasAuthority('SCOPE_roles:write') or hasRole('ADMIN')")
     @Operation(
             summary = "Create a new role",
-            description = "Creates a new system role. Only ADMINs or users with 'roles:write' authority can access this endpoint.",
+            description = "Requires role **ADMIN** or scope **roles:write**",
+            security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "201", description = "Role created successfully",
                             content = @Content(schema = @Schema(implementation = RoleDTO.class))),
@@ -58,8 +60,7 @@ public class RoleController {
                     @ApiResponse(responseCode = "409", description = "Role already exists", content = @Content)
             }
     )
-    public ResponseEntity<RoleDTO> createRole(
-            @Valid @RequestBody RoleCreateRequestDTO request) {
+    public ResponseEntity<RoleDTO> createRole(@Valid @RequestBody RoleCreateRequestDTO request) {
         RoleDTO created = createRoleUseCase.create(new RoleDTO(null, request.name()));
         return ResponseEntity.created(URI.create("/api/v1/roles/" + created.id()))
                 .body(created);
@@ -69,10 +70,11 @@ public class RoleController {
     // GET /roles
     // ----------------------
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PreAuthorize("hasAuthority('SCOPE_roles:read') or hasAnyRole('ADMIN','USER')")
     @Operation(
             summary = "List all roles",
-            description = "Retrieves all available roles. Accessible to ADMIN and USER.",
+            description = "Requires role **ADMIN**, **USER**, or scope **roles:read**",
+            security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "200", description = "List of roles",
                             content = @Content(schema = @Schema(implementation = RoleDTO.class)))
@@ -86,10 +88,11 @@ public class RoleController {
     // GET /roles/exists/{name}
     // ----------------------
     @GetMapping("/exists/{name}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SERVICE_AUTH')")
+    @PreAuthorize("hasAuthority('SCOPE_roles:read') or hasRole('ADMIN') or hasRole('SERVICE_AUTH')")
     @Operation(
             summary = "Check if role exists",
-            description = "Checks if a role exists by its name. Accessible to ADMIN and SERVICE_AUTH.",
+            description = "Requires role **ADMIN**, **SERVICE_AUTH**, or scope **roles:read**",
+            security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "200", description = "True if role exists, false otherwise",
                             content = @Content(schema = @Schema(implementation = Boolean.class))),
@@ -112,10 +115,11 @@ public class RoleController {
     // PUT /roles/{roleId}/assign/{userId}
     // ----------------------
     @PutMapping("/{roleId}/assign/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_roles:write') or hasRole('ADMIN')")
     @Operation(
             summary = "Assign role to user",
-            description = "Assigns a role to a specific user. Only ADMINs can access this endpoint.",
+            description = "Requires role **ADMIN** or scope **roles:write**",
+            security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "204", description = "Role assigned successfully"),
                     @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
@@ -133,10 +137,11 @@ public class RoleController {
     // DELETE /roles/{id}
     // ----------------------
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('roles:write')")
+    @PreAuthorize("hasAuthority('SCOPE_roles:delete') or hasRole('ADMIN')")
     @Operation(
             summary = "Delete a role",
-            description = "Deletes a role by its ID. Only ADMINs or users with 'roles:write' authority can access this endpoint.",
+            description = "Requires role **ADMIN** or scope **roles:delete**",
+            security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(responseCode = "204", description = "Role deleted successfully"),
                     @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
@@ -150,5 +155,3 @@ public class RoleController {
         return ResponseEntity.noContent().build();
     }
 }
-
-
