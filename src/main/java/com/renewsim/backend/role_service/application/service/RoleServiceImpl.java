@@ -7,6 +7,8 @@ import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.role_service.domain.policy.RolePolicy;
 import com.renewsim.backend.role_service.domain.policy.RoleValidator;
 import com.renewsim.backend.role_service.dto.RoleDTO;
+import com.renewsim.backend.role_service.infrastructure.mapper.RoleServiceMapper;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,29 +24,30 @@ public class RoleServiceImpl implements
 
     private final RoleRepositoryPort roleRepositoryPort;
     private final RoleValidator roleValidator;
+    private final RoleServiceMapper roleMapper;
 
-    public RoleServiceImpl(RoleRepositoryPort roleRepositoryPort, RoleValidator roleValidator) {
+    public RoleServiceImpl(RoleRepositoryPort roleRepositoryPort, RoleValidator roleValidator, RoleServiceMapper roleMapper) {
         this.roleRepositoryPort = roleRepositoryPort;
         this.roleValidator = roleValidator;
+        this.roleMapper = roleMapper;
     }
 
     @Override
     public RoleDTO create(RoleDTO request) {
         RoleName roleName = RolePolicy.normalizeRoleName(request.name());
-
         roleValidator.validateRoleDoesNotExist(roleName);
 
         Role role = new Role(null, roleName);
         Role saved = roleRepositoryPort.save(role);
 
-        return new RoleDTO(saved.id(), saved.name().name());
+        return roleMapper.toDTO(saved);
     }
 
     @Override
     public List<RoleDTO> getAll() {
         return roleRepositoryPort.findAll()
                 .stream()
-                .map(role -> new RoleDTO(role.id(), role.name().name()))
+                .map(roleMapper::toDTO)
                 .toList();
     }
 
@@ -56,7 +59,6 @@ public class RoleServiceImpl implements
     @Override
     public void delete(Long roleId) {
         roleValidator.validateRoleExists(roleId);
-
         roleRepositoryPort.deleteById(roleId);
     }
 }

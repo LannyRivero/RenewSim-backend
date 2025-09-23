@@ -5,6 +5,7 @@ import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.role_service.domain.policy.RoleValidator;
 import com.renewsim.backend.role_service.dto.RoleDTO;
+import com.renewsim.backend.role_service.infrastructure.mapper.RoleServiceMapperImpl;
 import com.renewsim.backend.shared.exception.RoleAlreadyExistsException;
 import com.renewsim.backend.shared.exception.RoleNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class RoleServiceImplTest {
@@ -21,12 +23,14 @@ class RoleServiceImplTest {
     private RoleRepositoryPort roleRepositoryPort;
     private RoleValidator roleValidator;
     private RoleServiceImpl roleService;
+    private RoleServiceMapperImpl roleServiceMapper;
 
     @BeforeEach
     void setUp() {
         roleRepositoryPort = mock(RoleRepositoryPort.class);
         roleValidator = mock(RoleValidator.class);
-        roleService = new RoleServiceImpl(roleRepositoryPort, roleValidator);
+        roleServiceMapper = mock(RoleServiceMapperImpl.class);
+        roleService = new RoleServiceImpl(roleRepositoryPort, roleValidator, roleServiceMapper);
     }
 
     @Test
@@ -38,6 +42,8 @@ class RoleServiceImplTest {
         // validator no lanza excepción
         doNothing().when(roleValidator).validateRoleDoesNotExist(RoleName.ADMIN);
         when(roleRepositoryPort.save(any())).thenReturn(role);
+        when(roleServiceMapper.toDTO(any(Role.class)))
+                .thenReturn(new RoleDTO(1L, "ADMIN"));
 
         RoleDTO result = roleService.create(dto);
 
@@ -90,6 +96,7 @@ class RoleServiceImplTest {
     @DisplayName("getAll should return roles list")
     void getAll_success() {
         when(roleRepositoryPort.findAll()).thenReturn(List.of(new Role(1L, RoleName.ADMIN)));
+        when(roleServiceMapper.toDTO(any(Role.class))).thenReturn(new RoleDTO(1L, "ADMIN"));
 
         var result = roleService.getAll();
 
