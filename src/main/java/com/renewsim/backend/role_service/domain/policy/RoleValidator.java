@@ -5,6 +5,7 @@ import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort
 import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.shared.exception.RoleAlreadyExistsException;
 import com.renewsim.backend.shared.exception.RoleNotFoundException;
+import com.renewsim.backend.shared.exception.LastAdminRemovalException;
 
 @Component
 public class RoleValidator {
@@ -32,7 +33,7 @@ public class RoleValidator {
     /** Validates that we are not removing the last ADMIN role in the system. */
     public void validateNotRemovingLastAdmin(long totalAdmins, RoleName roleNameToRemove) {
         if (roleNameToRemove == RoleName.ADMIN && totalAdmins <= 1) {
-            throw new IllegalStateException("Cannot remove the last ADMIN role");
+            throw new LastAdminRemovalException("Cannot remove the last ADMIN role");
         }
     }
 }

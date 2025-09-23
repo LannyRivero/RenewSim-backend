@@ -3,6 +3,7 @@ package com.renewsim.backend.role_service.domain.policy;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
 import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.exception.LastAdminRemovalException;
 import com.renewsim.backend.shared.exception.RoleAlreadyExistsException;
 import com.renewsim.backend.shared.exception.RoleNotFoundException;
 import org.junit.jupiter.api.DisplayName;
@@ -73,12 +74,12 @@ class RoleValidatorTest {
     }
 
     @Test
-    @DisplayName("validateNotRemovingLastAdmin should throw when trying to remove the last ADMIN")
+    @DisplayName("validateNotRemovingLastAdmin should throw LastAdminRemovalException when trying to remove the last ADMIN")
     void validateNotRemovingLastAdmin_lastAdmin_throwsException() {
         long totalAdmins = 1;
 
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
+        LastAdminRemovalException exception = assertThrows(
+                LastAdminRemovalException.class,
                 () -> roleValidator.validateNotRemovingLastAdmin(totalAdmins, RoleName.ADMIN));
 
         assertEquals("Cannot remove the last ADMIN role", exception.getMessage());
@@ -87,16 +88,13 @@ class RoleValidatorTest {
     @Test
     @DisplayName("validateNotRemovingLastAdmin should pass when more than one ADMIN exists")
     void validateNotRemovingLastAdmin_multipleAdmins_passes() {
-        long totalAdmins = 2;
-
-        assertDoesNotThrow(() -> roleValidator.validateNotRemovingLastAdmin(totalAdmins, RoleName.ADMIN));
+        assertDoesNotThrow(() -> roleValidator.validateNotRemovingLastAdmin(2, RoleName.ADMIN));
     }
 
     @Test
     @DisplayName("validateNotRemovingLastAdmin should pass when removing a non-ADMIN role")
     void validateNotRemovingLastAdmin_nonAdmin_passes() {
-        long totalAdmins = 1;
-
-        assertDoesNotThrow(() -> roleValidator.validateNotRemovingLastAdmin(totalAdmins, RoleName.USER));
+        assertDoesNotThrow(() -> roleValidator.validateNotRemovingLastAdmin(1, RoleName.USER));
     }
+
 }
