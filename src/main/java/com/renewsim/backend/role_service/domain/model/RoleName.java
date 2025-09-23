@@ -22,5 +22,15 @@ public enum RoleName {
     public String asAuthority() {
         return "ROLE_" + this.name();
     }
-}
 
+    /**
+     * Converts an authority string (e.g., ROLE_ADMIN) back into RoleName enum.
+     * Throws IllegalArgumentException if the value is invalid.
+     */
+    public static RoleName fromAuthority(String authority) {
+        if (authority != null && authority.startsWith("ROLE_")) {
+            return RoleName.valueOf(authority.substring(5));
+        }
+        throw new IllegalArgumentException("Invalid authority: " + authority);
+    }
+}
