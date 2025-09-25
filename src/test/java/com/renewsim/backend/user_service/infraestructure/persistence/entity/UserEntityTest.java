@@ -18,14 +18,10 @@ class UserEntityTest {
     void testRolesConversion() {
         UserEntity entity = new UserEntity();
 
-        RoleEntity userRole = new RoleEntity();
-        userRole.setName(RoleName.USER);
-        RoleEntity adminRole = new RoleEntity();
-        adminRole.setName(RoleName.ADMIN);
-        entity.setRoles(Set.of(userRole, adminRole));
-        Set<RoleEntity> roles = entity.getRoles();
+        entity.setRoles(Set.of("USER", "ADMIN"));
+        Set<String> roles = entity.getRoles();
         assertThat(roles).hasSize(2);
-        assertThat(roles).extracting("name").containsExactlyInAnyOrder(RoleName.USER, RoleName.ADMIN);
+        assertThat(roles).containsExactlyInAnyOrder("USER", "ADMIN");
 
         assertThat(roles).extracting("name").containsExactlyInAnyOrder(RoleName.USER, RoleName.ADMIN);
     }
@@ -81,11 +77,10 @@ class UserEntityTest {
         
         RoleEntity userRole = new RoleEntity();
         userRole.setName(RoleName.USER);
-        entity.setRoles(Set.of(userRole));
-
+        entity.setUpdatedAt(Instant.now());
+        
+        entity.setRoles(Set.of("USER"));
         String str = entity.toString();
-
-        assertThat(str).contains("john");
         assertThat(str).contains("john@example.com");
         assertThat(str).contains("USER");
     }

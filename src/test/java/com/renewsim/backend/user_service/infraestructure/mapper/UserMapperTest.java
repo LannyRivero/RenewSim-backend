@@ -67,7 +67,7 @@ class UserMapperTest {
         userRole.setName(RoleName.USER);
         RoleEntity adminRole = new RoleEntity();
         adminRole.setName(RoleName.ADMIN);
-        entity.setRoles(Set.of(userRole, adminRole));
+        entity.setRoles(Set.of("USER", "ADMIN")); 
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
         entity.setPasswordHash("hashed");
