@@ -17,5 +17,5 @@ public record UserCreateRequest(
         String email,
 
         @NotBlank(message = "Password is required") 
-        @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters") String passwordHash
+        @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters") String password
 ) {}

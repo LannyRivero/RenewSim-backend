@@ -5,6 +5,7 @@ import com.renewsim.backend.auth_service.infrastructure.client.UserServiceClient
 import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.user_service.dto.UserCreateRequest;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -65,14 +66,9 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     }
 
     @Override
-    public UserSnapshot createUser(String username, String passwordHash, String email, Set<RoleName> roles) {
+    public UserSnapshot createUser(String username, String rawPassword, String email, Set<RoleName> roles) {
 
-        ExternalUserSnapshot request = new ExternalUserSnapshot(
-                username,
-                passwordHash,
-                email,
-                roles.stream().map(Enum::name).collect(Collectors.toUnmodifiableSet()) // Enum → String
-        );
+        UserCreateRequest request = new UserCreateRequest(username, email, rawPassword);
 
         ExternalUserSnapshot created = userServiceClient.createUser(request);
         return mapToSnapshot(created);

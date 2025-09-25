@@ -52,7 +52,6 @@ public class AuthServiceImpl implements AuthUseCase {
         @Override
         @Transactional
         public AuthResponseDTO register(RegisterRequestDTO request) {
-
                 // 1- Validar credenciales mínimas
                 authValidator.validateCredentials(request);
 
@@ -62,12 +61,11 @@ public class AuthServiceImpl implements AuthUseCase {
                                         AUTH_USERNAME_CONFLICT.code(),
                                         AUTH_USERNAME_CONFLICT.defaultMessage());
                 }
-                String passwordHash = authValidator.encodePassword(request.getPassword());
 
-                // 3- Crear el usuario con rol por defecto ROLE_USER
+                // Enviar password en claro al User Service
                 UserSnapshot user = userAccountGateway.createUser(
                                 request.getUsername(),
-                                passwordHash,
+                                request.getPassword(), 
                                 request.getEmail(),
                                 Set.of(RoleName.USER));
 

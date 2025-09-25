@@ -2,6 +2,7 @@ package com.renewsim.backend.user_service.infraestructure.persistence.adapter;
 
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
+import com.renewsim.backend.user_service.application.port.out.RoleCatalogPort;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserFilterRequest;
@@ -18,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -25,7 +28,8 @@ import java.util.Optional;
 public class UserPersistenceAdapter implements UserRepositoryPort {
 
     private final UserJpaRepository repo;
-       private final UserServiceMapper mapper;
+    private final UserServiceMapper mapper;
+    private final RoleCatalogPort roleCatalogPort;
 
     @Override
     public Optional<User> findById(Long id) {
@@ -69,26 +73,36 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
     }
 
     @Override
-    @Transactional
-    public User save(User user) {
-        try {
-            UserEntity entity = mapper.toEntity(user);
-            UserEntity saved = repo.save(entity);
-            return mapper.toDomain(saved);
-        } catch (DataIntegrityViolationException ex) {
-            String message = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : "";
-            log.warn("Integrity violation while saving user {}: {}", user.username(), message);
+@Transactional
+public User save(User user) {
+    try {
+        UserEntity entity = mapper.toEntity(user);
 
-            // Detectar violaciones por constraints de unicidad
-            if (message.contains("uk_user_username") || message.contains("uk_user_email")) {
-                throw new UserAlreadyExistsException(
-                        "User with username '" + user.username() + "' or email '" + user.email() + "' already exists"
-                );
-            }
-            // Re-lanzar si no es duplicado
-            throw ex;
+        // Resolver roles usando el catálogo antes de guardar
+        if (user.roles() != null && !user.roles().isEmpty()) {
+            Set<String> validatedRoles = user.roles().stream()
+                    .map(roleName -> roleCatalogPort.findByName(roleName.name())
+                            .orElseThrow(() -> new IllegalStateException("Role not found: " + roleName))
+                            .name() // guardamos solo el nombre
+                    )
+                    .collect(Collectors.toSet());
+            entity.setRoles(validatedRoles);
         }
+
+        UserEntity saved = repo.save(entity);
+        return mapper.toDomain(saved);
+
+    } catch (DataIntegrityViolationException ex) {
+        String message = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : "";
+        log.warn("Integrity violation while saving user {}: {}", user.username(), message);
+
+        if (message.contains("uk_users_username") || message.contains("uk_users_email")) {
+            throw new UserAlreadyExistsException(
+                    "User with username '" + user.username() + "' or email '" + user.email() + "' already exists");
+        }
+        throw ex;
     }
+}
 
     @Override
     public void deleteById(Long id) {
@@ -98,4 +112,3 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
         repo.deleteById(id);
     }
 }
-
