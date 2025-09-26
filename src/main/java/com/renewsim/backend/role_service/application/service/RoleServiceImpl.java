@@ -14,7 +14,7 @@ import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.role_service.domain.policy.RolePolicy;
 import com.renewsim.backend.role_service.domain.policy.RoleValidator;
 import com.renewsim.backend.role_service.dto.RoleDTO;
-import com.renewsim.backend.role_service.infrastructure.mapper.RoleServiceMapper;
+import com.renewsim.backend.role_service.infrastructure.mapper.RoleDtoMapper;
 
 @Service
 @Transactional
@@ -25,13 +25,14 @@ public class RoleServiceImpl implements
 
     private final RoleRepositoryPort roleRepositoryPort;
     private final RoleValidator roleValidator;
-    private final RoleServiceMapper roleMapper;
+    private final RoleDtoMapper roleDtoMapper;
 
-    public RoleServiceImpl(RoleRepositoryPort roleRepositoryPort, RoleValidator roleValidator,
-            RoleServiceMapper roleMapper) {
+    public RoleServiceImpl(RoleRepositoryPort roleRepositoryPort,
+            RoleValidator roleValidator,
+            RoleDtoMapper roleDtoMapper) {
         this.roleRepositoryPort = roleRepositoryPort;
         this.roleValidator = roleValidator;
-        this.roleMapper = roleMapper;
+        this.roleDtoMapper = roleDtoMapper;
     }
 
     @Override
@@ -42,14 +43,14 @@ public class RoleServiceImpl implements
         Role role = new Role(null, roleName);
         Role saved = roleRepositoryPort.save(role);
 
-        return roleMapper.toDTO(saved);
+        return roleDtoMapper.toDTO(saved);
     }
 
     @Override
     public List<RoleDTO> getAll() {
         return roleRepositoryPort.findAll()
                 .stream()
-                .map(roleMapper::toDTO)
+                .map(roleDtoMapper::toDTO)
                 .toList();
     }
 

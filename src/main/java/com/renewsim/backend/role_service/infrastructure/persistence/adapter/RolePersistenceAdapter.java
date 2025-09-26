@@ -3,7 +3,7 @@ package com.renewsim.backend.role_service.infrastructure.persistence.adapter;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
 import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.role_service.domain.model.RoleName;
-import com.renewsim.backend.role_service.infrastructure.mapper.RoleServiceMapper;
+import com.renewsim.backend.role_service.infrastructure.mapper.RoleMapper;
 import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 import com.renewsim.backend.role_service.infrastructure.persistence.repo.RoleJpaRepository;
 import org.springframework.stereotype.Component;
@@ -15,9 +15,9 @@ import java.util.Optional;
 public class RolePersistenceAdapter implements RoleRepositoryPort {
 
     private final RoleJpaRepository roleJpaRepository;
-    private final RoleServiceMapper mapper;
+    private final RoleMapper mapper;
 
-    public RolePersistenceAdapter(RoleJpaRepository roleJpaRepository, RoleServiceMapper mapper) {
+    public RolePersistenceAdapter(RoleJpaRepository roleJpaRepository, RoleMapper mapper) {
         this.roleJpaRepository = roleJpaRepository;
         this.mapper = mapper;
     }

@@ -1,22 +1,20 @@
 package com.renewsim.backend.role_service.infrastructure.mapper;
 
+import com.renewsim.backend.role_service.domain.model.Role;
+import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
-import com.renewsim.backend.role_service.domain.model.Role;
-import com.renewsim.backend.role_service.domain.model.RoleName;
-import com.renewsim.backend.role_service.dto.RoleDTO;
-import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
-
 @Mapper(
     componentModel = "spring",
-    implementationName = "RoleServiceMapperImpl",
+    implementationName = "RoleMapperImpl",
     unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
-public interface RoleServiceMapper {
+public interface RoleMapper {
 
-    // -------- Entity ↔ Domain --------
+    // Entity ↔ Domain
     @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "name")
     Role toDomain(RoleEntity entity);
@@ -25,30 +23,15 @@ public interface RoleServiceMapper {
     @Mapping(target = "name", source = "name")
     RoleEntity toEntity(Role domain);
 
-    // -------- Domain ↔ DTO --------
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "name", source = "name")
-    RoleDTO toDTO(Role domain);
-
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "name", source = "name")
-    Role toDomain(RoleDTO dto);
-
-    // -------- Entity ↔ RoleName --------
-    // Estos métodos permiten que MapStruct pueda convertir
-    // automáticamente colecciones Set<RoleEntity> ↔ Set<RoleName>
+    // Helpers
     default RoleName toRoleName(RoleEntity entity) {
         return entity != null ? entity.getName() : null;
     }
 
     default RoleEntity toRoleEntity(RoleName roleName) {
-        if (roleName == null) {
-            return null;
-        }
+        if (roleName == null) return null;
         RoleEntity entity = new RoleEntity();
         entity.setName(roleName);
         return entity;
     }
 }
-
-
