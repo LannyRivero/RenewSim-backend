@@ -1,16 +1,23 @@
 package com.renewsim.backend.role_service.infrastructure.persistence.entity;
 
-import com.renewsim.backend.role_service.domain.model.RoleName;
-import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;
-
-import jakarta.persistence.*;
-
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
+
+import com.renewsim.backend.role_service.domain.model.RoleName;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "roles")
+@Table(name = "roles", indexes = {
+        @Index(name = "idx_role_name", columnList = "name", unique = true)
+})
 public class RoleEntity {
 
     @Id
@@ -21,13 +28,19 @@ public class RoleEntity {
     @Column(nullable = false, unique = true, length = 50)
     private RoleName name;
 
-    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
-    private Set<UserEntity> users = new HashSet<>();
+   
 
-    public RoleEntity() {}
+    public RoleEntity() {
+    }
 
     public RoleEntity(RoleName name) {
-        this.name = name;
+        this.name = Objects.requireNonNull(name, "RoleName cannot be null");
+    }
+
+    public RoleEntity(Long id, RoleName name) {
+        this.id = id;
+        this.name = Objects.requireNonNull(name, "RoleName cannot be null");
+
     }
 
     public Long getId() {
@@ -43,28 +56,24 @@ public class RoleEntity {
     }
 
     public void setName(RoleName name) {
-        this.name = name;
+        this.name = Objects.requireNonNull(name, "RoleName cannot be null");
     }
 
-    public Set<UserEntity> getUsers() {
-        return users;
-    }
 
-    public void setUsers(Set<UserEntity> users) {
-        this.users = users;
-    }
 
     // equals & hashCode basados en name para evitar duplicados
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof RoleEntity that)) return false;
-        return name == that.name;
+        if (this == o)
+            return true;
+        if (!(o instanceof RoleEntity that))
+            return false;
+        return Objects.equals(id, that.id) && name == that.name;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(id, name);
     }
 
     @Override
@@ -72,4 +81,3 @@ public class RoleEntity {
         return "RoleEntity{name=" + name + '}';
     }
 }
-

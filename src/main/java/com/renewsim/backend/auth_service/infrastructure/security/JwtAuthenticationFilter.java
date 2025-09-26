@@ -51,6 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (log.isDebugEnabled()) {
                     log.debug("Authentication already present, skipping JWT validation.");
                 }
+                chain.doFilter(request, response);
                 return;
             }
 
@@ -59,6 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (log.isDebugEnabled()) {
                     log.debug("No Bearer token found in Authorization header.");
                 }
+                chain.doFilter(request, response);
                 return;
             }
 
@@ -67,13 +69,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 setAuthentication(validated.get(), request);
             } else {
                 log.warn("JWT validation failed: token is invalid, expired, or has incorrect claims.");
+                respondUnauthorized(response);
+                return; // detener aquí → no seguimos con el chain
             }
 
         } catch (Exception e) {
             log.warn("JWT parsing/validation error: {}", e.getMessage());
-        } finally {
-            chain.doFilter(request, response);
+            respondUnauthorized(response);
+            return; // detener aquí también
         }
+
+        chain.doFilter(request, response);
     }
 
     private String extractBearerToken(HttpServletRequest req) {
@@ -108,5 +114,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     user.username(),
                     authorities.stream().map(GrantedAuthority::getAuthority).toList());
         }
+    }
+
+    private void respondUnauthorized(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setHeader("Cache-Control", "no-store, max-age=0");
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Expires", "0");
+        response.getWriter().write("""
+                    {"status":401,"error":"Unauthorized","message":"Invalid or expired token"}
+                """);
     }
 }

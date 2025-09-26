@@ -18,6 +18,8 @@ import com.renewsim.backend.role_service.domain.model.RoleName;
 
 import java.util.Set;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -26,14 +28,15 @@ public class CreateUserService implements CreateUserUseCase {
 
     private final UserRepositoryPort userRepositoryPort;
     private final UserServiceMapper mapper;
+    private final PasswordEncoder passwordEncoder; // << Inyección
 
     private static final RoleName DEFAULT_ROLE = RoleName.USER;
 
     @Override
     public UserResponse createUser(UserCreateRequest req) {
         if (req.username() == null || req.username().isBlank() ||
-            req.email() == null || req.email().isBlank() ||
-            req.passwordHash() == null || req.passwordHash().isBlank()) {
+                req.email() == null || req.email().isBlank() ||
+                req.password() == null || req.password().isBlank()) {
             throw new InvalidUserDataException("Username, email and password must be provided");
         }
 
@@ -46,12 +49,14 @@ public class CreateUserService implements CreateUserUseCase {
             if (userRepositoryPort.existsByUsername(username) || userRepositoryPort.existsByEmail(email)) {
                 log.warn("User creation failed: username={} or email={} already exists", username, email);
                 throw new UserAlreadyExistsException(
-                        "User with username '" + username + "' or email '" + email + "' already exists"
-                );
+                        "User with username '" + username + "' or email '" + email + "' already exists");
             }
 
-            //  Usa la factory del dominio
-            User user = User.create(username, email, req.passwordHash(), Set.of(DEFAULT_ROLE));
+            // Encriptar antes de persistir
+            String encodedPassword = passwordEncoder.encode(req.password());
+
+            User user = User.create(username, email, encodedPassword, Set.of(DEFAULT_ROLE));
+            log.debug("Encoded password for {} = {}", username, encodedPassword);
 
             User saved = userRepositoryPort.save(user);
             log.info("User created successfully id={} username={}", saved.id(), saved.username());

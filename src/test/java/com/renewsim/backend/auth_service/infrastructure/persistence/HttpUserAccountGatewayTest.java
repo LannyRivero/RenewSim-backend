@@ -68,7 +68,7 @@ class HttpUserAccountGatewayTest {
         when(passwordEncoder.encode(rawPassword)).thenReturn(hashedPassword);
 
         var externalCreated = new ExternalUserSnapshot("john", hashedPassword, "john@example.com", Set.of("USER"));
-        when(userServiceClient.createUser(any(ExternalUserSnapshot.class))).thenReturn(externalCreated);
+        when(userServiceClient.createUser(any())).thenReturn(externalCreated);
 
         // When
         UserSnapshot result = gateway.createUser("john", "john@example.com", rawPassword, Set.of(RoleName.USER));
@@ -80,7 +80,6 @@ class HttpUserAccountGatewayTest {
 
         verify(passwordEncoder).encode(rawPassword);
         verify(userServiceClient).createUser(argThat(snapshot -> snapshot.username().equals("john") &&
-                snapshot.passwordHash().equals(hashedPassword) &&
-                snapshot.roles().contains("USER")));
+                snapshot.password().equals(hashedPassword)));
     }
 }

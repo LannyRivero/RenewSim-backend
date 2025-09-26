@@ -13,6 +13,7 @@ import java.security.Key;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.renewsim.backend.auth_service.infrastructure.security.JwtClaimUtils.toStringSet;
 
@@ -42,8 +43,12 @@ public final class JwtTokenProvider implements TokenProvider {
 
         Map<String, Object> claims = new HashMap<>(4);
         if (user.roles() != null && !user.roles().isEmpty()) {
-            claims.put("roles", Set.copyOf(user.roles()));
+            Set<String> normalizedRoles = user.roles().stream()
+                    .map(r -> r.startsWith("ROLE_") ? r : "ROLE_" + r)
+                    .collect(Collectors.toSet());
+            claims.put("roles", normalizedRoles);
         }
+
         if (user.scopes() != null && !user.scopes().isEmpty()) {
             claims.put("scopes", Set.copyOf(user.scopes()));
         }
@@ -104,16 +109,17 @@ public final class JwtTokenProvider implements TokenProvider {
     }
 
     public String generateServiceToken(String serviceName, Set<String> scopes) {
-        Objects.requireNonNull(serviceName, "serviceName must not be null");        
+        Objects.requireNonNull(serviceName, "serviceName must not be null");
 
         Instant now = Instant.now(clock);
-        Instant exp = now.plusSeconds(300); //token de servicio cortos 5 minutos
+        Instant exp = now.plusSeconds(props.serviceExpirationSeconds());
+
 
         Map<String, Object> claims = new HashMap<>(2);
         claims.put("roles", Set.of("SERVICE_AUTH"));
         if (scopes != null && !scopes.isEmpty()) {
             claims.put("scopes", Set.copyOf(scopes));
-            
+
         }
 
         return Jwts.builder()

@@ -28,7 +28,11 @@ public record SecurityJwtProperties(
         @Nullable Long notBeforeSkewSeconds,
 
         // tolerancia de reloj para iat/nbf/exp (segundos)
-        @Nullable Long allowedClockSkewSeconds
+        @Nullable Long allowedClockSkewSeconds,
+
+        // exp: duración del token en segundos para el servicio
+        @Min(60) long serviceExpirationSeconds
+
 ) {
 
     /** ¿Hay clave Base64 configurada? */
@@ -51,4 +55,3 @@ public record SecurityJwtProperties(
         return allowedClockSkewSeconds != null ? allowedClockSkewSeconds : 0L;
     }
 }
-
