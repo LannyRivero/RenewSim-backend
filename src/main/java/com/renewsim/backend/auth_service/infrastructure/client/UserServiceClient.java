@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 
-@FeignClient(name = "user-service", url = "${user-service.url}", configuration = FeignAuthConfig.class)
+@FeignClient(name = "user-service", contextId = "authUserClient", url = "${user-service.url}", configuration = FeignAuthConfig.class)
 public interface UserServiceClient {
 
     // Para registrar usuarios

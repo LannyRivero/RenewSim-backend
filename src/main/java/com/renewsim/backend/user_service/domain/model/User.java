@@ -45,4 +45,15 @@ public record User(
                 passwordHash
         );
     }
+    public User withAdditionalRole(RoleName role) {
+        Set<RoleName> updated = new java.util.HashSet<>(this.roles);
+        updated.add(role);
+        return new User(id, username, email, enabled, updated, createdAt, Instant.now(), passwordHash);
+    }
+
+    public User withoutRole(RoleName role) {
+        Set<RoleName> updated = new java.util.HashSet<>(this.roles);
+        updated.remove(role);
+        return new User(id, username, email, enabled, updated, createdAt, Instant.now(), passwordHash);
+    }
 }

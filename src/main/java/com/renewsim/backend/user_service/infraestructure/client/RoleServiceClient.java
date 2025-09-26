@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.renewsim.backend.role_service.dto.RoleDTO;
 
-@FeignClient(name = "role-service", url = "${role-service.url}", configuration = FeignRoleConfig.class)
+@FeignClient(name = "role-service", contextId = "userRoleClient", url = "${role-service.url}", configuration = FeignRoleConfig.class)
 public interface RoleServiceClient {
 
     @GetMapping("/api/v1/roles/exists/{name}")

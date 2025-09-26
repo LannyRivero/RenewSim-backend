@@ -2,12 +2,15 @@ package com.renewsim.backend.role_service.application.service;
 
 import com.renewsim.backend.role_service.application.port.in.*;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
+import com.renewsim.backend.role_service.application.port.out.UserServiceGateway;
 import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.role_service.domain.policy.RolePolicy;
 import com.renewsim.backend.role_service.domain.policy.RoleValidator;
 import com.renewsim.backend.role_service.dto.RoleDTO;
 import com.renewsim.backend.role_service.infrastructure.mapper.RoleServiceMapper;
+import com.renewsim.backend.shared.exception.RoleNotFoundException;
+import com.renewsim.backend.user_service.dto.UpdateUserRolesRequestDTO;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,11 +28,14 @@ public class RoleServiceImpl implements
     private final RoleRepositoryPort roleRepositoryPort;
     private final RoleValidator roleValidator;
     private final RoleServiceMapper roleMapper;
+    private final UserServiceGateway userServiceGateway;
 
-    public RoleServiceImpl(RoleRepositoryPort roleRepositoryPort, RoleValidator roleValidator, RoleServiceMapper roleMapper) {
+    public RoleServiceImpl(RoleRepositoryPort roleRepositoryPort, RoleValidator roleValidator,
+            RoleServiceMapper roleMapper, UserServiceGateway userServiceGateway) {
         this.roleRepositoryPort = roleRepositoryPort;
         this.roleValidator = roleValidator;
         this.roleMapper = roleMapper;
+        this.userServiceGateway = userServiceGateway;
     }
 
     @Override
@@ -53,7 +59,13 @@ public class RoleServiceImpl implements
 
     @Override
     public void assignRoleToUser(Long roleId, Long userId) {
-        throw new UnsupportedOperationException("Assign role to user not yet implemented");
+        Role role = roleRepositoryPort.findById(roleId)
+                .orElseThrow(() -> new RoleNotFoundException("Role not found with id: " + roleId));
+
+        UpdateUserRolesRequestDTO request = new UpdateUserRolesRequestDTO(
+                List.of(role.name().name()));
+
+        userServiceGateway.updateUserRoles(userId, request);
     }
 
     @Override
