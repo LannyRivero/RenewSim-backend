@@ -1,7 +1,6 @@
 package com.renewsim.backend.role_service.application.service;
 
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
-import com.renewsim.backend.role_service.application.port.out.UserServiceGateway;
 import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.role_service.domain.policy.RoleValidator;
@@ -25,16 +24,14 @@ class RoleServiceImplTest {
     private RoleValidator roleValidator;
     private RoleServiceImpl roleService;
     private RoleServiceMapperImpl roleServiceMapper;
-    private UserServiceGateway userServiceGateway;
 
     @BeforeEach
     void setUp() {
         roleRepositoryPort = mock(RoleRepositoryPort.class);
         roleValidator = mock(RoleValidator.class);
         roleServiceMapper = mock(RoleServiceMapperImpl.class);
-        userServiceGateway = mock(UserServiceGateway.class);
         
-        roleService = new RoleServiceImpl(roleRepositoryPort, roleValidator, roleServiceMapper,userServiceGateway);
+        roleService = new RoleServiceImpl(roleRepositoryPort, roleValidator, roleServiceMapper);
     }
 
     @Test
