@@ -22,7 +22,7 @@ public class RoleServiceImpl implements
         CreateRoleUseCase,
         GetRolesUseCase,
         DeleteRoleUseCase {
-
+    
     private final RoleRepositoryPort roleRepositoryPort;
     private final RoleValidator roleValidator;
     private final RoleDtoMapper roleDtoMapper;
