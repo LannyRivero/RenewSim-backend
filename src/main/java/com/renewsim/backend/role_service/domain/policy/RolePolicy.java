@@ -5,6 +5,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.exception.DuplicateRoleException;
+import com.renewsim.backend.shared.exception.InvalidRoleNameException;
+import com.renewsim.backend.shared.exception.LastAdminRemovalException;
+import com.renewsim.backend.shared.exception.UnauthorizedRoleAssignmentException;
 
 public final class RolePolicy {
 
@@ -13,7 +17,7 @@ public final class RolePolicy {
 
     public static RoleName normalizeRoleName(String raw) {
         if (raw == null || raw.isBlank()) {
-            throw new IllegalArgumentException("Role name cannot be null or blank");
+            throw new InvalidRoleNameException("Role name cannot be null or blank");
         }
         return RoleName.valueOf(raw.trim().toUpperCase());
     }
@@ -23,14 +27,14 @@ public final class RolePolicy {
         if (roles == null)
             return;
         if (roles.size() != new HashSet<>(roles).size()) {
-            throw new IllegalArgumentException("Duplicate roles are not allowed");
+            throw new DuplicateRoleException("Duplicate roles are not allowed");
         }
     }
 
     /** Rule: USER cannot create or assign ADMIN roles. */
     public static void ensureUserCannotAssignAdmin(RoleName requester, RoleName target) {
         if (requester == RoleName.USER && target == RoleName.ADMIN) {
-            throw new SecurityException("USER cannot assign ADMIN role");
+             throw new UnauthorizedRoleAssignmentException("USER cannot assign ADMIN role");
         }
     }
 
@@ -40,8 +44,8 @@ public final class RolePolicy {
             long totalAdmins) {
         boolean removingAdmin = currentRoles.contains(RoleName.ADMIN) && !newRoles.contains(RoleName.ADMIN);
         if (removingAdmin && totalAdmins <= 1) {
-            throw new IllegalStateException(
-                    "Cannot remove ADMIN role: at least one administrator must remain in the system");
+           throw new LastAdminRemovalException(
+                "Cannot remove ADMIN role: at least one administrator must remain in the system");
         }
     }
 }
