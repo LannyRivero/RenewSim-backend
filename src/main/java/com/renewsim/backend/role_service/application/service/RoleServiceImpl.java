@@ -12,7 +12,6 @@ import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort
 import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.role_service.domain.policy.RolePolicy;
-import com.renewsim.backend.role_service.domain.policy.RoleValidator;
 import com.renewsim.backend.role_service.dto.RoleDTO;
 import com.renewsim.backend.role_service.infrastructure.mapper.RoleDtoMapper;
 

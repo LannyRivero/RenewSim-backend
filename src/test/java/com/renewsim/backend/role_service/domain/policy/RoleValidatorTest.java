@@ -1,6 +1,7 @@
 package com.renewsim.backend.role_service.domain.policy;
 
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
+import com.renewsim.backend.role_service.application.service.RoleValidator;
 import com.renewsim.backend.role_service.domain.exception.LastAdminRemovalException;
 import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.role_service.domain.model.RoleName;

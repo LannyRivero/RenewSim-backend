@@ -1,4 +1,4 @@
-package com.renewsim.backend.role_service.domain.policy;
+package com.renewsim.backend.role_service.application.service;
 
 import org.springframework.stereotype.Component;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
