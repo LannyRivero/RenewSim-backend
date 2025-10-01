@@ -50,4 +50,9 @@ public class RolePersistenceAdapter implements RoleRepositoryPort {
     public void deleteById(Long roleId) {
         roleJpaRepository.deleteById(roleId);
     }
+
+    @Override
+    public long countByName(RoleName roleName) {
+        return roleJpaRepository.countByName(roleName);
+    }
 }

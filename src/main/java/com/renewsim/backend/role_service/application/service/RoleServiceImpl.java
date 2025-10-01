@@ -57,6 +57,12 @@ public class RoleServiceImpl implements
     @Override
     public void delete(Long roleId) {
         roleValidator.validateRoleExists(roleId);
+        
+        Role role = roleRepositoryPort.findById(roleId)
+                .orElseThrow(() -> new IllegalStateException("Unexpected: role not found after validation "));
+
+        long totalAdmins = roleRepositoryPort.countByName(RoleName.ADMIN);
+        roleValidator.validateNotRemovingLastAdmin(totalAdmins, role.name());
         roleRepositoryPort.deleteById(roleId);
     }
 }

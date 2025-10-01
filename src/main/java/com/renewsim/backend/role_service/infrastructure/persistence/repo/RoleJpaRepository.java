@@ -9,5 +9,6 @@ import java.util.Optional;
 
 public interface RoleJpaRepository extends JpaRepository<RoleEntity, Long> {
     Optional<RoleEntity> findByName(RoleName name);
+    long countByName(RoleName name);
 }
 
