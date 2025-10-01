@@ -52,7 +52,7 @@ class RoleControllerTest {
     @DisplayName("POST /roles should create role when authorized")
     void createRole_success() throws Exception {
         RoleDTO dto = new RoleDTO(1L, "ADMIN");
-        when(createRoleUseCase.create(any())).thenReturn(dto);
+        when(createRoleUseCase.createRole(any())).thenReturn(dto);
 
         mockMvc.perform(post("/api/v1/roles")
                 .contentType(MediaType.APPLICATION_JSON)
