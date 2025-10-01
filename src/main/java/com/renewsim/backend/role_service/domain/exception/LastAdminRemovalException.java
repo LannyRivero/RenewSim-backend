@@ -1,4 +1,4 @@
-package com.renewsim.backend.shared.exception;
+package com.renewsim.backend.role_service.domain.exception;
 /**
  * Exception thrown when attempting to remove the last ADMIN role from the system.
  */

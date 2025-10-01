@@ -2,10 +2,10 @@ package com.renewsim.backend.role_service.domain.policy;
 
 import org.springframework.stereotype.Component;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
+import com.renewsim.backend.role_service.domain.exception.LastAdminRemovalException;
 import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.shared.exception.RoleAlreadyExistsException;
 import com.renewsim.backend.shared.exception.RoleNotFoundException;
-import com.renewsim.backend.shared.exception.LastAdminRemovalException;
 
 @Component
 public class RoleValidator {
