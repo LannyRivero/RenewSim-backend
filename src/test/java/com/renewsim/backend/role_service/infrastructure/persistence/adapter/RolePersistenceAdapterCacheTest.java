@@ -61,7 +61,7 @@ class RolePersistenceAdapterCacheTest {
         rolePersistenceAdapter.findAll();
 
         // Guardar nuevo rol
-        Role newRole = new Role(null, RoleName.USER);
+        Role newRole = new Role(RoleName.USER);
         rolePersistenceAdapter.save(newRole);
 
         // Verificar que se vuelve a BD

@@ -35,7 +35,7 @@ class RoleValidatorTest {
     @DisplayName("validateRoleDoesNotExist should throw RoleAlreadyExistsException if role exists")
     void validateRoleDoesNotExist_exists_throwsException() {
         when(roleRepositoryPort.findByName(RoleName.ADMIN))
-                .thenReturn(Optional.of(new Role(1L, RoleName.ADMIN)));
+                .thenReturn(Optional.of(new Role(RoleName.ADMIN)));
 
         assertThrows(RoleAlreadyExistsException.class,
                 () -> roleValidator.validateRoleDoesNotExist(RoleName.ADMIN));
@@ -71,7 +71,7 @@ class RoleValidatorTest {
     @DisplayName("validateRoleExists should pass when role is found")
     void validateRoleExists_found_ok() {
         when(roleRepositoryPort.findById(1L))
-                .thenReturn(Optional.of(new Role(1L, RoleName.ADMIN)));
+                .thenReturn(Optional.of(new Role(RoleName.ADMIN)));
 
         assertDoesNotThrow(() -> roleValidator.validateRoleExists(1L));
         verify(roleRepositoryPort).findById(1L);

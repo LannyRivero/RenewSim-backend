@@ -38,7 +38,7 @@ class RoleServiceImplTest {
     @DisplayName("create should save role when it does not exist")
     void create_success() {
         RoleDTO dto = new RoleDTO(null, "ADMIN");
-        Role role = new Role(1L, RoleName.ADMIN);
+        Role role = new Role( RoleName.ADMIN);
 
         // validator no lanza excepción
         doNothing().when(roleValidator).validateRoleDoesNotExist(RoleName.ADMIN);
@@ -96,7 +96,7 @@ class RoleServiceImplTest {
     @Test
     @DisplayName("getAll should return roles list")
     void getAll_success() {
-        when(roleRepositoryPort.findAll()).thenReturn(List.of(new Role(1L, RoleName.ADMIN)));
+        when(roleRepositoryPort.findAll()).thenReturn(List.of(new Role( RoleName.ADMIN)));
         when(roleDtoMapper.toDTO(any(Role.class))).thenReturn(new RoleDTO(1L, "ADMIN"));
 
         var result = roleService.getAll();

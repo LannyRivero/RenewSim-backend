@@ -2,16 +2,15 @@ package com.renewsim.backend.role_service.domain.model;
 
 import java.util.Objects;
 
-public record Role(Long id, RoleName name) {
+import com.renewsim.backend.role_service.domain.exception.InvalidRoleNameException;
+
+public record Role(RoleName name) {
 
     public Role {
-        if (id != null && id <= 0) {
-            throw new IllegalArgumentException("Role ID must be positive if provided");
-        }
         if (name == null) {
-            throw new IllegalArgumentException("RoleName cannot be null");
-
+            throw new InvalidRoleNameException("RoleName cannot be null");
         }
+
     }
 
     @Override

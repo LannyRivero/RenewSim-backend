@@ -40,7 +40,7 @@ public class RoleServiceImpl implements
         RoleName roleName = RolePolicy.normalizeRoleName(request.name());
         roleValidator.validateRoleDoesNotExist(roleName);
 
-        Role role = new Role(null, roleName);
+        Role role = new Role(roleName);
         Role saved = roleRepositoryPort.save(role);
 
         return roleDtoMapper.toDTO(saved);
