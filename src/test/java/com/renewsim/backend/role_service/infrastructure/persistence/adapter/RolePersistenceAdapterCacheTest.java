@@ -33,7 +33,10 @@ class RolePersistenceAdapterCacheTest {
 
     @BeforeEach
     void setUp() {
-        cacheManager.getCache("renewsim_roles").clear();
+        var cache = cacheManager.getCache("renewsim_roles");
+        if (cache != null) {
+            cache.clear();
+        }
     }
 
     @Test

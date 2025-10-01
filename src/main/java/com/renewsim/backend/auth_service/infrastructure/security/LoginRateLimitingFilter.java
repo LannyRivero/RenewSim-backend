@@ -1,6 +1,7 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.lang.NonNull;
 import com.renewsim.backend.auth_service.infrastructure.config.SecurityRateLimitProperties;
 import com.renewsim.backend.shared.web.ClientIpExtractor;
 import jakarta.servlet.FilterChain;
@@ -26,9 +27,8 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
     private final LoginRateLimiter rateLimiter;             
     private final ObjectMapper objectMapper;                 
     private final SecurityRateLimitProperties props;         
-
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         if (!"POST".equalsIgnoreCase(request.getMethod())) return true;
         String uri = request.getRequestURI();
         if (uri == null || !uri.startsWith(props.getLoginPath())) return true;
@@ -39,9 +39,9 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain chain) throws ServletException, IOException {
 
         ContentCachingRequestWrapper wrapped = new ContentCachingRequestWrapper(request);
 
