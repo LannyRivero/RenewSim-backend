@@ -5,6 +5,7 @@ import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort
 import com.renewsim.backend.role_service.application.result.RoleCreationResultDTO;
 import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.role_service.domain.service.RoleDomainService;
 import com.renewsim.backend.role_service.dto.RoleDTO;
 import com.renewsim.backend.role_service.infrastructure.mapper.RoleDtoMapper;
 import com.renewsim.backend.shared.exception.RoleAlreadyExistsException;
@@ -25,15 +26,16 @@ class RoleServiceImplTest {
     private RoleRepositoryPort roleRepositoryPort;
     private RoleValidator roleValidator;
     private RoleServiceImpl roleService;
+    private RoleDomainService roleDomainService;
     private RoleDtoMapper roleDtoMapper;
 
     @BeforeEach
     void setUp() {
         roleRepositoryPort = mock(RoleRepositoryPort.class);
-        roleValidator = mock(RoleValidator.class);
+        roleDomainService = mock(RoleDomainService.class);
         roleDtoMapper = mock(RoleDtoMapper.class);
 
-        roleService = new RoleServiceImpl(roleRepositoryPort, roleValidator, roleDtoMapper);
+        roleService = new RoleServiceImpl(roleRepositoryPort, roleDomainService, roleDtoMapper);
     }
 
     @Test
