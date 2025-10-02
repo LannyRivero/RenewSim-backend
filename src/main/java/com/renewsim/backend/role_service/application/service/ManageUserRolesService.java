@@ -4,6 +4,7 @@ import com.renewsim.backend.role_service.application.command.ManageUserRolesComm
 import com.renewsim.backend.role_service.application.port.in.ManageUserRolesUseCase;
 import com.renewsim.backend.role_service.application.port.out.UserServiceGateway;
 import com.renewsim.backend.role_service.application.result.ManageUserRolesResultDTO;
+import com.renewsim.backend.shared.observability.RoleAuditLogger;
 import com.renewsim.backend.user_service.dto.UpdateUserRolesRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,21 +21,26 @@ public class ManageUserRolesService implements ManageUserRolesUseCase {
 
     @Override
     public ManageUserRolesResultDTO manageRoles(ManageUserRolesCommand command) {
-        // unir asignaciones y revocaciones (ejemplo simple: la request final incluye
-        // todos los roles asignados válidos)
         List<String> finalRoles = command.rolesToAssign().stream()
                 .map(r -> "ROLE_" + r)
                 .toList();
 
         UpdateUserRolesRequestDTO request = new UpdateUserRolesRequestDTO(finalRoles);
-
         userServiceGateway.updateUserRoles(command.targetUserId(), request);
+
+        RoleAuditLogger.rolesBatchUpdated(
+                command.requesterId(),
+                command.targetUserId(),
+                finalRoles,
+                command.rolesToRevoke().stream().map(r -> "ROLE_" + r).toList()
+        );
 
         return new ManageUserRolesResultDTO(
                 command.targetUserId(),
                 finalRoles,
                 command.rolesToRevoke().stream().map(r -> "ROLE_" + r).toList(),
                 true,
-                "User roles updated in batch");
+                "User roles updated in batch"
+        );
     }
 }

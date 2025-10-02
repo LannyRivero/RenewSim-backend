@@ -112,6 +112,25 @@
     <logger name="AUTH_AUDIT" level="INFO" additivity="false">
         <appender-ref ref="AUTH_AUDIT_FILE"/>
     </logger>
+    
+    <!-- Auditoría de roles -->
+    <appender name="ROLE_AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/role-audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/role-audit-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>
+                %d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level ${MDC_CORE} - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <logger name="ROLE_AUDIT" level="INFO" additivity="false">
+        <appender-ref ref="ROLE_AUDIT_FILE"/>
+    </logger>
 
 </configuration>
 
