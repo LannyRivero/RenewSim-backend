@@ -1,10 +1,18 @@
 package com.renewsim.backend.role_service.infrastructure.web.controller;
 
+import com.renewsim.backend.role_service.application.command.AssignRoleCommand;
+import com.renewsim.backend.role_service.application.command.CreateRoleCommand;
+import com.renewsim.backend.role_service.application.command.ManageUserRolesCommand;
 import com.renewsim.backend.role_service.application.port.in.AssignRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.CreateRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.DeleteRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.GetRolesUseCase;
+import com.renewsim.backend.role_service.application.port.in.ManageUserRolesUseCase;
+import com.renewsim.backend.role_service.application.result.ManageUserRolesResultDTO;
+import com.renewsim.backend.role_service.application.result.RoleAssignmentResultDTO;
+import com.renewsim.backend.role_service.application.result.RoleCreationResultDTO;
 import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.role_service.dto.ManageUserRolesRequestDTO;
 import com.renewsim.backend.role_service.dto.RoleCreateRequestDTO;
 import com.renewsim.backend.role_service.dto.RoleDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,15 +41,18 @@ public class RoleController {
         private final GetRolesUseCase getRolesUseCase;
         private final AssignRoleUseCase assignRoleUseCase;
         private final DeleteRoleUseCase deleteRoleUseCase;
+        private final ManageUserRolesUseCase manageUserRolesUseCase;
 
         public RoleController(CreateRoleUseCase createRoleUseCase,
                         GetRolesUseCase getRolesUseCase,
                         AssignRoleUseCase assignRoleUseCase,
-                        DeleteRoleUseCase deleteRoleUseCase) {
+                        DeleteRoleUseCase deleteRoleUseCase,
+                        ManageUserRolesUseCase manageUserRolesUseCase) {
                 this.createRoleUseCase = createRoleUseCase;
                 this.getRolesUseCase = getRolesUseCase;
                 this.assignRoleUseCase = assignRoleUseCase;
                 this.deleteRoleUseCase = deleteRoleUseCase;
+                this.manageUserRolesUseCase = manageUserRolesUseCase;
         }
 
         // ----------------------
@@ -54,10 +65,39 @@ public class RoleController {
                         @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
                         @ApiResponse(responseCode = "409", description = "Role already exists", content = @Content)
         })
-        public ResponseEntity<RoleDTO> createRole(@Valid @RequestBody RoleCreateRequestDTO request) {
-                RoleDTO created = createRoleUseCase.create(new RoleDTO(null, request.name()));
-                return ResponseEntity.created(URI.create("/api/v1/roles/" + created.id()))
-                                .body(created);
+        public ResponseEntity<RoleCreationResultDTO> createRole(@Valid @RequestBody RoleCreateRequestDTO request) {
+
+                CreateRoleCommand command = new CreateRoleCommand(request.name());
+
+                RoleCreationResultDTO result = createRoleUseCase.createRole(command);
+
+                return ResponseEntity
+                                .created(URI.create("/api/v1/roles/" + result.roleName()))
+                                .body(result);
+        }
+
+        // ----------------------
+        // POST /roles/manage
+        // ----------------------
+        @PostMapping("/manage")
+        @PreAuthorize("hasAuthority('SCOPE_roles:write') or hasRole('ADMIN')")
+        @Operation(summary = "Batch manage user roles", description = "Assign and revoke multiple roles in a single request. Requires **ADMIN** or scope **roles:write**", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+                        @ApiResponse(responseCode = "200", description = "Roles updated successfully", content = @Content(schema = @Schema(implementation = ManageUserRolesResultDTO.class))),
+                        @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
+                        @ApiResponse(responseCode = "404", description = "User or role not found", content = @Content)
+        })
+        public ResponseEntity<ManageUserRolesResultDTO> manageRoles(
+                        @Valid @RequestBody ManageUserRolesRequestDTO request) {
+
+                ManageUserRolesCommand command = new ManageUserRolesCommand(
+                                request.requesterId(),
+                                request.targetUserId(),
+                                request.rolesToAssign(),
+                                request.rolesToRevoke());
+
+                ManageUserRolesResultDTO result = manageUserRolesUseCase.manageRoles(command);
+
+                return ResponseEntity.ok(result);
         }
 
         // ----------------------
@@ -75,7 +115,7 @@ public class RoleController {
         // ----------------------
         // GET /roles/exists/{name}
         // ----------------------
-         @GetMapping("exists/{name}")
+        @GetMapping("exists/{name}")
         @PreAuthorize("hasAuthority('SCOPE_roles:read') or hasRole('ADMIN') or hasRole('SERVICE_AUTH')")
         @Operation(summary = "Check if role exists", description = "Requires role **ADMIN**, **SERVICE_AUTH**, or scope **roles:read**", security = @SecurityRequirement(name = "bearerAuth"), responses = {
                         @ApiResponse(responseCode = "200", description = "True if role exists, false otherwise", content = @Content(schema = @Schema(implementation = Boolean.class))),
@@ -128,11 +168,18 @@ public class RoleController {
                         @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
                         @ApiResponse(responseCode = "404", description = "User or role not found", content = @Content)
         })
-        public ResponseEntity<Void> assignRoleToUser(
+        public ResponseEntity<RoleAssignmentResultDTO> assignRoleToUser(
                         @Parameter(description = "Role ID") @PathVariable @NotNull(message = "Role ID cannot be null") Long roleId,
                         @Parameter(description = "User ID") @PathVariable @NotNull(message = "User ID cannot be null") Long userId) {
-                assignRoleUseCase.assignRoleToUser(roleId, userId);
-                return ResponseEntity.noContent().build();
+
+                AssignRoleCommand command = new AssignRoleCommand(
+                                /* requesterId */ null, // si no lo pasas ahora
+                                userId,
+                                roleId);
+
+                RoleAssignmentResultDTO result = assignRoleUseCase.assignRoleToUser(command);
+
+                return ResponseEntity.ok(result);
         }
 
         // ----------------------

@@ -5,10 +5,13 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.renewsim.backend.role_service.application.command.CreateRoleCommand;
 import com.renewsim.backend.role_service.application.port.in.CreateRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.DeleteRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.GetRolesUseCase;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
+import com.renewsim.backend.role_service.application.result.RoleCreationResultDTO;
+import com.renewsim.backend.role_service.application.result.RoleDeletionResultDTO;
 import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.role_service.domain.policy.RolePolicy;
@@ -21,7 +24,7 @@ public class RoleServiceImpl implements
         CreateRoleUseCase,
         GetRolesUseCase,
         DeleteRoleUseCase {
-    
+
     private final RoleRepositoryPort roleRepositoryPort;
     private final RoleValidator roleValidator;
     private final RoleDtoMapper roleDtoMapper;
@@ -35,14 +38,13 @@ public class RoleServiceImpl implements
     }
 
     @Override
-    public RoleDTO create(RoleDTO request) {
-        RoleName roleName = RolePolicy.normalizeRoleName(request.name());
+    public RoleCreationResultDTO createRole(CreateRoleCommand command) {
+        RoleName roleName = RolePolicy.normalizeRoleName(command.name());
         roleValidator.validateRoleDoesNotExist(roleName);
 
-        Role role = new Role(roleName);
-        Role saved = roleRepositoryPort.save(role);
+        Role saved = roleRepositoryPort.save(new Role(roleName));
 
-        return roleDtoMapper.toDTO(saved);
+        return new RoleCreationResultDTO(saved.name().name(), "Role created successfully");
     }
 
     @Override
@@ -54,14 +56,21 @@ public class RoleServiceImpl implements
     }
 
     @Override
-    public void delete(Long roleId) {
+    public RoleDeletionResultDTO delete(Long roleId) {
         roleValidator.validateRoleExists(roleId);
-        
+
         Role role = roleRepositoryPort.findById(roleId)
-                .orElseThrow(() -> new IllegalStateException("Unexpected: role not found after validation "));
+                .orElseThrow(() -> new IllegalStateException("Unexpected: role not found after validation"));
 
         long totalAdmins = roleRepositoryPort.countByName(RoleName.ADMIN);
         roleValidator.validateNotRemovingLastAdmin(totalAdmins, role.name());
+
         roleRepositoryPort.deleteById(roleId);
+
+        return new RoleDeletionResultDTO(
+                roleId,
+                true,
+                "Role deleted successfully");
     }
+
 }

@@ -5,11 +5,13 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.renewsim.backend.role_service.application.command.AssignRoleCommand;
+import com.renewsim.backend.role_service.application.command.RevokeRoleCommand;
 import com.renewsim.backend.role_service.application.port.in.AssignRoleUseCase;
-import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
+import com.renewsim.backend.role_service.application.port.in.RevokeRoleUseCase;
 import com.renewsim.backend.role_service.application.port.out.UserServiceGateway;
-import com.renewsim.backend.role_service.domain.model.Role;
-import com.renewsim.backend.shared.exception.RoleNotFoundException;
+import com.renewsim.backend.role_service.application.result.RoleAssignmentResultDTO;
+import com.renewsim.backend.role_service.application.result.RoleRevocationResultDTO;
 import com.renewsim.backend.user_service.dto.UpdateUserRolesRequestDTO;
 
 import lombok.RequiredArgsConstructor;
@@ -17,19 +19,46 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class RoleAssignmentService implements AssignRoleUseCase {
+public class RoleAssignmentService implements AssignRoleUseCase, RevokeRoleUseCase {
 
-    private final RoleRepositoryPort roleRepositoryPort;
     private final UserServiceGateway userServiceGateway;
+    private final RoleValidator roleValidator;
 
     @Override
-    public void assignRoleToUser(Long roleId, Long userId) {
-        Role role = roleRepositoryPort.findById(roleId)
-                .orElseThrow(() -> new RoleNotFoundException("Role not found with id: " + roleId));
+    public RoleAssignmentResultDTO assignRoleToUser(AssignRoleCommand command) {
 
-        UpdateUserRolesRequestDTO request = new UpdateUserRolesRequestDTO(
-                List.of(role.name().name()));
+        roleValidator.validateRoleExists(command.roleId());
 
-        userServiceGateway.updateUserRoles(userId, request);
+        UpdateUserRolesRequestDTO updateRequest = new UpdateUserRolesRequestDTO(
+            List.of("ROLE_" + command.roleId())
+        );
+
+        userServiceGateway.updateUserRoles(command.targetUserId(), updateRequest);
+
+        return new RoleAssignmentResultDTO(
+            command.targetUserId(), 
+            "ROLE_" + command.roleId(),
+            true,
+            "Role assigned successfully"
+        );
+    }
+
+    @Override
+    public RoleRevocationResultDTO revokeRoleFromUser(RevokeRoleCommand command) {
+
+        roleValidator.validateRoleExists(command.roleId());
+
+        UpdateUserRolesRequestDTO updateRequest = new UpdateUserRolesRequestDTO(
+            List.of()
+        );
+
+        userServiceGateway.updateUserRoles(command.targetUserId(), updateRequest);
+
+        return new RoleRevocationResultDTO(
+            command.targetUserId(), 
+            "ROLE_" + command.roleId(),
+            true,
+            "Role revoked successfully"
+        );
     }
 }
