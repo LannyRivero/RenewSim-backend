@@ -24,9 +24,9 @@ public record Technology(
         try {
             TechnologyPolicy.validateName(name);
             TechnologyPolicy.validateEfficiency(efficiency);
-            TechnologyPolicy.validateInstallationCost(installationCost, maintenanceCost);
+            TechnologyPolicy.validateCost(installationCost, maintenanceCost);
             TechnologyPolicy.validateEnvironmentalImpact(environmentalImpact);
-            TechnologyPolicy.validateCO2Reduction(co2Reduction);
+            TechnologyPolicy.validateCo2Reduction(co2Reduction);
             TechnologyPolicy.validateEnergyProduction(energyProduction);
         } catch (IllegalArgumentException ex) {
             throw new InvalidTechnologyParameterException("Invalid technology parameter: " + ex.getMessage());
