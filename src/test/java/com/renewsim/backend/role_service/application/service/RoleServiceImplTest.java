@@ -25,7 +25,7 @@ class RoleServiceImplTest {
 
     private RoleRepositoryPort roleRepositoryPort;
     private RoleValidator roleValidator;
-    private RoleServiceImpl roleService;
+    private RoleApplicationService roleService;
     private RoleDomainService roleDomainService;
     private RoleDtoMapper roleDtoMapper;
 
@@ -35,7 +35,7 @@ class RoleServiceImplTest {
         roleDomainService = mock(RoleDomainService.class);
         roleDtoMapper = mock(RoleDtoMapper.class);
 
-        roleService = new RoleServiceImpl(roleRepositoryPort, roleDomainService, roleDtoMapper);
+        roleService = new RoleApplicationService(roleRepositoryPort, roleDomainService, roleDtoMapper);
     }
 
     @Test

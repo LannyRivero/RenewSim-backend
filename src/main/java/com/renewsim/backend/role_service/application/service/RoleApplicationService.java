@@ -21,7 +21,7 @@ import com.renewsim.backend.role_service.infrastructure.mapper.RoleDtoMapper;
 
 @Service
 @Transactional
-public class RoleServiceImpl implements
+public class RoleApplicationService implements
         CreateRoleUseCase,
         GetRolesUseCase,
         DeleteRoleUseCase {
@@ -30,7 +30,7 @@ public class RoleServiceImpl implements
     private final RoleDomainService roleDomainService;
     private final RoleDtoMapper roleDtoMapper;
 
-    public RoleServiceImpl(RoleRepositoryPort roleRepositoryPort,
+    public RoleApplicationService(RoleRepositoryPort roleRepositoryPort,
             RoleDomainService roleDomainService,
             RoleDtoMapper roleDtoMapper) {
         this.roleRepositoryPort = roleRepositoryPort;

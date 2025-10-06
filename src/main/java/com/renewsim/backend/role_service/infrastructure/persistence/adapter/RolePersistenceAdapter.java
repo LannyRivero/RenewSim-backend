@@ -6,21 +6,20 @@ import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.role_service.infrastructure.mapper.RoleMapper;
 import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 import com.renewsim.backend.role_service.infrastructure.persistence.repo.RoleJpaRepository;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class RolePersistenceAdapter implements RoleRepositoryPort {
 
     private final RoleJpaRepository roleJpaRepository;
     private final RoleMapper mapper;
-
-    public RolePersistenceAdapter(RoleJpaRepository roleJpaRepository, RoleMapper mapper) {
-        this.roleJpaRepository = roleJpaRepository;
-        this.mapper = mapper;
-    }
 
     @Override
     public Optional<Role> findById(Long roleId) {

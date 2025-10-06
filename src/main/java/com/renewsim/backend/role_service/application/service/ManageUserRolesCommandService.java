@@ -15,7 +15,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class ManageUserRolesService implements ManageUserRolesUseCase {
+public class ManageUserRolesCommandService implements ManageUserRolesUseCase {
 
     private final UserServiceGateway userServiceGateway;
 
