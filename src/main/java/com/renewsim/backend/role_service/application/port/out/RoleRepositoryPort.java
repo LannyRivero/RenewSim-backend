@@ -17,6 +17,7 @@ public interface RoleRepositoryPort {
     List<Role> findAll(); 
 
     void deleteById(Long id);
+    
     long countByName(RoleName roleName);
 }
 
