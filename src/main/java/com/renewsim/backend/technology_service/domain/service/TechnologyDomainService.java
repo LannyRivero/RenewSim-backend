@@ -26,5 +26,10 @@ public class TechnologyDomainService {
                 .max(Comparator.comparingDouble(t ->
                         t.efficiency() / (t.installationCost() + t.maintenanceCost())));
     }
+
+    public double calculateScore(Technology t) {
+    return t.efficiency() * 100 - (t.environmentalImpact() * 0.5);
+}
+
 }
 
