@@ -2,6 +2,7 @@ package com.renewsim.backend.technology_service.domain.model;
 
 import java.util.Objects;
 
+import com.renewsim.backend.technology_service.domain.exception.InvalidTechnologyParameterException;
 import com.renewsim.backend.technology_service.domain.policy.TechnologyPolicy;
 
 /**
