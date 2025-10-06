@@ -1,13 +1,16 @@
 package com.renewsim.backend.role_service.application.service;
 
+import com.renewsim.backend.role_service.application.command.CreateRoleCommand;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
+import com.renewsim.backend.role_service.application.result.RoleCreationResultDTO;
 import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.role_service.domain.model.RoleName;
-import com.renewsim.backend.role_service.domain.policy.RoleValidator;
+import com.renewsim.backend.role_service.domain.service.RoleDomainService;
 import com.renewsim.backend.role_service.dto.RoleDTO;
-import com.renewsim.backend.role_service.infrastructure.mapper.RoleServiceMapperImpl;
+import com.renewsim.backend.role_service.infrastructure.mapper.RoleDtoMapper;
 import com.renewsim.backend.shared.exception.RoleAlreadyExistsException;
 import com.renewsim.backend.shared.exception.RoleNotFoundException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,46 +25,48 @@ class RoleServiceImplTest {
 
     private RoleRepositoryPort roleRepositoryPort;
     private RoleValidator roleValidator;
-    private RoleServiceImpl roleService;
-    private RoleServiceMapperImpl roleServiceMapper;
+    private RoleApplicationService roleService;
+    private RoleDomainService roleDomainService;
+    private RoleDtoMapper roleDtoMapper;
 
     @BeforeEach
     void setUp() {
         roleRepositoryPort = mock(RoleRepositoryPort.class);
-        roleValidator = mock(RoleValidator.class);
-        roleServiceMapper = mock(RoleServiceMapperImpl.class);
-        
-        roleService = new RoleServiceImpl(roleRepositoryPort, roleValidator, roleServiceMapper);
+        roleDomainService = mock(RoleDomainService.class);
+        roleDtoMapper = mock(RoleDtoMapper.class);
+
+        roleService = new RoleApplicationService(roleRepositoryPort, roleDomainService, roleDtoMapper);
     }
 
     @Test
     @DisplayName("create should save role when it does not exist")
     void create_success() {
-        RoleDTO dto = new RoleDTO(null, "ADMIN");
-        Role role = new Role(1L, RoleName.ADMIN);
+        CreateRoleCommand command = new CreateRoleCommand("ADMIN");
+        Role role = new Role(RoleName.ADMIN);
 
         // validator no lanza excepción
         doNothing().when(roleValidator).validateRoleDoesNotExist(RoleName.ADMIN);
         when(roleRepositoryPort.save(any())).thenReturn(role);
-        when(roleServiceMapper.toDTO(any(Role.class)))
+        when(roleDtoMapper.toDTO(any(Role.class)))
                 .thenReturn(new RoleDTO(1L, "ADMIN"));
 
-        RoleDTO result = roleService.create(dto);
+        RoleCreationResultDTO result = roleService.createRole(command);
 
-        assertThat(result.name()).isEqualTo("ADMIN");
+        assertThat(result.roleName()).isEqualTo("ADMIN");
+        assertThat(result.message()).contains("Role created successfully");
         verify(roleValidator).validateRoleDoesNotExist(RoleName.ADMIN);
         verify(roleRepositoryPort).save(any());
     }
 
     @Test
-    @DisplayName("create should throw when role already exists (validator)")
-    void create_conflict() {
+    @DisplayName("createRole should throw when role already exists (validator)")
+    void createRole_conflict() {
         doThrow(new RoleAlreadyExistsException("Role already exists: ADMIN"))
                 .when(roleValidator).validateRoleDoesNotExist(RoleName.ADMIN);
 
-        RoleDTO dto = new RoleDTO(null, "ADMIN");
+        CreateRoleCommand command = new CreateRoleCommand("ADMIN");
 
-        assertThatThrownBy(() -> roleService.create(dto))
+        assertThatThrownBy(() -> roleService.createRole(command))
                 .isInstanceOf(RoleAlreadyExistsException.class)
                 .hasMessageContaining("Role already exists");
 
@@ -96,8 +101,8 @@ class RoleServiceImplTest {
     @Test
     @DisplayName("getAll should return roles list")
     void getAll_success() {
-        when(roleRepositoryPort.findAll()).thenReturn(List.of(new Role(1L, RoleName.ADMIN)));
-        when(roleServiceMapper.toDTO(any(Role.class))).thenReturn(new RoleDTO(1L, "ADMIN"));
+        when(roleRepositoryPort.findAll()).thenReturn(List.of(new Role(RoleName.ADMIN)));
+        when(roleDtoMapper.toDTO(any(Role.class))).thenReturn(new RoleDTO(1L, "ADMIN"));
 
         var result = roleService.getAll();
 

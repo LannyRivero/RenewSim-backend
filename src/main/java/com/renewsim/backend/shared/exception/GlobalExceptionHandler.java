@@ -1,5 +1,6 @@
 package com.renewsim.backend.shared.exception;
 
+import com.renewsim.backend.role_service.domain.exception.LastAdminRemovalException;
 import com.renewsim.backend.shared.dto.ErrorResponse;
 
 import jakarta.servlet.ServletException;

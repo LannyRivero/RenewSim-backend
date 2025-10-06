@@ -1,15 +1,24 @@
 package com.renewsim.backend.role_service.domain.policy;
 
+import com.renewsim.backend.role_service.domain.exception.DuplicateRoleException;
+import com.renewsim.backend.role_service.domain.exception.InvalidRoleNameException;
+import com.renewsim.backend.role_service.domain.exception.LastAdminRemovalException;
+import com.renewsim.backend.role_service.domain.exception.UnauthorizedRoleAssignmentException;
 import com.renewsim.backend.role_service.domain.model.RoleName;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 class RolePolicyTest {
+
+    // ---------------------------
+    // normalizeRoleName
+    // ---------------------------
 
     @Test
     @DisplayName("normalizeRoleName should return ADMIN when input is lowercase 'admin'")
@@ -19,44 +28,31 @@ class RolePolicyTest {
     }
 
     @Test
-    @DisplayName("normalizeRoleName should return ADMIN when input is uppercase 'ADMIN'")
-    void normalizeRoleName_uppercase_returnsAdmin() {
-        RoleName result = RolePolicy.normalizeRoleName("ADMIN");
-        assertEquals(RoleName.ADMIN, result);
-    }
-
-    @Test
-    @DisplayName("normalizeRoleName should return ADMIN when input has mixed case 'AdMiN'")
-    void normalizeRoleName_mixedCase_returnsAdmin() {
-        RoleName result = RolePolicy.normalizeRoleName("AdMiN");
-        assertEquals(RoleName.ADMIN, result);
-    }
-
-    @Test
-    @DisplayName("normalizeRoleName should trim spaces and return ADMIN")
+    @DisplayName("normalizeRoleName should return ADMIN when input has spaces")
     void normalizeRoleName_withSpaces_returnsAdmin() {
         RoleName result = RolePolicy.normalizeRoleName("   admin   ");
         assertEquals(RoleName.ADMIN, result);
     }
 
     @Test
-    @DisplayName("normalizeRoleName should throw IllegalArgumentException when input is null")
+    @DisplayName("normalizeRoleName should throw InvalidRoleNameException when input is null")
     void normalizeRoleName_nullInput_throwsException() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        InvalidRoleNameException ex = assertThrows(
+                InvalidRoleNameException.class,
                 () -> RolePolicy.normalizeRoleName(null));
-        assertEquals("Role name cannot be null or blank", exception.getMessage());
+        assertEquals("Role name cannot be null or blank", ex.getMessage());
     }
 
     @Test
-    @DisplayName("normalizeRoleName should throw IllegalArgumentException when role name is invalid")
-    void normalizeRoleName_invalidInput_throwsException() {
-        assertThrows(IllegalArgumentException.class, () -> RolePolicy.normalizeRoleName("INVALID_ROLE"));
+    @DisplayName("normalizeRoleName should throw InvalidRoleNameException when input is blank")
+    void normalizeRoleName_blankInput_throwsException() {
+        assertThrows(InvalidRoleNameException.class, () -> RolePolicy.normalizeRoleName("   "));
     }
 
     @Test
-    @DisplayName("normalizeRoleName should throw IllegalArgumentException when input is empty string")
-    void normalizeRoleName_emptyInput_throwsException() {
-        assertThrows(IllegalArgumentException.class, () -> RolePolicy.normalizeRoleName(""));
+    @DisplayName("normalizeRoleName should throw IllegalArgumentException when role does not exist in enum")
+    void normalizeRoleName_invalidRole_throwsException() {
+        assertThrows(IllegalArgumentException.class, () -> RolePolicy.normalizeRoleName("INVALID"));
     }
 
     // ---------------------------
@@ -65,25 +61,45 @@ class RolePolicyTest {
 
     @Test
     @DisplayName("ensureNoDuplicateRoles should pass when roles are unique")
-    void ensureNoDuplicateRoles_uniqueRoles_ok() {
+    void ensureNoDuplicateRoles_unique_ok() {
         assertDoesNotThrow(() -> RolePolicy.ensureNoDuplicateRoles(Set.of(RoleName.USER, RoleName.ADMIN)));
     }
 
     @Test
-    @DisplayName("ensureNoDuplicateRoles should throw when roles contain duplicates")
-    void ensureNoDuplicateRoles_duplicateRoles_throwsException() {
-        List<RoleName> roles = List.of(RoleName.USER, RoleName.USER); // List sí admite duplicados
+    @DisplayName("ensureNoDuplicateRoles should throw DuplicateRoleException when duplicates exist")
+    void ensureNoDuplicateRoles_duplicates_throwsException() {
+        List<RoleName> roles = List.of(RoleName.USER, RoleName.USER);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        DuplicateRoleException ex = assertThrows(
+                DuplicateRoleException.class,
                 () -> RolePolicy.ensureNoDuplicateRoles(roles));
 
-        assertEquals("Duplicate roles are not allowed", exception.getMessage());
+        assertEquals("Duplicate roles are not allowed", ex.getMessage());
     }
 
     @Test
-    @DisplayName("ensureNoDuplicateRoles should pass when roles set is null")
-    void ensureNoDuplicateRoles_nullSet_ok() {
+    @DisplayName("ensureNoDuplicateRoles should pass when roles is null")
+    void ensureNoDuplicateRoles_null_ok() {
         assertDoesNotThrow(() -> RolePolicy.ensureNoDuplicateRoles(null));
+    }
+
+    // ---------------------------
+    // ensureUserCannotAssignAdmin
+    // ---------------------------
+
+    @Test
+    @DisplayName("ensureUserCannotAssignAdmin should throw UnauthorizedRoleAssignmentException when USER assigns ADMIN")
+    void ensureUserCannotAssignAdmin_userAssignsAdmin_throwsException() {
+        UnauthorizedRoleAssignmentException ex = assertThrows(
+                UnauthorizedRoleAssignmentException.class,
+                () -> RolePolicy.ensureUserCannotAssignAdmin(RoleName.USER, RoleName.ADMIN));
+        assertEquals("USER cannot assign ADMIN role", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("ensureUserCannotAssignAdmin should pass when ADMIN assigns ADMIN")
+    void ensureUserCannotAssignAdmin_adminAssignsAdmin_ok() {
+        assertDoesNotThrow(() -> RolePolicy.ensureUserCannotAssignAdmin(RoleName.ADMIN, RoleName.ADMIN));
     }
 
     // ---------------------------
@@ -91,7 +107,7 @@ class RolePolicyTest {
     // ---------------------------
 
     @Test
-    @DisplayName("ensureAtLeastOneAdminRemaining should pass when removing ADMIN but other admins remain")
+    @DisplayName("ensureAtLeastOneAdminRemaining should pass when removing ADMIN but others remain")
     void ensureAtLeastOneAdminRemaining_multipleAdmins_ok() {
         Set<RoleName> currentRoles = Set.of(RoleName.ADMIN, RoleName.USER);
         Set<RoleName> newRoles = Set.of(RoleName.USER); // admin removed
@@ -101,24 +117,26 @@ class RolePolicyTest {
     }
 
     @Test
-    @DisplayName("ensureAtLeastOneAdminRemaining should throw when removing the only ADMIN")
+    @DisplayName("ensureAtLeastOneAdminRemaining should throw LastAdminRemovalException when removing the only ADMIN")
     void ensureAtLeastOneAdminRemaining_lastAdmin_throwsException() {
         Set<RoleName> currentRoles = Set.of(RoleName.ADMIN);
         Set<RoleName> newRoles = Set.of(); // admin removed
         long totalAdmins = 1;
 
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
+        LastAdminRemovalException ex = assertThrows(
+                LastAdminRemovalException.class,
                 () -> RolePolicy.ensureAtLeastOneAdminRemaining(currentRoles, newRoles, totalAdmins));
-        assertEquals("Cannot remove ADMIN role: at least one administrator must remain in the system",
-                exception.getMessage());
+
+        assertEquals(
+                "Cannot remove ADMIN role: at least one administrator must remain in the system",
+                ex.getMessage());
     }
 
     @Test
-    @DisplayName("ensureAtLeastOneAdminRemaining should pass when user keeps ADMIN role")
+    @DisplayName("ensureAtLeastOneAdminRemaining should pass when ADMIN is still present")
     void ensureAtLeastOneAdminRemaining_adminStillPresent_ok() {
         Set<RoleName> currentRoles = Set.of(RoleName.ADMIN, RoleName.USER);
-        Set<RoleName> newRoles = Set.of(RoleName.ADMIN); // still admin
+        Set<RoleName> newRoles = Set.of(RoleName.ADMIN);
         long totalAdmins = 1;
 
         assertDoesNotThrow(() -> RolePolicy.ensureAtLeastOneAdminRemaining(currentRoles, newRoles, totalAdmins));

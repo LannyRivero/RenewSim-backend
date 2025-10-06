@@ -147,7 +147,11 @@ public final class JwtTokenProvider implements TokenProvider {
             return Keys.hmacShaKeyFor(decoded);
         }
         if (props.hasPlainSecret()) {
-            byte[] raw = props.secret().getBytes(StandardCharsets.UTF_8);
+            String secret = props.secret();
+            if (secret == null) {
+                throw new IllegalStateException("JWT secret is null");
+            }
+            byte[] raw = secret.getBytes(StandardCharsets.UTF_8);
             if (raw.length < 32) {
                 throw new IllegalStateException("Plain JWT secret too short (<32 bytes).");
             }

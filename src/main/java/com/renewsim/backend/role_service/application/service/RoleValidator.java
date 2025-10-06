@@ -1,22 +1,24 @@
-package com.renewsim.backend.role_service.domain.policy;
+package com.renewsim.backend.role_service.application.service;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
+import com.renewsim.backend.role_service.domain.exception.LastAdminRemovalException;
 import com.renewsim.backend.role_service.domain.model.RoleName;
 import com.renewsim.backend.shared.exception.RoleAlreadyExistsException;
 import com.renewsim.backend.shared.exception.RoleNotFoundException;
-import com.renewsim.backend.shared.exception.LastAdminRemovalException;
 
-@Component
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
 public class RoleValidator {
 
     private final RoleRepositoryPort roleRepositoryPort;
 
-    public RoleValidator(RoleRepositoryPort roleRepositoryPort) {
-        this.roleRepositoryPort = roleRepositoryPort;
-    }
-
-    /** Validates that a role with this name does not already exist in the system. */
+    /**
+     * Validates that a role with this name does not already exist in the system.
+     */
     public void validateRoleDoesNotExist(RoleName roleName) {
         roleRepositoryPort.findByName(roleName).ifPresent(existing -> {
             throw new RoleAlreadyExistsException("Role already exists: " + roleName.name());

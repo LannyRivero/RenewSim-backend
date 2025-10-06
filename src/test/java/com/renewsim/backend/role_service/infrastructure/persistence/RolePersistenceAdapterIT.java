@@ -57,11 +57,11 @@ class RolePersistenceAdapterIT {
     @DisplayName("RolePersistenceAdapter should save and retrieve domain Role correctly")
     void saveAndRetrieveRole() {
         // Arrange
-        Role role = new Role(null, RoleName.USER);
+        Role role = new Role(RoleName.USER);
 
         // Act
         Role saved = roleRepositoryPort.save(role);
-        Optional<Role> found = roleRepositoryPort.findById(saved.id());
+        Optional<Role> found = roleRepositoryPort.findByName(saved.name());
 
         // Assert
         assertThat(found).isPresent();

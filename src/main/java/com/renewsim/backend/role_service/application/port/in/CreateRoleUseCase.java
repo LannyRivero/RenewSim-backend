@@ -1,9 +1,10 @@
 package com.renewsim.backend.role_service.application.port.in;
 
-import com.renewsim.backend.role_service.dto.RoleDTO;
-import com.renewsim.backend.shared.common.application.port.in.CreateUseCase;
+import com.renewsim.backend.role_service.application.command.CreateRoleCommand;
+import com.renewsim.backend.role_service.application.result.RoleCreationResultDTO;
 
-public interface CreateRoleUseCase extends CreateUseCase<RoleDTO> {
+public interface CreateRoleUseCase {
+    RoleCreationResultDTO  createRole(CreateRoleCommand command);
 }
 
 

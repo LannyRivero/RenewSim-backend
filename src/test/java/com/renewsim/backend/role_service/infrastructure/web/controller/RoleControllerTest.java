@@ -15,7 +15,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.renewsim.backend.role_service.application.command.AssignRoleCommand;
 import com.renewsim.backend.role_service.application.port.in.*;
+import com.renewsim.backend.role_service.application.result.RoleCreationResultDTO;
 
 import java.util.List;
 
@@ -51,8 +53,8 @@ class RoleControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /roles should create role when authorized")
     void createRole_success() throws Exception {
-        RoleDTO dto = new RoleDTO(1L, "ADMIN");
-        when(createRoleUseCase.create(any())).thenReturn(dto);
+        RoleCreationResultDTO dto = new RoleCreationResultDTO( "ADMIN", "Role created successfully");
+        when(createRoleUseCase.createRole(any())).thenReturn(dto);
 
         mockMvc.perform(post("/api/v1/roles")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -119,7 +121,7 @@ class RoleControllerTest {
     void assignRole_success() throws Exception {
         mockMvc.perform(put("/api/v1/roles/1/assign/100"))
                 .andExpect(status().isNoContent());
-        verify(assignRoleUseCase).assignRoleToUser(1L, 100L);
+        verify(assignRoleUseCase).assignRoleToUser(new AssignRoleCommand(1L, 100L, 1L));
     }
 
     // -------------------

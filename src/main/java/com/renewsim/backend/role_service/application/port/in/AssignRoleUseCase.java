@@ -1,6 +1,9 @@
 package com.renewsim.backend.role_service.application.port.in;
 
+import com.renewsim.backend.role_service.application.command.AssignRoleCommand;
+import com.renewsim.backend.role_service.application.result.RoleAssignmentResultDTO;
+
 public interface AssignRoleUseCase {
-    void assignRoleToUser(Long roleId, Long userId);
+    RoleAssignmentResultDTO  assignRoleToUser(AssignRoleCommand command);
 }
 
