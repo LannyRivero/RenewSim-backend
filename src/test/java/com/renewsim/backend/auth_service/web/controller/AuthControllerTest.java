@@ -114,6 +114,21 @@ class AuthControllerTest {
 
         verifyNoInteractions(authUseCase);
     }
+
+    @Test
+    @DisplayName("register → should return 400 when registration payload is invalid (@Valid)")
+    void testShouldReturnBadRequestWhenInvalidRegistrationBody() throws Exception {
+        final String invalidJson = """
+            {"username":null,"password":null,"email":null}
+        """;
+
+        mvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON) 
+                .content(invalidJson))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(authUseCase);
+    }
 }
 
 
