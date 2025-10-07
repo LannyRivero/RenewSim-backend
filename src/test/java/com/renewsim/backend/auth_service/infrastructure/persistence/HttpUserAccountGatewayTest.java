@@ -4,6 +4,7 @@ import com.renewsim.backend.auth_service.infrastructure.client.UserServiceClient
 import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.dto.OperationResponse;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -26,9 +26,6 @@ class HttpUserAccountGatewayTest {
     @Mock
     private UserServiceClient userServiceClient;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
     @InjectMocks
     private HttpUserAccountGateway gateway;
 
@@ -36,7 +33,7 @@ class HttpUserAccountGatewayTest {
     @DisplayName("findByUsername() should map ExternalUserSnapshot → UserSnapshot")
     void testFindByUsername() {
         var external = new ExternalUserSnapshot("john", "$hash", "john@example.com", Set.of("USER"));
-        when(userServiceClient.findByUsername("john")).thenReturn(external);
+        when(userServiceClient.getCredentials("john", null)).thenReturn(OperationResponse.ok(external, "Found"));
 
         Optional<UserSnapshot> opt = gateway.findByUsername("john");
 
@@ -44,42 +41,44 @@ class HttpUserAccountGatewayTest {
         UserSnapshot snap = opt.get();
         assertThat(snap.username()).isEqualTo("john");
         assertThat(snap.passwordHash()).isEqualTo("$hash");
+        assertThat(snap.email()).isEqualTo("john@example.com");
         assertThat(snap.roles()).containsExactly(RoleName.USER);
+        assertThat(snap.enabled()).isTrue();
     }
 
     @Test
     @DisplayName("findByUsername() should return empty when user does not exist")
     void testFindByUsername_WhenUserNotFound() {
-        when(userServiceClient.findByUsername("missing")).thenReturn(null);
+        when(userServiceClient.getCredentials("missing", null)).thenReturn(null);
 
         Optional<UserSnapshot> opt = gateway.findByUsername("missing");
 
         assertThat(opt).isEmpty();
-        verify(userServiceClient).findByUsername("missing");
+        verify(userServiceClient).getCredentials("missing", null);
     }
-    
 
     @Test
-    @DisplayName("createUser() should hash password and call UserServiceClient with mapped snapshot")
+    @DisplayName("createUser() should delegate to UserServiceClient and map response")
     void testCreateUser() {
         // Given
         String rawPassword = "secret";
         String hashedPassword = "$2a$10$hashed";
-        when(passwordEncoder.encode(rawPassword)).thenReturn(hashedPassword);
 
         var externalCreated = new ExternalUserSnapshot("john", hashedPassword, "john@example.com", Set.of("USER"));
-        when(userServiceClient.createUser(any())).thenReturn(externalCreated);
+        when(userServiceClient.createUser(any())).thenReturn(OperationResponse.ok(externalCreated, "Created"));
 
         // When
-        UserSnapshot result = gateway.createUser("john", "john@example.com", rawPassword, Set.of(RoleName.USER));
+        UserSnapshot result = gateway.createUser("john", rawPassword, "john@example.com", Set.of(RoleName.USER));
 
         // Then
         assertThat(result.username()).isEqualTo("john");
         assertThat(result.passwordHash()).isEqualTo(hashedPassword);
+        assertThat(result.email()).isEqualTo("john@example.com");
         assertThat(result.roles()).containsExactly(RoleName.USER);
+        assertThat(result.enabled()).isTrue();
 
-        verify(passwordEncoder).encode(rawPassword);
-        verify(userServiceClient).createUser(argThat(snapshot -> snapshot.username().equals("john") &&
-                snapshot.password().equals(hashedPassword)));
+        verify(userServiceClient).createUser(argThat(request -> request.username().equals("john") &&
+                request.password().equals(rawPassword) &&
+                request.email().equals("john@example.com")));
     }
 }
