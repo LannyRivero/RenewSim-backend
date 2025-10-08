@@ -5,14 +5,14 @@ import com.renewsim.backend.auth_service.infrastructure.client.UserServiceClient
 import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
-
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,11 +27,12 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     @Override
     public Optional<UserSnapshot> findByEmail(String email) {
         try {
-            ExternalUserSnapshot external = userServiceClient.getCredentials(null, email);
+            OperationResponse<ExternalUserSnapshot> response = userServiceClient.getCredentials(null, email);
+            ExternalUserSnapshot external = response != null ? response.data() : null;
 
             log.debug("Fetched ExternalUserSnapshot: username={}, email={}",
-                    external.username(),
-                    external.email());
+                    external != null ? external.username() : null,
+                    external != null ? external.email() : null);
 
             return Optional.ofNullable(mapToSnapshot(external));
         } catch (FeignException.NotFound e) {
@@ -45,11 +46,12 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     @Override
     public Optional<UserSnapshot> findByUsername(String username) {
         try {
-            ExternalUserSnapshot external = userServiceClient.getCredentials(username, null);
+            OperationResponse<ExternalUserSnapshot> response = userServiceClient.getCredentials(username, null);
+            ExternalUserSnapshot external = response != null ? response.data() : null;
 
             log.debug("Fetched ExternalUserSnapshot: username={}, email={}",
-                    external.username(),
-                    external.email());
+                    external != null ? external.username() : null,
+                    external != null ? external.email() : null);
 
             return Optional.ofNullable(mapToSnapshot(external));
         } catch (FeignException.NotFound e) {
@@ -62,15 +64,17 @@ public class HttpUserAccountGateway implements UserAccountGateway {
 
     @Override
     public boolean existsByUsername(String username) {
-        return userServiceClient.existsByUsernameOrEmail(username, null);
+        OperationResponse<Boolean> response = userServiceClient.existsByUsernameOrEmail(username, null);
+        return response != null && Boolean.TRUE.equals(response.data());
     }
 
     @Override
     public UserSnapshot createUser(String username, String rawPassword, String email, Set<RoleName> roles) {
-
         UserCreateRequest request = new UserCreateRequest(username, email, rawPassword);
 
-        ExternalUserSnapshot created = userServiceClient.createUser(request);
+        OperationResponse<ExternalUserSnapshot> response = userServiceClient.createUser(request);
+        ExternalUserSnapshot created = response != null ? response.data() : null;
+
         return mapToSnapshot(created);
     }
 
@@ -79,7 +83,9 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         if (external == null)
             return null;
 
-        Set<RoleName> roles = external.roles().stream()
+        Set<RoleName> roles = Optional.ofNullable(external.roles())
+                .orElse(Collections.emptySet())
+                .stream()
                 .map(RoleName::valueOf)
                 .collect(Collectors.toUnmodifiableSet());
 

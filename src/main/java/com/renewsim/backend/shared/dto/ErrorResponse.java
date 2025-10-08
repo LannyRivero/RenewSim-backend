@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Instant;
 import java.util.Map;
 
+/**
+ * Represents a standardized error response structure used across all RenewSim services.
+ * Includes observability (traceId), timestamp, actor (current user), and validation details.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
 
@@ -14,6 +18,7 @@ public class ErrorResponse {
     private final String path;
     private final Instant timestamp;
     private final String correlationId;
+    private final String actor; 
     private final Map<String, String> fieldErrors;
 
     private ErrorResponse(Builder b) {
@@ -23,6 +28,7 @@ public class ErrorResponse {
         this.path = b.path;
         this.timestamp = b.timestamp != null ? b.timestamp : Instant.now();
         this.correlationId = b.correlationId;
+        this.actor = b.actor;
         this.fieldErrors = b.fieldErrors;
     }
 
@@ -30,6 +36,9 @@ public class ErrorResponse {
         return new Builder();
     }
 
+    // ---------------------------------------
+    // Getters
+    // ---------------------------------------
     public int getStatus() {
         return status;
     }
@@ -54,10 +63,17 @@ public class ErrorResponse {
         return correlationId;
     }
 
+    public String getActor() {
+        return actor;
+    }
+
     public Map<String, String> getFieldErrors() {
         return fieldErrors;
     }
 
+    // ---------------------------------------
+    // Builder pattern
+    // ---------------------------------------
     public static final class Builder {
         private int status;
         private String error;
@@ -65,6 +81,7 @@ public class ErrorResponse {
         private String path;
         private Instant timestamp;
         private String correlationId;
+        private String actor;
         private Map<String, String> fieldErrors;
 
         public Builder status(int status) {
@@ -94,6 +111,11 @@ public class ErrorResponse {
 
         public Builder correlationId(String correlationId) {
             this.correlationId = correlationId;
+            return this;
+        }
+
+        public Builder actor(String actor) {
+            this.actor = actor;
             return this;
         }
 
