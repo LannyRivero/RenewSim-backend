@@ -24,9 +24,12 @@ public class TechnologyDomainService {
         if (Double.isNaN(value) || Double.isNaN(min) || Double.isNaN(max))
             throw new IllegalArgumentException("Values for normalization cannot be NaN");
 
-        if (max == min) return 0.0;
-        if (value < min) return 0.0;
-        if (value > max) return 1.0;
+        if (max == min)
+            return 0.0;
+        if (value < min)
+            return 0.0;
+        if (value > max)
+            return 1.0;
 
         return (value - min) / (max - min);
     }
@@ -42,8 +45,12 @@ public class TechnologyDomainService {
         double efficiencyWeight = 0.6;
         double environmentalWeight = 0.4;
 
-        return (technology.efficiency() * 100 * efficiencyWeight)
-                - (technology.environmentalImpact() * environmentalWeight);
+        // Access Value Object values
+        double efficiency = technology.getEfficiency().value();
+        double impact = technology.getEnvironmentalImpact().value();
+
+        // Weighted score: maximize efficiency, minimize impact
+        return (efficiency * efficiencyWeight) - (impact * environmentalWeight);
     }
 
     /**
@@ -54,12 +61,19 @@ public class TechnologyDomainService {
             return Optional.empty();
 
         return technologies.stream()
-                .max(Comparator.comparingDouble(t ->
-                        t.efficiency() / (t.installationCost() + t.maintenanceCost())));
+                .max(Comparator.comparingDouble(t -> {
+                    double efficiency = t.getEfficiency().value();
+                    double installCost = t.getInstallationCost().value().doubleValue();
+                    double maintenanceCost = t.getMaintenanceCost().value().doubleValue();
+                    double totalCost = installCost + maintenanceCost;
+
+                    return totalCost > 0 ? efficiency / totalCost : 0.0;
+                }));
     }
 
     /**
-     * Returns the technology with the best overall score according to calculateScore().
+     * Returns the technology with the best overall score according to
+     * calculateScore().
      */
     public Optional<Technology> findBestOverall(List<Technology> technologies) {
         if (technologies == null || technologies.isEmpty())
