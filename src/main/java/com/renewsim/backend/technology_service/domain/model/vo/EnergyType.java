@@ -8,6 +8,14 @@ public enum EnergyType {
     EOLIC,
     HYDRO,
     GEOTHERMAL,
-    BIOMASS
-}
+    BIOMASS;
 
+    public static EnergyType fromString(String value) {
+        if (value == null)
+            throw new IllegalArgumentException("EnergyType cannot be null");
+        return switch (value.trim().toUpperCase()) {
+            case "WIND" -> EOLIC; 
+            default -> EnergyType.valueOf(value.trim().toUpperCase());
+        };
+    }
+}
