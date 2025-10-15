@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.renewsim.backend.technology_service.application.command.CreateTechnologyCommand;
-import com.renewsim.backend.technology_service.application.command.DeleteTechnologyCommand;
-import com.renewsim.backend.technology_service.application.command.GetTechnologyByIdCommand;
-import com.renewsim.backend.technology_service.application.command.UpdateTechnologyCommand;
+import com.renewsim.backend.technology_service.application.command.*;
 import com.renewsim.backend.technology_service.application.port.out.TechnologyRepositoryPort;
 import com.renewsim.backend.technology_service.application.result.*;
 import com.renewsim.backend.technology_service.domain.model.Technology;
@@ -17,6 +14,15 @@ import com.renewsim.backend.technology_service.infrastructure.mapper.TechnologyD
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Application Service for handling technology lifecycle operations.
+ * 
+ * Follows CQRS principles:
+ * - Commands mutate state (create, update, delete)
+ * - Queries retrieve state (getById, getAll)
+ * 
+ * All inputs are validated records (commands) and outputs are immutable DTOs.
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -26,57 +32,48 @@ public class TechnologyCommandService {
     private final TechnologyValidator validator;
     private final TechnologyDtoMapper dtoMapper;
 
-    // ------------------------------------------------------------
-    // CREATE
-    // ------------------------------------------------------------
+    // ============================================================
+    // ⛏️ Command Handlers
+    // ============================================================
+
     public TechnologyCreationResultDTO handleCreate(CreateTechnologyCommand command) {
         validator.ensureUniqueName(command.name());
-
-        Technology technology = toDomain(command);
-        Technology saved = repository.save(technology);
-
+        var saved = repository.save(toDomain(command));
         return dtoMapper.toCreationResult(saved);
     }
 
-    // ------------------------------------------------------------
-    // UPDATE
-    // ------------------------------------------------------------
     public TechnologyUpdateResultDTO handleUpdate(UpdateTechnologyCommand command) {
         validator.ensureExists(command.id());
-
-        Technology updated = repository.save(toDomain(command));
-
+        var updated = repository.save(toDomain(command));
         return dtoMapper.toUpdateResult(updated);
     }
 
-    // ------------------------------------------------------------
-    // DELETE
-    // ------------------------------------------------------------
     public void handleDelete(DeleteTechnologyCommand command) {
         validator.ensureExists(command.id());
         repository.deleteById(command.id());
     }
 
-    // ------------------------------------------------------------
-    // QUERY (BY ID / ALL)
-    // ------------------------------------------------------------
+    // ============================================================
+    // 🔍 Query Handlers
+    // ============================================================
+
     @Transactional(readOnly = true)
     public TechnologyQueryResultDTO handleGetById(GetTechnologyByIdCommand command) {
-        Technology tech = validator.getExisting(command.id());
+        var tech = validator.getExisting(command.id());
         return dtoMapper.toQueryResult(tech);
     }
 
     @Transactional(readOnly = true)
     public List<TechnologyQueryResultDTO> handleGetAll() {
-        return repository.findAll()
-                .stream()
+        return repository.findAll().stream()
                 .map(dtoMapper::toQueryResult)
                 .toList();
     }
 
-    // ------------------------------------------------------------
-    // DOMAIN CONSTRUCTORS
-    // ------------------------------------------------------------
+    // ============================================================
+    // 🧩 Domain Conversion Helpers
+    // ============================================================
+
     private Technology toDomain(CreateTechnologyCommand c) {
         return new Technology(
                 c.name(),
@@ -86,8 +83,7 @@ public class TechnologyCommandService {
                 new MaintenanceCost(BigDecimal.valueOf(c.maintenanceCost())),
                 new EnvironmentalImpact(c.environmentalImpact()),
                 new Co2Reduction(BigDecimal.valueOf(c.co2Reduction())),
-                new EnergyProduction(c.energyProduction())
-        );
+                new EnergyProduction(c.energyProduction()));
     }
 
     private Technology toDomain(UpdateTechnologyCommand c) {
@@ -99,7 +95,6 @@ public class TechnologyCommandService {
                 new MaintenanceCost(BigDecimal.valueOf(c.maintenanceCost())),
                 new EnvironmentalImpact(c.environmentalImpact()),
                 new Co2Reduction(BigDecimal.valueOf(c.co2Reduction())),
-                new EnergyProduction(c.energyProduction())
-        );
+                new EnergyProduction(c.energyProduction()));
     }
 }
