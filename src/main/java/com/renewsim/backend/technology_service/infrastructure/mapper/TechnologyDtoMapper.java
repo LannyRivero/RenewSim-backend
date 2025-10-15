@@ -7,25 +7,31 @@ import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
 /**
- * MapStruct mapper for converting Technology domain models into Data Transfer Objects (DTOs).
- * Handles explicit transformation of complex Value Objects (VOs) into primitive representations.
+ * ✅ TechnologyDtoMapper
+ *
+ * Converts domain models to immutable ResultDTOs used by the Application layer.
+ * Implements explicit flattening of Value Objects (VOs) into primitives
+ * for serialization and transport.
+ *
+ * Notes:
+ * - Compatible with Java records (ADR-003).
+ * - No Lombok or mutable classes required.
  */
-@Mapper(
-        componentModel = "spring",
-        implementationName = "TechnologyDtoMapperImpl",
-        unmappedTargetPolicy = ReportingPolicy.IGNORE
-)
+@Mapper(componentModel = "spring", implementationName = "TechnologyDtoMapperImpl", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TechnologyDtoMapper {
 
-    // --- Core Mappings ---
+    // ------------------------------------------------------------
+    // DOMAIN → RESULT DTO
+    // ------------------------------------------------------------
     TechnologyCreationResultDTO toCreationResult(Technology domain);
+
     TechnologyUpdateResultDTO toUpdateResult(Technology domain);
+
     TechnologyQueryResultDTO toQueryResult(Technology domain);
 
     // ------------------------------------------------------------
     // VALUE OBJECT MAPPERS
     // ------------------------------------------------------------
-
     default double map(Efficiency value) {
         return value != null ? value.value() : 0.0;
     }
