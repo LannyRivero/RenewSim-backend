@@ -8,50 +8,77 @@ import org.mapstruct.*;
 import java.math.BigDecimal;
 
 /**
- * ✅ TechnologyMapper
+ * 🧭 TechnologyMapper 
  *
- * Converts between domain aggregates (Technology) and persistence entities
- * (TechnologyEntity).
- * This mapper supports full VO <-> primitive transformations.
+ * ✅ Responsabilidad: traducir entre entidades de persistencia y modelos de dominio inmutables.
+ * ✅ Diseñado para Clean Architecture, DDD y compatibilidad con MapStruct 1.6.2 / Java 21.
  *
- * Design notes:
- * - Uses explicit expressions to unwrap or rewrap Value Objects.
- * - Fully compatible with Java records and ADR-003 principles.
- * - Avoids Lombok annotations and relies on MapStruct for generation.
+ * 💡 Notas:
+ * - Implementa conversión explícita para evitar reflección innecesaria.
+ * - Usa métodos helper para mayor claridad y reusabilidad.
+ * - Marcado con @Mapper para generación automática del lado ENTITY → DTO.
+ * - El método toDomain() se define manualmente para preservar inmutabilidad del Domain Model.
  */
-@Mapper(componentModel = "spring", implementationName = "TechnologyMapperImpl", unmappedTargetPolicy = ReportingPolicy.IGNORE, imports = {
-        BigDecimal.class,
-        Efficiency.class,
-        InstallationCost.class,
-        MaintenanceCost.class,
-        EnvironmentalImpact.class,
-        Co2Reduction.class,
-        EnergyProduction.class,
-        EnergyType.class
-})
+@Mapper(
+    componentModel = "spring",
+    implementationName = "TechnologyMapperImpl",
+    unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface TechnologyMapper {
 
-    // ------------------------------------------------------------
-    // ENTITY → DOMAIN
-    // ------------------------------------------------------------
-    @Mapping(target = "efficiency", expression = "java(new Efficiency(entity.getEfficiency()))")
-    @Mapping(target = "installationCost", expression = "java(new InstallationCost(BigDecimal.valueOf(entity.getInstallationCost())))")
-    @Mapping(target = "maintenanceCost", expression = "java(new MaintenanceCost(BigDecimal.valueOf(entity.getMaintenanceCost())))")
-    @Mapping(target = "environmentalImpact", expression = "java(new EnvironmentalImpact(entity.getEnvironmentalImpact()))")
-    @Mapping(target = "co2Reduction", expression = "java(new Co2Reduction(BigDecimal.valueOf(entity.getCo2Reduction())))")
-    @Mapping(target = "energyProduction", expression = "java(new EnergyProduction(entity.getEnergyProduction()))")
-    @Mapping(target = "energyType", expression = "java(EnergyType.valueOf(entity.getEnergyType().toUpperCase()))")
-    Technology toDomain(TechnologyEntity entity);
+    // ============================================================
+    // ✅ ENTITY → DOMAIN
+    // ============================================================
 
-    // ------------------------------------------------------------
-    // DOMAIN → ENTITY
-    // ------------------------------------------------------------
+    /**
+     * Convierte una entidad JPA en un agregado de dominio inmutable.
+     * Se hace manualmente por las restricciones del constructor del modelo.
+     */
+    default Technology toDomain(TechnologyEntity entity) {
+        if (entity == null) return null;
+
+        return new Technology(
+            entity.getId(),
+            entity.getName(),
+            parseEnergyType(entity.getEnergyType()),
+            new Efficiency(entity.getEfficiency()),
+            new InstallationCost(BigDecimal.valueOf(entity.getInstallationCost())),
+            new MaintenanceCost(BigDecimal.valueOf(entity.getMaintenanceCost())),
+            new EnvironmentalImpact(entity.getEnvironmentalImpact()),
+            new Co2Reduction(BigDecimal.valueOf(entity.getCo2Reduction())),
+            new EnergyProduction(entity.getEnergyProduction())
+        );
+    }
+
+    // ============================================================
+    // ✅ DOMAIN → ENTITY (MapStruct handled)
+    // ============================================================
+
+    @Mapping(target = "energyType", expression = "java(domain.getEnergyType().name())")
     @Mapping(target = "efficiency", expression = "java(domain.getEfficiency().value())")
     @Mapping(target = "installationCost", expression = "java(domain.getInstallationCost().value().doubleValue())")
     @Mapping(target = "maintenanceCost", expression = "java(domain.getMaintenanceCost().value().doubleValue())")
     @Mapping(target = "environmentalImpact", expression = "java(domain.getEnvironmentalImpact().value())")
     @Mapping(target = "co2Reduction", expression = "java(domain.getCo2Reduction().value().doubleValue())")
     @Mapping(target = "energyProduction", expression = "java(domain.getEnergyProduction().value())")
-    @Mapping(target = "energyType", expression = "java(domain.getEnergyType().name())")
     TechnologyEntity toEntity(Technology domain);
+
+    // ============================================================
+    // 🧩 Helper Methods
+    // ============================================================
+
+    /**
+     * Convierte un tipo de energía en su enum correspondiente,
+     * asegurando robustez ante mayúsculas/minúsculas.
+     */
+    default EnergyType parseEnergyType(String energyTypeRaw) {
+        if (energyTypeRaw == null || energyTypeRaw.isBlank()) {
+            return EnergyType.SOLAR; 
+        }
+        try {
+            return EnergyType.valueOf(energyTypeRaw.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException("Unknown energy type: " + energyTypeRaw, ex);
+        }
+    }
 }

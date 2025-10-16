@@ -13,6 +13,7 @@ import com.renewsim.backend.technology_service.domain.policy.TechnologyPolicy;
  */
 public class Technology {
 
+    private final Long id;
     private final String name;
     private final EnergyType energyType;
     private final Efficiency efficiency;
@@ -23,6 +24,7 @@ public class Technology {
     private final EnergyProduction energyProduction;
 
     public Technology(
+            Long id,
             String name,
             EnergyType energyType,
             Efficiency efficiency,
@@ -36,6 +38,7 @@ public class Technology {
             throw new InvalidTechnologyParameterException("Technology name cannot be null or blank");
         }
 
+        this.id = id;
         this.name = name.trim();
         this.energyType = Objects.requireNonNull(energyType);
         this.efficiency = Objects.requireNonNull(efficiency);
@@ -47,6 +50,23 @@ public class Technology {
 
         // Business-level validation (e.g., combined constraints)
         TechnologyPolicy.validateCompatibility(this);
+    }
+
+    public Technology(
+            String name,
+            EnergyType energyType,
+            Efficiency efficiency,
+            InstallationCost installationCost,
+            MaintenanceCost maintenanceCost,
+            EnvironmentalImpact environmentalImpact,
+            Co2Reduction co2Reduction,
+            EnergyProduction energyProduction) {
+        this(null, name, energyType, efficiency, installationCost, maintenanceCost, environmentalImpact, co2Reduction,
+                energyProduction);
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getName() {
