@@ -3,7 +3,7 @@ package com.renewsim.backend.technology_service.application.command;
 import jakarta.validation.constraints.*;
 
 public record UpdateTechnologyCommand(
-                @NotNull(message = "Technology ID is required") Long id,
+                 Long id,
                 @NotBlank(message = "Technology name is required") String name,
                 @DecimalMin(value = "0.0", message = "Efficiency must be >= 0") @DecimalMax(value = "1.0", message = "Efficiency must be <= 1") double efficiency,
                 @Positive(message = "Installation cost must be positive") double installationCost,

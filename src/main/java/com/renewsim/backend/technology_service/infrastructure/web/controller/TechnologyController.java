@@ -7,12 +7,15 @@ import com.renewsim.backend.technology_service.application.port.in.*;
 import com.renewsim.backend.technology_service.application.result.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/technologies")
 @RequiredArgsConstructor
@@ -58,7 +61,22 @@ public class TechnologyController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateTechnologyCommand command) {
 
-        var result = updateUseCase.updateTechnology(command);
+        log.info("📩 Payload recibido para ID {}: {}", id, command);
+
+        // ✅ Crear un nuevo record con el id del path
+        var commandWithId = new UpdateTechnologyCommand(
+                id,
+                command.name(),
+                command.efficiency(),
+                command.installationCost(),
+                command.maintenanceCost(),
+                command.environmentalImpact(),
+                command.co2Reduction(),
+                command.energyProduction(),
+                command.energyType());
+
+        var result = updateUseCase.updateTechnology(commandWithId);
+
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Technology updated successfully"));
     }
 
