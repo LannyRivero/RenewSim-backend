@@ -26,7 +26,7 @@ public class TechnologyController {
     private final DeleteTechnologyUseCase deleteUseCase;
     private final GetTechnologyUseCase getUseCase;
 
-    // ✅ CREATE
+    // CREATE
     @PostMapping
     @PreAuthorize("hasAuthority('SCOPE_admin:write') or hasRole('ADMIN')")
     public ResponseEntity<OperationResponse<TechnologyCreationResultDTO>> create(
@@ -38,7 +38,7 @@ public class TechnologyController {
                 .body(ApiResponseFactory.created(result, "Technology created successfully"));
     }
 
-    // ✅ GET by ID
+    // GET by ID
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
     public ResponseEntity<OperationResponse<TechnologyQueryResultDTO>> getById(@PathVariable Long id) {
@@ -46,7 +46,7 @@ public class TechnologyController {
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Technology retrieved successfully"));
     }
 
-    // ✅ GET ALL
+    // GET ALL
     @GetMapping
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
     public ResponseEntity<OperationResponse<List<TechnologyQueryResultDTO>>> getAll() {
@@ -54,33 +54,21 @@ public class TechnologyController {
         return ResponseEntity.ok(ApiResponseFactory.ok(results, "All technologies retrieved"));
     }
 
-    // ✅ UPDATE
+    // UPDATE
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_admin:write') or hasRole('ADMIN')")
     public ResponseEntity<OperationResponse<TechnologyUpdateResultDTO>> update(
             @PathVariable Long id,
             @Valid @RequestBody UpdateTechnologyCommand command) {
 
-        log.info("📩 Payload recibido para ID {}: {}", id, command);
-
-        // ✅ Crear un nuevo record con el id del path
-        var commandWithId = new UpdateTechnologyCommand(
-                id,
-                command.name(),
-                command.efficiency(),
-                command.installationCost(),
-                command.maintenanceCost(),
-                command.environmentalImpact(),
-                command.co2Reduction(),
-                command.energyProduction(),
-                command.energyType());
-
+        // Crear un nuevo record con el id del path
+        var commandWithId = UpdateTechnologyCommand.withId(id, command);
         var result = updateUseCase.updateTechnology(commandWithId);
 
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Technology updated successfully"));
     }
 
-    // ✅ DELETE
+    //  DELETE
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_admin:delete') or hasRole('ADMIN')")
     public ResponseEntity<OperationResponse<Void>> delete(@PathVariable Long id) {
