@@ -18,10 +18,11 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * ✅ Unit tests for {@link TechnologyCommandService}.
+ * Unit tests for {@link TechnologyCommandService}.
  * Ensures correct orchestration between Validator, Repository, and Mapper
  * layers.
  */
@@ -95,19 +96,34 @@ class TechnologyCommandServiceTest {
     @Test
     @DisplayName("Should update an existing technology successfully")
     void shouldUpdateTechnology() {
+
+        Technology existing = new Technology(
+                1L,
+                "Solar Panel",
+                EnergyType.SOLAR,
+                new Efficiency(0.85),
+                new InstallationCost(BigDecimal.valueOf(1200)),
+                new MaintenanceCost(BigDecimal.valueOf(100)),
+                new EnvironmentalImpact(10.0),
+                new Co2Reduction(BigDecimal.valueOf(250)),
+                new EnergyProduction(5000));
+
         TechnologyUpdateResultDTO expectedDTO = new TechnologyUpdateResultDTO(
                 1L, "Solar Panel", "SOLAR", 0.90, 1400, 120, 8, 300, 6000, true, "Updated successfully");
 
-        when(repository.save(any(Technology.class))).thenReturn(domain);
-        when(dtoMapper.toUpdateResult(domain)).thenReturn(expectedDTO);
+        when(validator.getExisting(1L)).thenReturn(existing);
+        when(repository.save(any(Technology.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(dtoMapper.toUpdateResult(any(Technology.class))).thenReturn(expectedDTO);
 
         var result = service.handleUpdate(updateCommand);
 
         assertNotNull(result);
         assertEquals("Solar Panel", result.name());
-        verify(validator, times(1)).ensureExists(1L);
+        assertEquals(0.90, result.efficiency());
+        assertEquals(1400, result.installationCost());
+        verify(validator, times(1)).getExisting(1L);
         verify(repository, times(1)).save(any(Technology.class));
-        verify(dtoMapper, times(1)).toUpdateResult(domain);
+        verify(dtoMapper, times(1)).toUpdateResult(any(Technology.class));
     }
 
     // ============================================================
