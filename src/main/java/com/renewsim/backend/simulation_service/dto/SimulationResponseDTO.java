@@ -2,6 +2,7 @@ package com.renewsim.backend.simulation_service.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+// Temporary: Feign client integration pending
 
 public record SimulationResponseDTO(
         Long simulationId,
