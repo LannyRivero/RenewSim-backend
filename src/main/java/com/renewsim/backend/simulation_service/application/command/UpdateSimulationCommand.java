@@ -11,5 +11,6 @@ public record UpdateSimulationCommand(
         double projectSize,
         double budget,
         ClimateData climateData,
-        List<Long> technologyIds) {
+        List<Long> technologyIds,
+        Long userId) {
 }

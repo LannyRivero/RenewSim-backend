@@ -6,7 +6,6 @@ import com.renewsim.backend.simulation_service.application.result.*;
 import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
 import com.renewsim.backend.simulation_service.domain.model.vo.EnergyType;
 import com.renewsim.backend.simulation_service.dto.SimulationRequestDTO;
-import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,11 @@ import java.util.List;
 /**
  * 🌐 SimulationController
  *
- * ✅ REST endpoints for simulation management with role-based and ownership-based security.
+ * ✅ REST endpoints for simulation management with role-based and
+ * ownership-based security.
+ * Implements ownership validation to ensure users can only access their own
+ * simulations,
+ * unless they have ADMIN privileges.
  */
 @Slf4j
 @RestController
@@ -49,12 +52,12 @@ public class SimulationController {
             @Valid @RequestBody SimulationRequestDTO request,
             Authentication auth) {
 
+        Long userId = Long.parseLong(auth.getName());
         EnergyType energyType = EnergyType.valueOf(request.energyType().toUpperCase());
         ClimateData climateData = new ClimateData(
                 request.climate().irradiance(),
                 request.climate().wind(),
-                request.climate().hydrology()
-        );
+                request.climate().hydrology());
 
         CreateSimulationCommand command = new CreateSimulationCommand(
                 request.location(),
@@ -62,17 +65,16 @@ public class SimulationController {
                 request.projectSize(),
                 request.budget(),
                 climateData,
-                List.of()
-        );
+                List.of(),
+                userId);
 
         SimulationCreationResultDTO result = createUseCase.createSimulation(command);
-
-        log.info("User {} created simulation {}", auth.getName(), result.id());
+        log.info("✅ User {} created simulation {}", auth.getName(), result.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     // ==========================================================
-    //  UPDATE SIMULATION
+    // 🟡 UPDATE SIMULATION
     // ==========================================================
     @Operation(summary = "Update a simulation")
     @PreAuthorize("hasAuthority('write:simulations')")
@@ -82,15 +84,16 @@ public class SimulationController {
             @Valid @RequestBody SimulationRequestDTO request,
             Authentication auth) {
 
-        // TODO: fetch simulation and verify ownership before updating
-        log.debug("User {} requested to update simulation {}", auth.getName(), id);
+        SimulationQueryResultDTO existing = getUseCase.getSimulationById(new GetSimulationByIdCommand(id));
+        if (!isOwner(auth, existing) && !hasAdminRole(auth)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         EnergyType energyType = EnergyType.valueOf(request.energyType().toUpperCase());
         ClimateData climateData = new ClimateData(
                 request.climate().irradiance(),
                 request.climate().wind(),
-                request.climate().hydrology()
-        );
+                request.climate().hydrology());
 
         UpdateSimulationCommand command = new UpdateSimulationCommand(
                 id,
@@ -99,15 +102,18 @@ public class SimulationController {
                 request.projectSize(),
                 request.budget(),
                 climateData,
-                List.of()
+                List.of(),
+                Long.parseLong(auth.getName())
+
         );
 
         SimulationUpdateResultDTO result = updateUseCase.updateSimulation(command);
+        log.info("✏️ User {} updated simulation {}", auth.getName(), id);
         return ResponseEntity.ok(result);
     }
 
     // ==========================================================
-    //  GET SIMULATION BY ID
+    // 🔵 GET SIMULATION BY ID
     // ==========================================================
     @Operation(summary = "Get simulation by ID")
     @PreAuthorize("hasAuthority('read:simulations')")
@@ -118,28 +124,35 @@ public class SimulationController {
 
         SimulationQueryResultDTO result = getUseCase.getSimulationById(new GetSimulationByIdCommand(id));
 
-        // Ownership check (TODO: replace with actual user ID match)
-        if (!isOwner(auth, result.id()) && !hasAdminRole(auth)) {
+        if (!isOwner(auth, result) && !hasAdminRole(auth)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
+        log.debug("👀 User {} retrieved simulation {}", auth.getName(), id);
         return ResponseEntity.ok(result);
     }
 
     // ==========================================================
-    //  EXPORT SIMULATION
+    // 📤 EXPORT SIMULATION
     // ==========================================================
     @Operation(summary = "Export simulation results as file")
     @PreAuthorize("hasAuthority('export:simulations')")
     @GetMapping("/{id}/export")
-    public ResponseEntity<String> exportSimulation(@PathVariable Long id, Authentication auth) {
-        // TODO: generate PDF/Excel export logic here
-        log.info("User {} exported simulation {}", auth.getName(), id);
+    public ResponseEntity<String> exportSimulation(
+            @PathVariable Long id,
+            Authentication auth) {
+
+        SimulationQueryResultDTO result = getUseCase.getSimulationById(new GetSimulationByIdCommand(id));
+        if (!isOwner(auth, result) && !hasAdminRole(auth)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        log.info("📦 User {} exported simulation {}", auth.getName(), id);
         return ResponseEntity.ok("Export successful (placeholder)");
     }
 
     // ==========================================================
-    //  DELETE SIMULATION
+    // 🔴 DELETE SIMULATION
     // ==========================================================
     @Operation(summary = "Delete simulation by ID")
     @PreAuthorize("hasAuthority('delete:simulations')")
@@ -148,26 +161,31 @@ public class SimulationController {
             @PathVariable Long id,
             Authentication auth) {
 
-        // Ownership check (prevent deleting others’ simulations)
         SimulationQueryResultDTO result = getUseCase.getSimulationById(new GetSimulationByIdCommand(id));
-        if (!isOwner(auth, result.id()) && !hasAdminRole(auth)) {
+        if (!isOwner(auth, result) && !hasAdminRole(auth)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         SimulationDeletionResultDTO deletion = deleteUseCase.deleteSimulation(new DeleteSimulationCommand(id));
-        log.info("User {} deleted simulation {}", auth.getName(), id);
+        log.warn("🗑️ User {} deleted simulation {}", auth.getName(), id);
 
         return ResponseEntity.ok(deletion);
     }
 
     // ==========================================================
-    // Utility methods
+    // ⚙️ Utility methods (Ownership and Roles)
     // ==========================================================
-    private boolean isOwner(Authentication auth, Long simulationId) {
-        // TODO: Compare simulation.userId with auth principal
-        return true; // Placeholder until user ownership is implemented
+    /**
+     * ✅ Verifica si el usuario autenticado es el propietario de la simulación.
+     */
+    private boolean isOwner(Authentication auth, SimulationQueryResultDTO result) {
+        Long authenticatedUserId = Long.parseLong(auth.getName());
+        return result.userId() != null && result.userId().equals(authenticatedUserId);
     }
 
+    /**
+     * ✅ Comprueba si el usuario autenticado tiene el rol ADMIN.
+     */
     private boolean hasAdminRole(Authentication auth) {
         return auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));

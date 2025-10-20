@@ -12,5 +12,6 @@ public record SimulationQueryResultDTO(
     double estimatedEnergy,
     double co2Reduction,
     LocalDateTime createdAt,
-    List<String> technologies
+    List<String> technologies,
+    Long userId
 ) {}

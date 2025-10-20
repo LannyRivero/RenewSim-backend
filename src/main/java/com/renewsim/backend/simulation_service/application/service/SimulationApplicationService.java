@@ -37,7 +37,7 @@ public class SimulationApplicationService implements
                 validator.validateProjectSize(command.projectSize());
                 validator.validateBudget(command.budget());
 
-                //  Si el frontend no envía datos climáticos, se consultan automáticamente
+                // Si el frontend no envía datos climáticos, se consultan automáticamente
                 ClimateData climateData = command.climateData() != null
                                 ? command.climateData()
                                 : climateProvider.fetchClimateData(command.location());
@@ -47,8 +47,10 @@ public class SimulationApplicationService implements
                                 command.energyType(),
                                 command.projectSize(),
                                 command.budget(),
-                                climateData,
-                                command.technologyIds());
+                                command.climateData(),
+                                command.technologyIds(),
+                                command.userId() 
+                );
 
                 Simulation saved = repository.save(simulation);
 
@@ -82,7 +84,8 @@ public class SimulationApplicationService implements
                                 command.projectSize(),
                                 command.budget(),
                                 climateData,
-                                command.technologyIds());
+                                command.technologyIds(),
+                                command.userId());
 
                 Simulation saved = repository.save(updated);
 
@@ -137,6 +140,7 @@ public class SimulationApplicationService implements
                                 estimatedEnergy,
                                 co2Reduction,
                                 simulation.createdAt(),
-                                simulation.technologyIds().stream().map(String::valueOf).toList());
+                                simulation.technologyIds().stream().map(String::valueOf).toList(),
+                                simulation.userId());
         }
 }
