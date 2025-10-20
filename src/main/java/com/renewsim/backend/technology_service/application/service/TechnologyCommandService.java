@@ -43,8 +43,20 @@ public class TechnologyCommandService {
     }
 
     public TechnologyUpdateResultDTO handleUpdate(UpdateTechnologyCommand command) {
-        validator.ensureExists(command.id());
-        var updated = repository.save(toDomain(command));
+        var existing = validator.getExisting(command.id());
+
+        var updated = new Technology(
+                existing.getId(),
+                command.name(),
+                EnergyType.valueOf(command.energyType().toUpperCase()),
+                new Efficiency(command.efficiency()),
+                new InstallationCost(BigDecimal.valueOf(command.installationCost())),
+                new MaintenanceCost(BigDecimal.valueOf(command.maintenanceCost())),
+                new EnvironmentalImpact(command.environmentalImpact()),
+                new Co2Reduction(BigDecimal.valueOf(command.co2Reduction())),
+                new EnergyProduction(command.energyProduction()));
+
+        repository.save(updated);
         return dtoMapper.toUpdateResult(updated);
     }
 
@@ -84,17 +96,5 @@ public class TechnologyCommandService {
                 new EnvironmentalImpact(c.environmentalImpact()),
                 new Co2Reduction(BigDecimal.valueOf(c.co2Reduction())),
                 new EnergyProduction(c.energyProduction()));
-    }
-
-    private Technology toDomain(UpdateTechnologyCommand c) {
-        return new Technology(
-                c.name(),
-                EnergyType.valueOf(c.energyType().toUpperCase()),
-                new Efficiency(c.efficiency()),
-                new InstallationCost(BigDecimal.valueOf(c.installationCost())),
-                new MaintenanceCost(BigDecimal.valueOf(c.maintenanceCost())),
-                new EnvironmentalImpact(c.environmentalImpact()),
-                new Co2Reduction(BigDecimal.valueOf(c.co2Reduction())),
-                new EnergyProduction(c.energyProduction()));
-    }
+    }    
 }
