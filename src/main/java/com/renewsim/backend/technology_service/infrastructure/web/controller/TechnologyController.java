@@ -7,12 +7,15 @@ import com.renewsim.backend.technology_service.application.port.in.*;
 import com.renewsim.backend.technology_service.application.result.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/technologies")
 @RequiredArgsConstructor
@@ -23,7 +26,7 @@ public class TechnologyController {
     private final DeleteTechnologyUseCase deleteUseCase;
     private final GetTechnologyUseCase getUseCase;
 
-    // ✅ CREATE
+    // CREATE
     @PostMapping
     @PreAuthorize("hasAuthority('SCOPE_admin:write') or hasRole('ADMIN')")
     public ResponseEntity<OperationResponse<TechnologyCreationResultDTO>> create(
@@ -35,7 +38,7 @@ public class TechnologyController {
                 .body(ApiResponseFactory.created(result, "Technology created successfully"));
     }
 
-    // ✅ GET by ID
+    // GET by ID
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
     public ResponseEntity<OperationResponse<TechnologyQueryResultDTO>> getById(@PathVariable Long id) {
@@ -43,7 +46,7 @@ public class TechnologyController {
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Technology retrieved successfully"));
     }
 
-    // ✅ GET ALL
+    // GET ALL
     @GetMapping
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
     public ResponseEntity<OperationResponse<List<TechnologyQueryResultDTO>>> getAll() {
@@ -51,18 +54,21 @@ public class TechnologyController {
         return ResponseEntity.ok(ApiResponseFactory.ok(results, "All technologies retrieved"));
     }
 
-    // ✅ UPDATE
+    // UPDATE
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_admin:write') or hasRole('ADMIN')")
     public ResponseEntity<OperationResponse<TechnologyUpdateResultDTO>> update(
             @PathVariable Long id,
             @Valid @RequestBody UpdateTechnologyCommand command) {
 
-        var result = updateUseCase.updateTechnology(command);
+        // Crear un nuevo record con el id del path
+        var commandWithId = UpdateTechnologyCommand.withId(id, command);
+        var result = updateUseCase.updateTechnology(commandWithId);
+
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Technology updated successfully"));
     }
 
-    // ✅ DELETE
+    //  DELETE
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_admin:delete') or hasRole('ADMIN')")
     public ResponseEntity<OperationResponse<Void>> delete(@PathVariable Long id) {

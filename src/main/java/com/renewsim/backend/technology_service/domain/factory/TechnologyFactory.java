@@ -1,13 +1,25 @@
 package com.renewsim.backend.technology_service.domain.factory;
 
-import com.renewsim.backend.technology_service.domain.model.Technology;
-import com.renewsim.backend.technology_service.domain.policy.TechnologyPolicy;
 import com.renewsim.backend.technology_service.domain.exception.InvalidTechnologyParameterException;
+import com.renewsim.backend.technology_service.domain.model.Technology;
+import com.renewsim.backend.technology_service.domain.model.vo.*;
+import com.renewsim.backend.technology_service.domain.policy.TechnologyPolicy;
 
+import java.math.BigDecimal;
+
+/**
+ * Factory for creating valid Technology domain objects.
+ * Ensures all Value Objects are validated upon creation and
+ * business-level consistency is checked through TechnologyPolicy.
+ */
 public final class TechnologyFactory {
 
-    private TechnologyFactory() {}
+    private TechnologyFactory() {
+    }
 
+    /**
+     * Creates a fully validated Technology aggregate from raw primitive input.
+     */
     public static Technology create(
             String name,
             double efficiency,
@@ -17,28 +29,24 @@ public final class TechnologyFactory {
             double co2Reduction,
             double energyProduction,
             String energyType) {
-
         try {
-            TechnologyPolicy.validateName(name);
-            TechnologyPolicy.validateEfficiency(efficiency);
-            TechnologyPolicy.validateCost(installationCost, maintenanceCost);
-            TechnologyPolicy.validateEnvironmentalImpact(environmentalImpact);
-            TechnologyPolicy.validateCo2Reduction(co2Reduction);
-            TechnologyPolicy.validateEnergyProduction(energyProduction);
-
-            return new Technology(
+            Technology technology = new Technology(
                     name,
-                    efficiency,
-                    installationCost,
-                    maintenanceCost,
-                    environmentalImpact,
-                    co2Reduction,
-                    energyProduction,
-                    energyType
-            );
+                    EnergyType.valueOf(energyType.toUpperCase()),
+                    new Efficiency(efficiency),
+                    new InstallationCost(BigDecimal.valueOf(installationCost)),
+                    new MaintenanceCost(BigDecimal.valueOf(maintenanceCost)),
+                    new EnvironmentalImpact(environmentalImpact),
+                    new Co2Reduction(co2Reduction),
+                    new EnergyProduction(energyProduction));
 
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidTechnologyParameterException(ex.getMessage());
+            // Business-level validation (cross-field consistency)
+            TechnologyPolicy.validateCompatibility(technology);
+
+            return technology;
+
+        } catch (IllegalArgumentException | NullPointerException ex) {
+            throw new InvalidTechnologyParameterException("Invalid technology parameters: " + ex.getMessage());
         }
     }
 }

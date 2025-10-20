@@ -248,6 +248,13 @@
                             <version>1.6.2</version>
                         </path>
                     </annotationProcessorPaths>
+                     <!-- ✅ Configuración adicional recomendada -->
+        <compilerArgs>
+            <!-- suprime la fecha en la clase generada -->
+            <arg>-Amapstruct.suppressGeneratorTimestamp=true</arg>
+            <!-- usa spring como modelo de componentes -->
+            <arg>-Amapstruct.defaultComponentModel=spring</arg>
+        </compilerArgs>
                 </configuration>
             </plugin>
 
