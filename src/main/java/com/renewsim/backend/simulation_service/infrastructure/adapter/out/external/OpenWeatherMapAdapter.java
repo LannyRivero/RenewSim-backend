@@ -19,7 +19,7 @@ import java.util.Map;
  * ✅ Implements ClimateDataProviderPort.
  * ✅ Optional component, can be disabled if frontend provides the data.
  */
-@Component
+//@Component
 @Profile("weather-enabled") 
 @RequiredArgsConstructor
 public class OpenWeatherMapAdapter implements ClimateDataProviderPort {
