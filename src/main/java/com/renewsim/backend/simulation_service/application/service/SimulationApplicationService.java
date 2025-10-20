@@ -58,8 +58,8 @@ public class SimulationApplicationService implements
     // --------------------------------------------------
     @Override
     public SimulationUpdateResultDTO updateSimulation(UpdateSimulationCommand command) {
-        Simulation existing = repository.findById(command.id())
-                .orElseThrow(() -> new SimulationNotFoundException(command.id()));
+        //Simulation existing = repository.findById(command.id())
+             //   .orElseThrow(() -> new SimulationNotFoundException(command.id()));
 
         validator.validateProjectSize(command.projectSize());
         validator.validateBudget(command.budget());

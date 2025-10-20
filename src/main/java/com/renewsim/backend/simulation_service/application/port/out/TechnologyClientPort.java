@@ -6,4 +6,3 @@ import com.renewsim.backend.simulation_service.domain.util.TechnologyScoringUtil
 public interface TechnologyClientPort {
     List<TechnologyData> fetchTechnologiesForSimulation(Long simulationId);
 }
-
