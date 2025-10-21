@@ -41,11 +41,10 @@ public class SimulationEntity {
     private double co2Reduction;
 
     /**
-     * Logical link to the user that owns this simulation.
-     * No foreign key constraint — keeps microservices decoupled.
+     * Logical reference to the creator (username from AuthenticatedUser).
      */
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
 
     /**
      * List of related technologies (IDs from technology_service).

@@ -11,5 +11,5 @@ public record CreateSimulationCommand(
         double budget,
         ClimateData climateData,
         List<Long> technologyIds,
-        Long userId) {
+        String createdBy) {
 }

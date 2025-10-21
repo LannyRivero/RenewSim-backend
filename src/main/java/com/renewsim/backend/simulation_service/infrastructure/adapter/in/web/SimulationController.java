@@ -1,5 +1,6 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.in.web;
 
+import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.simulation_service.application.command.*;
 import com.renewsim.backend.simulation_service.application.port.in.*;
 import com.renewsim.backend.simulation_service.application.result.*;
@@ -46,13 +47,14 @@ public class SimulationController {
     // CREATE SIMULATION
     // ==========================================================
     @Operation(summary = "Create a new simulation")
-    @PreAuthorize("hasAuthority('write:simulations')")
+    @PreAuthorize("hasAuthority('SCOPE_write:simulations')")
     @PostMapping
     public ResponseEntity<SimulationCreationResultDTO> createSimulation(
             @Valid @RequestBody SimulationRequestDTO request,
             Authentication auth) {
 
-        Long userId = Long.parseLong(auth.getName());
+        AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
+
         EnergyType energyType = EnergyType.valueOf(request.energyType().toUpperCase());
         ClimateData climateData = new ClimateData(
                 request.climate().irradiance(),
@@ -66,7 +68,8 @@ public class SimulationController {
                 request.budget(),
                 climateData,
                 List.of(),
-                userId);
+                user.username() 
+        );
 
         SimulationCreationResultDTO result = createUseCase.createSimulation(command);
         log.info("✅ User {} created simulation {}", auth.getName(), result.id());
@@ -77,7 +80,7 @@ public class SimulationController {
     // 🟡 UPDATE SIMULATION
     // ==========================================================
     @Operation(summary = "Update a simulation")
-    @PreAuthorize("hasAuthority('write:simulations')")
+    @PreAuthorize("hasAuthority('SCOPE_write:simulations')")
     @PutMapping("/{id}")
     public ResponseEntity<SimulationUpdateResultDTO> updateSimulation(
             @PathVariable Long id,
@@ -103,9 +106,7 @@ public class SimulationController {
                 request.budget(),
                 climateData,
                 List.of(),
-                Long.parseLong(auth.getName())
-
-        );
+                auth.getName());
 
         SimulationUpdateResultDTO result = updateUseCase.updateSimulation(command);
         log.info("✏️ User {} updated simulation {}", auth.getName(), id);
@@ -116,7 +117,7 @@ public class SimulationController {
     // 🔵 GET SIMULATION BY ID
     // ==========================================================
     @Operation(summary = "Get simulation by ID")
-    @PreAuthorize("hasAuthority('read:simulations')")
+    @PreAuthorize("hasAuthority('SCOPE_read:simulations')")
     @GetMapping("/{id}")
     public ResponseEntity<SimulationQueryResultDTO> getSimulationById(
             @PathVariable Long id,
@@ -136,11 +137,13 @@ public class SimulationController {
     // 📤 EXPORT SIMULATION
     // ==========================================================
     @Operation(summary = "Export simulation results as file")
-    @PreAuthorize("hasAuthority('export:simulations')")
+    @PreAuthorize("hasAuthority('SCOPE_export:simulations')")
     @GetMapping("/{id}/export")
     public ResponseEntity<String> exportSimulation(
             @PathVariable Long id,
             Authentication auth) {
+
+        AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
 
         SimulationQueryResultDTO result = getUseCase.getSimulationById(new GetSimulationByIdCommand(id));
         if (!isOwner(auth, result) && !hasAdminRole(auth)) {
@@ -155,7 +158,7 @@ public class SimulationController {
     // 🔴 DELETE SIMULATION
     // ==========================================================
     @Operation(summary = "Delete simulation by ID")
-    @PreAuthorize("hasAuthority('delete:simulations')")
+    @PreAuthorize("hasAuthority('SCOPE_delete:simulations')")
     @DeleteMapping("/{id}")
     public ResponseEntity<SimulationDeletionResultDTO> deleteSimulation(
             @PathVariable Long id,
@@ -179,8 +182,8 @@ public class SimulationController {
      * ✅ Verifica si el usuario autenticado es el propietario de la simulación.
      */
     private boolean isOwner(Authentication auth, SimulationQueryResultDTO result) {
-        Long authenticatedUserId = Long.parseLong(auth.getName());
-        return result.userId() != null && result.userId().equals(authenticatedUserId);
+        AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
+        return result.createdBy().equalsIgnoreCase(user.username());
     }
 
     /**

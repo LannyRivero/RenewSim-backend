@@ -19,7 +19,7 @@ public final class Simulation {
     private final CO2Reduction co2Reduction;
     private final ClimateData climateData;
     private final LocalDateTime createdAt;
-    private final Long userId;
+  private final String createdBy;
     private final List<Long> technologyIds;
 
     public Simulation(
@@ -32,7 +32,7 @@ public final class Simulation {
         CO2Reduction co2Reduction,
         ClimateData climateData,
         List<Long> technologyIds,
-        Long userId,
+        String createdBy,
         LocalDateTime createdAt
     ) {
         this.id = id;
@@ -44,7 +44,7 @@ public final class Simulation {
         this.co2Reduction = co2Reduction;
         this.climateData = climateData;
         this.technologyIds = technologyIds;
-        this.userId = userId;
+        this.createdBy = createdBy;
         this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
     }
 
@@ -57,6 +57,6 @@ public final class Simulation {
     public CO2Reduction co2Reduction() { return co2Reduction; }
     public ClimateData climateData() { return climateData; }
     public List<Long> technologyIds() { return technologyIds; }
-    public Long userId() { return userId; }
+    public String createdBy() { return createdBy; }
     public LocalDateTime createdAt() { return createdAt; }
 }

@@ -12,5 +12,5 @@ public record UpdateSimulationCommand(
         double budget,
         ClimateData climateData,
         List<Long> technologyIds,
-        Long userId) {
+        String createdBy) {
 }

@@ -13,5 +13,5 @@ public record SimulationQueryResultDTO(
     double co2Reduction,
     LocalDateTime createdAt,
     List<String> technologies,
-    Long userId
+    String createdBy
 ) {}

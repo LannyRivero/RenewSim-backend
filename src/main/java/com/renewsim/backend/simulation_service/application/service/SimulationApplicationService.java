@@ -49,7 +49,7 @@ public class SimulationApplicationService implements
                                 command.budget(),
                                 command.climateData(),
                                 command.technologyIds(),
-                                command.userId() 
+                                command.createdBy()
                 );
 
                 Simulation saved = repository.save(simulation);
@@ -85,7 +85,7 @@ public class SimulationApplicationService implements
                                 command.budget(),
                                 climateData,
                                 command.technologyIds(),
-                                command.userId());
+                                command.createdBy());
 
                 Simulation saved = repository.save(updated);
 
@@ -141,6 +141,6 @@ public class SimulationApplicationService implements
                                 co2Reduction,
                                 simulation.createdAt(),
                                 simulation.technologyIds().stream().map(String::valueOf).toList(),
-                                simulation.userId());
+                                simulation.createdBy());
         }
 }

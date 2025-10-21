@@ -16,7 +16,7 @@ public final class SimulationFactory {
         double budget,
         ClimateData climateData,
         List<Long> technologyIds,
-        Long userId 
+        String createdBy
     ) {
         return new Simulation(
             null,
@@ -28,7 +28,7 @@ public final class SimulationFactory {
             new CO2Reduction(0), 
             climateData,
             technologyIds,
-            userId,
+            createdBy,
             LocalDateTime.now()
         );
     }

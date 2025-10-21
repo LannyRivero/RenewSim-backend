@@ -39,13 +39,14 @@ public interface SimulationMapper {
                 new CO2Reduction(entity.getCo2Reduction()),
                 new ClimateData(0, 0, 0), 
                 entity.getTechnologyIds(),
-                entity.getUserId(),
+                entity.getCreatedBy(),
                 entity.getCreatedAt());
     }
 
     // ============================================================
     // DOMAIN → ENTITY (MapStruct handled)
     // ============================================================
+    @Mapping(target = "location", expression = "java(domain.location())")
     @Mapping(target = "energyType", expression = "java(domain.energyType().name())")
     @Mapping(target = "projectSize", expression = "java(domain.projectSize().value())")
     @Mapping(target = "budget", expression = "java(domain.budget().value())")
@@ -53,7 +54,7 @@ public interface SimulationMapper {
     @Mapping(target = "co2Reduction", expression = "java(domain.co2Reduction().tonsPerYear())")
     @Mapping(target = "technologyIds", expression = "java(domain.technologyIds())")
     @Mapping(target = "createdAt", expression = "java(domain.createdAt())")
-    @Mapping(target = "userId", expression = "java(domain.userId())")
+    @Mapping(target = "createdBy", expression = "java(domain.createdBy())")
     SimulationEntity toEntity(Simulation domain);
 
     // ============================================================
