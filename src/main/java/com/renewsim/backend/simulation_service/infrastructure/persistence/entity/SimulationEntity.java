@@ -3,6 +3,7 @@ package com.renewsim.backend.simulation_service.infrastructure.persistence.entit
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,7 +13,8 @@ import java.util.List;
  * Contains only persistence structure, no business logic.
  *
  * 💡 Notes:
- * - "userId" is a logical reference to the owning user (no @ManyToOne relation).
+ * - "userId" is a logical reference to the owning user (no @ManyToOne
+ * relation).
  * - "technologyIds" is stored as an ElementCollection for flexibility.
  */
 @Entity
@@ -50,10 +52,19 @@ public class SimulationEntity {
      * List of related technologies (IDs from technology_service).
      * Uses an element collection for simplicity and JSON-friendly structure.
      */
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "simulation_technologies", joinColumns = @JoinColumn(name = "simulation_id"))
     @Column(name = "technology_id")
-    private List<Long> technologyIds;
+    @org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.ALL)
+    private List<Long> technologyIds = new ArrayList<>();
 
     private LocalDateTime createdAt;
+
+    public void setTechnologyIds(List<Long> technologyIds) {
+    this.technologyIds.clear();
+    if (technologyIds != null) {
+        this.technologyIds.addAll(technologyIds);
+    }
+}
+
 }

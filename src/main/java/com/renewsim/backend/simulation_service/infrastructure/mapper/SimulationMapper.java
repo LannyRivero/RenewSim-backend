@@ -52,7 +52,8 @@ public interface SimulationMapper {
     @Mapping(target = "budget", expression = "java(domain.budget().value())")
     @Mapping(target = "estimatedEnergy", expression = "java(domain.energyOutput().kwhPerYear())")
     @Mapping(target = "co2Reduction", expression = "java(domain.co2Reduction().tonsPerYear())")
-    @Mapping(target = "technologyIds", expression = "java(domain.technologyIds())")
+    @Mapping(target = "technologyIds", expression = "java(domain.technologyIds() != null ? new java.util.ArrayList<>(domain.technologyIds()) : new java.util.ArrayList<>())")
+
     @Mapping(target = "createdAt", expression = "java(domain.createdAt())")
     @Mapping(target = "createdBy", expression = "java(domain.createdBy())")
     SimulationEntity toEntity(Simulation domain);
