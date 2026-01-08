@@ -148,7 +148,14 @@ public class SimulationController {
 
         AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
 
-        SimulationQueryResultDTO result = getUseCase.getSimulationById(new GetSimulationByIdCommand(id));
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        SimulationDetailResultDTO result = getUseCase.getSimulationById(
+                new GetSimulationByIdCommand(
+                        id,
+                        user.username(),
+                        isAdmin));
         if (!isOwner(auth, result) && !hasAdminRole(auth)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -167,7 +174,16 @@ public class SimulationController {
             @PathVariable Long id,
             Authentication auth) {
 
-        SimulationQueryResultDTO result = getUseCase.getSimulationById(new GetSimulationByIdCommand(id));
+        AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
+
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        SimulationDetailResultDTO result = getUseCase.getSimulationById(
+                new GetSimulationByIdCommand(
+                        id,
+                        user.username(),
+                        isAdmin));
         if (!isOwner(auth, result) && !hasAdminRole(auth)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -204,6 +220,14 @@ public class SimulationController {
      * Verifica si el usuario autenticado es el propietario de la simulación.
      */
     private boolean isOwner(Authentication auth, SimulationQueryResultDTO result) {
+        AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
+        return result.createdBy().equalsIgnoreCase(user.username());
+    }
+
+    /**
+     * Verifica si el usuario autenticado es el propietario de la simulación.
+     */
+    private boolean isOwner(Authentication auth, SimulationDetailResultDTO result) {
         AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
         return result.createdBy().equalsIgnoreCase(user.username());
     }
