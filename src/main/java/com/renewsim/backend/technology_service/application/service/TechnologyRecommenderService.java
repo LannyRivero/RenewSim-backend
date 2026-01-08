@@ -28,7 +28,7 @@ public class TechnologyRecommenderService {
 
         return switch (simulation.energyType()) {
             case SOLAR -> List.of(1L); // Ejemplo: tecnología 1 = Panel solar
-            case EOLIC -> List.of(2L); // Ejemplo: tecnología 2 = Turbina eólica
+            case WIND -> List.of(2L); // Ejemplo: tecnología 2 = Turbina eólica
             case HYDRO -> List.of(3L); // Ejemplo: tecnología 3 = Microhidráulica
             case GEOTHERMAL -> List.of(4L);
             case BIOMASS -> List.of(5L);
