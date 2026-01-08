@@ -11,7 +11,8 @@ public record SimulationDetailResultDTO(
     double energyGenerated,
     double estimatedSavings,
     Double returnOnInvestment,
-    LocalDateTime timestamp
+    LocalDateTime timestamp,
+    String createdBy
 ) {}
 
 

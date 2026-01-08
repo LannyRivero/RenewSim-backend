@@ -168,7 +168,8 @@ public class SimulationApplicationService implements
                                 simulation.energyOutput().kwhPerYear(),
                                 savings,
                                 roiYears,
-                                simulation.createdAt()
+                                simulation.createdAt(),
+                                simulation.createdBy()
 
                 );
         }
