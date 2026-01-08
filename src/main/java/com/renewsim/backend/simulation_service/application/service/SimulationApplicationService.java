@@ -18,6 +18,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.EnergyOutput;
 import com.renewsim.backend.simulation_service.domain.model.vo.ProjectSize;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +27,8 @@ public class SimulationApplicationService implements
                 CreateSimulationUseCase,
                 UpdateSimulationUseCase,
                 DeleteSimulationUseCase,
-                GetSimulationUseCase {
+                GetSimulationUseCase,
+                GetUserSimulationHistoryUseCase {
 
         private final SimulationRepositoryPort repository;
         private final SimulationValidator validator;
@@ -87,15 +89,15 @@ public class SimulationApplicationService implements
                                 ? command.climateData()
                                 : existing.climateData();
 
-                // 🔁 Se conserva identidad del aggregate
+                // Se conserva identidad del aggregate
                 Simulation updated = new Simulation(
                                 existing.id(),
                                 command.location(),
                                 command.energyType(),
                                 new ProjectSize(command.projectSize()),
                                 new Budget(command.budget()),
-                                existing.energyOutput(), // se recalcula luego
-                                existing.co2Reduction(), // se recalcula luego
+                                existing.energyOutput(),
+                                existing.co2Reduction(),
                                 climateData,
                                 command.technologyIds(),
                                 existing.createdBy(),
@@ -157,4 +159,40 @@ public class SimulationApplicationService implements
                                 simulation.technologyIds().stream().map(String::valueOf).toList(),
                                 simulation.createdBy());
         }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<SimulationHistoryResultDTO> getUserHistory(String username) {
+
+                return repository.findAllByCreatedBy(username)
+                                .stream()
+                                .map(simulation -> {
+
+                                        //  Recalcular derivados
+                                        EnergyOutput energy = simulation.energyOutput() != null
+                                                        ? simulation.energyOutput()
+                                                        : calculator.calculateEnergyOutput(simulation);
+
+                                        double savings = calculator.calculateSavings(
+                                                        simulation.withCalculatedResults(
+                                                                        energy,
+                                                                        calculator.calculateCo2Reduction(energy)));
+
+                                        int roiYears = calculator.calculateRoiYears(
+                                                        simulation.withCalculatedResults(
+                                                                        energy,
+                                                                        calculator.calculateCo2Reduction(energy)));
+
+                                        return new SimulationHistoryResultDTO(
+                                                        simulation.id(),
+                                                        simulation.location(),
+                                                        simulation.energyType().name(),
+                                                        energy.kwhPerYear(),
+                                                        savings,
+                                                        roiYears >= 0 ? roiYears : null,
+                                                        simulation.createdAt());
+                                })
+                                .toList();
+        }
+
 }

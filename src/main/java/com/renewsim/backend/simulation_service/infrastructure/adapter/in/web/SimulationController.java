@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * SimulationController
  *
- *  REST endpoints for simulation management with role-based and
+ * REST endpoints for simulation management with role-based and
  * ownership-based security.
  * Implements ownership validation to ensure users can only access their own
  * simulations,
@@ -42,6 +42,7 @@ public class SimulationController {
     private final UpdateSimulationUseCase updateUseCase;
     private final DeleteSimulationUseCase deleteUseCase;
     private final GetSimulationUseCase getUseCase;
+    private final GetUserSimulationHistoryUseCase historyUseCase;
 
     // ==========================================================
     // CREATE SIMULATION
@@ -68,8 +69,7 @@ public class SimulationController {
                 request.budget(),
                 climateData,
                 List.of(),
-                user.username() 
-        );
+                user.username());
 
         SimulationCreationResultDTO result = createUseCase.createSimulation(command);
         log.info("✅ User {} created simulation {}", auth.getName(), result.id());
@@ -77,7 +77,7 @@ public class SimulationController {
     }
 
     // ==========================================================
-    // 🟡 UPDATE SIMULATION
+    // UPDATE SIMULATION
     // ==========================================================
     @Operation(summary = "Update a simulation")
     @PreAuthorize("hasAuthority('SCOPE_write:simulations')")
@@ -114,7 +114,7 @@ public class SimulationController {
     }
 
     // ==========================================================
-    // 🔵 GET SIMULATION BY ID
+    // GET SIMULATION BY ID
     // ==========================================================
     @Operation(summary = "Get simulation by ID")
     @PreAuthorize("hasAuthority('SCOPE_read:simulations')")
@@ -134,7 +134,7 @@ public class SimulationController {
     }
 
     // ==========================================================
-    // 📤 EXPORT SIMULATION
+    // EXPORT SIMULATION
     // ==========================================================
     @Operation(summary = "Export simulation results as file")
     @PreAuthorize("hasAuthority('SCOPE_export:simulations')")
@@ -155,7 +155,7 @@ public class SimulationController {
     }
 
     // ==========================================================
-    // 🔴 DELETE SIMULATION
+    // DELETE SIMULATION
     // ==========================================================
     @Operation(summary = "Delete simulation by ID")
     @PreAuthorize("hasAuthority('SCOPE_delete:simulations')")
@@ -176,10 +176,29 @@ public class SimulationController {
     }
 
     // ==========================================================
-    // ⚙️ Utility methods (Ownership and Roles)
+    // GET USER SIMULATION HISTORY
+    // ==========================================================
+    @Operation(summary = "Get authenticated user simulation history")
+    @PreAuthorize("hasAuthority('SCOPE_read:simulations')")
+    @GetMapping("/user")
+    public ResponseEntity<List<SimulationHistoryResultDTO>> getUserHistory(
+            Authentication auth) {
+
+        AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
+
+        List<SimulationHistoryResultDTO> history = historyUseCase.getUserHistory(user.username());
+
+        log.info("📜 User {} retrieved {} simulations",
+                user.username(), history.size());
+
+        return ResponseEntity.ok(history);
+    }
+
+    // ==========================================================
+    // Utility methods (Ownership and Roles)
     // ==========================================================
     /**
-     * ✅ Verifica si el usuario autenticado es el propietario de la simulación.
+     * Verifica si el usuario autenticado es el propietario de la simulación.
      */
     private boolean isOwner(Authentication auth, SimulationQueryResultDTO result) {
         AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
@@ -187,7 +206,7 @@ public class SimulationController {
     }
 
     /**
-     * ✅ Comprueba si el usuario autenticado tiene el rol ADMIN.
+     * Comprueba si el usuario autenticado tiene el rol ADMIN.
      */
     private boolean hasAdminRole(Authentication auth) {
         return auth.getAuthorities().stream()
