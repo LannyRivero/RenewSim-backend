@@ -168,7 +168,7 @@ public class SimulationApplicationService implements
                                 .stream()
                                 .map(simulation -> {
 
-                                        //  Recalcular derivados
+                                        // Recalcular derivados
                                         EnergyOutput energy = simulation.energyOutput() != null
                                                         ? simulation.energyOutput()
                                                         : calculator.calculateEnergyOutput(simulation);
