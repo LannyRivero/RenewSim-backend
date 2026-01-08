@@ -41,4 +41,10 @@ public class SimulationRepositoryAdapter implements SimulationRepositoryPort {
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
+
+    @Override
+    public void deleteAllByCreatedBy(String username) {
+        repository.deleteAllByCreatedBy(username);
+    }
+
 }

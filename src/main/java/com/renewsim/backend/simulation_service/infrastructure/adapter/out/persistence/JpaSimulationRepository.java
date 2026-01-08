@@ -9,4 +9,6 @@ import java.util.List;
 public interface JpaSimulationRepository extends JpaRepository<SimulationEntity, Long> {
 
     List<SimulationEntity> findByCreatedByOrderByCreatedAtDesc(String createdBy);
+    
+    void deleteAllByCreatedBy(String createdBy);
 }

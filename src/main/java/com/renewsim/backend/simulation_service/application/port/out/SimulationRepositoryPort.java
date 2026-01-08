@@ -9,5 +9,6 @@ public interface SimulationRepositoryPort {
     Optional<Simulation> findById(Long id);
      List<Simulation> findAllByCreatedBy(String username);
     void deleteById(Long id);
+    void deleteAllByCreatedBy(String username);
 }
 
