@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.renewsim.backend.simulation_service.application.port.in.GetSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.command.GetSimulationByIdCommand;
+import com.renewsim.backend.simulation_service.application.result.SimulationDetailResultDTO;
 import com.renewsim.backend.simulation_service.application.result.SimulationQueryResultDTO;
 
 import java.util.List;
@@ -22,7 +23,7 @@ public class SimulationTechnologyController {
      */
     @GetMapping("/{id}/technologies")
     public List<String> getTechnologiesBySimulationId(@PathVariable Long id) {
-        SimulationQueryResultDTO simulation = getSimulationUseCase.getSimulationById(new GetSimulationByIdCommand(id));
+        SimulationDetailResultDTO simulation = getSimulationUseCase.getSimulationById(new GetSimulationByIdCommand(id));
 
         return simulation.technologyIds();
     }

@@ -5,7 +5,7 @@ package com.renewsim.backend.simulation_service.domain.model.vo;
  */
 public enum EnergyType {
     SOLAR,
-    EOLIC,
+    WIND,
     HYDRO,
     GEOTHERMAL,
     BIOMASS;
@@ -14,7 +14,7 @@ public enum EnergyType {
         if (value == null)
             throw new IllegalArgumentException("EnergyType cannot be null");
         return switch (value.trim().toUpperCase()) {
-            case "WIND" -> EOLIC; // alias compatible
+            case "WIND" -> WIND; // alias compatible
             default -> EnergyType.valueOf(value.trim().toUpperCase());
         };
     }
