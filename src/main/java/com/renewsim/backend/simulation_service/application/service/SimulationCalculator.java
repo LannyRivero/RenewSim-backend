@@ -2,19 +2,18 @@ package com.renewsim.backend.simulation_service.application.service;
 
 import org.springframework.stereotype.Component;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.simulation_service.domain.model.vo.CO2Reduction;
+import com.renewsim.backend.simulation_service.domain.model.vo.EnergyOutput;
 
 @Component
 public class SimulationCalculator {
 
-    public double calculateEnergyOutput(Simulation simulation) {
-        return simulation.projectSize().value() * 1200; // kWh/year (base estimation)
+    public EnergyOutput calculateEnergyOutput(Simulation simulation) {
+        double value = simulation.projectSize().value() * 1200;
+        return new EnergyOutput(value);
     }
 
-    public double calculateCo2Reduction(Simulation simulation) {
-        return simulation.energyOutput().kwhPerYear() * 0.0007; // tons/year
-    }
-
-    public double calculateROI(Simulation simulation) {
-        return (simulation.energyOutput().kwhPerYear() * 0.15) / simulation.budget().value();
+    public CO2Reduction calculateCo2Reduction(EnergyOutput energyOutput) {
+        return new CO2Reduction(energyOutput.kwhPerYear() * 0.0007);
     }
 }

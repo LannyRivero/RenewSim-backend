@@ -2,21 +2,11 @@ package com.renewsim.backend.simulation_service.infrastructure.persistence.entit
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 🧱 SimulationEntity
- *
- * JPA entity representing a Simulation persisted in the database.
- * Contains only persistence structure, no business logic.
- *
- * 💡 Notes:
- * - "userId" is a logical reference to the owning user (no @ManyToOne
- * relation).
- * - "technologyIds" is stored as an ElementCollection for flexibility.
- */
 @Entity
 @Table(name = "simulations")
 @Getter
@@ -32,39 +22,35 @@ public class SimulationEntity {
 
     private String location;
 
+    @Column(name = "energy_type", nullable = false)
     private String energyType;
 
+    @Column(name = "project_size", nullable = false)
     private double projectSize;
 
+    @Column(nullable = false)
     private double budget;
 
+    @Column(name = "estimated_energy", nullable = false)
     private double estimatedEnergy;
 
+    @Column(name = "co2_reduction", nullable = false)
     private double co2Reduction;
 
-    /**
-     * Logical reference to the creator (username from AuthenticatedUser).
-     */
     @Column(name = "created_by", nullable = false)
     private String createdBy;
 
-    /**
-     * List of related technologies (IDs from technology_service).
-     * Uses an element collection for simplicity and JSON-friendly structure.
-     */
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "simulation_technologies", joinColumns = @JoinColumn(name = "simulation_id"))
-    @Column(name = "technology_id")
-    @org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.ALL)
-    private List<Long> technologyIds = new ArrayList<>();
-
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public void setTechnologyIds(List<Long> technologyIds) {
-    this.technologyIds.clear();
-    if (technologyIds != null) {
-        this.technologyIds.addAll(technologyIds);
-    }
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+        name = "simulation_technologies",
+        joinColumns = @JoinColumn(name = "simulation_id")
+    )
+    @Column(name = "technology_id")
+    @Builder.Default
+    private List<Long> technologyIds = new ArrayList<>();
 }
 
-}
+

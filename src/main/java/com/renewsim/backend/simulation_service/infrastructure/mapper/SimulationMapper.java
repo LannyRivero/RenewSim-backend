@@ -8,13 +8,13 @@ import org.mapstruct.*;
 import java.util.List;
 
 /**
- * 🧭 SimulationMapper
+ * SimulationMapper
  *
- * ✅ Responsibility: translate between persistence entities and immutable domain
+ * Responsibility: translate between persistence entities and immutable domain
  * models.
- * ✅ Designed for Clean Architecture & DDD compatibility.
+ * Designed for Clean Architecture & DDD compatibility.
  *
- * 💡 Notes:
+ * Notes:
  * - ENTITY → DOMAIN is implemented manually to preserve immutability.
  * - DOMAIN → ENTITY uses MapStruct mapping expressions.
  * - Compatible with MapStruct 1.6+ / Java 17+.
@@ -26,8 +26,9 @@ public interface SimulationMapper {
     // ENTITY → DOMAIN (manual)
     // ============================================================
     default Simulation toDomain(SimulationEntity entity) {
-        if (entity == null)
+        if (entity == null) {
             return null;
+        }
 
         return new Simulation(
                 entity.getId(),
@@ -35,25 +36,26 @@ public interface SimulationMapper {
                 parseEnergyType(entity.getEnergyType()),
                 new ProjectSize(entity.getProjectSize()),
                 new Budget(entity.getBudget()),
+                // 👉 usamos energyGenerated como fuente real
                 new EnergyOutput(entity.getEstimatedEnergy()),
                 new CO2Reduction(entity.getCo2Reduction()),
-                new ClimateData(0, 0, 0), 
+                new ClimateData(0, 0, 0),
                 entity.getTechnologyIds(),
                 entity.getCreatedBy(),
                 entity.getCreatedAt());
     }
 
     // ============================================================
-    // DOMAIN → ENTITY (MapStruct handled)
+    // DOMAIN → ENTITY (MapStruct)
     // ============================================================
     @Mapping(target = "location", expression = "java(domain.location())")
     @Mapping(target = "energyType", expression = "java(domain.energyType().name())")
     @Mapping(target = "projectSize", expression = "java(domain.projectSize().value())")
     @Mapping(target = "budget", expression = "java(domain.budget().value())")
+
     @Mapping(target = "estimatedEnergy", expression = "java(domain.energyOutput().kwhPerYear())")
     @Mapping(target = "co2Reduction", expression = "java(domain.co2Reduction().tonsPerYear())")
     @Mapping(target = "technologyIds", expression = "java(domain.technologyIds() != null ? new java.util.ArrayList<>(domain.technologyIds()) : new java.util.ArrayList<>())")
-
     @Mapping(target = "createdAt", expression = "java(domain.createdAt())")
     @Mapping(target = "createdBy", expression = "java(domain.createdBy())")
     SimulationEntity toEntity(Simulation domain);

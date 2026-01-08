@@ -1,46 +1,44 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
+
 import com.renewsim.backend.simulation_service.application.port.out.SimulationRepositoryPort;
-import com.renewsim.backend.simulation_service.infrastructure.mapper.SimulationMapper;
-import com.renewsim.backend.simulation_service.infrastructure.persistence.entity.SimulationEntity;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.simulation_service.infrastructure.mapper.SimulationMapper;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Adapter implementing the SimulationRepositoryPort using Spring Data JPA.
- */
-@Component
+@Repository
 @RequiredArgsConstructor
 public class SimulationRepositoryAdapter implements SimulationRepositoryPort {
 
-    private final JpaSimulationRepository jpaRepository;
+    private final JpaSimulationRepository repository;
     private final SimulationMapper mapper;
 
     @Override
     public Simulation save(Simulation simulation) {
-        SimulationEntity entity = mapper.toEntity(simulation);
-        SimulationEntity saved = jpaRepository.save(entity);
-        return mapper.toDomain(saved);
+        return mapper.toDomain(
+                repository.save(mapper.toEntity(simulation)));
+    }
+
+    @Override
+    public List<Simulation> findAllByCreatedBy(String username) {
+        return repository.findByCreatedByOrderByCreatedAtDesc(username)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     @Override
     public Optional<Simulation> findById(Long id) {
-        return jpaRepository.findById(id)
+        return repository.findById(id)
                 .map(mapper::toDomain);
     }
 
     @Override
-    public List<Simulation> findAllByUserId(Long userId) {
-        // Implementación temporal, ajustable si la entidad incorpora userId
-        return mapper.toDomainList(jpaRepository.findAllById(userId));
-    }
-
-    @Override
     public void deleteById(Long id) {
-        jpaRepository.deleteById(id);
+        repository.deleteById(id);
     }
 }

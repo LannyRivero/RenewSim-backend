@@ -5,7 +5,9 @@ import com.renewsim.backend.simulation_service.application.port.out.ClimateDataP
 import com.renewsim.backend.simulation_service.application.port.out.SimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.domain.factory.SimulationFactory;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.simulation_service.domain.model.vo.CO2Reduction;
 import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
+import com.renewsim.backend.simulation_service.domain.model.vo.EnergyOutput;
 import com.renewsim.backend.simulation_service.dto.SimulationRecommendationResultDTO;
 import com.renewsim.backend.technology_service.application.service.TechnologyRecommenderService;
 
@@ -17,10 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * 🎯 SimulationOrchestratorService
+ * SimulationOrchestratorService
  *
- * Orquesta la creación de simulaciones y la asignación automática de tecnologías recomendadas.
- * Garantiza persistencia coherente y consistencia transaccional siguiendo principios DDD.
+ * Orquesta la creación de simulaciones y la asignación automática de
+ * tecnologías recomendadas.
+ * Garantiza persistencia coherente y consistencia transaccional siguiendo
+ * principios DDD.
  */
 @Slf4j
 @Service
@@ -28,62 +32,59 @@ import java.util.List;
 @Transactional
 public class SimulationOrchestratorService {
 
-    private final SimulationRepositoryPort repository;
-    private final SimulationValidator validator;
-    private final SimulationCalculator calculator;
-    private final TechnologyRecommenderService recommender;
-    private final ClimateDataProviderPort climateProvider;
+        private final SimulationRepositoryPort repository;
+        private final SimulationValidator validator;
+        private final SimulationCalculator calculator;
+        private final TechnologyRecommenderService recommender;
+        private final ClimateDataProviderPort climateProvider;
 
-    /**
-     * Crea una simulación y recomienda tecnologías según su tipo de energía.
-     * Flujo:
-     *  1️⃣ Validar y obtener datos climáticos.
-     *  2️⃣ Crear y guardar simulación base.
-     *  3️⃣ Generar recomendaciones de tecnologías.
-     *  4️⃣ Asignarlas y persistir la simulación actualizada.
-     */
-    public SimulationRecommendationResultDTO createSimulationWithRecommendation(CreateSimulationCommand command) {
-        log.info("🚀 Creando simulación con recomendación | Tipo de energía: {}", command.energyType());
+        /**
+         * Crea una simulación y recomienda tecnologías según su tipo de energía.
+         * Flujo:
+         * 1 Validar y obtener datos climáticos.
+         * 2 Crear y guardar simulación base.
+         * 3 Generar recomendaciones de tecnologías.
+         * 4 Asignarlas y persistir la simulación actualizada.
+         */
+        public SimulationRecommendationResultDTO createSimulationWithRecommendation(CreateSimulationCommand command) {
 
-        // 1️⃣ Validación
-        validator.validateProjectSize(command.projectSize());
-        validator.validateBudget(command.budget());
+                validator.validateProjectSize(command.projectSize());
+                validator.validateBudget(command.budget());
 
-        // 2️⃣ Obtener datos climáticos
-        ClimateData climateData = command.climateData() != null
-                ? command.climateData()
-                : climateProvider.fetchClimateData(command.location());
+                ClimateData climateData = command.climateData() != null
+                                ? command.climateData()
+                                : climateProvider.fetchClimateData(command.location());
 
-        // 3️⃣ Crear simulación base
-        Simulation base = SimulationFactory.create(
-                command.location(),
-                command.energyType(),
-                command.projectSize(),
-                command.budget(),
-                climateData,
-                List.of(),
-                command.createdBy()
-        );
+                // 1️ Crear simulación base
+                Simulation base = SimulationFactory.create(
+                                command.location(),
+                                command.energyType(),
+                                command.projectSize(),
+                                command.budget(),
+                                climateData,
+                                List.of(),
+                                command.createdBy());
 
-        // 4️⃣ Guardar la simulación inicial para obtener su ID persistido
-        Simulation savedBase = repository.save(base);
-        log.info("💾 Simulación base guardada con ID: {}", savedBase.id());
+                // 2️ Calcular resultados
+                EnergyOutput energyOutput = calculator.calculateEnergyOutput(base);
+                CO2Reduction co2Reduction = calculator.calculateCo2Reduction(energyOutput);
 
-        // 5️⃣ Obtener recomendaciones de tecnologías
-        List<Long> recommendedIds = recommender.recommendFor(savedBase);
-        log.info("✅ Tecnologías recomendadas para simulación {}: {}", savedBase.id(), recommendedIds);
+                Simulation completed = base.withCalculatedResults(energyOutput, co2Reduction);
 
-        // 6️⃣ Asignar tecnologías y guardar nuevamente
-        Simulation updated = savedBase.assignTechnologies(recommendedIds);
-        Simulation finalSaved = repository.save(updated);
+                // 3️ Guardar simulación COMPLETA
+                Simulation saved = repository.save(completed);
 
-        log.info("💾 Simulación {} actualizada con tecnologías: {}", finalSaved.id(), finalSaved.technologyIds());
+                // 4️ Recomendar tecnologías
+                List<Long> recommendedIds = recommender.recommendFor(saved);
 
-        // 7️⃣ Devolver DTO de resultado
-        return new SimulationRecommendationResultDTO(
-                finalSaved.id(),
-                finalSaved.energyType().name(),
-                finalSaved.technologyIds()
-        );
-    }
+                Simulation finalSimulation = saved.assignTechnologies(recommendedIds);
+
+                repository.save(finalSimulation);
+
+                return new SimulationRecommendationResultDTO(
+                                finalSimulation.id(),
+                                finalSimulation.energyType().name(),
+                                finalSimulation.technologyIds());
+        }
+
 }

@@ -11,7 +11,11 @@ import com.renewsim.backend.simulation_service.application.result.*;
 import com.renewsim.backend.simulation_service.domain.factory.SimulationFactory;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
+import com.renewsim.backend.simulation_service.domain.model.vo.Budget;
+import com.renewsim.backend.simulation_service.domain.model.vo.CO2Reduction;
 import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
+import com.renewsim.backend.simulation_service.domain.model.vo.EnergyOutput;
+import com.renewsim.backend.simulation_service.domain.model.vo.ProjectSize;
 
 import java.time.LocalDateTime;
 
@@ -27,32 +31,36 @@ public class SimulationApplicationService implements
         private final SimulationRepositoryPort repository;
         private final SimulationValidator validator;
         private final SimulationCalculator calculator;
-        private final ClimateDataProviderPort climateProvider; // opcional (perfil weather-enabled)
+        private final ClimateDataProviderPort climateProvider;
 
         // --------------------------------------------------
         // CREATE
         // --------------------------------------------------
         @Override
         public SimulationCreationResultDTO createSimulation(CreateSimulationCommand command) {
+
                 validator.validateProjectSize(command.projectSize());
                 validator.validateBudget(command.budget());
 
-                // Si el frontend no envía datos climáticos, se consultan automáticamente
                 ClimateData climateData = command.climateData() != null
                                 ? command.climateData()
                                 : climateProvider.fetchClimateData(command.location());
 
-                Simulation simulation = SimulationFactory.create(
+                Simulation base = SimulationFactory.create(
                                 command.location(),
                                 command.energyType(),
                                 command.projectSize(),
                                 command.budget(),
-                                command.climateData(),
+                                climateData,
                                 command.technologyIds(),
-                                command.createdBy()
-                );
+                                command.createdBy());
 
-                Simulation saved = repository.save(simulation);
+                EnergyOutput energyOutput = calculator.calculateEnergyOutput(base);
+
+                CO2Reduction co2Reduction = calculator.calculateCo2Reduction(energyOutput);
+
+                Simulation completed = base.withCalculatedResults(energyOutput, co2Reduction);
+                Simulation saved = repository.save(completed);
 
                 return new SimulationCreationResultDTO(
                                 saved.id(),
@@ -68,6 +76,7 @@ public class SimulationApplicationService implements
         // --------------------------------------------------
         @Override
         public SimulationUpdateResultDTO updateSimulation(UpdateSimulationCommand command) {
+
                 Simulation existing = repository.findById(command.id())
                                 .orElseThrow(() -> new SimulationNotFoundException(command.id()));
 
@@ -78,19 +87,25 @@ public class SimulationApplicationService implements
                                 ? command.climateData()
                                 : existing.climateData();
 
-                Simulation updated = SimulationFactory.create(
+                // 🔁 Se conserva identidad del aggregate
+                Simulation updated = new Simulation(
+                                existing.id(),
                                 command.location(),
                                 command.energyType(),
-                                command.projectSize(),
-                                command.budget(),
+                                new ProjectSize(command.projectSize()),
+                                new Budget(command.budget()),
+                                existing.energyOutput(), // se recalcula luego
+                                existing.co2Reduction(), // se recalcula luego
                                 climateData,
                                 command.technologyIds(),
-                                command.createdBy());
+                                existing.createdBy(),
+                                existing.createdAt());
 
-                Simulation saved = repository.save(updated);
+                EnergyOutput energy = calculator.calculateEnergyOutput(updated);
+                CO2Reduction co2 = calculator.calculateCo2Reduction(energy);
 
-                double newEnergy = calculator.calculateEnergyOutput(saved);
-                double newCo2 = calculator.calculateCo2Reduction(saved);
+                Simulation completed = updated.withCalculatedResults(energy, co2);
+                Simulation saved = repository.save(completed);
 
                 return new SimulationUpdateResultDTO(
                                 saved.id(),
@@ -98,8 +113,8 @@ public class SimulationApplicationService implements
                                 saved.energyType().name(),
                                 saved.projectSize().value(),
                                 saved.budget().value(),
-                                newEnergy,
-                                newCo2,
+                                energy.kwhPerYear(),
+                                co2.tonsPerYear(),
                                 LocalDateTime.now());
         }
 
@@ -108,6 +123,7 @@ public class SimulationApplicationService implements
         // --------------------------------------------------
         @Override
         public SimulationDeletionResultDTO deleteSimulation(DeleteSimulationCommand command) {
+
                 Simulation existing = repository.findById(command.id())
                                 .orElseThrow(() -> new SimulationNotFoundException(command.id()));
 
@@ -125,11 +141,9 @@ public class SimulationApplicationService implements
         @Override
         @Transactional(readOnly = true)
         public SimulationQueryResultDTO getSimulationById(GetSimulationByIdCommand command) {
+
                 Simulation simulation = repository.findById(command.id())
                                 .orElseThrow(() -> new SimulationNotFoundException(command.id()));
-
-                double estimatedEnergy = calculator.calculateEnergyOutput(simulation);
-                double co2Reduction = calculator.calculateCo2Reduction(simulation);
 
                 return new SimulationQueryResultDTO(
                                 simulation.id(),
@@ -137,8 +151,8 @@ public class SimulationApplicationService implements
                                 simulation.energyType().name(),
                                 simulation.projectSize().value(),
                                 simulation.budget().value(),
-                                estimatedEnergy,
-                                co2Reduction,
+                                simulation.energyOutput().kwhPerYear(),
+                                simulation.co2Reduction().tonsPerYear(),
                                 simulation.createdAt(),
                                 simulation.technologyIds().stream().map(String::valueOf).toList(),
                                 simulation.createdBy());

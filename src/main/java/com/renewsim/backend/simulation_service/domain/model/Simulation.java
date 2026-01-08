@@ -8,9 +8,10 @@ import java.util.List;
 import com.renewsim.backend.simulation_service.domain.model.vo.*;
 
 /**
- * 🧠 Root Aggregate for Simulation domain.
- * Immutable-like aggregate, but allows controlled mutation of technologyIds
- * to enable persistence synchronization.
+ * Root Aggregate for Simulation domain.
+ *
+ * Immutable aggregate with controlled internal mutation
+ * only for technologyIds to support persistence synchronization.
  */
 public final class Simulation {
 
@@ -25,22 +26,20 @@ public final class Simulation {
     private final LocalDateTime createdAt;
     private final String createdBy;
 
-    // 👇 Se mantiene mutable internamente para compatibilidad con JPA
-    private List<Long> technologyIds;
+    private final List<Long> technologyIds;
 
     public Simulation(
-        Long id,
-        String location,
-        EnergyType energyType,
-        ProjectSize projectSize,
-        Budget budget,
-        EnergyOutput energyOutput,
-        CO2Reduction co2Reduction,
-        ClimateData climateData,
-        List<Long> technologyIds,
-        String createdBy,
-        LocalDateTime createdAt
-    ) {
+            Long id,
+            String location,
+            EnergyType energyType,
+            ProjectSize projectSize,
+            Budget budget,
+            EnergyOutput energyOutput,
+            CO2Reduction co2Reduction,
+            ClimateData climateData,
+            List<Long> technologyIds,
+            String createdBy,
+            LocalDateTime createdAt) {
         this.id = id;
         this.location = location;
         this.energyType = energyType;
@@ -49,24 +48,55 @@ public final class Simulation {
         this.energyOutput = energyOutput;
         this.co2Reduction = co2Reduction;
         this.climateData = climateData;
-        this.technologyIds = (technologyIds != null) ? new ArrayList<>(technologyIds) : new ArrayList<>();
+        this.technologyIds = (technologyIds != null)
+                ? new ArrayList<>(technologyIds)
+                : new ArrayList<>();
         this.createdBy = createdBy;
         this.createdAt = (createdAt != null) ? createdAt : LocalDateTime.now();
     }
 
     // ==========================
-    // ✅ Getters (read-only)
+    // Getters
     // ==========================
-    public Long id() { return id; }
-    public String location() { return location; }
-    public EnergyType energyType() { return energyType; }
-    public ProjectSize projectSize() { return projectSize; }
-    public Budget budget() { return budget; }
-    public EnergyOutput energyOutput() { return energyOutput; }
-    public CO2Reduction co2Reduction() { return co2Reduction; }
-    public ClimateData climateData() { return climateData; }
-    public String createdBy() { return createdBy; }
-    public LocalDateTime createdAt() { return createdAt; }
+    public Long id() {
+        return id;
+    }
+
+    public String location() {
+        return location;
+    }
+
+    public EnergyType energyType() {
+        return energyType;
+    }
+
+    public ProjectSize projectSize() {
+        return projectSize;
+    }
+
+    public Budget budget() {
+        return budget;
+    }
+
+    public EnergyOutput energyOutput() {
+        return energyOutput;
+    }
+
+    public CO2Reduction co2Reduction() {
+        return co2Reduction;
+    }
+
+    public ClimateData climateData() {
+        return climateData;
+    }
+
+    public String createdBy() {
+        return createdBy;
+    }
+
+    public LocalDateTime createdAt() {
+        return createdAt;
+    }
 
     /**
      * Returns an unmodifiable view to prevent external modification.
@@ -76,11 +106,12 @@ public final class Simulation {
     }
 
     // ==========================
-    // 🧩 Domain Behavior
+    // Domain Behavior
     // ==========================
+
     /**
      * Assigns technologies to this simulation.
-     * Mutates the internal list for persistence consistency.
+     * Internal mutation is allowed only for persistence synchronization.
      */
     public Simulation assignTechnologies(List<Long> newTechnologyIds) {
         if (newTechnologyIds == null || newTechnologyIds.isEmpty()) {
@@ -90,5 +121,26 @@ public final class Simulation {
         this.technologyIds.clear();
         this.technologyIds.addAll(newTechnologyIds);
         return this;
+    }
+
+    /**
+     * Returns a new Simulation instance enriched with calculated results.
+     * Preserves immutability of derived values.
+     */
+    public Simulation withCalculatedResults(
+            EnergyOutput newEnergyOutput,
+            CO2Reduction newCo2Reduction) {
+        return new Simulation(
+                this.id,
+                this.location,
+                this.energyType,
+                this.projectSize,
+                this.budget,
+                newEnergyOutput,
+                newCo2Reduction,
+                this.climateData,
+                this.technologyIds,
+                this.createdBy,
+                this.createdAt);
     }
 }

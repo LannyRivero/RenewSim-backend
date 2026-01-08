@@ -23,9 +23,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 
 /**
- * 🌐 SimulationController
+ * SimulationController
  *
- * ✅ REST endpoints for simulation management with role-based and
+ *  REST endpoints for simulation management with role-based and
  * ownership-based security.
  * Implements ownership validation to ensure users can only access their own
  * simulations,
