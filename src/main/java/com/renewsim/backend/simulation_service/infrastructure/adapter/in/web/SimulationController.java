@@ -116,20 +116,23 @@ public class SimulationController {
     // ==========================================================
     // GET SIMULATION BY ID
     // ==========================================================
-    @Operation(summary = "Get simulation by ID")
-    @PreAuthorize("hasAuthority('SCOPE_read:simulations')")
     @GetMapping("/{id}")
-    public ResponseEntity<SimulationQueryResultDTO> getSimulationById(
+    @PreAuthorize("hasAuthority('SCOPE_read:simulations')")
+    public ResponseEntity<SimulationDetailResultDTO> getSimulationById(
             @PathVariable Long id,
             Authentication auth) {
 
-        SimulationQueryResultDTO result = getUseCase.getSimulationById(new GetSimulationByIdCommand(id));
+        AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
 
-        if (!isOwner(auth, result) && !hasAdminRole(auth)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        log.debug("👀 User {} retrieved simulation {}", auth.getName(), id);
+        SimulationDetailResultDTO result = getUseCase.getSimulationById(
+                new GetSimulationByIdCommand(
+                        id,
+                        user.username(),
+                        isAdmin));
+
         return ResponseEntity.ok(result);
     }
 

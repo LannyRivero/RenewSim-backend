@@ -8,6 +8,6 @@ public record SimulationHistoryResultDTO(
         String energyType,
         double energyGenerated,
         double estimatedSavings,
-        Integer roiYears,
+        Double roiYears,
         LocalDateTime createdAt
 ) {}

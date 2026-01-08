@@ -22,7 +22,7 @@ public class SimulationCalculator {
         return simulation.energyOutput().kwhPerYear() * pricePerKwh;
     }
 
-    public int calculateRoiYears(Simulation simulation) {
+    public double calculateRoiYears(Simulation simulation) {
         double savings = calculateSavings(simulation);
 
         if (savings <= 0) {

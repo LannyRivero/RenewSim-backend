@@ -1,6 +1,8 @@
 package com.renewsim.backend.simulation_service.application.service;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -142,22 +144,33 @@ public class SimulationApplicationService implements
         // --------------------------------------------------
         @Override
         @Transactional(readOnly = true)
-        public SimulationQueryResultDTO getSimulationById(GetSimulationByIdCommand command) {
+        public SimulationDetailResultDTO getSimulationById(GetSimulationByIdCommand command) {
 
                 Simulation simulation = repository.findById(command.id())
                                 .orElseThrow(() -> new SimulationNotFoundException(command.id()));
 
-                return new SimulationQueryResultDTO(
+                if (!simulation.createdBy().equals(command.requesterUsername())
+                                && !command.isAdmin()) {
+                        throw new AccessDeniedException("Not owner of simulation");
+                }
+
+                double savings = calculator.calculateSavings(simulation);
+                Double roiYears = calculator.calculateRoiYears(simulation);
+                if (roiYears < 0)
+                        roiYears = null;
+
+                return new SimulationDetailResultDTO(
                                 simulation.id(),
                                 simulation.location(),
                                 simulation.energyType().name(),
                                 simulation.projectSize().value(),
                                 simulation.budget().value(),
                                 simulation.energyOutput().kwhPerYear(),
-                                simulation.co2Reduction().tonsPerYear(),
-                                simulation.createdAt(),
-                                simulation.technologyIds().stream().map(String::valueOf).toList(),
-                                simulation.createdBy());
+                                savings,
+                                roiYears,
+                                simulation.createdAt()
+
+                );
         }
 
         @Override
@@ -178,7 +191,7 @@ public class SimulationApplicationService implements
                                                                         energy,
                                                                         calculator.calculateCo2Reduction(energy)));
 
-                                        int roiYears = calculator.calculateRoiYears(
+                                        double roiYears = calculator.calculateRoiYears(
                                                         simulation.withCalculatedResults(
                                                                         energy,
                                                                         calculator.calculateCo2Reduction(energy)));
