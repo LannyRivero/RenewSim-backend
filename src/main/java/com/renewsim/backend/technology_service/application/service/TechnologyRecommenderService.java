@@ -7,12 +7,12 @@ import org.springframework.stereotype.Service;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 
 /**
- * 💡 Servicio de recomendación de tecnologías.
+ *  Servicio de recomendación de tecnologías.
  * 
  * Evalúa el tipo de energía y devuelve una lista de IDs de tecnologías
  * recomendadas.
  * 
- * 🔸 Esta lógica puede evolucionar a un sistema más complejo basado en:
+ *  Esta lógica puede evolucionar a un sistema más complejo basado en:
  * - Datos climáticos
  * - Coste de instalación
  * - Eficiencia esperada
