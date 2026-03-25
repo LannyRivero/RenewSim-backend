@@ -14,11 +14,6 @@
 
 **RenewSim** es una plataforma profesional de simulación de proyectos de energías renovables que permite evaluar la **viabilidad técnica, económica y ambiental** de instalaciones solares, eólicas e hidroeléctricas, con análisis predictivo impulsado por **Inteligencia Artificial**.
 
-**Proyecto de Tesis de Máster**  
-**Fecha de entrega:** 15 de abril de 2026  
-**Universidad:** [Tu Universidad]  
-**Programa:** [Tu Programa de Máster]
-
 ---
 
 ## 🎯 Características Principales
