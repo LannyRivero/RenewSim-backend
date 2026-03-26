@@ -1,6 +1,7 @@
 package com.renewsim.backend.role_service.domain.model;
 
 import java.util.Objects;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 
 import com.renewsim.backend.role_service.domain.exception.InvalidRoleNameException;
 

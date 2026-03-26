@@ -1,6 +1,6 @@
 package com.renewsim.backend.role_service.infrastructure.persistence;
 
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 import com.renewsim.backend.role_service.infrastructure.persistence.repo.RoleJpaRepository;
 import org.junit.jupiter.api.DisplayName;

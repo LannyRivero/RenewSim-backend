@@ -2,7 +2,7 @@ package com.renewsim.backend.role_service.application.port.in;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

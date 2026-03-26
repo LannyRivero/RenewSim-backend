@@ -3,7 +3,7 @@ package com.renewsim.backend.user_service.infraestructure.persistence.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 
 import java.time.Instant;

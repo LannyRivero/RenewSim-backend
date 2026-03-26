@@ -1,6 +1,6 @@
 package com.renewsim.backend.user_service.domain.model;
 
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 
 import java.time.Instant;
 import java.util.Objects;

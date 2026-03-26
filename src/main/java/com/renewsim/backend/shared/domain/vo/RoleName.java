@@ -1,4 +1,4 @@
-package com.renewsim.backend.role_service.domain.model;
+package com.renewsim.backend.shared.domain.vo;
 
 public enum RoleName {
     USER("User"),

@@ -14,7 +14,7 @@ import com.renewsim.backend.user_service.domain.service.UserPolicy;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
 import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 
 import java.util.Set;
 

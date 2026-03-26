@@ -2,7 +2,7 @@ package com.renewsim.backend.role_service.infrastructure.persistence.entity;
 
 import java.util.Objects;
 
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -4,7 +4,7 @@ import com.renewsim.backend.role_service.application.command.CreateRoleCommand;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
 import com.renewsim.backend.role_service.application.result.RoleCreationResultDTO;
 import com.renewsim.backend.role_service.domain.model.Role;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.role_service.domain.service.RoleDomainService;
 import com.renewsim.backend.role_service.dto.RoleDTO;
 import com.renewsim.backend.role_service.infrastructure.mapper.RoleDtoMapper;

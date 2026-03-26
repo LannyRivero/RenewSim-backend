@@ -2,7 +2,7 @@ package com.renewsim.backend.role_service.infrastructure.persistence.adapter;
 
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
 import com.renewsim.backend.role_service.domain.model.Role;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.role_service.infrastructure.mapper.RoleMapper;
 import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 import com.renewsim.backend.role_service.infrastructure.persistence.repo.RoleJpaRepository;

@@ -1,7 +1,7 @@
 package com.renewsim.backend.role_service.domain.factory;
 
 import com.renewsim.backend.role_service.domain.model.Role;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.role_service.domain.policy.RolePolicy;
 
 public final class RoleFactory {
