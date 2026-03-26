@@ -16,7 +16,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Configurar MapStruct annotation processor en `pom.xml`: añadir `maven-compiler-plugin` con `annotationProcessorPaths` incluyendo `mapstruct-processor` y `lombok-mapstruct-binding` (si se usa Lombok); asegurar que `mapstruct` y `mapstruct-processor` tienen el mismo version property `${mapstruct.version}`
     - Habilitar Virtual Threads en `application.yml`: `spring.threads.virtual.enabled=true`
     - _Requirements: 17.1, 17.2_
-  - [ ] 1.1.1 Fix pre-existing code quality issues
+  - [x] 1.1.1 Fix pre-existing code quality issues
     - Fix SimulationController.java:91 (constructor call)
     - Fix SimulationTechnologyController.java:26 (constructor call)
     - Fix SimulationTechnologyController.java:28 (missing method)
