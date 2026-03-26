@@ -88,7 +88,11 @@ public class SimulationController {
                         @Valid @RequestBody SimulationRequestDTO request,
                         Authentication auth) {
 
-                SimulationQueryResultDTO existing = getUseCase.getSimulationById(new GetSimulationByIdCommand(id));
+                AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
+boolean isAdmin = hasAdminRole(auth);
+SimulationQueryResultDTO existing = getUseCase.getSimulationById(
+    new GetSimulationByIdCommand(id, user.username(), isAdmin)
+);
                 if (!isOwner(auth, existing) && !hasAdminRole(auth)) {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
                 }
