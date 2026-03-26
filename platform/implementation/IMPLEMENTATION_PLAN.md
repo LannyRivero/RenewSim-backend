@@ -11,11 +11,21 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
 ## Fase 1: Backend Foundation
 
 - [ ] 1. Fase 1: Backend Foundation
-  - [ ] 1.1 Crear proyecto Spring Boot 3.2.1 con Java 21 y dependencias completas
+  - [x] 1.1 Crear proyecto Spring Boot 3.2.1 con Java 21 y dependencias completas
     - Verificar/actualizar `pom.xml` con: spring-boot-starter-web, data-jpa, mysql-connector-j, security, validation, actuator, flyway-core, jjwt-api/impl/jackson, caffeine, resilience4j-spring-boot3, mapstruct, mapstruct-processor, jqwik, testcontainers-mysql, springdoc-openapi-starter-webmvc-ui, itext7-core
     - Configurar MapStruct annotation processor en `pom.xml`: añadir `maven-compiler-plugin` con `annotationProcessorPaths` incluyendo `mapstruct-processor` y `lombok-mapstruct-binding` (si se usa Lombok); asegurar que `mapstruct` y `mapstruct-processor` tienen el mismo version property `${mapstruct.version}`
     - Habilitar Virtual Threads en `application.yml`: `spring.threads.virtual.enabled=true`
     - _Requirements: 17.1, 17.2_
+  - [ ] 1.1.1 Fix pre-existing code quality issues
+    - Fix SimulationController.java:91 (constructor call)
+    - Fix SimulationTechnologyController.java:26 (constructor call)
+    - Fix SimulationTechnologyController.java:28 (missing method)
+    - Fix 18 NullPointerException in tests (mock initialization)
+    - Fix 22 IllegalStateException in tests (Spring context)
+    - Fix 18 test assertion failures
+    - Fix 19 miscellaneous test errors
+    - Target: mvn verify passes with 0 errors
+    - _Requirements: Code quality baseline for Phase 1_
 
   - [ ] 1.2 Configurar estructura hexagonal de paquetes por bounded context
     - Crear directorios `domain/{model,service,repository,exception,policy}`, `application/{port/in,port/out,command,service,mapper}`, `infrastructure/{persistence,config,security,client}`, `web/{controller,dto}` para cada bounded context: `auth_service`, `user_service`, `role_service`, `technology_service`, `simulation_service`, `ai_service`, `shared`
