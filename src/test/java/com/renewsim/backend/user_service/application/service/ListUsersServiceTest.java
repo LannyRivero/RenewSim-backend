@@ -1,6 +1,6 @@
 package com.renewsim.backend.user_service.application.service;
 
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;

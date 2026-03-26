@@ -2,7 +2,7 @@
 package com.renewsim.backend.auth_service.infrastructure.persistence;
 
 import com.renewsim.backend.auth_service.application.port.out.RoleProvider;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;

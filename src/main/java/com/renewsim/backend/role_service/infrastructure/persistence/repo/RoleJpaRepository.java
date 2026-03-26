@@ -1,6 +1,6 @@
 package com.renewsim.backend.role_service.infrastructure.persistence.repo;
 
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 
 import org.springframework.data.jpa.repository.JpaRepository;

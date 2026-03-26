@@ -4,7 +4,7 @@ import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
 import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -33,7 +33,7 @@ public interface UserServiceMapper {
     // -------- CreateRequest -> Domain --------
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "enabled", constant = "true")
-    @Mapping(target = "roles", expression = "java(java.util.Set.of(com.renewsim.backend.role_service.domain.model.RoleName.USER))")
+    @Mapping(target = "roles", expression = "java(java.util.Set.of(com.renewsim.backend.shared.domain.vo.RoleName.USER))")
     @Mapping(target = "passwordHash", ignore = true)
     @Mapping(target = "createdAt", expression = "java(java.time.Instant.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.Instant.now())")

@@ -4,7 +4,7 @@ import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway
 import com.renewsim.backend.auth_service.infrastructure.client.UserServiceClient;
 import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 import feign.FeignException;

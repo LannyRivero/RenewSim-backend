@@ -3,7 +3,7 @@ package com.renewsim.backend.auth_service.infrastructure.persistence;
 import com.renewsim.backend.auth_service.infrastructure.client.UserServiceClient;
 import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.dto.OperationResponse;
 
 import org.junit.jupiter.api.DisplayName;

@@ -1,7 +1,7 @@
 package com.renewsim.backend.role_service.domain.service;
 
 import com.renewsim.backend.role_service.domain.model.Role;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.role_service.domain.policy.RolePolicy;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
 import com.renewsim.backend.shared.exception.RoleAlreadyExistsException;

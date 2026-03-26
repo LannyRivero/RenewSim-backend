@@ -3,7 +3,7 @@ package com.renewsim.backend.role_service.application.port.out;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.renewsim.backend.role_service.domain.model.Role;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 
 import java.util.List;
 import java.util.Optional;

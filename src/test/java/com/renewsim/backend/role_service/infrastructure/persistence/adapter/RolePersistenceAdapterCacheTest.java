@@ -15,7 +15,7 @@ import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.renewsim.backend.role_service.domain.model.Role;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.role_service.infrastructure.persistence.repo.RoleJpaRepository;
 
 @SpringBootTest

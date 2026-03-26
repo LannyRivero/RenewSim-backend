@@ -8,7 +8,7 @@ import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
 import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.shared.exception.ResourceConflictException;
 import com.renewsim.backend.testutil.UnitTestBase;

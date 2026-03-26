@@ -2,7 +2,7 @@ package com.renewsim.backend.role_service.infrastructure.persistence;
 
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
 import com.renewsim.backend.role_service.domain.model.Role;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

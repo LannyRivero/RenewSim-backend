@@ -4,7 +4,7 @@ import com.renewsim.backend.role_service.domain.exception.DuplicateRoleException
 import com.renewsim.backend.role_service.domain.exception.InvalidRoleNameException;
 import com.renewsim.backend.role_service.domain.exception.LastAdminRemovalException;
 import com.renewsim.backend.role_service.domain.exception.UnauthorizedRoleAssignmentException;
-import com.renewsim.backend.role_service.domain.model.RoleName;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
