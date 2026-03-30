@@ -1,4 +1,4 @@
-package com.renewsim.backend.technology_service.infrastructure.mapper;
+package com.renewsim.backend.technology_service.application.mapper;
 
 import com.renewsim.backend.technology_service.application.result.*;
 import com.renewsim.backend.technology_service.domain.model.Technology;

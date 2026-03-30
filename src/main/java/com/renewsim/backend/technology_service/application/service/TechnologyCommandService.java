@@ -9,7 +9,8 @@ import com.renewsim.backend.technology_service.application.port.out.TechnologyRe
 import com.renewsim.backend.technology_service.application.result.*;
 import com.renewsim.backend.technology_service.domain.model.Technology;
 import com.renewsim.backend.technology_service.domain.model.vo.*;
-import com.renewsim.backend.technology_service.infrastructure.mapper.TechnologyDtoMapper;
+import com.renewsim.backend.technology_service.application.mapper.TechnologyDtoMapper;
+import com.renewsim.backend.technology_service.domain.factory.TechnologyFactory;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -38,7 +39,19 @@ public class TechnologyCommandService {
 
     public TechnologyCreationResultDTO handleCreate(CreateTechnologyCommand command) {
         validator.ensureUniqueName(command.name());
-        var saved = repository.save(toDomain(command));
+
+        Technology newTech = TechnologyFactory.create(
+            command.name(),
+            command.efficiency(),
+            command.installationCost(),
+            command.maintenanceCost(),
+            command.environmentalImpact(),
+            command.co2Reduction(),
+            command.energyProduction(),
+            command.energyType()
+        );
+
+        var saved = repository.save(newTech);
         return dtoMapper.toCreationResult(saved);
     }
 
@@ -82,19 +95,5 @@ public class TechnologyCommandService {
                 .toList();
     }
 
-    // ============================================================
-    // 🧩 Domain Conversion Helpers
-    // ============================================================
-
-    private Technology toDomain(CreateTechnologyCommand c) {
-        return new Technology(
-                c.name(),
-                EnergyType.valueOf(c.energyType().toUpperCase()),
-                new Efficiency(c.efficiency()),
-                new InstallationCost(BigDecimal.valueOf(c.installationCost())),
-                new MaintenanceCost(BigDecimal.valueOf(c.maintenanceCost())),
-                new EnvironmentalImpact(c.environmentalImpact()),
-                new Co2Reduction(BigDecimal.valueOf(c.co2Reduction())),
-                new EnergyProduction(c.energyProduction()));
-    }    
+   
 }

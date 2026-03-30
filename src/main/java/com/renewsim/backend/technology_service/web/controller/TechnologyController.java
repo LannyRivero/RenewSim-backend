@@ -1,4 +1,4 @@
-package com.renewsim.backend.technology_service.infrastructure.web.controller;
+package com.renewsim.backend.technology_service.web.controller;
 
 import com.renewsim.backend.shared.dto.ApiResponseFactory;
 import com.renewsim.backend.shared.dto.OperationResponse;
