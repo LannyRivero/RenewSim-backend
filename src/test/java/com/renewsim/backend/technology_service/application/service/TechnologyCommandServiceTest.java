@@ -5,7 +5,7 @@ import com.renewsim.backend.technology_service.application.port.out.TechnologyRe
 import com.renewsim.backend.technology_service.application.result.*;
 import com.renewsim.backend.technology_service.domain.model.Technology;
 import com.renewsim.backend.technology_service.domain.model.vo.*;
-import com.renewsim.backend.technology_service.infrastructure.mapper.TechnologyDtoMapper;
+import com.renewsim.backend.technology_service.application.mapper.TechnologyDtoMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
