@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import com.renewsim.backend.technology_service.application.port.out.TechnologyRepositoryPort;
 import com.renewsim.backend.technology_service.domain.exception.TechnologyNotFoundException;
+import com.renewsim.backend.technology_service.domain.exception.DuplicateTechnologyNameException;
 import com.renewsim.backend.technology_service.domain.model.Technology;
 
 @Component
@@ -15,7 +16,7 @@ public class TechnologyValidator {
 
     public void ensureUniqueName(String name) {
         if (repository.existsByName(name)) {
-            throw new IllegalArgumentException("Technology with name '" + name + "' already exists");
+            throw new DuplicateTechnologyNameException(name);
         }
     }
 
