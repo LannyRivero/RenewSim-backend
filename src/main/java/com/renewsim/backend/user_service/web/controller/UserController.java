@@ -4,7 +4,7 @@ import com.renewsim.backend.shared.dto.ApiResponseFactory;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.in.*;
-import com.renewsim.backend.user_service.dto.*;
+import com.renewsim.backend.user_service.web.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

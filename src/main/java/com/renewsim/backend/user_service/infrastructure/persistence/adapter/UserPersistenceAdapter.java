@@ -5,7 +5,7 @@ import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.out.RoleCatalogPort;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
-import com.renewsim.backend.user_service.dto.UserFilterRequest;
+import com.renewsim.backend.user_service.web.dto.UserFilterRequest;
 import com.renewsim.backend.user_service.application.mapper.UserServiceMapper;
 import com.renewsim.backend.user_service.infrastructure.persistence.entity.UserEntity;
 import com.renewsim.backend.user_service.infrastructure.persistence.repo.UserJpaRepository;

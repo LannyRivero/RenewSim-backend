@@ -5,7 +5,7 @@ import com.renewsim.backend.role_service.application.port.in.ManageUserRolesUseC
 import com.renewsim.backend.role_service.application.port.out.UserServiceGateway;
 import com.renewsim.backend.role_service.application.result.ManageUserRolesResultDTO;
 import com.renewsim.backend.shared.observability.RoleAuditLogger;
-import com.renewsim.backend.user_service.dto.UpdateUserRolesRequestDTO;
+import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

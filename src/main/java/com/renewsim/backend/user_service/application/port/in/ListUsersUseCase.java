@@ -1,9 +1,9 @@
 package com.renewsim.backend.user_service.application.port.in;
 
 import com.renewsim.backend.user_service.application.port.in.common.ListUseCase;
-import com.renewsim.backend.user_service.dto.PageResponse;
-import com.renewsim.backend.user_service.dto.UserFilterRequest;
-import com.renewsim.backend.user_service.dto.UserResponse;
+import com.renewsim.backend.user_service.web.dto.PageResponse;
+import com.renewsim.backend.user_service.web.dto.UserFilterRequest;
+import com.renewsim.backend.user_service.web.dto.UserResponse;
 
 /**
  * Use case for listing users with filtering and pagination.

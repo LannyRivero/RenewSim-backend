@@ -1,4 +1,4 @@
-package com.renewsim.backend.user_service.dto;
+package com.renewsim.backend.user_service.web.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;

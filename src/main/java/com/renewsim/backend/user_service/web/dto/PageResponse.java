@@ -1,4 +1,4 @@
-package com.renewsim.backend.user_service.dto;
+package com.renewsim.backend.user_service.web.dto;
 
 import java.util.List;
 

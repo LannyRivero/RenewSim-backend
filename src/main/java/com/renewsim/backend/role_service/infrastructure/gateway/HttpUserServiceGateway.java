@@ -2,7 +2,7 @@ package com.renewsim.backend.role_service.infrastructure.gateway;
 
 import com.renewsim.backend.role_service.application.port.out.UserServiceGateway;
 import com.renewsim.backend.role_service.infrastructure.client.UserServiceClient;
-import com.renewsim.backend.user_service.dto.UpdateUserRolesRequestDTO;
+import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;

@@ -8,7 +8,7 @@ import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.role_service.dto.RoleDTO;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.user_service.application.port.out.RoleCatalogPort;
-import com.renewsim.backend.user_service.dto.RoleSnapshot;
+import com.renewsim.backend.user_service.web.dto.RoleSnapshot;
 import com.renewsim.backend.user_service.infrastructure.client.RoleServiceClient;
 
 import lombok.RequiredArgsConstructor;

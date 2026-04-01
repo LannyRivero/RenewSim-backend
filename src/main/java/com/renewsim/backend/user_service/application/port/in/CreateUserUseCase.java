@@ -2,8 +2,8 @@ package com.renewsim.backend.user_service.application.port.in;
 
 import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
-import com.renewsim.backend.user_service.dto.UserCreateRequest;
-import com.renewsim.backend.user_service.dto.UserResponse;
+import com.renewsim.backend.user_service.web.dto.UserCreateRequest;
+import com.renewsim.backend.user_service.web.dto.UserResponse;
 
 /**
  * Use case for creating a new user in the system.

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.renewsim.backend.user_service.domain.model.User;
-import com.renewsim.backend.user_service.dto.UserFilterRequest;
+import com.renewsim.backend.user_service.web.dto.UserFilterRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

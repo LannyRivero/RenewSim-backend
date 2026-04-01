@@ -5,7 +5,7 @@ import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
-import com.renewsim.backend.user_service.dto.UserResponse;
+import com.renewsim.backend.user_service.web.dto.UserResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

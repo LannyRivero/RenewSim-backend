@@ -1,4 +1,4 @@
-package com.renewsim.backend.user_service.dto;
+package com.renewsim.backend.user_service.web.dto;
 
 /**
  * Criteria object for searching users.
