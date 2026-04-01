@@ -1,4 +1,4 @@
-package com.renewsim.backend.user_service.infrastructure.mapper;
+package com.renewsim.backend.user_service.application.mapper;
 
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;

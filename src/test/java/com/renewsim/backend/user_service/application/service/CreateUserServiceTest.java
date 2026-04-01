@@ -6,7 +6,7 @@ import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
-import com.renewsim.backend.user_service.infrastructure.mapper.UserServiceMapper;
+import com.renewsim.backend.user_service.application.mapper.UserServiceMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
