@@ -1,4 +1,4 @@
-package com.renewsim.backend.role_service.infrastructure.web.controller;
+package com.renewsim.backend.role_service.web.controller;
 
 import com.renewsim.backend.role_service.application.command.AssignRoleCommand;
 import com.renewsim.backend.role_service.application.command.CreateRoleCommand;
@@ -6,9 +6,9 @@ import com.renewsim.backend.role_service.application.command.ManageUserRolesComm
 import com.renewsim.backend.role_service.application.port.in.*;
 import com.renewsim.backend.role_service.application.result.*;
 import com.renewsim.backend.shared.domain.vo.RoleName;
-import com.renewsim.backend.role_service.dto.ManageUserRolesRequestDTO;
-import com.renewsim.backend.role_service.dto.RoleCreateRequestDTO;
-import com.renewsim.backend.role_service.dto.RoleDTO;
+import com.renewsim.backend.role_service.web.dto.ManageUserRolesRequestDTO;
+import com.renewsim.backend.role_service.web.dto.RoleCreateRequestDTO;
+import com.renewsim.backend.role_service.web.dto.RoleDTO;
 import com.renewsim.backend.shared.dto.ApiResponseFactory;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import io.swagger.v3.oas.annotations.Operation;

@@ -2,7 +2,7 @@ package com.renewsim.backend.role_service.application.port.in;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.renewsim.backend.role_service.dto.RoleDTO;
+import com.renewsim.backend.role_service.web.dto.RoleDTO;
 import com.renewsim.backend.shared.common.application.port.in.GetAllUseCase;
 
 import java.util.List;

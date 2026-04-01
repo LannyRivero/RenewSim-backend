@@ -1,5 +1,5 @@
-package com.renewsim.backend.role_service.infrastructure.mapper;
-
+     package com.renewsim.backend.role_service.application.mapper;
+     
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;

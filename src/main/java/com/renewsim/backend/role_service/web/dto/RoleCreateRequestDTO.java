@@ -1,4 +1,4 @@
-package com.renewsim.backend.role_service.dto;
+package com.renewsim.backend.role_service.web.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
