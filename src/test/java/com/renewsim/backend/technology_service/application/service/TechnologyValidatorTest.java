@@ -3,6 +3,7 @@ package com.renewsim.backend.technology_service.application.service;
 import com.renewsim.backend.technology_service.application.port.out.TechnologyRepositoryPort;
 import com.renewsim.backend.technology_service.domain.exception.TechnologyNotFoundException;
 import com.renewsim.backend.technology_service.domain.model.Technology;
+import com.renewsim.backend.technology_service.domain.exception.DuplicateTechnologyNameException;
 import com.renewsim.backend.technology_service.domain.model.vo.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -64,7 +65,7 @@ class TechnologyValidatorTest {
     void shouldThrowWhenNameExists() {
         when(repository.existsByName("Solar Panel")).thenReturn(true);
 
-        var ex = assertThrows(IllegalArgumentException.class,
+        var ex = assertThrows(DuplicateTechnologyNameException.class,
                 () -> validator.ensureUniqueName("Solar Panel"));
 
         assertEquals("Technology with name 'Solar Panel' already exists", ex.getMessage());

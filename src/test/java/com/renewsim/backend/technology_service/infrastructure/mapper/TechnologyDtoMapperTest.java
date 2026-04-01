@@ -1,10 +1,10 @@
-package com.renewsim.backend.technology_service.infraestructure.mapper;
+package com.renewsim.backend.technology_service.infrastructure.mapper;
 
 import com.renewsim.backend.technology_service.application.result.*;
 import com.renewsim.backend.technology_service.domain.model.Technology;
 import com.renewsim.backend.technology_service.domain.model.vo.*;
-import com.renewsim.backend.technology_service.infrastructure.mapper.TechnologyDtoMapper;
-import com.renewsim.backend.technology_service.infrastructure.mapper.TechnologyDtoMapperImpl;
+import com.renewsim.backend.technology_service.application.mapper.TechnologyDtoMapper;
+import com.renewsim.backend.technology_service.application.mapper.TechnologyDtoMapperImpl;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
