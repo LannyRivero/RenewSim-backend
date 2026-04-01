@@ -1,0 +1,121 @@
+# =============================
+# PERFIL PROD - Producción
+# Requirement: 19.1 - datasource via env vars, logging WARN, Actuator restringido
+# =============================
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${SPRING_DATASOURCE_HOST}:${SPRING_DATASOURCE_PORT:5432}/${SPRING_DATASOURCE_DB}?sslmode=${DB_SSLMODE:require}}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.postgresql.Driver}
+    hikari:
+      minimum-idle: ${DB_POOL_MIN:1}
+      maximum-pool-size: ${DB_POOL_MAX:5}
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      keepalive-time: 150000
+
+  jpa:
+    database-platform: ${SPRING_JPA_PLATFORM:org.hibernate.dialect.PostgreSQLDialect}
+    hibernate:
+      ddl-auto: validate  # NUNCA create/update en prod
+    show-sql: false
+    open-in-view: false
+
+  # =============================
+  # FLYWAY (enabled en prod)
+  # =============================
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    locations: classpath:db/migration
+    schemas: ${FLYWAY_SCHEMA:public}
+
+# =============================
+# SERVER
+# =============================
+server:
+  port: ${PORT:8080}
+  address: 0.0.0.0
+  forward-headers-strategy: framework
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,text/css,application/javascript
+
+# =============================
+# LOGGING (WARN en prod)
+# =============================
+logging:
+  level:
+    root: WARN
+    org.springframework.security: WARN
+    com.renewsim: WARN
+    org.hibernate: WARN
+    org.flywaydb: WARN
+    AUTH_AUDIT: WARN
+
+# =============================
+# JWT (prod - TODAS las credenciales via env vars)
+# =============================
+security:
+  jwt:
+    issuer: ${SECURITY_JWT_ISSUER:renewsim-auth}
+    audience: ${SECURITY_JWT_AUDIENCE:renewsim-app}
+    secret-base64: ${SECURITY_JWT_SECRET_BASE64:${JWT_SECRET_BASE64}}
+    expiration-seconds: ${SECURITY_JWT_EXPIRATION_SECONDS:3600}
+    not-before-skew-seconds: 0
+    allowed-clock-skew-seconds: 60
+
+  rate-limiting:
+    enabled: ${SECURITY_RATE_LIMITING_ENABLED:true}
+    strategy: IP_USER
+    max-attempts: ${SECURITY_RATE_LIMITING_MAX_ATTEMPTS:5}
+    window: 60s
+    retry-after: 60s
+    login-path: /api/v1/auth/login
+
+# =============================
+# CORS (restrictivo en prod)
+# =============================
+cors:
+  enabled: ${CORS_ENABLED:true}
+  allow-credentials: true
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://renewsim.vercel.app}
+  allowed-methods: [ "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" ]
+  allowed-headers:
+    - Content-Type
+    - Authorization
+    - X-Requested-With
+    - X-Correlation-Id
+  exposed-headers:
+    - X-Correlation-Id
+  max-age-seconds: 3600
+
+# =============================
+# ACTUATOR (endpoints RESTRINGIDOS en prod)
+# =============================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"  # SOLO health e info en prod
+      base-path: /actuator
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never  # NO mostrar detalles en prod
+
+# =============================
+# SERVICE URLS (prod - via env vars)
+# =============================
+user-service:
+  url: ${USER_SERVICE_URL:http://localhost:8080}
+
+role-service:
+  url: ${ROLE_SERVICE_URL:http://localhost:8080}
+
+technology-service:
+  url: ${TECHNOLOGY_SERVICE_URL:http://localhost:8080}
