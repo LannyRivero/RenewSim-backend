@@ -1,8 +1,8 @@
 package com.renewsim.backend.role_service.infrastructure.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.role_service.dto.RoleCreateRequestDTO;
-import com.renewsim.backend.role_service.dto.RoleDTO;
+import com.renewsim.backend.role_service.web.dto.RoleCreateRequestDTO;
+import com.renewsim.backend.role_service.web.dto.RoleDTO;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,7 @@
      package com.renewsim.backend.role_service.application.mapper;
 
 import com.renewsim.backend.role_service.domain.model.Role;
-import com.renewsim.backend.role_service.dto.RoleDTO;
+import com.renewsim.backend.role_service.web.dto.RoleDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
