@@ -2,7 +2,7 @@ package com.renewsim.backend.role_service.infrastructure.gateway;
 
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.renewsim.backend.user_service.dto.UpdateUserRolesRequestDTO;
+import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

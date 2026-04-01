@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 
 import com.renewsim.backend.shared.dto.OperationResponse;
-import com.renewsim.backend.user_service.dto.UpdateUserRolesRequestDTO;
-import com.renewsim.backend.user_service.infraestructure.client.FeignRoleConfig;
+import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
+import com.renewsim.backend.user_service.infrastructure.client.FeignRoleConfig;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 

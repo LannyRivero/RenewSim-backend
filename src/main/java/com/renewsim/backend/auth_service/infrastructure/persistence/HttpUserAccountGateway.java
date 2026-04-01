@@ -6,7 +6,7 @@ import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.dto.OperationResponse;
-import com.renewsim.backend.user_service.dto.UserCreateRequest;
+import com.renewsim.backend.user_service.web.dto.UserCreateRequest;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

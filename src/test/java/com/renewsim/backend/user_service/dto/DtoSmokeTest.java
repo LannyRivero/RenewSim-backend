@@ -4,6 +4,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.renewsim.backend.shared.domain.vo.RoleName;
+import com.renewsim.backend.user_service.web.dto.PageResponse;
+import com.renewsim.backend.user_service.web.dto.UserCredentialsDTO;
+import com.renewsim.backend.user_service.web.dto.UserFilterRequest;
 
 import java.util.List;
 import java.util.Set;

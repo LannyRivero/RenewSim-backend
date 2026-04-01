@@ -1,6 +1,6 @@
 package com.renewsim.backend.shared.mapper;
 
-import com.renewsim.backend.user_service.dto.PageResponse;
+import com.renewsim.backend.user_service.web.dto.PageResponse;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

@@ -10,8 +10,8 @@ import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.in.GetUserUseCase;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
-import com.renewsim.backend.user_service.dto.UserResponse;
-import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
+import com.renewsim.backend.user_service.web.dto.UserResponse;
+import com.renewsim.backend.user_service.application.mapper.UserServiceMapper;
 
 @Slf4j
 @Service

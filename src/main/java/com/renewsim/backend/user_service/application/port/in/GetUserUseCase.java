@@ -2,7 +2,7 @@ package com.renewsim.backend.user_service.application.port.in;
 
 import com.renewsim.backend.user_service.application.port.in.common.GetByIdUseCase;
 import com.renewsim.backend.user_service.domain.model.User;
-import com.renewsim.backend.user_service.dto.UserResponse;
+import com.renewsim.backend.user_service.web.dto.UserResponse;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
 
 /**

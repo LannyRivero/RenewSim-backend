@@ -10,10 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.user_service.application.port.in.ListUsersUseCase;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
-import com.renewsim.backend.user_service.dto.PageResponse;
-import com.renewsim.backend.user_service.dto.UserFilterRequest;
-import com.renewsim.backend.user_service.dto.UserResponse;
-import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
+import com.renewsim.backend.user_service.web.dto.PageResponse;
+import com.renewsim.backend.user_service.web.dto.UserFilterRequest;
+import com.renewsim.backend.user_service.web.dto.UserResponse;
+import com.renewsim.backend.user_service.application.mapper.UserServiceMapper;
 import com.renewsim.backend.shared.mapper.PageMapper;
 
 import java.util.List;

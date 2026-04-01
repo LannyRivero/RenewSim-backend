@@ -2,12 +2,13 @@ package com.renewsim.backend.role_service.application.port.out;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.renewsim.backend.user_service.dto.UpdateUserRolesRequestDTO;
 
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
 
 /**
  * Contract test to ensure UserServiceGateway defines the correct method signature

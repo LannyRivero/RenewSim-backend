@@ -1,9 +1,9 @@
 package com.renewsim.backend.user_service.application.port.in;
 
 import com.renewsim.backend.user_service.application.port.in.common.SearchUseCase;
-import com.renewsim.backend.user_service.dto.PageResponse;
-import com.renewsim.backend.user_service.dto.UserResponse;
-import com.renewsim.backend.user_service.dto.UserSearchCriteria;
+import com.renewsim.backend.user_service.web.dto.PageResponse;
+import com.renewsim.backend.user_service.web.dto.UserResponse;
+import com.renewsim.backend.user_service.web.dto.UserSearchCriteria;
 
 /**
  * Use case for searching users based on multiple criteria.

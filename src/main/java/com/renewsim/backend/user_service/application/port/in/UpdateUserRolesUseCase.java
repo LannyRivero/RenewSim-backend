@@ -1,6 +1,6 @@
 package com.renewsim.backend.user_service.application.port.in;
 
-import com.renewsim.backend.user_service.dto.UpdateUserRolesRequestDTO;
+import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
 
 public interface UpdateUserRolesUseCase {
 

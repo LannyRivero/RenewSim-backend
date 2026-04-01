@@ -13,7 +13,7 @@ import com.renewsim.backend.role_service.application.port.out.UserServiceGateway
 import com.renewsim.backend.role_service.application.result.RoleAssignmentResultDTO;
 import com.renewsim.backend.role_service.application.result.RoleRevocationResultDTO;
 import com.renewsim.backend.shared.observability.RoleAuditService;
-import com.renewsim.backend.user_service.dto.UpdateUserRolesRequestDTO;
+import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
 
 import lombok.RequiredArgsConstructor;
 
