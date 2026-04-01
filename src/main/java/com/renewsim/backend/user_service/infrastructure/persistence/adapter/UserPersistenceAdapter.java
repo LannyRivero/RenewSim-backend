@@ -1,4 +1,4 @@
-package com.renewsim.backend.user_service.infraestructure.persistence.adapter;
+package com.renewsim.backend.user_service.infrastructure.persistence.adapter;
 
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
@@ -6,9 +6,9 @@ import com.renewsim.backend.user_service.application.port.out.RoleCatalogPort;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserFilterRequest;
-import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
-import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;
-import com.renewsim.backend.user_service.infraestructure.persistence.repo.UserJpaRepository;
+import com.renewsim.backend.user_service.infrastructure.mapper.UserServiceMapper;
+import com.renewsim.backend.user_service.infrastructure.persistence.entity.UserEntity;
+import com.renewsim.backend.user_service.infrastructure.persistence.repo.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;

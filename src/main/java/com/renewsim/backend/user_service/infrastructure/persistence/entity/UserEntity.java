@@ -1,4 +1,4 @@
-package com.renewsim.backend.user_service.infraestructure.persistence.entity;
+package com.renewsim.backend.user_service.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;

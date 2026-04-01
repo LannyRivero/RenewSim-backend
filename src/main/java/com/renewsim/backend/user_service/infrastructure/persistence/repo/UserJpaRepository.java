@@ -1,6 +1,6 @@
-package com.renewsim.backend.user_service.infraestructure.persistence.repo;
+package com.renewsim.backend.user_service.infrastructure.persistence.repo;
 
-import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;
+import com.renewsim.backend.user_service.infrastructure.persistence.entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

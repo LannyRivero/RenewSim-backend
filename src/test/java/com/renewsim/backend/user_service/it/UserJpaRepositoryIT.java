@@ -1,7 +1,7 @@
 package com.renewsim.backend.user_service.it;
 
-import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;
-import com.renewsim.backend.user_service.infraestructure.persistence.repo.UserJpaRepository;
+import com.renewsim.backend.user_service.infrastructure.persistence.entity.UserEntity;
+import com.renewsim.backend.user_service.infrastructure.persistence.repo.UserJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

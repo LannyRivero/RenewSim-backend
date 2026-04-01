@@ -1,4 +1,4 @@
-package com.renewsim.backend.user_service.infraestructure.client;
+package com.renewsim.backend.user_service.infrastructure.client;
 
 import com.renewsim.backend.auth_service.infrastructure.security.JwtTokenProvider;
 import feign.RequestInterceptor;

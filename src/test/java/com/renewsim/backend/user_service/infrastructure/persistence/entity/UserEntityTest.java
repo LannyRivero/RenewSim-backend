@@ -1,4 +1,4 @@
-package com.renewsim.backend.user_service.infraestructure.persistence.entity;
+package com.renewsim.backend.user_service.infrastructure.persistence.entity;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

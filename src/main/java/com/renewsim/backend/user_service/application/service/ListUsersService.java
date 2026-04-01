@@ -13,7 +13,7 @@ import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort
 import com.renewsim.backend.user_service.dto.PageResponse;
 import com.renewsim.backend.user_service.dto.UserFilterRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
-import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
+import com.renewsim.backend.user_service.infrastructure.mapper.UserServiceMapper;
 import com.renewsim.backend.shared.mapper.PageMapper;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.renewsim.backend.user_service.infraestructure.persistence.adapter;
+package com.renewsim.backend.user_service.infrastructure.persistence.adapter;
 
 import java.util.Optional;
 
@@ -9,7 +9,7 @@ import com.renewsim.backend.role_service.dto.RoleDTO;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.user_service.application.port.out.RoleCatalogPort;
 import com.renewsim.backend.user_service.dto.RoleSnapshot;
-import com.renewsim.backend.user_service.infraestructure.client.RoleServiceClient;
+import com.renewsim.backend.user_service.infrastructure.client.RoleServiceClient;
 
 import lombok.RequiredArgsConstructor;
 

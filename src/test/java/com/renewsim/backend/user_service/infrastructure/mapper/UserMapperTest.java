@@ -1,11 +1,11 @@
-package com.renewsim.backend.user_service.infraestructure.mapper;
+package com.renewsim.backend.user_service.infrastructure.mapper;
 
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.dto.UserResponse;
-import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;
+import com.renewsim.backend.user_service.infrastructure.persistence.entity.UserEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;

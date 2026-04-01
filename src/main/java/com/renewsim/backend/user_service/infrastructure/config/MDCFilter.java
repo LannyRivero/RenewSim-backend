@@ -1,4 +1,4 @@
-package com.renewsim.backend.user_service.infraestructure.config;
+package com.renewsim.backend.user_service.infrastructure.config;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;

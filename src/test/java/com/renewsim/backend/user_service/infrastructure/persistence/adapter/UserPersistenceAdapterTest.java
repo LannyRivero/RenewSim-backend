@@ -1,12 +1,12 @@
-package com.renewsim.backend.user_service.infraestructure.persistence.adapter;
+package com.renewsim.backend.user_service.infrastructure.persistence.adapter;
 
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.domain.model.User;
-import com.renewsim.backend.user_service.infraestructure.mapper.UserServiceMapper;
-import com.renewsim.backend.user_service.infraestructure.persistence.entity.UserEntity;
-import com.renewsim.backend.user_service.infraestructure.persistence.repo.UserJpaRepository;
+import com.renewsim.backend.user_service.infrastructure.mapper.UserServiceMapper;
+import com.renewsim.backend.user_service.infrastructure.persistence.entity.UserEntity;
+import com.renewsim.backend.user_service.infrastructure.persistence.repo.UserJpaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
