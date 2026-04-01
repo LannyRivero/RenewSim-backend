@@ -1,4 +1,4 @@
-package com.renewsim.backend.role_service.infrastructure.mapper;
+     package com.renewsim.backend.role_service.application.mapper;
 
 import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.role_service.dto.RoleDTO;

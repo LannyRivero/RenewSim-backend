@@ -7,7 +7,7 @@ import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.role_service.domain.service.RoleDomainService;
 import com.renewsim.backend.role_service.dto.RoleDTO;
-import com.renewsim.backend.role_service.infrastructure.mapper.RoleDtoMapper;
+import com.renewsim.backend.role_service.application.mapper.RoleDtoMapper;
 import com.renewsim.backend.shared.exception.RoleAlreadyExistsException;
 import com.renewsim.backend.shared.exception.RoleNotFoundException;
 
