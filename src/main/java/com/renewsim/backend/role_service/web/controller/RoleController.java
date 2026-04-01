@@ -1,4 +1,4 @@
-package com.renewsim.backend.role_service.infrastructure.web.controller;
+package com.renewsim.backend.role_service.web.controller;
 
 import com.renewsim.backend.role_service.application.command.AssignRoleCommand;
 import com.renewsim.backend.role_service.application.command.CreateRoleCommand;
