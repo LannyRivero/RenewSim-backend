@@ -31,7 +31,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Crear directorios `domain/{model,service,repository,exception,policy}`, `application/{port/in,port/out,command,service,mapper}`, `infrastructure/{persistence,config,security,client}`, `web/{controller,dto}` para cada bounded context: `auth_service`, `user_service`, `role_service`, `technology_service`, `simulation_service`, `ai_service`, `shared`
     - _Requirements: 21.2 (dominio sin Spring)_
 
-  - [ ] 1.3 Configurar `application.yml` con perfiles local, docker y prod
+  - [x] 1.3 Configurar `application.yml` con perfiles local, docker y prod
     - Perfil `local`: datasource localhost:3306, logging DEBUG, Flyway enabled
     - Perfil `docker`: datasource `db:3306`, logging INFO
     - Perfil `prod`: datasource via env vars, logging WARN, Actuator endpoints restringidos
