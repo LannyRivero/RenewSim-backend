@@ -27,7 +27,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Target: mvn verify passes with 0 errors
     - _Requirements: Code quality baseline for Phase 1_
 
-  - [ ] 1.2 Configurar estructura hexagonal de paquetes por bounded context
+  - [x] 1.2 Configurar estructura hexagonal de paquetes por bounded context
     - Crear directorios `domain/{model,service,repository,exception,policy}`, `application/{port/in,port/out,command,service,mapper}`, `infrastructure/{persistence,config,security,client}`, `web/{controller,dto}` para cada bounded context: `auth_service`, `user_service`, `role_service`, `technology_service`, `simulation_service`, `ai_service`, `shared`
     - _Requirements: 21.2 (dominio sin Spring)_
 
