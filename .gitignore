@@ -46,7 +46,6 @@ nbproject/private/
 
 # 🔑 Ignorar archivos de configuración sensibles
 *.env
-*.yml
 *.yaml
 
 # 🖼️ Ignorar archivos del sistema (Mac y Windows)

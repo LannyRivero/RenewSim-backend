@@ -1,0 +1,82 @@
+# =============================
+# H2 In-Memory Database
+# =============================
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  
+  # =============================
+  # Flyway (DISABLED in tests)
+  # =============================
+  flyway:
+    enabled: false
+    
+  # =============================
+  # JPA / Hibernate
+  # =============================
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+  
+  # =============================
+  # Cache
+  # =============================
+  cache:
+    type: none
+
+# =============================
+# SECURITY CONFIGURATION
+# =============================
+security:
+  jwt:
+    issuer: renewsim-test
+    audience: renewsim-clients
+    secret-base64: c2VjdXJlX3Rlc3Rfc2VjcmV0X2tleV8zMmJ5dGVzX2Jhc2U2NA==
+    expiration-seconds: 3600
+    not-before-skew-seconds: 0
+    allowed-clock-skew-seconds: 60
+  
+  rate-limiting:
+    enabled: false
+
+# =============================
+# CORS
+# =============================
+cors:
+  enabled: true
+  allowed-origins: http://localhost:3000
+  allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
+  allowed-headers: Content-Type,Authorization,X-Requested-With,X-Correlation-Id
+  exposed-headers: X-Correlation-Id
+  allow-credentials: true
+  max-age-seconds: 3600
+
+# =============================
+# ACTUATOR
+# =============================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# =============================
+# LOGGING
+# =============================
+logging:
+  level:
+    root: WARN
+    org.springframework: INFO
+    org.hibernate: WARN
+    com.renewsim.backend: DEBUG

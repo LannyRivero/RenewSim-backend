@@ -1,0 +1,143 @@
+# =============================
+# RENEWSIM - CONFIGURACIÓN PRINCIPAL
+# =============================
+spring:
+  profiles:
+    active: local # Perfil por defecto (local development)
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec:
+        tokens: maximumSize=1000,expireAfterWrite=5m,recordStats
+        roles: maximumSize=100,expireAfterWrite=30m,recordStats
+        default: maximumSize=100,expireAfterWrite=10m,recordStats
+
+# =============================
+# JWT CONFIG (común a todos los perfiles)
+# =============================
+security:
+  jwt:
+    issuer: renewsim-auth
+    audience: renewsim-app
+    secret-base64: ${JWT_SECRET_BASE64:}
+    secret: ${JWT_SECRET_PLAINTEXT:}
+    expiration-seconds: 3600
+    service-expiration-seconds: 300
+    not-before-skew-seconds: 0
+    allowed-clock-skew-seconds: 60
+
+  # =============================
+  # RATE LIMITING (Brute-force guard)
+  # =============================
+  rate-limiting:
+    enabled: true
+    strategy: IP_USER
+    max-attempts: 5
+    window: 60
+    block-seconds: 300
+    retry-after: 60
+    login-path: /api/v1/auth/login
+
+# =============================
+# AUTH SCOPES (YamlScopePolicy)
+# =============================
+auth:
+  roleScopes:
+    USER:
+      - read:simulations
+      - write:simulations
+      - compare:simulations
+      - export:simulations
+      - delete:simulations
+    ADMIN:
+      - read:simulations
+      - write:simulations
+      - compare:simulations
+      - export:simulations
+      - delete:simulations
+      - read:users
+      - manage:users
+    SERVICE_AUTH:
+      - user:write
+      - user:read
+
+# =============================
+# CORS CONFIG (centralizado)
+# =============================
+cors:
+  enabled: true
+  allowed-origins:
+    - https://renewsim.example.com
+    - http://localhost:3000
+    - http://localhost:5173
+    - https://localhost:5173
+    - https://127.0.0.1:5173
+  allowed-methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+  allowed-headers:
+    ["Content-Type", "Authorization", "X-Requested-With", "X-Correlation-Id"]
+  exposed-headers: ["X-Correlation-Id"]
+  allow-credentials: true
+  max-age-seconds: 3600
+
+# =============================
+# LOGGING (niveles base)
+# =============================
+logging:
+  level:
+    org.springframework.security: INFO
+    AUTH_AUDIT: WARN
+  pattern:
+    level: "%5p [corr=%X{correlationId}]"
+
+# =============================
+# ACTUATOR (endpoints base)
+# =============================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# =============================
+# RESILIENCE4J
+# =============================
+resilience4j:
+  circuitbreaker:
+    instances:
+      userService:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    instances:
+      userService:
+        max-attempts: 3
+        wait-duration: 500ms
+  timelimiter:
+    instances:
+      userService:
+        timeout-duration: 2s
+
+# =============================
+# ZONA HORARIA
+# =============================
+app:
+  clock:
+    zone: UTC
+
+# =============================
+# SERVICE URLS (base - override en perfiles)
+# =============================
+user-service:
+  url: http://localhost:8080
+
+role-service:
+  url: http://localhost:8080
+
+technology-service:
+  url: http://localhost:8080
