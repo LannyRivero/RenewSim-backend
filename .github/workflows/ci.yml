@@ -37,7 +37,7 @@ jobs:
           cache: 'maven'
 
       - name: Run tests with coverage
-        run: ./mvnw clean verify jacoco:report --batch-mode --no-transfer-progress
+        run: mvn clean verify jacoco:report --batch-mode --no-transfer-progress
 
       - name: Ensure security binding test passed
         run: |
