@@ -68,7 +68,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Variables de entorno: `SPRING_DATASOURCE_URL`, `JWT_SECRET`
     - _Requirements: 19.1_
 
-  - [ ] 1.8 Configurar `GlobalExceptionHandler` con envelope de error consistente
+  - [x] 1.8 Configurar `GlobalExceptionHandler` con envelope de error consistente
     - `@RestControllerAdvice` en `shared/web/controller/GlobalExceptionHandler`
     - Manejar: `MethodArgumentNotValidException` → 400 con `fieldErrors`, `EntityNotFoundException` → 404, `AccessDeniedException` → 403, `ConflictException` → 409, `RateLimitExceededException` → 429, `AIServiceUnavailableException` → 503
     - Envelope: `{ timestamp, status, errorCode, message, path, fieldErrors? }`
