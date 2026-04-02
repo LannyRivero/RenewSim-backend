@@ -6,23 +6,40 @@ import java.time.Instant;
 import java.util.Map;
 
 /**
- * Represents a standardized error response structure used across all RenewSim services.
- * Includes observability (traceId), timestamp, actor (current user), and validation details.
+ * Represents a standardized error response structure used across all RenewSim
+ * services.
+ * Includes observability (traceId), timestamp, actor (current user), and
+ * validation details.
+ * 
+ * Envelope structure:
+ * {
+ * "timestamp": "2026-04-02T14:30:00Z",
+ * "status": 404,
+ * "errorCode": "ENTITY_NOT_FOUND",
+ * "error": "Not Found",
+ * "message": "User with id 123 not found",
+ * "path": "/api/v1/users/123",
+ * "correlationId": "abc-123-def",
+ * "actor": "admin@renewsim.com",
+ * "fieldErrors": { "email": "must be valid" }
+ * }
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
 
     private final int status;
+    private final String errorCode;
     private final String error;
     private final String message;
     private final String path;
     private final Instant timestamp;
     private final String correlationId;
-    private final String actor; 
+    private final String actor;
     private final Map<String, String> fieldErrors;
 
     private ErrorResponse(Builder b) {
         this.status = b.status;
+        this.errorCode = b.errorCode;
         this.error = b.error;
         this.message = b.message;
         this.path = b.path;
@@ -41,6 +58,10 @@ public class ErrorResponse {
     // ---------------------------------------
     public int getStatus() {
         return status;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
     }
 
     public String getError() {
@@ -76,6 +97,7 @@ public class ErrorResponse {
     // ---------------------------------------
     public static final class Builder {
         private int status;
+        private String errorCode;
         private String error;
         private String message;
         private String path;
@@ -86,6 +108,11 @@ public class ErrorResponse {
 
         public Builder status(int status) {
             this.status = status;
+            return this;
+        }
+
+        public Builder errorCode(String errorCode) {
+            this.errorCode = errorCode;
             return this;
         }
 
