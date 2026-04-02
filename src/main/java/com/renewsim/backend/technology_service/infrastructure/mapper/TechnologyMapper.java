@@ -5,24 +5,22 @@ import com.renewsim.backend.technology_service.domain.model.vo.*;
 import com.renewsim.backend.technology_service.infrastructure.persistence.entity.TechnologyEntity;
 import org.mapstruct.*;
 
-
 /**
- * 🧭 TechnologyMapper 
+ * 🧭 TechnologyMapper
  *
- * ✅ Responsabilidad: traducir entre entidades de persistencia y modelos de dominio inmutables.
- * ✅ Diseñado para Clean Architecture, DDD y compatibilidad con MapStruct 1.6.2 / Java 21.
+ * ✅ Responsabilidad: traducir entre entidades de persistencia y modelos de
+ * dominio inmutables.
+ * ✅ Diseñado para Clean Architecture, DDD y compatibilidad con MapStruct 1.6.2
+ * / Java 21.
  *
  * 💡 Notas:
  * - Implementa conversión explícita para evitar reflección innecesaria.
  * - Usa métodos helper para mayor claridad y reusabilidad.
  * - Marcado con @Mapper para generación automática del lado ENTITY → DTO.
- * - El método toDomain() se define manualmente para preservar inmutabilidad del Domain Model.
+ * - El método toDomain() se define manualmente para preservar inmutabilidad del
+ * Domain Model.
  */
-@Mapper(
-    componentModel = "spring",
-    implementationName = "TechnologyMapperImpl",
-    unmappedTargetPolicy = ReportingPolicy.IGNORE
-)
+@Mapper(componentModel = "spring", implementationName = "TechnologyMapperImpl", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TechnologyMapper {
 
     // ============================================================
@@ -34,31 +32,31 @@ public interface TechnologyMapper {
      * Se hace manualmente por las restricciones del constructor del modelo.
      */
     default Technology toDomain(TechnologyEntity entity) {
-        if (entity == null) return null;
+        if (entity == null)
+            return null;
 
         return new Technology(
-            entity.getId(),
-            entity.getName(),
-            parseEnergyType(entity.getEnergyType()),
-            new Efficiency(entity.getEfficiency().doubleValue()),
-            new InstallationCost(entity.getUnitCost()),
-            new MaintenanceCost(entity.getMaintenanceCost()),
-            new EnvironmentalImpact(entity.getCo2ReductionFactor().doubleValue()),
-            new Co2Reduction(entity.getCo2ReductionFactor()),
-            new EnergyProduction(entity.getCapacityFactor().doubleValue())
-        );
+                entity.getId(),
+                entity.getName(),
+                parseEnergyType(entity.getEnergyType()),
+                new Efficiency(entity.getEfficiency().doubleValue()),
+                new InstallationCost(entity.getUnitCost()),
+                new MaintenanceCost(entity.getMaintenanceCost()),
+                new EnvironmentalImpact(entity.getCo2ReductionFactor().doubleValue()),
+                new Co2Reduction(entity.getCo2ReductionFactor()),
+                new EnergyProduction(entity.getCapacityFactor().doubleValue()));
     }
 
     // ============================================================
     // ✅ DOMAIN → ENTITY (MapStruct handled)
     // ============================================================
 
-    @Mapping(target = "energyType", expression = "java(TechnologyEntity.EnergyType.valueOf(domain.getEnergyType().name()))")
-    @Mapping(target = "efficiency", expression = "java(BigDecimal.valueOf(domain.getEfficiency().value()))")
+    @Mapping(target = "energyType", expression = "java(mapToEntityEnergyType(domain.getEnergyType()))")
+    @Mapping(target = "efficiency", expression = "java(java.math.BigDecimal.valueOf(domain.getEfficiency().value()))")
     @Mapping(target = "unitCost", expression = "java(domain.getInstallationCost().value())")
     @Mapping(target = "maintenanceCost", expression = "java(domain.getMaintenanceCost().value())")
     @Mapping(target = "co2ReductionFactor", expression = "java(domain.getCo2Reduction().value())")
-    @Mapping(target = "capacityFactor", expression = "java(BigDecimal.valueOf(domain.getEnergyProduction().value()))")
+    @Mapping(target = "capacityFactor", expression = "java(java.math.BigDecimal.valueOf(domain.getEnergyProduction().value()))")
     @Mapping(target = "description", ignore = true)
     @Mapping(target = "lifespanYears", constant = "25")
     @Mapping(target = "minCapacityKw", constant = "0.00")
@@ -73,17 +71,52 @@ public interface TechnologyMapper {
     // ============================================================
 
     /**
-     * Convierte un tipo de energía en su enum correspondiente,
-     * asegurando robustez ante mayúsculas/minúsculas.
+     * Convierte un tipo de energía de Entity a Domain,
+     * manejando diferencias de nomenclatura (WIND → EOLIC).
      */
     default EnergyType parseEnergyType(TechnologyEntity.EnergyType energyType) {
         if (energyType == null) {
             return EnergyType.SOLAR;
         }
-        try {
-            return EnergyType.valueOf(energyType.name());
-        } catch (IllegalArgumentException ex) {
-            throw new IllegalStateException("Unknown energy type: " + energyType, ex);
+
+        switch (energyType) {
+            case SOLAR:
+                return EnergyType.SOLAR;
+            case WIND:
+                return EnergyType.EOLIC;
+            case HYDRO:
+                return EnergyType.HYDRO;
+            case GEOTHERMAL:
+                return EnergyType.GEOTHERMAL;
+            case BIOMASS:
+                return EnergyType.BIOMASS;
+            default:
+                throw new IllegalStateException("Unknown energy type: " + energyType);
+        }
+    }
+
+    /**
+     * Convierte un tipo de energía de Domain a Entity,
+     * manejando diferencias de nomenclatura (EOLIC → WIND).
+     */
+    default TechnologyEntity.EnergyType mapToEntityEnergyType(EnergyType domainType) {
+        if (domainType == null) {
+            return TechnologyEntity.EnergyType.SOLAR;
+        }
+
+        switch (domainType) {
+            case SOLAR:
+                return TechnologyEntity.EnergyType.SOLAR;
+            case EOLIC:
+                return TechnologyEntity.EnergyType.WIND;
+            case HYDRO:
+                return TechnologyEntity.EnergyType.HYDRO;
+            case GEOTHERMAL:
+                return TechnologyEntity.EnergyType.GEOTHERMAL;
+            case BIOMASS:
+                return TechnologyEntity.EnergyType.BIOMASS;
+            default:
+                throw new IllegalStateException("Unknown energy type: " + domainType);
         }
     }
 }
