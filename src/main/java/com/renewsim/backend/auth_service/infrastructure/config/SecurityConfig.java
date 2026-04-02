@@ -56,16 +56,22 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // OpenAPI/Swagger endpoints
                         .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/v3/api-docs.yaml",
+                                "/api-docs",
+                                "/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html")
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**")
                         .permitAll()
+                        // Auth endpoints
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                        // User service internal endpoints
                         .requestMatchers("/api/v1/users/exists").permitAll()
                         .requestMatchers("/api/v1/users/by-username").permitAll()
+                        // Actuator & error
                         .requestMatchers("/actuator/health", "/error").permitAll()
                         .anyRequest().authenticated())
                 .headers(h -> h.cacheControl(HeadersConfigurer.CacheControlConfig::disable))

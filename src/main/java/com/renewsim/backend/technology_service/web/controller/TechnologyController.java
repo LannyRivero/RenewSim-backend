@@ -5,6 +5,14 @@ import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.technology_service.application.command.*;
 import com.renewsim.backend.technology_service.application.port.in.*;
 import com.renewsim.backend.technology_service.application.result.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +27,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/technologies")
 @RequiredArgsConstructor
+@Tag(name = "Technologies", description = "Renewable energy technology catalog management")
 public class TechnologyController {
 
     private final CreateTechnologyUseCase createUseCase;
@@ -29,6 +38,13 @@ public class TechnologyController {
     // CREATE
     @PostMapping
     @PreAuthorize("hasAuthority('SCOPE_admin:write') or hasRole('ADMIN')")
+    @Operation(summary = "Create new technology", description = "Creates a new renewable energy technology in the catalog. Requires ADMIN role or scope admin:write.", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Technology created successfully", content = @Content(schema = @Schema(implementation = TechnologyCreationResultDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request - validation error or duplicate technology name", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - JWT token missing or invalid", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions", content = @Content)
+    })
     public ResponseEntity<OperationResponse<TechnologyCreationResultDTO>> create(
             @Valid @RequestBody CreateTechnologyCommand command) {
 
@@ -41,7 +57,14 @@ public class TechnologyController {
     // GET by ID
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<OperationResponse<TechnologyQueryResultDTO>> getById(@PathVariable Long id) {
+    @Operation(summary = "Get technology by ID", description = "Retrieves detailed information about a specific renewable energy technology", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Technology found", content = @Content(schema = @Schema(implementation = TechnologyQueryResultDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Technology not found", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content)
+    })
+    public ResponseEntity<OperationResponse<TechnologyQueryResultDTO>> getById(
+            @Parameter(description = "Technology unique identifier", required = true) @PathVariable Long id) {
         var result = getUseCase.getTechnologyById(new GetTechnologyByIdCommand(id));
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Technology retrieved successfully"));
     }
@@ -49,6 +72,11 @@ public class TechnologyController {
     // GET ALL
     @GetMapping
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
+    @Operation(summary = "List all technologies", description = "Retrieves all available renewable energy technologies with their technical specifications", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Technologies retrieved successfully", content = @Content(schema = @Schema(implementation = List.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - JWT token missing or invalid", content = @Content)
+    })
     public ResponseEntity<OperationResponse<List<TechnologyQueryResultDTO>>> getAll() {
         var results = getUseCase.getAllTechnologies();
         return ResponseEntity.ok(ApiResponseFactory.ok(results, "All technologies retrieved"));
@@ -57,8 +85,16 @@ public class TechnologyController {
     // UPDATE
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_admin:write') or hasRole('ADMIN')")
+    @Operation(summary = "Update technology", description = "Updates an existing renewable energy technology. Requires ADMIN role or scope admin:write.", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Technology updated successfully", content = @Content(schema = @Schema(implementation = TechnologyUpdateResultDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request - validation error", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Technology not found", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions", content = @Content)
+    })
     public ResponseEntity<OperationResponse<TechnologyUpdateResultDTO>> update(
-            @PathVariable Long id,
+            @Parameter(description = "Technology unique identifier", required = true) @PathVariable Long id,
             @Valid @RequestBody UpdateTechnologyCommand command) {
 
         // Crear un nuevo record con el id del path
@@ -68,10 +104,18 @@ public class TechnologyController {
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Technology updated successfully"));
     }
 
-    //  DELETE
+    // DELETE
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_admin:delete') or hasRole('ADMIN')")
-    public ResponseEntity<OperationResponse<Void>> delete(@PathVariable Long id) {
+    @Operation(summary = "Delete technology", description = "Permanently removes a technology from the catalog. Requires ADMIN role or scope admin:delete.", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Technology deleted successfully", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Technology not found", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions", content = @Content)
+    })
+    public ResponseEntity<OperationResponse<Void>> delete(
+            @Parameter(description = "Technology unique identifier", required = true) @PathVariable Long id) {
         deleteUseCase.deleteTechnology(new DeleteTechnologyCommand(id));
         return ResponseEntity.ok(ApiResponseFactory.noContent("Technology deleted successfully"));
     }

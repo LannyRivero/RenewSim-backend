@@ -119,3 +119,12 @@ role-service:
 
 technology-service:
   url: ${TECHNOLOGY_SERVICE_URL:http://localhost:8080}
+
+# =============================
+# OPENAPI/SWAGGER (DISABLED IN PROD)
+# =============================
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
