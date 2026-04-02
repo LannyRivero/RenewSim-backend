@@ -5,7 +5,6 @@ import com.renewsim.backend.technology_service.domain.model.vo.*;
 import com.renewsim.backend.technology_service.infrastructure.persistence.entity.TechnologyEntity;
 import org.mapstruct.*;
 
-import java.math.BigDecimal;
 
 /**
  * 🧭 TechnologyMapper 

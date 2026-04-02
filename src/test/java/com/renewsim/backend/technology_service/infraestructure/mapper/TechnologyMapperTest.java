@@ -16,7 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * ✅ Unit test for {@link TechnologyMapper}
  *
- * Ensures accurate and safe bidirectional conversion between Domain and Entity layers.
+ * Ensures accurate and safe bidirectional conversion between Domain and Entity
+ * layers.
  * Covers both happy-path and edge cases to validate mapper robustness.
  */
 class TechnologyMapperTest {
@@ -38,31 +39,29 @@ class TechnologyMapperTest {
                     1L,
                     "Solar Panel",
                     EnergyType.SOLAR,
-                    new Efficiency(0.85),
+                    new Efficiency(85.0),
                     new InstallationCost(BigDecimal.valueOf(12000)),
                     new MaintenanceCost(BigDecimal.valueOf(400)),
                     new EnvironmentalImpact(5.0),
                     new Co2Reduction(BigDecimal.valueOf(25.0)),
-                    new EnergyProduction(3000.0)
-            );
+                    new EnergyProduction(3000.0));
 
-            // ACT
             TechnologyEntity entity = mapper.toEntity(domain);
             Technology result = mapper.toDomain(entity);
 
-            // ASSERT
             assertNotNull(entity, "Entity must not be null");
             assertNotNull(result, "Mapped domain must not be null");
 
-            // Compare field by field
             assertEquals(domain.getName(), result.getName());
             assertEquals(domain.getEnergyType(), result.getEnergyType());
+
             assertEquals(domain.getEfficiency().value(), result.getEfficiency().value(), 1e-6);
-            assertEquals(domain.getInstallationCost().value().doubleValue(), result.getInstallationCost().value().doubleValue(), 1e-6);
-            assertEquals(domain.getMaintenanceCost().value().doubleValue(), result.getMaintenanceCost().value().doubleValue(), 1e-6);
             assertEquals(domain.getEnvironmentalImpact().value(), result.getEnvironmentalImpact().value(), 1e-6);
-            assertEquals(domain.getCo2Reduction().value().doubleValue(), result.getCo2Reduction().value().doubleValue(), 1e-6);
             assertEquals(domain.getEnergyProduction().value(), result.getEnergyProduction().value(), 1e-6);
+
+            assertEquals(0, domain.getInstallationCost().value().compareTo(result.getInstallationCost().value()));
+            assertEquals(0, domain.getMaintenanceCost().value().compareTo(result.getMaintenanceCost().value()));
+            assertEquals(0, domain.getCo2Reduction().value().compareTo(result.getCo2Reduction().value()));
         }
     }
 
@@ -80,47 +79,75 @@ class TechnologyMapperTest {
         }
 
         @Test
-        @DisplayName("Should handle lowercase energyType gracefully")
-        void shouldHandleLowercaseEnergyType() {
+        @DisplayName("Should map WIND energy type correctly")
+        void shouldMapWindEnergyTypeCorrectly() {
             TechnologyEntity entity = TechnologyEntity.builder()
                     .id(10L)
                     .name("Wind Turbine")
-                    .energyType("eolic") // lowercase
-                    .efficiency(0.75)
-                    .installationCost(5000)
-                    .maintenanceCost(250)
-                    .environmentalImpact(1.5)
-                    .co2Reduction(200)
-                    .energyProduction(4500)
+                    .energyType(TechnologyEntity.EnergyType.WIND)
+                    .efficiency(BigDecimal.valueOf(75.0))
+                    .unitCost(BigDecimal.valueOf(5000))
+                    .maintenanceCost(BigDecimal.valueOf(250))
+                    .lifespanYears(20)
+                    .capacityFactor(BigDecimal.valueOf(35.0))
+                    .minCapacityKw(BigDecimal.valueOf(100))
+                    .maxCapacityKw(BigDecimal.valueOf(5000))
+                    .co2ReductionFactor(BigDecimal.valueOf(0.85))
+                    .isActive(true)
                     .build();
 
             Technology domain = mapper.toDomain(entity);
 
+            assertNotNull(domain);
             assertEquals(EnergyType.EOLIC, domain.getEnergyType());
+            assertEquals("Wind Turbine", domain.getName());
         }
 
         @Test
-        @DisplayName("Should throw exception for invalid energyType value")
+        @DisplayName("Should throw exception for invalid energyType enum value")
         void shouldThrowExceptionForInvalidEnergyType() {
-            TechnologyEntity invalidEntity = TechnologyEntity.builder()
-                    .id(5L)
-                    .name("Invalid Tech")
-                    .energyType("UNKNOWN_TYPE")
-                    .efficiency(0.5)
-                    .installationCost(1000)
-                    .maintenanceCost(200)
-                    .environmentalImpact(0.3)
-                    .co2Reduction(10)
-                    .energyProduction(100)
-                    .build();
-
             Exception exception = assertThrows(
-                    IllegalStateException.class,
-                    () -> mapper.toDomain(invalidEntity),
-                    "Expected an exception for invalid energyType"
-            );
+                    IllegalArgumentException.class,
+                    () -> TechnologyEntity.EnergyType.valueOf("UNKNOWN_TYPE"),
+                    "Expected IllegalArgumentException for invalid energyType");
 
-            assertTrue(exception.getMessage().contains("Unknown energy type"));
+            assertTrue(exception.getMessage().contains("No enum constant"));
+        }
+
+        @Test
+        @DisplayName("Should handle all supported energy types")
+        void shouldHandleAllSupportedEnergyTypes() {
+            TechnologyEntity solarEntity = createEntityWithEnergyType(TechnologyEntity.EnergyType.SOLAR);
+            assertEquals(EnergyType.SOLAR, mapper.toDomain(solarEntity).getEnergyType());
+
+            TechnologyEntity windEntity = createEntityWithEnergyType(TechnologyEntity.EnergyType.WIND);
+            assertEquals(EnergyType.EOLIC, mapper.toDomain(windEntity).getEnergyType());
+
+            TechnologyEntity hydroEntity = createEntityWithEnergyType(TechnologyEntity.EnergyType.HYDRO);
+            assertEquals(EnergyType.HYDRO, mapper.toDomain(hydroEntity).getEnergyType());
+
+            TechnologyEntity geoEntity = createEntityWithEnergyType(TechnologyEntity.EnergyType.GEOTHERMAL);
+            assertEquals(EnergyType.GEOTHERMAL, mapper.toDomain(geoEntity).getEnergyType());
+
+            TechnologyEntity biomassEntity = createEntityWithEnergyType(TechnologyEntity.EnergyType.BIOMASS);
+            assertEquals(EnergyType.BIOMASS, mapper.toDomain(biomassEntity).getEnergyType());
+        }
+
+        private TechnologyEntity createEntityWithEnergyType(TechnologyEntity.EnergyType energyType) {
+            return TechnologyEntity.builder()
+                    .id(1L)
+                    .name("Test Technology")
+                    .energyType(energyType)
+                    .efficiency(BigDecimal.valueOf(80.0))
+                    .unitCost(BigDecimal.valueOf(10000))
+                    .maintenanceCost(BigDecimal.valueOf(500))
+                    .lifespanYears(25)
+                    .capacityFactor(BigDecimal.valueOf(40.0))
+                    .minCapacityKw(BigDecimal.valueOf(50))
+                    .maxCapacityKw(BigDecimal.valueOf(10000))
+                    .co2ReductionFactor(BigDecimal.valueOf(0.90))
+                    .isActive(true)
+                    .build();
         }
     }
 }
