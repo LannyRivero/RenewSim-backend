@@ -41,7 +41,7 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
     private static final String XPCDP = "none";
 
     // Lee el perfil activo de Spring
-    @Value("${spring.profiles.active:dev}")
+    @Value("${spring.profiles.active:local}")
     private String activeProfile;
 
     @Override
