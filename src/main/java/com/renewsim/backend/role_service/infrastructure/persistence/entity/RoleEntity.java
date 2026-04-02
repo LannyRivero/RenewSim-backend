@@ -25,10 +25,8 @@ public class RoleEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "name", nullable = false, length = 50)
     private RoleName name;
-
-   
 
     public RoleEntity() {
     }
@@ -58,8 +56,6 @@ public class RoleEntity {
     public void setName(RoleName name) {
         this.name = Objects.requireNonNull(name, "RoleName cannot be null");
     }
-
-
 
     // equals & hashCode basados en name para evitar duplicados
     @Override
