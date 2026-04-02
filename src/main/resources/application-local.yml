@@ -18,8 +18,11 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: validate  # Flyway maneja el schema
+      ddl-auto: none  # Flyway maneja el schema
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
