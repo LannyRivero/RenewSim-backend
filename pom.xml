@@ -366,7 +366,6 @@
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                 </configuration>
-              
             </plugin>
         </plugins>
     </build>
