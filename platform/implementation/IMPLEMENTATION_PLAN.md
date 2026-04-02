@@ -37,7 +37,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Perfil `prod`: datasource via env vars, logging WARN, Actuator endpoints restringidos
     - _Requirements: 19.1_
 
-  - [ ] 1.4 Crear migraciones Flyway V1–V6 (todas las tablas del sistema)
+  - [x] 1.4 Crear migraciones Flyway V1–V6 (todas las tablas del sistema)
     - `V1__create_users_and_roles.sql`: tablas `users`, `roles`, `user_roles` con índices `idx_users_email`, `idx_users_status`
     - `V2__create_auth_tables.sql`: tablas `refresh_tokens`, `token_blacklist`, `otp_codes`, `activation_tokens` con índices compuestos según diseño de BD
     - `V3__create_technologies_and_scenarios.sql`: tablas `technologies` (EnergyType ENUM, is_active, índices) y `scenarios` (climate_profile JSON, FK a technologies)
@@ -46,7 +46,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - `V6__create_ai_tables.sql`: tablas `chat_sessions` (session_id UNIQUE, índices) y `chat_messages` (role ENUM, content TEXT, índice por session_id)
     - _Requirements: 1.1, 2.1, 2.4, 5.1, 6.1, 8.1, 15.1_
 
-  - [ ] 1.5 Crear value objects base del dominio compartido
+  - [x] 1.5 Crear value objects base del dominio compartido
     - `Email` record con validación de formato RFC 5322
     - `Password` record con validación (≥8 chars, mayúscula, dígito, símbolo)
     - `Location` record con validación lat[-90,90] lon[-180,180] — lanzar `InvalidLocationException`
