@@ -41,12 +41,12 @@ public interface TechnologyMapper {
             entity.getId(),
             entity.getName(),
             parseEnergyType(entity.getEnergyType()),
-            new Efficiency(entity.getEfficiency()),
-            new InstallationCost(BigDecimal.valueOf(entity.getInstallationCost())),
-            new MaintenanceCost(BigDecimal.valueOf(entity.getMaintenanceCost())),
-            new EnvironmentalImpact(entity.getEnvironmentalImpact()),
-            new Co2Reduction(BigDecimal.valueOf(entity.getCo2Reduction())),
-            new EnergyProduction(entity.getEnergyProduction())
+            new Efficiency(entity.getEfficiency().doubleValue()),
+            new InstallationCost(entity.getUnitCost()),
+            new MaintenanceCost(entity.getMaintenanceCost()),
+            new EnvironmentalImpact(entity.getCo2ReductionFactor().doubleValue()),
+            new Co2Reduction(entity.getCo2ReductionFactor()),
+            new EnergyProduction(entity.getCapacityFactor().doubleValue())
         );
     }
 
@@ -54,13 +54,19 @@ public interface TechnologyMapper {
     // ✅ DOMAIN → ENTITY (MapStruct handled)
     // ============================================================
 
-    @Mapping(target = "energyType", expression = "java(domain.getEnergyType().name())")
-    @Mapping(target = "efficiency", expression = "java(domain.getEfficiency().value())")
-    @Mapping(target = "installationCost", expression = "java(domain.getInstallationCost().value().doubleValue())")
-    @Mapping(target = "maintenanceCost", expression = "java(domain.getMaintenanceCost().value().doubleValue())")
-    @Mapping(target = "environmentalImpact", expression = "java(domain.getEnvironmentalImpact().value())")
-    @Mapping(target = "co2Reduction", expression = "java(domain.getCo2Reduction().value().doubleValue())")
-    @Mapping(target = "energyProduction", expression = "java(domain.getEnergyProduction().value())")
+    @Mapping(target = "energyType", expression = "java(TechnologyEntity.EnergyType.valueOf(domain.getEnergyType().name()))")
+    @Mapping(target = "efficiency", expression = "java(BigDecimal.valueOf(domain.getEfficiency().value()))")
+    @Mapping(target = "unitCost", expression = "java(domain.getInstallationCost().value())")
+    @Mapping(target = "maintenanceCost", expression = "java(domain.getMaintenanceCost().value())")
+    @Mapping(target = "co2ReductionFactor", expression = "java(domain.getCo2Reduction().value())")
+    @Mapping(target = "capacityFactor", expression = "java(BigDecimal.valueOf(domain.getEnergyProduction().value()))")
+    @Mapping(target = "description", ignore = true)
+    @Mapping(target = "lifespanYears", constant = "25")
+    @Mapping(target = "minCapacityKw", constant = "0.00")
+    @Mapping(target = "maxCapacityKw", ignore = true)
+    @Mapping(target = "isActive", constant = "true")
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     TechnologyEntity toEntity(Technology domain);
 
     // ============================================================
@@ -71,14 +77,14 @@ public interface TechnologyMapper {
      * Convierte un tipo de energía en su enum correspondiente,
      * asegurando robustez ante mayúsculas/minúsculas.
      */
-    default EnergyType parseEnergyType(String energyTypeRaw) {
-        if (energyTypeRaw == null || energyTypeRaw.isBlank()) {
-            return EnergyType.SOLAR; 
+    default EnergyType parseEnergyType(TechnologyEntity.EnergyType energyType) {
+        if (energyType == null) {
+            return EnergyType.SOLAR;
         }
         try {
-            return EnergyType.valueOf(energyTypeRaw.trim().toUpperCase());
+            return EnergyType.valueOf(energyType.name());
         } catch (IllegalArgumentException ex) {
-            throw new IllegalStateException("Unknown energy type: " + energyTypeRaw, ex);
+            throw new IllegalStateException("Unknown energy type: " + energyType, ex);
         }
     }
 }
