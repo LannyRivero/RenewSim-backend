@@ -55,7 +55,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Sin anotaciones Spring en ninguno de estos records
     - _Requirements: 6.8, 6.9, 6.10_
 
-  - [ ] 1.6 Configurar JaCoCo con threshold ≥70% en `pom.xml`
+  - [x ] 1.6 Configurar JaCoCo con threshold ≥70% en `pom.xml`
     - Plugin `jacoco-maven-plugin` con execution `prepare-agent` + `report` + `check`
     - Regla `PACKAGE` / `LINE` / `COVEREDRATIO` ≥ 0.70
     - Excluir paquetes `*.dto`, `*.config`, `*.mapper` del check

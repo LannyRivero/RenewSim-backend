@@ -28,8 +28,7 @@ class TechnologyDomainServiceTest {
                 new MaintenanceCost(BigDecimal.valueOf(500)),
                 new EnvironmentalImpact(10.0),
                 new Co2Reduction(20.0),
-                new EnergyProduction(3000.0)
-        );
+                new EnergyProduction(3000.0));
     }
 
     private Technology windTech() {
@@ -41,8 +40,7 @@ class TechnologyDomainServiceTest {
                 new MaintenanceCost(BigDecimal.valueOf(800)),
                 new EnvironmentalImpact(15.0),
                 new Co2Reduction(30.0),
-                new EnergyProduction(5000.0)
-        );
+                new EnergyProduction(5000.0));
     }
 
     private Technology hydroTech() {
@@ -54,8 +52,7 @@ class TechnologyDomainServiceTest {
                 new MaintenanceCost(BigDecimal.valueOf(1000)),
                 new EnvironmentalImpact(5.0),
                 new Co2Reduction(50.0),
-                new EnergyProduction(8000.0)
-        );
+                new EnergyProduction(8000.0));
     }
 
     // ----------------------------------------------------------
@@ -151,15 +148,13 @@ class TechnologyDomainServiceTest {
                 "Zero Cost",
                 EnergyType.SOLAR,
                 new Efficiency(60.0),
-                new InstallationCost(BigDecimal.ZERO.add(BigDecimal.ONE)), // avoid invalid cost
-                new MaintenanceCost(BigDecimal.ZERO),
+                new InstallationCost(BigDecimal.ONE), 
+                new MaintenanceCost(BigDecimal.ONE),
                 new EnvironmentalImpact(15.0),
                 new Co2Reduction(5.0),
-                new EnergyProduction(1000.0)
-        );
+                new EnergyProduction(1000.0));
 
         List<Technology> technologies = List.of(zeroCostTech, solarTech());
         assertDoesNotThrow(() -> service.findMostEfficient(technologies));
     }
 }
-

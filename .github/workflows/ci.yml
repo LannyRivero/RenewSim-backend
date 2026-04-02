@@ -1,10 +1,10 @@
-name: CI - Build, Test and Coverage Report
+name: CI Pipeline
 
 on:
   push:
-    branches: [ dev/v1.2.0 ]
+    branches: [ main, dev/v1.2.0 ]
   pull_request:
-    branches: [ dev/v1.2.0 ]
+    branches: [ main, dev/v1.2.0 ]
 
 permissions:
   contents: read
@@ -14,18 +14,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  backend-tests:
+    name: Backend Tests with Testcontainers
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     env:
       SPRING_PROFILES_ACTIVE: test
-      JWT_SECRET_BASE64: TzEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYwMTIzNDU2Nzg5YWJjZGVm
+      JWT_SECRET: TzEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYwMTIzNDU2Nzg5YWJjZGVm
       TESTCONTAINERS_RYUK_DISABLED: true
       TESTCONTAINERS_CHECKS_DISABLE: true
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
@@ -35,40 +36,36 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Build + Unit & IT tests + JaCoCo + Testcontainers
-      - name: Build & test (with JaCoCo & Testcontainers)
-        run: mvn -B -ntp -Dspring.profiles.active=test clean verify jacoco:report
+      - name: Run tests with coverage
+        run: mvn clean verify jacoco:report --batch-mode --no-transfer-progress
 
-      # ✅ Gate: SecurityRateLimitPropertiesBindingTest must exist AND pass
-      - name: Ensure binding test executed and passed
+      - name: Ensure security binding test passed
         run: |
           set -euo pipefail
           REPORT_FILE=$(ls -1 **/target/surefire-reports/TEST-*.xml | grep -E "SecurityRateLimitPropertiesBindingTest" || true)
 
           if [ -z "${REPORT_FILE}" ]; then
-            echo "::error::Missing SecurityRateLimitPropertiesBindingTest report in surefire-reports"
+            echo "::error::Missing SecurityRateLimitPropertiesBindingTest report"
             exit 1
           fi
 
-          echo "Found report: ${REPORT_FILE}"
           if ! grep -Eq 'tests="[1-9][0-9]*".*failures="0".*errors="0"' "${REPORT_FILE}"; then
-            echo "::error::SecurityRateLimitPropertiesBindingTest did not pass successfully"
-            cat "${REPORT_FILE}" || true
+            echo "::error::SecurityRateLimitPropertiesBindingTest did not pass"
             exit 1
           fi
 
-      - name: Upload surefire & failsafe reports (always)
-        if: ${{ always() }}
+      - name: Upload test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
+          name: test-results
           path: |
             **/target/surefire-reports/**
             **/target/failsafe-reports/**
 
-      - name: Upload JaCoCo coverage report (always)
-        if: ${{ always() }}
+      - name: Upload coverage report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: jacoco-report
-          path: target/site/jacoco
+          name: coverage-report
+          path: target/site/jacoco/
