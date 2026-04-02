@@ -20,7 +20,7 @@ class ContextLoadsProfilesITest {
 
     @Nested
     @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-    @ActiveProfiles("dev")
+    @ActiveProfiles("local")
     @DisplayName("Context loads with 'dev' profile")
     class DevProfile {
         @Test
