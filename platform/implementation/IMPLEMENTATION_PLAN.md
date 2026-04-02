@@ -61,7 +61,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Excluir paquetes `*.dto`, `*.config`, `*.mapper` del check
     - _Requirements: (estrategia de testing)_
 
-  - [ ] 1.7 Configurar GitHub Actions CI (job `backend-tests` con MySQL service container)
+  - [x] 1.7 Configurar GitHub Actions CI (job `backend-tests` con MySQL service container)
     - Archivo `.github/workflows/ci.yml` con job `backend-tests`
     - Service container `mysql:8.0` con health check
     - Steps: checkout → setup-java 21 temurin → `./mvnw clean test` → `jacoco:report` → `jacoco:check`
