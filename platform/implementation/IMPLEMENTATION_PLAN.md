@@ -74,7 +74,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Envelope: `{ timestamp, status, errorCode, message, path, fieldErrors? }`
     - _Requirements: 1.3, 1.4, 2.2, 4.5, 6.8_
 
-  - [ ] 1.9 Configurar OpenAPI/Swagger con SpringDoc
+  - [x] 1.9 Configurar OpenAPI/Swagger con SpringDoc
     - Bean `OpenAPI` con info (título, versión, descripción), `SecurityScheme` BearerAuth JWT
     - Anotaciones `@Tag` en controllers, `@Operation` en endpoints principales
     - URL: `/swagger-ui.html` disponible en perfiles local y docker
