@@ -80,7 +80,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - URL: `/swagger-ui.html` disponible en perfiles local y docker
     - _Requirements: (documentación API)_
 
-  - [ ] 1.10 Crear Dockerfile backend multi-stage
+  - [x] 1.10 Crear Dockerfile backend multi-stage
     - Stage `build`: `eclipse-temurin:21-jdk-alpine`, `COPY pom.xml` + `mvnw` + `.mvn`, `RUN ./mvnw dependency:go-offline`, `COPY src`, `RUN ./mvnw clean package -DskipTests`
     - Stage `runtime`: `eclipse-temurin:21-jre-alpine`, usuario no-root `renewsim`, `COPY --from=build app.jar`
     - `HEALTHCHECK`: `wget --spider http://localhost:8080/actuator/health`
