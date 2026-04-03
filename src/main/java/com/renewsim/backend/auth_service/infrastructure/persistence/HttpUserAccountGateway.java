@@ -70,7 +70,14 @@ public class HttpUserAccountGateway implements UserAccountGateway {
 
     @Override
     public UserSnapshot createUser(String username, String rawPassword, String email, Set<RoleName> roles) {
-        UserCreateRequest request = new UserCreateRequest(username, email, rawPassword);
+        // UserCreateRequest now requires: username, email, password, fullName, phone
+        UserCreateRequest request = new UserCreateRequest(
+            username, 
+            email, 
+            rawPassword,
+            null,  // fullName (nullable)
+            null   // phone (nullable)
+        );
 
         OperationResponse<ExternalUserSnapshot> response = userServiceClient.createUser(request);
         ExternalUserSnapshot created = response != null ? response.data() : null;

@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,17 +37,9 @@ public class UpdateUserRolesService implements UpdateUserRolesUseCase {
                 })
                 .collect(Collectors.toSet());
 
-        User updated = new User(
-                user.id(),
-                user.username(),
-                user.email(),
-                user.enabled(),
-                newRoles,
-                user.createdAt(),
-                Instant.now(),
-                user.passwordHash()
-        );
+        user.getRoles().forEach(user::removeRole);
+        newRoles.forEach(user::addRole);
 
-        userRepositoryPort.save(updated);
+        userRepositoryPort.save(user);
     }
 }

@@ -7,8 +7,10 @@ public record UserResponse(
         Long id,
         String username,
         String email,
-        boolean enabled,
+        String fullName,
+        String phone,
+        String status,
         Set<String> roles,
         Instant createdAt,
-        Instant updatedAt) {
-}
+        Instant activatedAt
+) {}

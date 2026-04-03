@@ -16,7 +16,7 @@ public class RoleAssignmentService {
      * @param user the user to receive the role
      * @param role the role to assign
      * @throws ResourceNotFoundException if user or role is null
-     * @throws IllegalStateException     if user already has the role
+     * @throws IllegalStateException if user already has the role
      */
     public void assignRoleToUser(User user, RoleName role) {
         if (user == null) {
@@ -39,7 +39,7 @@ public class RoleAssignmentService {
      * @param user the user to remove the role from
      * @param role the role to remove
      * @throws ResourceNotFoundException if user or role is null
-     * @throws IllegalStateException     if user does not have the role
+     * @throws IllegalStateException if user does not have the role
      */
     public void removeRoleFromUser(User user, RoleName role) {
         if (user == null) {
