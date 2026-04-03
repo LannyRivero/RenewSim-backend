@@ -1,5 +1,49 @@
+# Build artifacts
 target/
-.git
-.gitignore
-README.md
+*.jar
+*.war
+*.ear
 
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.settings/
+.classpath
+.project
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (not needed in image)
+*.md
+docs/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Logs
+*.log
+logs/
+
+# Environment files (may contain secrets)
+.env
+.env.*
+*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files (already excluded in build)
+src/test/
+
+# Docker files (meta)
+Dockerfile
+docker-compose*.yml
+.dockerignore
