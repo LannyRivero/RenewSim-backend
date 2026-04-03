@@ -1,8 +1,9 @@
 package com.renewsim.backend.user_service.infrastructure.persistence.adapter;
 
+import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
+import com.renewsim.backend.role_service.infrastructure.persistence.repo.RoleJpaRepository;
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
-import com.renewsim.backend.user_service.application.port.out.RoleCatalogPort;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.web.dto.UserFilterRequest;
@@ -29,7 +30,7 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
 
     private final UserJpaRepository repo;
     private final UserServiceMapper mapper;
-    private final RoleCatalogPort roleCatalogPort;
+    private final RoleJpaRepository roleJpaRepository;
 
     @Override
     public Optional<User> findById(Long id) {
@@ -73,36 +74,38 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
     }
 
     @Override
-@Transactional
-public User save(User user) {
-    try {
-        UserEntity entity = mapper.toEntity(user);
+    @Transactional
+    public User save(User user) {
+        try {
+            UserEntity entity = mapper.toEntity(user);
 
-        // Resolver roles usando el catálogo antes de guardar
-        if (user.roles() != null && !user.roles().isEmpty()) {
-            Set<String> validatedRoles = user.roles().stream()
-                    .map(roleName -> roleCatalogPort.findByName(roleName.name())
-                            .orElseThrow(() -> new IllegalStateException("Role not found: " + roleName))
-                            .name() // guardamos solo el nombre
-                    )
-                    .collect(Collectors.toSet());
-            entity.setRoles(validatedRoles);
+            if (user.roles() != null && !user.roles().isEmpty()) {
+                Set<RoleEntity> roleEntities = user.roles().stream()
+                        .map(roleName -> roleJpaRepository.findByName(roleName)
+                                .orElseThrow(() -> new IllegalStateException(
+                                        "Role not found in database: " + roleName)))
+                        .collect(Collectors.toSet());
+
+                entity.setRoles(roleEntities);
+            }
+
+            UserEntity saved = repo.save(entity);
+            return mapper.toDomain(saved);
+
+        } catch (DataIntegrityViolationException ex) {
+            String message = ex.getMostSpecificCause() != null
+                    ? ex.getMostSpecificCause().getMessage()
+                    : "";
+            log.warn("Integrity violation while saving user {}: {}", user.username(), message);
+
+            if (message.contains("uk_users_username") || message.contains("uk_users_email")) {
+                throw new UserAlreadyExistsException(
+                        "User with username '" + user.username() +
+                                "' or email '" + user.email() + "' already exists");
+            }
+            throw ex;
         }
-
-        UserEntity saved = repo.save(entity);
-        return mapper.toDomain(saved);
-
-    } catch (DataIntegrityViolationException ex) {
-        String message = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : "";
-        log.warn("Integrity violation while saving user {}: {}", user.username(), message);
-
-        if (message.contains("uk_users_username") || message.contains("uk_users_email")) {
-            throw new UserAlreadyExistsException(
-                    "User with username '" + user.username() + "' or email '" + user.email() + "' already exists");
-        }
-        throw ex;
     }
-}
 
     @Override
     public void deleteById(Long id) {
