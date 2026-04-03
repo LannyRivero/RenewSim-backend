@@ -4,6 +4,10 @@
 spring:
   profiles:
     active: local # Perfil por defecto (local development)
+  
+  threads:
+    virtual:
+      enabled: true # Habilitar virtual threads (Project Loom)
 
   jpa:
     hibernate:
