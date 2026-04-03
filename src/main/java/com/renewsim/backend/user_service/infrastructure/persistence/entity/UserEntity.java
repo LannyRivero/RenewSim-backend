@@ -3,6 +3,7 @@ package com.renewsim.backend.user_service.infrastructure.persistence.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -14,9 +15,6 @@ import java.util.Set;
         @Index(name = "idx_users_username", columnList = "username"),
         @Index(name = "idx_users_email", columnList = "email"),
         @Index(name = "idx_users_enabled", columnList = "enabled")
-}, uniqueConstraints = {
-        @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
-        @UniqueConstraint(name = "uk_users_email", columnNames = "email")
 })
 public class UserEntity {
 
@@ -44,21 +42,15 @@ public class UserEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    // 🔥 Usamos nombres de roles en lugar de RoleEntity
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
-            uniqueConstraints = @UniqueConstraint(
-                    name = "uk_user_roles_user_id_role_name",
-                    columnNames = {"user_id", "role_name"}
-            )
+            inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    @Column(name = "role_name", nullable = false, length = 50)
-    private Set<String> roles = new HashSet<>();
+    private Set<RoleEntity> roles = new HashSet<>();
 
     // --- Getters & Setters ---
-    // (igual que antes, solo cambia roles a Set<String>)
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -76,13 +68,22 @@ public class UserEntity {
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
     public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-
     public Instant getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 
-    public Set<String> getRoles() { return roles; }
-    public void setRoles(Set<String> roles) { this.roles = roles; }
+    public Set<RoleEntity> getRoles() { return roles; }
+    public void setRoles(Set<RoleEntity> roles) { this.roles = roles; }
+
+    @PrePersist
+    public void prePersist() {
+        this.enabled = true;
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = Instant.now();
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -92,7 +93,9 @@ public class UserEntity {
     }
 
     @Override
-    public int hashCode() { return Objects.hashCode(id); }
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 
     @Override
     public String toString() {
@@ -105,17 +108,5 @@ public class UserEntity {
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';
-    }
-
-    @PrePersist
-    public void prePersist() {
-        this.enabled = true;
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = Instant.now();
     }
 }
