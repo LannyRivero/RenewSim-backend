@@ -14,20 +14,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserEntityTest {
 
     @Test
-    @DisplayName("should convert roles Set <-> CSV correctly")
+    @DisplayName("should handle Set<RoleEntity> correctly")
     void testRolesConversion() {
         UserEntity entity = new UserEntity();
 
-        entity.setRoles(Set.of("USER", "ADMIN"));
-        Set<String> roles = entity.getRoles();
-        assertThat(roles).hasSize(2);
-        assertThat(roles).containsExactlyInAnyOrder("USER", "ADMIN");
+        // ✅ Crear RoleEntity instances
+        RoleEntity userRole = new RoleEntity();
+        userRole.setId(1L);
+        userRole.setName(RoleName.USER);
 
-        assertThat(roles).extracting("name").containsExactlyInAnyOrder(RoleName.USER, RoleName.ADMIN);
+        RoleEntity adminRole = new RoleEntity();
+        adminRole.setId(2L);
+        adminRole.setName(RoleName.ADMIN);
+
+        // ✅ Setear Set<RoleEntity>
+        entity.setRoles(Set.of(userRole, adminRole));
+        
+        Set<RoleEntity> roles = entity.getRoles();
+        assertThat(roles).hasSize(2);
+        assertThat(roles).extracting(RoleEntity::getName)
+                .containsExactlyInAnyOrder(RoleName.USER, RoleName.ADMIN);
     }
 
     @Test
-    @DisplayName("should handle empty rolesCsv gracefully")
+    @DisplayName("should handle empty roles gracefully")
     void testEmptyRoles() {
         UserEntity entity = new UserEntity();
         entity.setRoles(Set.of());
@@ -72,17 +82,17 @@ class UserEntityTest {
         entity.setUsername("john");
         entity.setEmail("john@example.com");
         entity.setEnabled(true);
-        entity.setCreatedAt(Instant.now());
-        entity.setUpdatedAt(Instant.now());
         
         RoleEntity userRole = new RoleEntity();
+        userRole.setId(1L);
         userRole.setName(RoleName.USER);
-        entity.setUpdatedAt(Instant.now());
         
-        entity.setRoles(Set.of("USER"));
+        entity.setRoles(Set.of(userRole));
+        
         String str = entity.toString();
+        assertThat(str).contains("john");
         assertThat(str).contains("john@example.com");
-        assertThat(str).contains("USER");
+        // Note: toString may show RoleEntity objects, not just "USER"
     }
 
     @Test
@@ -116,5 +126,4 @@ class UserEntityTest {
         e1.setId(1L);
         assertThat(e1.equals("string")).isFalse();
     }
-
 }

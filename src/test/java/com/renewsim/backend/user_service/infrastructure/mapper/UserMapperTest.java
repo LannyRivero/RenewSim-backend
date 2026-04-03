@@ -58,27 +58,31 @@ class UserMapperTest {
     }
 
     @Test
-    @DisplayName("should map UserEntity to User domain and rolesCsv to Set")
+    @DisplayName("should map UserEntity to User domain with RoleEntity set")
     void testMapUserEntityToDomain() {
+        RoleEntity userRole = new RoleEntity();
+        userRole.setId(1L);
+        userRole.setName(RoleName.USER);
+
+        RoleEntity adminRole = new RoleEntity();
+        adminRole.setId(2L);
+        adminRole.setName(RoleName.ADMIN);
+
         UserEntity entity = new UserEntity();
         entity.setId(10L);
         entity.setUsername("charlie");
         entity.setEmail("charlie@mail.com");
-        RoleEntity userRole = new RoleEntity();
-        userRole.setName(RoleName.USER);
-        RoleEntity adminRole = new RoleEntity();
-        adminRole.setName(RoleName.ADMIN);
-        entity.setRoles(Set.of("USER", "ADMIN")); 
-        entity.setCreatedAt(Instant.now());
-        entity.setUpdatedAt(Instant.now());
         entity.setPasswordHash("hashed");
+        entity.setEnabled(true);
+        entity.setRoles(Set.of(userRole, adminRole)); 
 
         User user = mapper.toDomain(entity);
 
         assertThat(user.id()).isEqualTo(10L);
         assertThat(user.username()).isEqualTo("charlie");
+        assertThat(user.email()).isEqualTo("charlie@mail.com");
         assertThat(user.roles()).containsExactlyInAnyOrder(RoleName.USER, RoleName.ADMIN);
-    } 
-
-    
+        assertThat(user.passwordHash()).isEqualTo("hashed");
+        assertThat(user.enabled()).isTrue();
+    }
 }
