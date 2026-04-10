@@ -15,9 +15,9 @@ public class TokenDebugConfig {
         return args -> {
             String token = jwtTokenProvider.generateServiceToken(
                 "auth-service",
-                Set.of("users:write") // 👈 ajusta al scope que pida tu UserController
+                Set.of("users:write")
             );
-            System.out.println("\n\n🔑 Service Token de prueba:\n" + token + "\n\n");
+            System.out.println("\n\nService test token:\n" + token + "\n\n");
         };
     }
 }

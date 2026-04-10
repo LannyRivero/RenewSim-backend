@@ -4,18 +4,25 @@ import jakarta.validation.constraints.*;
 
 public record UserCreateRequest(
 
-        @NotBlank 
+        @NotBlank
         @Pattern(
-                regexp = "^[a-z0-9._-]{3,32}$", 
+                regexp = "^[a-z0-9._-]{3,32}$",
                 message = "Username must be 3-32 chars, lowercase letters, digits, . _ -"
-        ) 
+        )
         String username,
 
-        @NotBlank 
-        @Email(message = "Email must be valid") 
-        @Size(max = 255, message = "Email must be at most 255 characters") 
+        @NotBlank
+        @Email(message = "Email must be valid")
+        @Size(max = 255, message = "Email must be at most 255 characters")
         String email,
 
-        @NotBlank(message = "Password is required") 
-        @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters") String password
+        @NotBlank(message = "Password is required")
+        @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
+        String password,
+
+        @Size(max = 255, message = "Full name must be at most 255 characters")
+        String fullName,
+
+        @Pattern(regexp = "^\\+?[0-9]{1,20}$", message = "Phone must be valid international format")
+        String phone
 ) {}

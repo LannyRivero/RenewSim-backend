@@ -28,7 +28,7 @@ public class CreateUserService implements CreateUserUseCase {
 
     private final UserRepositoryPort userRepositoryPort;
     private final UserServiceMapper mapper;
-    private final PasswordEncoder passwordEncoder; // << Inyección
+    private final PasswordEncoder passwordEncoder;
 
     private static final RoleName DEFAULT_ROLE = RoleName.USER;
 
@@ -52,14 +52,21 @@ public class CreateUserService implements CreateUserUseCase {
                         "User with username '" + username + "' or email '" + email + "' already exists");
             }
 
-            // Encriptar antes de persistir
-            String encodedPassword = passwordEncoder.encode(req.password());
+            // Hash password before creating domain object
+            String hashedPassword = passwordEncoder.encode(req.password());
 
-            User user = User.create(username, email, encodedPassword, Set.of(DEFAULT_ROLE));
-            log.debug("Encoded password for {} = {}", username, encodedPassword);
+            // Use User.create() factory method with all required parameters
+            User user = User.create(
+                email,           // email
+                hashedPassword,  // passwordHash
+                req.fullName(),  // fullName (nullable)
+                req.phone(),     // phone (nullable)
+                Set.of(DEFAULT_ROLE)
+            );
 
             User saved = userRepositoryPort.save(user);
-            log.info("User created successfully id={} username={}", saved.id(), saved.username());
+            log.info("User created successfully id={} email={}", saved.getId(), saved.getEmail());
+            
             return mapper.toResponse(saved);
 
         } catch (UserAlreadyExistsException e) {

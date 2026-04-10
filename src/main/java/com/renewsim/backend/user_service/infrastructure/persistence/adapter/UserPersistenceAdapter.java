@@ -79,8 +79,9 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
         try {
             UserEntity entity = mapper.toEntity(user);
 
-            if (user.roles() != null && !user.roles().isEmpty()) {
-                Set<RoleEntity> roleEntities = user.roles().stream()
+            // Sync roles: fetch RoleEntity for each RoleName in domain
+            if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+                Set<RoleEntity> roleEntities = user.getRoles().stream()
                         .map(roleName -> roleJpaRepository.findByName(roleName)
                                 .orElseThrow(() -> new IllegalStateException(
                                         "Role not found in database: " + roleName)))
@@ -96,12 +97,12 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
             String message = ex.getMostSpecificCause() != null
                     ? ex.getMostSpecificCause().getMessage()
                     : "";
-            log.warn("Integrity violation while saving user {}: {}", user.username(), message);
+            log.warn("Integrity violation while saving user email={}: {}", user.getEmail(), message);
 
             if (message.contains("uk_users_username") || message.contains("uk_users_email")) {
                 throw new UserAlreadyExistsException(
-                        "User with username '" + user.username() +
-                                "' or email '" + user.email() + "' already exists");
+                        "User with username '" + user.getEmail() +
+                                "' or email '" + user.getEmail() + "' already exists");
             }
             throw ex;
         }

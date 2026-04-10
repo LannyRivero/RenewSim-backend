@@ -49,7 +49,7 @@ class LoginRateLimitingFilterIT {
     }
 
     @Test
-    @DisplayName("N+1 attempts within window → 429; after window → back to 401/200")
+    @DisplayName("N+1 attempts within window -> 429; after window -> back to 401/200")
     void rateLimit_then_reset_window() throws Exception {
         when(authUseCase.login(any())).thenThrow(new BadCredentialsException("invalid"));
         String body = jsonBody("john.doe", "InvalidPwd#123");

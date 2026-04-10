@@ -49,7 +49,7 @@ class AuthServiceImplTest extends UnitTestBase {
     }
 
     @Test
-    @DisplayName("login → returns AuthResponseDTO from mapper when credentials are valid")
+    @DisplayName("login -> returns AuthResponseDTO from mapper when credentials are valid")
     void login_ok() {
         when(userAccountGateway.findByUsername("john")).thenReturn(Optional.of(snapshot));
         when(authResponseMapper.toAuthResponseDTO(any(UserSnapshot.class)))
@@ -73,7 +73,7 @@ class AuthServiceImplTest extends UnitTestBase {
     }
 
     @Test
-    @DisplayName("login → throws on invalid credentials")
+    @DisplayName("login -> throws on invalid credentials")
     void login_invalid() {
         doThrow(new AuthenticationException("Invalid credentials"))
                 .when(authValidator).validateCredentials(any(AuthRequestDTO.class));
@@ -87,7 +87,7 @@ class AuthServiceImplTest extends UnitTestBase {
     }
 
     @Test
-    @DisplayName("register → throws when username already exists")
+    @DisplayName("register -> throws when username already exists")
     void register_username_exists() {
         when(userAccountGateway.existsByUsername("john")).thenReturn(true);
         assertThatThrownBy(() -> authService.register(new RegisterRequestDTO("john", "secret", "john@email.com")))
@@ -100,7 +100,7 @@ class AuthServiceImplTest extends UnitTestBase {
     }
 
     @Test
-    @DisplayName("register → creates user and maps response via mapper")
+    @DisplayName("register -> creates user and maps response via mapper")
     void register_ok() {
         when(userAccountGateway.existsByUsername("john")).thenReturn(false);
         when(userAccountGateway.createUser("john", "secret", "john@email.com", Set.of(RoleName.USER)))

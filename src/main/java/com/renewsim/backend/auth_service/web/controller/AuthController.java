@@ -26,7 +26,7 @@ public class AuthController {
     private final AuthUseCase authUseCase;
 
     // ----------------------------------------------------
-    // POST /auth/login → Authenticate
+        // POST /auth/login -> Authenticate
     // ----------------------------------------------------
     @PostMapping(value = "/login", consumes = "application/json")
     @Operation(summary = "User login", description = "Authenticate user via email/username and password. Returns a JWT token.")
@@ -42,7 +42,7 @@ public class AuthController {
     }
 
     // ----------------------------------------------------
-    // POST /auth/register → Register new user
+        // POST /auth/register -> Register new user
     // ----------------------------------------------------
     @PostMapping(value = "/register", consumes = "application/json")
     @Operation(summary = "User registration", description = "Register a new user account. Returns a JWT access token upon success.")

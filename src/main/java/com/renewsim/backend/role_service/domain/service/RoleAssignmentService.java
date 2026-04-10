@@ -5,20 +5,20 @@ import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.shared.exception.ResourceNotFoundException;
 
 /**
- * Service class responsible for managing role assignments to users.
- * Provides functionality to assign roles to users with proper validation.
+ * Domain service for managing role assignments.
+ * Coordinates role assignment operations with proper validation.
  */
 public class RoleAssignmentService {
 
     /**
-     * Assigns a specific role to a user.
+     * Assigns a role to a user.
      * 
-     * @param role the role to be assigned to the user
-     * @param user the user who will receive the role assignment
-     * @throws ResourceNotFoundException if the role is null (role not found)
-     * @throws ResourceNotFoundException if the user is null (user not found)
+     * @param user the user to receive the role
+     * @param role the role to assign
+     * @throws ResourceNotFoundException if user or role is null
+     * @throws IllegalStateException if user already has the role
      */
-    public User assignRoleToUser(User user, RoleName role) {
+    public void assignRoleToUser(User user, RoleName role) {
         if (user == null) {
             throw new ResourceNotFoundException("User not found");
         }
@@ -26,22 +26,22 @@ public class RoleAssignmentService {
             throw new ResourceNotFoundException("Role not found");
         }
 
-        if (user.roles().contains(role)) {
+        if (user.hasRole(role)) {
             throw new IllegalStateException("User already has role: " + role.name());
         }
 
-        return user.withAdditionalRole(role);
+        user.addRole(role);
     }
 
     /**
-     * Removes a specific role from a user.
+     * Removes a role from a user.
      * 
-     * @param role the role to be removed from the user
-     * @param user the user who will lose the role assignment
-     * @throws ResourceNotFoundException if the role is null (role not found)
-     * @throws ResourceNotFoundException if the user is null (user not found)
+     * @param user the user to remove the role from
+     * @param role the role to remove
+     * @throws ResourceNotFoundException if user or role is null
+     * @throws IllegalStateException if user does not have the role
      */
-    public User removeRoleFromUser(User user, RoleName role) {
+    public void removeRoleFromUser(User user, RoleName role) {
         if (user == null) {
             throw new ResourceNotFoundException("User not found");
         }
@@ -49,11 +49,10 @@ public class RoleAssignmentService {
             throw new ResourceNotFoundException("Role not found");
         }
 
-        if (!user.roles().contains(role)) {
+        if (!user.hasRole(role)) {
             throw new IllegalStateException("User does not have role: " + role.name());
         }
 
-        return user.withoutRole(role);
+        user.removeRole(role);
     }
 }
-

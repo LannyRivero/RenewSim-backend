@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
+@Profile("!test")
 @RequiredArgsConstructor
 public class LoginRateLimitingFilter extends OncePerRequestFilter {
 

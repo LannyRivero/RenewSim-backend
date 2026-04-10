@@ -104,11 +104,11 @@ public class UserController {
         var user = getUserUseCase.getDomainUserByUsernameOrEmail(username, email);
 
         var credentials = new UserCredentialsDTO(
-                user.username(),
-                user.email(),
-                user.passwordHash(),
-                user.roles(),
-                user.enabled());
+                user.getEmail(), // username = email
+                user.getEmail(),
+                user.getPasswordHash(),
+                user.getRoles(),
+                user.getStatus().name().equals("ACTIVE"));
 
         return ResponseEntity.ok(ApiResponseFactory.ok(credentials, "Credentials retrieved successfully"));
     }

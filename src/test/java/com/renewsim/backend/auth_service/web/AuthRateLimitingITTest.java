@@ -39,11 +39,11 @@ class AuthRateLimitingITTest {
     }
 
     @Test
-    @DisplayName("Exceed attempts → 429 with Retry-After")
+    @DisplayName("Exceed attempts -> 429 with Retry-After")
     void exceedAttemptsShouldReturn429AndRetryAfter() throws Exception {
-        final String loginPath = rateProps.getLoginPath(); // e.g. /api/v1/auth/login
+        final String loginPath = rateProps.getLoginPath(); 
         final String body = objectMapper.writeValueAsString(
-                new LoginDto("user@example.com", "WrongPassword123") // válido pero incorrecto
+            new LoginDto("user@example.com", "WrongPassword123")
         );
 
         for (int i = 0; i < rateProps.getMaxAttempts() - 1; i++) {
@@ -51,7 +51,7 @@ class AuthRateLimitingITTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
                     .content(body))
-                    .andExpect(status().isUnauthorized()); // 401
+                    .andExpect(status().isUnauthorized());
         }
 
         mvc.perform(post(loginPath)

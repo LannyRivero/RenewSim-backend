@@ -71,8 +71,8 @@ class SecurityConfigTest {
         }
 
         @Test
-        @DisplayName("Auth endpoints públicos y login con no-store")
-        void authEndpoints_public_y_noStore_en_login() throws Exception {
+        @DisplayName("Public auth endpoints and login with no-store")
+        void authEndpoints_public_and_noStore_on_login() throws Exception {
                 String body = """
                                     {"username":"john","password":"secret"}
                                 """;
@@ -99,7 +99,7 @@ class SecurityConfigTest {
         }
 
         @Test
-        @DisplayName("HSTS se envía cuando X-Forwarded-Proto=https (detrás de proxy TLS)")
+        @DisplayName("HSTS is sent when X-Forwarded-Proto=https (behind TLS proxy)")
         void hsts_with_forwarded_proto_https() throws Exception {
                 mvc.perform(get("/error").secure(true)
                                 .header("X-Forwarded-Proto", "https"))

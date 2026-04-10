@@ -45,7 +45,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("login → should return 200, no-store cache header and response body")
+    @DisplayName("login -> should return 200, no-store cache header and response body")
     void testShouldLoginAndReturnNoStoreHeader() throws Exception {
         final AuthRequestDTO req = new AuthRequestDTO("john", "secret");
 
@@ -74,7 +74,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("register → should return 201, no-store cache header and response body")
+    @DisplayName("register -> should return 201, no-store cache header and response body")
     void testShouldRegisterAndReturnCreatedWithNoStoreHeader() throws Exception {
         final AuthRequestDTO req = new AuthRequestDTO("mary", "StrongPass_1");
 
@@ -101,7 +101,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("login → should return 400 when payload is invalid (@Valid)")
+    @DisplayName("login -> should return 400 when payload is invalid (@Valid)")
     void testShouldReturnBadRequestWhenInvalidBody() throws Exception {
         final String invalidJson = """
             {"username":null,"password":null}
@@ -116,7 +116,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("register → should return 400 when registration payload is invalid (@Valid)")
+    @DisplayName("register -> should return 400 when registration payload is invalid (@Valid)")
     void testShouldReturnBadRequestWhenInvalidRegistrationBody() throws Exception {
         final String invalidJson = """
             {"username":null,"password":null,"email":null}
