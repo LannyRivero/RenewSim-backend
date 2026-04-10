@@ -35,8 +35,6 @@ class JwtTokenProviderTest {
             Long nbfSkewSeconds,
             Long clockSkewSeconds,
             Long serviceExpirationSeconds) {
-        // Ajusta a tu record real: issuer, audience, secret, secretBase64,
-        // expirationSeconds, notBeforeSkewSeconds, allowedClockSkewSeconds
         return new SecurityJwtProperties(
                 issuer,
                 audience,
@@ -62,7 +60,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("generate/validate → token válido con roles/scopes y claims estándar")
+    @DisplayName("generate/validate -> valid token with roles/scopes and standard claims")
     void generateAndValidate_ok_withStandardClaims() {
         String base64Key = randomBase64Key();
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
@@ -92,7 +90,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("validate → vacío cuando issuer es incorrecto")
+    @DisplayName("validate -> empty when issuer is incorrect")
     void validate_empty_wrongIssuer() {
         String base64Key = randomBase64Key();
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
@@ -109,7 +107,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("validate → vacío cuando audience es incorrecta")
+    @DisplayName("validate -> empty when audience is incorrect")
     void validate_empty_wrongAudience() {
         String base64Key = randomBase64Key();
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
@@ -126,7 +124,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("validate → vacío si nbf está en el futuro (Premature)")
+    @DisplayName("validate -> empty if nbf is in the future (Premature)")
     void validate_empty_beforeNbf() {
         String base64Key = randomBase64Key();
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
@@ -141,7 +139,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("validate → ok dentro del clock skew luego de expirar")
+    @DisplayName("validate -> ok within clock skew after expiration")
     void validate_ok_withinAllowedSkew() {
         String base64Key = randomBase64Key();
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
@@ -160,7 +158,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("validate → vacío cuando expira más allá del clock skew")
+    @DisplayName("validate -> empty when expired beyond clock skew")
     void validate_empty_outsideSkew() {
         String base64Key = randomBase64Key();
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
@@ -179,7 +177,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("validate → vacío para token firmado con otra clave (firma inválida)")
+    @DisplayName("validate -> empty for token signed with another key (invalid signature)")
     void validate_empty_differentKey() {
         String base64Key = randomBase64Key();
         String attackerKey = randomBase64Key();
@@ -204,7 +202,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("validate → vacío para token con algoritmo distinto (HS384)")
+    @DisplayName("validate -> empty for token with different algorithm (HS384)")
     void validate_empty_differentAlg() {
         String base64Key = randomBase64Key();
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
@@ -228,7 +226,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("constructor → lanza excepción si la clave < 32 bytes (secret plano)")
+    @DisplayName("constructor -> throws exception if key < 32 bytes (plain secret)")
     void constructor_throws_shortPlainSecret() {
         var tooShortPlain = "short-key";
         var p = new SecurityJwtProperties(
@@ -247,7 +245,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("expiresInSeconds → devuelve el valor configurado")
+    @DisplayName("expiresInSeconds -> returns configured value")
     void expiresInSeconds_ok() {
         String base64Key = randomBase64Key();
         Clock clock = Clock.fixed(Instant.parse("2025-01-01T10:00:00Z"), ZoneOffset.UTC);
@@ -259,7 +257,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("validate → ok para token sin roles ni scopes")
+    @DisplayName("validate -> ok for token without roles or scopes")
     void validate_ok_subjectOnly() {
         String base64Key = randomBase64Key();
         Clock clock = Clock.fixed(Instant.parse("2025-01-01T10:00:00Z"), ZoneOffset.UTC);
@@ -277,7 +275,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("toStringSet → vacío cuando el claim no es colección")
+    @DisplayName("toStringSet -> empty when claim is not a collection")
     void toStringSet_ShouldReturnEmpty_WhenClaimNotCollection() throws Exception {
         Method m = JwtTokenProvider.class.getDeclaredMethod("toStringSet", Object.class);
         m.setAccessible(true);
@@ -288,7 +286,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("generate → incluye jti único")
+    @DisplayName("generate -> includes unique jti")
     void generate_includesJti() {
         String base64Key = randomBase64Key();
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
@@ -307,7 +305,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("constructor → lanza excepción cuando faltan ambos secretos (plain y base64)")
+    @DisplayName("constructor -> throws exception when both secrets are missing (plain and base64)")
     void constructor_throws_whenBothSecretsMissing() {
         var p = new SecurityJwtProperties(
                 "iss", "aud",
@@ -325,7 +323,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("constructor → NO debe ser público (package-private)")
+    @DisplayName("constructor -> must NOT be public (package-private)")
     void constructor_isPackagePrivate() throws Exception {
         var ctor = JwtTokenProvider.class.getDeclaredConstructor(SecurityJwtProperties.class, Clock.class);
         int mod = ctor.getModifiers();

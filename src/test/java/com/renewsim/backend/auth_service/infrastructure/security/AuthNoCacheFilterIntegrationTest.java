@@ -66,7 +66,7 @@ class AuthNoCacheFilterIntegrationTest {
     }
 
     @Test
-    @DisplayName("Auth endpoints → añade no-cache (por AuthNoCacheFilter)")
+    @DisplayName("Auth endpoints -> add no-cache (via AuthNoCacheFilter)")
     void authEndpointsHaveNoStore() throws Exception {
         var res = mockMvc.perform(post("/api/v1/auth/login"))
                 .andReturn()
@@ -82,7 +82,7 @@ class AuthNoCacheFilterIntegrationTest {
     }
 
     @Test
-    @DisplayName("Endpoints no-auth (200 OK) → NO añade no-cache (no lo pone el filtro)")
+    @DisplayName("Non-auth endpoints (200 OK) -> DO NOT add no-cache (filter does not set it)")
     void nonAuth200DoesNotAddNoStore() throws Exception {
         Mockito.when(tokenProvider.validate(anyString()))
                 .thenReturn(Optional.of(new AuthenticatedUser("john", Set.of("ADMIN"), Set.of())));
@@ -99,7 +99,7 @@ class AuthNoCacheFilterIntegrationTest {
     }
 
     @Test
-    @DisplayName("401 de endpoint protegido → no-cache viene del exceptionHandling global (valor distinto)")
+    @DisplayName("401 from protected endpoint -> no-cache comes from global exceptionHandling (different value)")
     void protected401HasNoStoreFromExceptionHandler() throws Exception {
         var res = mockMvc.perform(get("/test-secure/admin"))
                 .andReturn()

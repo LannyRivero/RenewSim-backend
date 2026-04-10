@@ -64,7 +64,7 @@ class SecurityIntegrationTest {
         }
 
         @Test
-        @DisplayName("DADO roles=[ADMIN], CUANDO autentica, ENTONCES /admin → 200 (ROLE_ADMIN)")
+        @DisplayName("GIVEN roles=[ADMIN], WHEN authenticated, THEN /admin -> 200 (ROLE_ADMIN)")
         void adminRoleAllowsAccess() throws Exception {
                 Mockito.when(tokenProvider.validate(anyString()))
                                 .thenReturn(Optional.of(new AuthenticatedUser("john", Set.of("ADMIN"), Set.of())));
@@ -76,7 +76,7 @@ class SecurityIntegrationTest {
         }
 
         @Test
-        @DisplayName("DADO scopes=[read:simulations], CUANDO autentica, ENTONCES /read-simulations → 200 (SCOPE_read:simulations)")
+        @DisplayName("GIVEN scopes=[read:simulations], WHEN authenticated, THEN /read-simulations -> 200 (SCOPE_read:simulations)")
         void scopeAllowsAccess() throws Exception {
                 Mockito.when(tokenProvider.validate(anyString()))
                                 .thenReturn(Optional.of(
@@ -89,7 +89,7 @@ class SecurityIntegrationTest {
         }
 
         @Test
-        @DisplayName("SIN authorities adecuadas → 403 (denegado por @PreAuthorize)")
+        @DisplayName("WITHOUT required authorities -> 403 (denied by @PreAuthorize)")
         void forbiddenWithoutAuthorities() throws Exception {
                 Mockito.when(tokenProvider.validate(anyString()))
                                 .thenReturn(Optional.of(new AuthenticatedUser("john", Set.of(), Set.of())));
@@ -100,7 +100,7 @@ class SecurityIntegrationTest {
         }
 
         @Test
-        @DisplayName("Security headers presentes y no duplicados en 200")
+        @DisplayName("Security headers present and not duplicated on 200")
         void securityHeadersOn200() throws Exception {
                 Mockito.when(tokenProvider.validate(anyString()))
                                 .thenReturn(Optional.of(new AuthenticatedUser("john", Set.of("ADMIN"), Set.of())));

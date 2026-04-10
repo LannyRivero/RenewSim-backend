@@ -71,13 +71,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } else {
                 log.warn("JWT validation failed: token is invalid, expired, or has incorrect claims.");
                 respondUnauthorized(response);
-                return; // detener aquí → no seguimos con el chain
+                return;
             }
 
         } catch (Exception e) {
             log.warn("JWT parsing/validation error: {}", e.getMessage());
             respondUnauthorized(response);
-            return; // detener aquí también
+            return;
         }
 
         chain.doFilter(request, response);

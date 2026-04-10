@@ -10,11 +10,9 @@ import com.renewsim.backend.user_service.web.dto.UserCreateRequest;
 @FeignClient(name = "user-service", contextId = "authUserClient", url = "${user-service.url}", configuration = FeignAuthConfig.class)
 public interface UserServiceClient {
 
-        // Para registrar usuarios
         @PostMapping("/api/v1/users")
         OperationResponse<ExternalUserSnapshot> createUser(@RequestBody UserCreateRequest request);
 
-        // Para obtener credenciales (interno)
         @GetMapping("/api/v1/users/internal/credentials")
         OperationResponse<ExternalUserSnapshot> getCredentials(
                         @RequestParam(required = false) String username,

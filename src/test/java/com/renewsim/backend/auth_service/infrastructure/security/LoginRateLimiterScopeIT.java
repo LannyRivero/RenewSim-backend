@@ -37,7 +37,7 @@ class LoginRateLimiterScopeIT {
     }
 
     @Test
-    @DisplayName("GET /api/v1/auth/login → NO aplica rate limit (solo POST)")
+    @DisplayName("GET /api/v1/auth/login -> rate limit does NOT apply (POST only)")
     void getLoginNotLimited() throws Exception {
         mockMvc.perform(get("/api/v1/auth/login"))
                .andExpect(res -> {
@@ -47,7 +47,7 @@ class LoginRateLimiterScopeIT {
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/register → NO aplica rate limit (scoped solo a login)")
+    @DisplayName("POST /api/v1/auth/register -> rate limit does NOT apply (scoped only to login)")
     void registerNotLimited() throws Exception {
         mockMvc.perform(post("/api/v1/auth/register")
                    .contentType(MediaType.APPLICATION_JSON)

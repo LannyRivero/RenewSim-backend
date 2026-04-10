@@ -14,7 +14,7 @@ import java.io.IOException;
 @Component
 public class SecurityHeadersFilter extends OncePerRequestFilter {
 
-    // CSP estricta (para endpoints normales)
+    // Strict CSP (for regular endpoints)
     private static final String CSP = String.join(" ",
             "default-src 'none';",
             "connect-src 'self';",
@@ -24,7 +24,7 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
             "object-src 'none';",
             "block-all-mixed-content");
 
-    // CSP relajada (para Swagger en prod)
+    // Relaxed CSP (for Swagger in production)
     private static final String SWAGGER_CSP = String.join(" ",
             "default-src 'self';",
             "script-src 'self' 'unsafe-inline';",
@@ -40,7 +40,7 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
     private static final String COOP = "same-origin";
     private static final String XPCDP = "none";
 
-    // Lee el perfil activo de Spring
+    // Read the active Spring profile
     @Value("${spring.profiles.active:local}")
     private String activeProfile;
 
@@ -56,14 +56,14 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
                 || path.startsWith("/v3/api-docs")
                 || path.equals("/swagger-ui.html");
 
-        // En dev/local → no aplicar CSP en Swagger
-        // En prod → aplicar CSP relajada en Swagger
+        // In dev/local -> do not apply CSP to Swagger
+        // In production -> apply relaxed CSP to Swagger
         if (isSwagger) {
             if ("prod".equalsIgnoreCase(activeProfile)) {
                 setIfAbsent(response, "Content-Security-Policy", SWAGGER_CSP);
             }
         } else {
-            // Endpoints normales → CSP estricta
+            // Regular endpoints -> strict CSP
             setIfAbsent(response, "Content-Security-Policy", CSP);
         }
 

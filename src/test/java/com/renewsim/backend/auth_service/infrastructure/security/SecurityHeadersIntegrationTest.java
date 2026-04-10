@@ -71,7 +71,7 @@ class SecurityHeadersIntegrationTest {
     }
 
     @Test
-    @DisplayName("200 OK → Security headers presentes")
+    @DisplayName("200 OK -> Security headers present")
     void headersOn200() throws Exception {
         Mockito.when(tokenProvider.validate(anyString()))
                 .thenReturn(Optional.of(new AuthenticatedUser("john", Set.of("ADMIN"), Set.of())));
@@ -85,7 +85,7 @@ class SecurityHeadersIntegrationTest {
     }
 
     @Test
-    @DisplayName("Protected → Security headers present on 401/403")
+    @DisplayName("Protected -> Security headers present on 401/403")
     void headersOnProtected() throws Exception {
         MvcResult res = mockMvc.perform(get(PROTECTED_ENDPOINT)).andReturn();
         int status = res.getResponse().getStatus();
@@ -94,7 +94,7 @@ class SecurityHeadersIntegrationTest {
     }
 
     @Test
-    @DisplayName("Admin → Security headers present on 401/403")
+    @DisplayName("Admin -> Security headers present on 401/403")
     void headersOnAdmin() throws Exception {
         MvcResult res = mockMvc.perform(get(ADMIN_ENDPOINT)).andReturn();
         int status = res.getResponse().getStatus();
@@ -103,7 +103,7 @@ class SecurityHeadersIntegrationTest {
     }
 
     @Test
-    @DisplayName("HTTPS simulado → HSTS presente una sola vez")
+    @DisplayName("Simulated HTTPS -> HSTS present only once")
     void hstsWhenHttps() throws Exception {
         MvcResult res = mockMvc.perform(get(PROTECTED_ENDPOINT)
                 .header("X-Forwarded-Proto", "https"))

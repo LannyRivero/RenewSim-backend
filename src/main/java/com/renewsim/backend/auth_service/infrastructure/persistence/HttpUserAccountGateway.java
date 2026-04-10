@@ -70,13 +70,12 @@ public class HttpUserAccountGateway implements UserAccountGateway {
 
     @Override
     public UserSnapshot createUser(String username, String rawPassword, String email, Set<RoleName> roles) {
-        // UserCreateRequest now requires: username, email, password, fullName, phone
         UserCreateRequest request = new UserCreateRequest(
             username, 
             email, 
             rawPassword,
-            null,  // fullName (nullable)
-            null   // phone (nullable)
+            null,
+            null
         );
 
         OperationResponse<ExternalUserSnapshot> response = userServiceClient.createUser(request);
@@ -85,7 +84,6 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         return mapToSnapshot(created);
     }
 
-    // Helper para evitar duplicación de código
     private UserSnapshot mapToSnapshot(ExternalUserSnapshot external) {
         if (external == null)
             return null;

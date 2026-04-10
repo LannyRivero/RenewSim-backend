@@ -42,7 +42,7 @@ class LoginRateLimitingFilterUnitTest {
         MockHttpServletRequest raw = new MockHttpServletRequest("POST", "/api/v1/auth/login");
         raw.setRemoteAddr("127.0.0.1");
         raw.setContentType("application/json");
-        raw.setContent(new byte[0]); // vacío
+        raw.setContent(new byte[0]); 
 
         ContentCachingRequestWrapper wrapped = new ContentCachingRequestWrapper(raw);
         MockHttpServletResponse res = new MockHttpServletResponse();

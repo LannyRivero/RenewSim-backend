@@ -52,17 +52,14 @@ public class AuthServiceImpl implements AuthUseCase {
         @Override
         @Transactional
         public AuthResponseDTO register(RegisterRequestDTO request) {
-                // 1- Validar credenciales mínimas
                 authValidator.validateCredentials(request);
 
-                // 2- Verificar si existe el usuario
                 if (userAccountGateway.existsByUsername(request.getUsername())) {
                         throw new ResourceConflictException(
                                         AUTH_USERNAME_CONFLICT.code(),
                                         AUTH_USERNAME_CONFLICT.defaultMessage());
                 }
 
-                // Enviar password en claro al User Service
                 UserSnapshot user = userAccountGateway.createUser(
                                 request.getUsername(),
                                 request.getPassword(), 

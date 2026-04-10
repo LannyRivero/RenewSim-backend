@@ -11,46 +11,46 @@ import jakarta.validation.constraints.NotBlank;
 @ConfigurationProperties(prefix = "security.jwt")
 public record SecurityJwtProperties(
 
-        // Quién emite el token (iss) y para quién va (aud)
+        // Token issuer (iss) and expected audience (aud)
         @NotBlank String issuer,
         @NotBlank String audience,
 
-        // Opción 1: clave en texto plano (>= 32 chars para HS256)
+        // Option 1: plain text key (>= 32 chars for HS256)
         @Nullable String secret,
 
-        // Opción 2: clave en Base64 (recomendada en prod)
+        // Option 2: Base64 key (recommended in production)
         @Nullable String secretBase64,
 
-        // exp: duración del token en segundos
+        // exp: token duration in seconds
         @Min(60) long expirationSeconds,
 
-        // nbf skew opcional (segundos). Si null, asumimos 0 en la implementación.
+        // Optional nbf skew (seconds). If null, implementation assumes 0.
         @Nullable Long notBeforeSkewSeconds,
 
-        // tolerancia de reloj para iat/nbf/exp (segundos)
+        // Clock skew tolerance for iat/nbf/exp (seconds)
         @Nullable Long allowedClockSkewSeconds,
 
-        // exp: duración del token en segundos para el servicio
+        // exp: service token duration in seconds
         @Min(60) long serviceExpirationSeconds
 
 ) {
 
-    /** ¿Hay clave Base64 configurada? */
+    /** Is a Base64 key configured? */
     public boolean hasSecretBase64() {
         return secretBase64 != null && !secretBase64.isBlank();
     }
 
-    /** ¿Hay clave en texto plano configurada? */
+    /** Is a plain text key configured? */
     public boolean hasPlainSecret() {
         return secret != null && !secret.isBlank();
     }
 
-    /** nbf skew seguro (0 si es null) */
+    /** Safe nbf skew (0 when null) */
     public long nbfSkewOrZero() {
         return notBeforeSkewSeconds != null ? notBeforeSkewSeconds : 0L;
     }
 
-    /** clock skew seguro (0 si es null) */
+    /** Safe clock skew (0 when null) */
     public long clockSkewOrZero() {
         return allowedClockSkewSeconds != null ? allowedClockSkewSeconds : 0L;
     }
