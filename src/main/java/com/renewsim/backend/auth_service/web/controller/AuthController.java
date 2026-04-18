@@ -1,9 +1,9 @@
 package com.renewsim.backend.auth_service.web.controller;
 
-import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
-import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
-import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
-import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
+import com.renewsim.backend.auth_service.application.command.*;
+import com.renewsim.backend.auth_service.application.port.in.*;
+import com.renewsim.backend.auth_service.application.result.*;
+import com.renewsim.backend.auth_service.web.dto.*;
 import com.renewsim.backend.shared.dto.ApiResponseFactory;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,37 +24,113 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthUseCase authUseCase;
+    private final LoginStep1UseCase loginStep1UseCase;
+    private final LoginStep2UseCase loginStep2UseCase;
+    private final ActivateAccountUseCase activateAccountUseCase;
+    private final ResendOtpUseCase resendOtpUseCase;
 
     // ----------------------------------------------------
-        // POST /auth/login -> Authenticate
+    // POST /auth/login → legacy single-factor (kept for compatibility)
     // ----------------------------------------------------
     @PostMapping(value = "/login", consumes = "application/json")
-    @Operation(summary = "User login", description = "Authenticate user via email/username and password. Returns a JWT token.")
+    @Operation(summary = "User login (single-factor)", description = "Authenticate user via email/username and password. Returns a JWT token.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Login successful",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponseDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Login successful", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content),
             @ApiResponse(responseCode = "400", description = "Validation error", content = @Content)
     })
-    public ResponseEntity<OperationResponse<AuthResponseDTO>> login(@Valid @RequestBody AuthRequestDTO request) {
+    public ResponseEntity<OperationResponse<AuthResponseDTO>> login(
+            @Valid @RequestBody AuthRequestDTO request) {
         AuthResponseDTO response = authUseCase.login(request);
         return ResponseEntity.ok(ApiResponseFactory.ok(response, "Login successful"));
     }
 
     // ----------------------------------------------------
-        // POST /auth/register -> Register new user
+    // POST /auth/register → Register new user
     // ----------------------------------------------------
     @PostMapping(value = "/register", consumes = "application/json")
     @Operation(summary = "User registration", description = "Register a new user account. Returns a JWT access token upon success.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "User registered successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request or user already exists", content = @Content)
+            @ApiResponse(responseCode = "201", description = "User registered successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponseDTO.class))),
+            @ApiResponse(responseCode = "409", description = "User already exists", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Validation error", content = @Content)
     })
-    public ResponseEntity<OperationResponse<AuthResponseDTO>> register(@Valid @RequestBody RegisterRequestDTO request) {
+    public ResponseEntity<OperationResponse<AuthResponseDTO>> register(
+            @Valid @RequestBody RegisterRequestDTO request) {
         AuthResponseDTO response = authUseCase.register(request);
         return ResponseEntity
                 .status(201)
                 .body(ApiResponseFactory.created(response, "User registered successfully"));
+    }
+
+    // ----------------------------------------------------
+    // POST /auth/login/step1 → Validate credentials, send OTP
+    // ----------------------------------------------------
+    @PostMapping(value = "/login/step1", consumes = "application/json")
+    @Operation(summary = "2FA login step 1", description = "Validates credentials and sends OTP to registered email. " +
+            "Response is always generic to prevent user enumeration.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OTP sent (or silently ignored)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginStep1ResultDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
+            @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content)
+    })
+    public ResponseEntity<OperationResponse<LoginStep1ResultDTO>> loginStep1(
+            @Valid @RequestBody LoginStep1RequestDTO request) {
+        LoginStep1ResultDTO result = loginStep1UseCase.execute(
+                new LoginStep1Command(request.email(), request.password()));
+        return ResponseEntity.ok(ApiResponseFactory.ok(result, result.message()));
+    }
+
+    // ----------------------------------------------------
+    // POST /auth/login/step2 → Validate OTP, issue JWT
+    // ----------------------------------------------------
+    @PostMapping(value = "/login/step2", consumes = "application/json")
+    @Operation(summary = "2FA login step 2", description = "Validates OTP code and issues JWT access token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Authentication successful", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginStep2ResultDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired OTP", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
+            @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content)
+    })
+    public ResponseEntity<OperationResponse<LoginStep2ResultDTO>> loginStep2(
+            @Valid @RequestBody LoginStep2RequestDTO request) {
+        LoginStep2ResultDTO result = loginStep2UseCase.execute(
+                new LoginStep2Command(request.email(), request.otpCode()));
+        return ResponseEntity.ok(ApiResponseFactory.ok(result, "Authentication successful"));
+    }
+
+    // ----------------------------------------------------
+    // POST /auth/activate → Activate account via token
+    // ----------------------------------------------------
+    @PostMapping(value = "/activate", consumes = "application/json")
+    @Operation(summary = "Activate user account", description = "Activates a user account using the token sent by email.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Account activated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ActivateAccountResultDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Validation error", content = @Content)
+    })
+    public ResponseEntity<OperationResponse<ActivateAccountResultDTO>> activate(
+            @Valid @RequestBody ActivateAccountRequestDTO request) {
+        ActivateAccountResultDTO result = activateAccountUseCase.execute(
+                new ActivateAccountCommand(request.token()));
+        return ResponseEntity.ok(ApiResponseFactory.ok(result, result.message()));
+    }
+
+    // ----------------------------------------------------
+    // POST /auth/resend-otp → Resend OTP
+    // ----------------------------------------------------
+    @PostMapping(value = "/resend-otp", consumes = "application/json")
+    @Operation(summary = "Resend OTP", description = "Resends OTP to registered email. " +
+            "Response is always generic to prevent user enumeration.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OTP resent (or silently ignored)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResendOtpResultDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
+            @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content)
+    })
+    public ResponseEntity<OperationResponse<ResendOtpResultDTO>> resendOtp(
+            @Valid @RequestBody ResendOtpRequestDTO request) {
+        ResendOtpResultDTO result = resendOtpUseCase.execute(
+                new ResendOtpCommand(request.email()));
+        return ResponseEntity.ok(ApiResponseFactory.ok(result, result.message()));
     }
 }
