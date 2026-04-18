@@ -39,7 +39,7 @@ CREATE TABLE users (
 
 -- Indexes for user queries (Requirement 1.1)
 CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_status ON users(enabled);
+CREATE INDEX idx_users_enabled ON users(enabled);
 CREATE INDEX idx_users_username ON users(username);
 
 -- =====================================================
