@@ -71,12 +71,11 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     @Override
     public UserSnapshot createUser(String username, String rawPassword, String email, Set<RoleName> roles) {
         UserCreateRequest request = new UserCreateRequest(
-            username, 
-            email, 
-            rawPassword,
-            null,
-            null
-        );
+                username,
+                email,
+                rawPassword,
+                null,
+                null);
 
         OperationResponse<ExternalUserSnapshot> response = userServiceClient.createUser(request);
         ExternalUserSnapshot created = response != null ? response.data() : null;
@@ -95,6 +94,7 @@ public class HttpUserAccountGateway implements UserAccountGateway {
                 .collect(Collectors.toUnmodifiableSet());
 
         return new UserSnapshot(
+                external.id(),
                 external.username(),
                 external.passwordHash(),
                 external.email(),
