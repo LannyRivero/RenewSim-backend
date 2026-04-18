@@ -108,18 +108,49 @@ public final class JwtTokenProvider implements TokenProvider {
         return props.expirationSeconds();
     }
 
+    @Override
+    public Optional<String> extractJti(String token) {
+        if (token == null || token.isBlank())
+            return Optional.empty();
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return Optional.ofNullable(claims.getId());
+        } catch (JwtException | IllegalArgumentException ex) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<Long> extractExpirationEpochSeconds(String token) {
+        if (token == null || token.isBlank())
+            return Optional.empty();
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return Optional.ofNullable(claims.getExpiration())
+                    .map(date -> date.toInstant().getEpochSecond());
+        } catch (JwtException | IllegalArgumentException ex) {
+            return Optional.empty();
+        }
+    }
+
     public String generateServiceToken(String serviceName, Set<String> scopes) {
         Objects.requireNonNull(serviceName, "serviceName must not be null");
 
         Instant now = Instant.now(clock);
         Instant exp = now.plusSeconds(props.serviceExpirationSeconds());
 
-
         Map<String, Object> claims = new HashMap<>(2);
         claims.put("roles", Set.of("SERVICE_AUTH"));
         if (scopes != null && !scopes.isEmpty()) {
             claims.put("scopes", Set.copyOf(scopes));
-
         }
 
         return Jwts.builder()
@@ -132,7 +163,6 @@ public final class JwtTokenProvider implements TokenProvider {
                 .addClaims(claims)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
-
     }
 
     // -------------------------
@@ -159,5 +189,4 @@ public final class JwtTokenProvider implements TokenProvider {
         }
         throw new IllegalStateException("No JWT secret configured (secretBase64 or secret required).");
     }
-
 }
