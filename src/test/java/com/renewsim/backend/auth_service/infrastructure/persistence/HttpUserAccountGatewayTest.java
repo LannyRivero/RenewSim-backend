@@ -32,7 +32,7 @@ class HttpUserAccountGatewayTest {
     @Test
     @DisplayName("findByUsername() should map ExternalUserSnapshot -> UserSnapshot")
     void testFindByUsername() {
-        var external = new ExternalUserSnapshot("john", "$hash", "john@example.com", Set.of("USER"));
+        var external = new ExternalUserSnapshot(1L, "john", "$hash", "john@example.com", Set.of("USER"));
         when(userServiceClient.getCredentials("john", null)).thenReturn(OperationResponse.ok(external, "Found"));
 
         Optional<UserSnapshot> opt = gateway.findByUsername("john");
@@ -63,7 +63,7 @@ class HttpUserAccountGatewayTest {
         String rawPassword = "secret";
         String hashedPassword = "$2a$10$hashed";
 
-        var externalCreated = new ExternalUserSnapshot("john", hashedPassword, "john@example.com", Set.of("USER"));
+        var externalCreated = new ExternalUserSnapshot(1L, "john", hashedPassword, "john@example.com", Set.of("USER"));
         when(userServiceClient.createUser(any())).thenReturn(OperationResponse.ok(externalCreated, "Created"));
 
         UserSnapshot result = gateway.createUser("john", rawPassword, "john@example.com", Set.of(RoleName.USER));

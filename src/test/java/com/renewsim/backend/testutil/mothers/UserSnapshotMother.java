@@ -16,11 +16,13 @@ public final class UserSnapshotMother {
     }
 
     public static UserSnapshot activeUser(String username, Set<RoleName> roles) {
-        return UserSnapshot.active(username, username + "@example.com", DEFAULT_HASH, roles);
+        Long id = 1L;
+        return UserSnapshot.active(id, username, DEFAULT_HASH, username + "@example.com", roles);
     }
 
     public static UserSnapshot disabledUser(String username, Set<RoleName> roles) {
-        return UserSnapshot.disabled(username, username + "@example.com", DEFAULT_HASH, roles);
+        Long id = 1L;
+        return UserSnapshot.disabled(id, username, DEFAULT_HASH, username + "@example.com", roles);
     }
 }
 
