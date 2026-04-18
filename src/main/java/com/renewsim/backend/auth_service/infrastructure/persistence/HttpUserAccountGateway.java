@@ -83,6 +83,16 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         return mapToSnapshot(created);
     }
 
+    @Override
+    public void activateUser(Long userId) {
+        try {
+            userServiceClient.activateUser(userId);
+        } catch (FeignException e) {
+            log.error("Error activating userId={} via UserServiceClient", userId, e);
+            throw e;
+        }
+    }
+
     private UserSnapshot mapToSnapshot(ExternalUserSnapshot external) {
         if (external == null)
             return null;

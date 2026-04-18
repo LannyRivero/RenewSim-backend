@@ -152,4 +152,15 @@ public class UserController {
                 updateUserRolesUseCase.updateUserRoles(id, request);
                 return ResponseEntity.ok(ApiResponseFactory.noContent("User roles updated successfully"));
         }
+
+        // ----------------------------------------------------
+        // PUT /users/{id}/activate → Activate user account
+        // ----------------------------------------------------
+        @Operation(summary = "Activate user account", description = "Requires role SERVICE_AUTH (internal use)", security = @SecurityRequirement(name = "bearerAuth"))
+        @PutMapping("/{id}/activate")
+        @PreAuthorize("hasRole('SERVICE_AUTH')")
+        public ResponseEntity<OperationResponse<Void>> activate(@PathVariable Long id) {
+                // TODO: implement ActivateUserUseCase in user_service (Task 2.6)
+                return ResponseEntity.ok(ApiResponseFactory.noContent("User activated successfully"));
+        }
 }
