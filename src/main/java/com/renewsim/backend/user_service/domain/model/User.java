@@ -3,20 +3,12 @@ package com.renewsim.backend.user_service.domain.model;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.renewsim.backend.shared.domain.vo.RoleName;
 
-/**
- * User aggregate root.
- * Manages user identity, status, and role assignments.
- * Pure domain object without framework annotations.
- */
 public class User {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
@@ -32,16 +24,8 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime activatedAt;
 
-    private User(
-            Long id,
-            String email,
-            String passwordHash,
-            String fullName,
-            String phone,
-            UserStatus status,
-            Set<RoleName> roles,
-            LocalDateTime createdAt,
-            LocalDateTime activatedAt) {
+    private User(Long id, String email, String passwordHash, String fullName, String phone,
+            UserStatus status, Set<RoleName> roles, LocalDateTime createdAt, LocalDateTime activatedAt) {
         this.id = id;
         this.email = requireValidEmail(email);
         this.passwordHash = requireValidPasswordHash(passwordHash);
@@ -53,27 +37,15 @@ public class User {
         this.activatedAt = activatedAt;
     }
 
-    public static User create(
-            String email,
-            String passwordHash,
-            String fullName,
-            String phone,
-            Set<RoleName> roles) {
-        return new User(
-                null, email, passwordHash, fullName, phone,
+    public static User create(String email, String passwordHash, String fullName,
+            String phone, Set<RoleName> roles) {
+        return new User(null, email, passwordHash, fullName, phone,
                 UserStatus.INACTIVE, roles, LocalDateTime.now(), null);
     }
 
-    public static User reconstitute(
-            Long id,
-            String email,
-            String passwordHash,
-            String fullName,
-            String phone,
-            UserStatus status,
-            Set<RoleName> roles,
-            LocalDateTime createdAt,
-            LocalDateTime activatedAt) {
+    public static User reconstitute(Long id, String email, String passwordHash, String fullName,
+            String phone, UserStatus status, Set<RoleName> roles,
+            LocalDateTime createdAt, LocalDateTime activatedAt) {
         return new User(id, email, passwordHash, fullName, phone,
                 status, roles, createdAt, activatedAt);
     }
@@ -105,40 +77,29 @@ public class User {
         this.roles.remove(roleName);
     }
 
-    /**
-     * Updates the user's profile information.
-     */
     public void updateProfile(String fullName, String phone) {
         this.fullName = fullName;
         this.phone = phone;
     }
 
-    /**
-     * Changes the user's password hash.
-     * Caller is responsible for providing a valid BCrypt hash.
-     */
     public void changePassword(String newPasswordHash) {
         this.passwordHash = requireValidPasswordHash(newPasswordHash);
     }
 
     private String requireValidEmail(String email) {
-        if (email == null || email.isBlank()) {
+        if (email == null || email.isBlank())
             throw new IllegalArgumentException("Email cannot be null or empty");
-        }
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
+        if (!EMAIL_PATTERN.matcher(email).matches())
             throw new IllegalArgumentException("Email format is invalid: " + email);
-        }
         return email.toLowerCase().trim();
     }
 
     private String requireValidPasswordHash(String passwordHash) {
-        if (passwordHash == null || passwordHash.isBlank()) {
+        if (passwordHash == null || passwordHash.isBlank())
             throw new IllegalArgumentException("PasswordHash cannot be null or empty");
-        }
-        if (!BCRYPT_PATTERN.matcher(passwordHash).matches()) {
+        if (!BCRYPT_PATTERN.matcher(passwordHash).matches())
             throw new IllegalArgumentException(
                     "PasswordHash must be a valid BCrypt hash (starts with $2a$, $2b$, or $2y$)");
-        }
         return passwordHash;
     }
 

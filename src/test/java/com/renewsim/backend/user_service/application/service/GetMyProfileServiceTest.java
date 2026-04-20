@@ -7,7 +7,6 @@ import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.domain.model.UserStatus;
 import com.renewsim.backend.user_service.web.dto.UserResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
