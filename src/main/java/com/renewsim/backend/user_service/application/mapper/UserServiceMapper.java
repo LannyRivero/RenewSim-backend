@@ -24,18 +24,17 @@ public interface UserServiceMapper {
         if (entity == null) {
             return null;
         }
-        
+
         return User.reconstitute(
-            entity.getId(),
-            entity.getEmail(),
-            entity.getPasswordHash(),
-            entity.getFullName(),
-            entity.getPhone(),
-            UserStatus.valueOf(entity.getStatus().name()),
-            mapRoleEntitiesToRoleNames(entity.getRoles()),
-            toLocalDateTime(entity.getCreatedAt()),
-            toLocalDateTime(entity.getActivatedAt())
-        );
+                entity.getId(),
+                entity.getEmail(),
+                entity.getPasswordHash(),
+                entity.getFullName(),
+                entity.getPhone(),
+                UserStatus.valueOf(entity.getStatus().name()),
+                mapRoleEntitiesToRoleNames(entity.getRoles()),
+                toLocalDateTime(entity.getCreatedAt()),
+                toLocalDateTime(entity.getActivatedAt()));
     }
 
     // -------- Domain -> Entity --------
@@ -50,7 +49,7 @@ public interface UserServiceMapper {
         entity.setPasswordHash(domain.getPasswordHash());
         entity.setFullName(domain.getFullName());
         entity.setPhone(domain.getPhone());
-        entity.setStatus(UserEntity.UserStatus.valueOf(domain.getStatus().name()));
+        entity.setStatus(UserStatus.valueOf(domain.getStatus().name()));
         entity.setActivatedAt(toInstant(domain.getActivatedAt()));
         // roles handled separately in adapter
         // createdAt/updatedAt managed by JPA
@@ -65,16 +64,15 @@ public interface UserServiceMapper {
         }
 
         return new UserResponse(
-            domain.getId(),
-            domain.getEmail(), // username = email for now
-            domain.getEmail(),
-            domain.getFullName(),
-            domain.getPhone(),
-            domain.getStatus().name(),
-            mapRoleNamesToStrings(domain.getRoles()),
-            toInstant(domain.getCreatedAt()),
-            toInstant(domain.getActivatedAt())
-        );
+                domain.getId(),
+                domain.getEmail(), // username = email for now
+                domain.getEmail(),
+                domain.getFullName(),
+                domain.getPhone(),
+                domain.getStatus().name(),
+                mapRoleNamesToStrings(domain.getRoles()),
+                toInstant(domain.getCreatedAt()),
+                toInstant(domain.getActivatedAt()));
     }
 
     // -------- CreateRequest -> Domain --------
@@ -82,18 +80,17 @@ public interface UserServiceMapper {
         if (request == null) {
             return null;
         }
-        
+
         return User.create(
-            request.email(),
-            hashedPassword,
-            request.fullName(),
-            request.phone(),
-            Set.of(RoleName.USER)
-        );
+                request.email(),
+                hashedPassword,
+                request.fullName(),
+                request.phone(),
+                Set.of(RoleName.USER));
     }
 
     // -------- Helper methods --------
-    
+
     default Set<RoleName> mapRoleEntitiesToRoleNames(Set<RoleEntity> roleEntities) {
         if (roleEntities == null || roleEntities.isEmpty()) {
             return Set.of();
