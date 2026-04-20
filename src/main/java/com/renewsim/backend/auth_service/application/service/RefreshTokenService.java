@@ -74,6 +74,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
                                 "Bearer",
                                 tokenProvider.expiresInSeconds(),
                                 user.email(),
-                                roleNames);
+                                roleNames,
+                                newRawRefreshToken);
         }
 }

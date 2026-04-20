@@ -11,4 +11,5 @@ public record LoginStep2ResultDTO(
         String tokenType,
         long expiresIn,
         String username,
-        Set<String> roles) {}
+        Set<String> roles,
+        String rawRefreshToken) {}

@@ -10,6 +10,7 @@ import com.renewsim.backend.auth_service.application.result.LoginStep2ResultDTO;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
+import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import lombok.RequiredArgsConstructor;
@@ -56,11 +57,9 @@ public class LoginStep2Service implements LoginStep2UseCase {
             throw new AuthenticationException("Invalid or expired OTP");
         }
 
-        // Mark OTP as consumed
         otpCode.markUsed();
         otpCodeRepositoryPort.save(otpCode);
 
-        // Generate access token
         Set<String> roleNames = user.roles().stream()
                 .map(Enum::name)
                 .collect(Collectors.toSet());
@@ -70,9 +69,9 @@ public class LoginStep2Service implements LoginStep2UseCase {
 
         String accessToken = tokenProvider.generate(authenticatedUser);
 
-        // Issue and persist refresh token
+        // Use SHA-256 hash for deterministic lookup — BCrypt is non-deterministic
         String rawRefreshToken = UUID.randomUUID().toString();
-        String hashedRefreshToken = passwordEncoder.encode(rawRefreshToken);
+        String hashedRefreshToken = TokenHasher.hash(rawRefreshToken);
         RefreshToken refreshToken = RefreshToken.issue(user.id(), hashedRefreshToken);
         refreshTokenRepositoryPort.save(refreshToken);
 
@@ -83,6 +82,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
                 "Bearer",
                 tokenProvider.expiresInSeconds(),
                 user.email(),
-                roleNames);
+                roleNames,
+                rawRefreshToken);
     }
 }
