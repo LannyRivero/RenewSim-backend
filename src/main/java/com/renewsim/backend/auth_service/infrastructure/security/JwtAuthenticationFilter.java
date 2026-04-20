@@ -1,5 +1,6 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
+import com.renewsim.backend.auth_service.application.port.out.TokenBlacklistPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import jakarta.servlet.FilterChain;
@@ -7,8 +8,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -32,12 +33,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Pattern BEARER_PATTERN = Pattern.compile("^Bearer\\s+(.+)$", Pattern.CASE_INSENSITIVE);
 
     private final TokenProvider tokenProvider;
+    private final TokenBlacklistPort tokenBlacklistPort;
 
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         final String p = request.getRequestURI();
         return p.startsWith("/api/v1/auth/login")
                 || p.startsWith("/api/v1/auth/register")
+                || p.startsWith("/api/v1/auth/activate")
+                || p.startsWith("/api/v1/auth/resend-otp")
                 || p.startsWith("/actuator/health")
                 || p.startsWith("/actuator/info");
     }
@@ -62,6 +66,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     log.debug("No Bearer token found in Authorization header.");
                 }
                 chain.doFilter(request, response);
+                return;
+            }
+
+            // Check blacklist before validating signature
+            Optional<String> jti = tokenProvider.extractJti(token);
+            if (jti.isPresent() && tokenBlacklistPort.isBlacklisted(jti.get())) {
+                log.warn("Rejected blacklisted token jti={}", jti.get());
+                respondUnauthorized(response);
                 return;
             }
 
