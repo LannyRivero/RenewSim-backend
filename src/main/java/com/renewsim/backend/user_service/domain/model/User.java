@@ -29,10 +29,6 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime activatedAt;
 
-    /**
-     * Private constructor enforcing invariants.
-     * Only accessible via factory methods.
-     */
     private User(
             Long id,
             String email,
@@ -54,10 +50,6 @@ public class User {
         this.activatedAt = activatedAt;
     }
 
-    /**
-     * Factory method for creating new users (without ID).
-     * Initial status is always INACTIVE.
-     */
     public static User create(
             String email,
             String passwordHash,
@@ -65,20 +57,10 @@ public class User {
             String phone,
             Set<RoleName> roles) {
         return new User(
-                null,
-                email,
-                passwordHash,
-                fullName,
-                phone,
-                UserStatus.INACTIVE,
-                roles,
-                LocalDateTime.now(),
-                null);
+                null, email, passwordHash, fullName, phone,
+                UserStatus.INACTIVE, roles, LocalDateTime.now(), null);
     }
 
-    /**
-     * Factory method for reconstituting users from persistence.
-     */
     public static User reconstitute(
             Long id,
             String email,
@@ -89,56 +71,51 @@ public class User {
             Set<RoleName> roles,
             LocalDateTime createdAt,
             LocalDateTime activatedAt) {
-        return new User(
-                id, email, passwordHash, fullName, phone,
+        return new User(id, email, passwordHash, fullName, phone,
                 status, roles, createdAt, activatedAt);
     }
 
-    /**
-     * Activates the user account.
-     * Idempotent: if already ACTIVE, does nothing.
-     */
     public void activate() {
-        if (this.status == UserStatus.ACTIVE) {
+        if (this.status == UserStatus.ACTIVE)
             return;
-        }
         this.status = UserStatus.ACTIVE;
         this.activatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Suspends the user account temporarily.
-     * Idempotent operation.
-     */
     public void suspend() {
-        if (this.status == UserStatus.SUSPENDED) {
+        if (this.status == UserStatus.SUSPENDED)
             return;
-        }
         this.status = UserStatus.SUSPENDED;
     }
 
-    /**
-     * Checks if user has a specific role.
-     */
     public boolean hasRole(RoleName roleName) {
         return roles.contains(roleName);
     }
 
-    /**
-     * Adds a role to the user.
-     * Prevents duplicates via Set semantics.
-     */
     public void addRole(RoleName roleName) {
         Objects.requireNonNull(roleName, "RoleName cannot be null");
         this.roles.add(roleName);
     }
 
-    /**
-     * Removes a role from the user.
-     */
     public void removeRole(RoleName roleName) {
         Objects.requireNonNull(roleName, "RoleName cannot be null");
         this.roles.remove(roleName);
+    }
+
+    /**
+     * Updates the user's profile information.
+     */
+    public void updateProfile(String fullName, String phone) {
+        this.fullName = fullName;
+        this.phone = phone;
+    }
+
+    /**
+     * Changes the user's password hash.
+     * Caller is responsible for providing a valid BCrypt hash.
+     */
+    public void changePassword(String newPasswordHash) {
+        this.passwordHash = requireValidPasswordHash(newPasswordHash);
     }
 
     private String requireValidEmail(String email) {
@@ -186,9 +163,6 @@ public class User {
         return status;
     }
 
-    /**
-     * Returns an immutable copy of roles.
-     */
     public Set<RoleName> getRoles() {
         return Collections.unmodifiableSet(roles);
     }

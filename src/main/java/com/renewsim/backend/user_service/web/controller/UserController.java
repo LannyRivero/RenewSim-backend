@@ -1,8 +1,11 @@
 package com.renewsim.backend.user_service.web.controller;
 
+import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.shared.dto.ApiResponseFactory;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
+import com.renewsim.backend.user_service.application.command.ChangeMyPasswordCommand;
+import com.renewsim.backend.user_service.application.command.UpdateMyProfileCommand;
 import com.renewsim.backend.user_service.application.port.in.*;
 import com.renewsim.backend.user_service.web.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,6 +29,9 @@ public class UserController {
         private final GetUserUseCase getUserUseCase;
         private final ListUsersUseCase listUsersUseCase;
         private final UpdateUserRolesUseCase updateUserRolesUseCase;
+        private final GetMyProfileUseCase getMyProfileUseCase;
+        private final UpdateMyProfileUseCase updateMyProfileUseCase;
+        private final ChangeMyPasswordUseCase changeMyPasswordUseCase;
 
         // ----------------------------------------------------
         // POST /users → Create
@@ -34,15 +41,55 @@ public class UserController {
         @PreAuthorize("hasAuthority('SCOPE_user:write') or hasRole('ADMIN') or hasRole('SERVICE_AUTH')")
         public ResponseEntity<OperationResponse<UserResponse>> create(@Valid @RequestBody UserCreateRequest req) {
                 var created = createUserUseCase.createUser(req);
-                return ResponseEntity
-                                .status(201)
+                return ResponseEntity.status(201)
                                 .body(ApiResponseFactory.created(created, "User created successfully"));
+        }
+
+        // ----------------------------------------------------
+        // GET /users/me → Get own profile
+        // ----------------------------------------------------
+        @Operation(summary = "Get my profile", description = "Returns the authenticated user's profile", security = @SecurityRequirement(name = "bearerAuth"))
+        @GetMapping("/me")
+        public ResponseEntity<OperationResponse<UserResponse>> getMe(
+                        @AuthenticationPrincipal AuthenticatedUser principal) {
+                var user = getUserUseCase.getDomainUserByUsernameOrEmail(null, principal.username());
+                var response = getMyProfileUseCase.getMyProfile(user.getId());
+                return ResponseEntity.ok(ApiResponseFactory.ok(response, "Profile retrieved successfully"));
+        }
+
+        // ----------------------------------------------------
+        // PUT /users/me → Update own profile
+        // ----------------------------------------------------
+        @Operation(summary = "Update my profile", description = "Updates fullName and phone", security = @SecurityRequirement(name = "bearerAuth"))
+        @PutMapping("/me")
+        public ResponseEntity<OperationResponse<UserResponse>> updateMe(
+                        @AuthenticationPrincipal AuthenticatedUser principal,
+                        @Valid @RequestBody UpdateMyProfileRequestDTO request) {
+                var user = getUserUseCase.getDomainUserByUsernameOrEmail(null, principal.username());
+                var response = updateMyProfileUseCase.updateMyProfile(
+                                new UpdateMyProfileCommand(user.getId(), request.fullName(), request.phone()));
+                return ResponseEntity.ok(ApiResponseFactory.ok(response, "Profile updated successfully"));
+        }
+
+        // ----------------------------------------------------
+        // PUT /users/me/password → Change own password
+        // ----------------------------------------------------
+        @Operation(summary = "Change my password", description = "Verifies current password and sets new one", security = @SecurityRequirement(name = "bearerAuth"))
+        @PutMapping("/me/password")
+        public ResponseEntity<OperationResponse<Void>> changePassword(
+                        @AuthenticationPrincipal AuthenticatedUser principal,
+                        @Valid @RequestBody ChangePasswordRequestDTO request) {
+                var user = getUserUseCase.getDomainUserByUsernameOrEmail(null, principal.username());
+                changeMyPasswordUseCase.changeMyPassword(
+                                new ChangeMyPasswordCommand(user.getId(), request.currentPassword(),
+                                                request.newPassword()));
+                return ResponseEntity.ok(ApiResponseFactory.noContent("Password changed successfully"));
         }
 
         // ----------------------------------------------------
         // GET /users/{id} → Get by ID
         // ----------------------------------------------------
-        @Operation(summary = "Get user by ID", description = "Requires role ADMIN, scope user:read or be the owner (@userSec.isOwner)", security = @SecurityRequirement(name = "bearerAuth"))
+        @Operation(summary = "Get user by ID", description = "Requires role ADMIN, scope user:read or be the owner", security = @SecurityRequirement(name = "bearerAuth"))
         @GetMapping("/{id}")
         @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN') or @userSec.isOwner(authentication, #id)")
         public ResponseEntity<OperationResponse<UserResponse>> get(@PathVariable Long id) {
@@ -58,15 +105,10 @@ public class UserController {
         @PreAuthorize("hasRole('SERVICE_AUTH')")
         public ResponseEntity<OperationResponse<UserCredentialsDTO>> getSnapshot(@PathVariable Long id) {
                 var user = getUserUseCase.getDomainUserById(id);
-
                 var credentials = new UserCredentialsDTO(
-                                user.getId(),
-                                user.getEmail(),
-                                user.getEmail(),
-                                user.getPasswordHash(),
-                                user.getRoles(),
+                                user.getId(), user.getEmail(), user.getEmail(),
+                                user.getPasswordHash(), user.getRoles(),
                                 user.getStatus().name().equals("ACTIVE"));
-
                 return ResponseEntity.ok(ApiResponseFactory.ok(credentials, "Snapshot retrieved successfully"));
         }
 
@@ -79,11 +121,9 @@ public class UserController {
         public ResponseEntity<OperationResponse<UserResponse>> getByUsername(@RequestParam String username) {
                 var filters = new UserFilterRequest(username, null, null);
                 var results = listUsersUseCase.listUsers(0, 1, filters);
-
                 if (results.content().isEmpty()) {
                         throw new UserNotFoundException("User with username '" + username + "' not found");
                 }
-
                 return ResponseEntity
                                 .ok(ApiResponseFactory.ok(results.content().get(0), "User retrieved successfully"));
         }
@@ -97,11 +137,9 @@ public class UserController {
         public ResponseEntity<OperationResponse<UserResponse>> getByEmail(@RequestParam String email) {
                 var filters = new UserFilterRequest(null, email, null);
                 var results = listUsersUseCase.listUsers(0, 1, filters);
-
                 if (results.content().isEmpty()) {
                         throw new UserNotFoundException("User with email '" + email + "' not found");
                 }
-
                 return ResponseEntity
                                 .ok(ApiResponseFactory.ok(results.content().get(0), "User retrieved successfully"));
         }
@@ -115,17 +153,11 @@ public class UserController {
         public ResponseEntity<OperationResponse<UserCredentialsDTO>> getCredentials(
                         @RequestParam(required = false) String username,
                         @RequestParam(required = false) String email) {
-
                 var user = getUserUseCase.getDomainUserByUsernameOrEmail(username, email);
-
                 var credentials = new UserCredentialsDTO(
-                                user.getId(),
-                                user.getEmail(),
-                                user.getEmail(),
-                                user.getPasswordHash(),
-                                user.getRoles(),
+                                user.getId(), user.getEmail(), user.getEmail(),
+                                user.getPasswordHash(), user.getRoles(),
                                 user.getStatus().name().equals("ACTIVE"));
-
                 return ResponseEntity.ok(ApiResponseFactory.ok(credentials, "Credentials retrieved successfully"));
         }
 
@@ -141,7 +173,6 @@ public class UserController {
                         @RequestParam(required = false) String username,
                         @RequestParam(required = false) String email,
                         @RequestParam(required = false) Boolean enabled) {
-
                 var result = listUsersUseCase.listUsers(page, size, new UserFilterRequest(username, email, enabled));
                 return ResponseEntity.ok(ApiResponseFactory.ok(result, "Users listed successfully"));
         }
@@ -155,7 +186,6 @@ public class UserController {
         public ResponseEntity<OperationResponse<Boolean>> exists(
                         @RequestParam(required = false) String username,
                         @RequestParam(required = false) String email) {
-
                 boolean exists = existsUserUseCase.existsByUsernameOrEmail(username, email);
                 return ResponseEntity.ok(ApiResponseFactory.ok(exists, "User existence check completed"));
         }
