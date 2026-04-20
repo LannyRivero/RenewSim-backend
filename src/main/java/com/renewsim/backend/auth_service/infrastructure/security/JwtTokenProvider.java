@@ -62,7 +62,7 @@ public final class JwtTokenProvider implements TokenProvider {
                 .setNotBefore(Date.from(nbf))
                 .setExpiration(Date.from(exp))
                 .addClaims(claims)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -85,7 +85,7 @@ public final class JwtTokenProvider implements TokenProvider {
             Jws<Claims> jws = builder.build().parseClaimsJws(token);
 
             JwsHeader<?> header = jws.getHeader();
-            if (!SignatureAlgorithm.HS256.getValue().equals(header.getAlgorithm())) {
+            if (!SignatureAlgorithm.HS512.getValue().equals(header.getAlgorithm())) {
                 return Optional.empty();
             }
 
@@ -115,6 +115,7 @@ public final class JwtTokenProvider implements TokenProvider {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
+                    .setAllowedClockSkewSeconds(Long.MAX_VALUE / 1000)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
@@ -131,6 +132,7 @@ public final class JwtTokenProvider implements TokenProvider {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
+                    .setAllowedClockSkewSeconds(Long.MAX_VALUE / 1000)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
@@ -161,7 +163,7 @@ public final class JwtTokenProvider implements TokenProvider {
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(exp))
                 .addClaims(claims)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -171,8 +173,8 @@ public final class JwtTokenProvider implements TokenProvider {
     private static Key resolveKey(SecurityJwtProperties props) {
         if (props.hasSecretBase64()) {
             byte[] decoded = Base64.getDecoder().decode(props.secretBase64());
-            if (decoded.length < 32) {
-                throw new IllegalStateException("Decoded Base64 JWT secret too short (<32 bytes).");
+            if (decoded.length < 64) {
+                throw new IllegalStateException("Decoded Base64 JWT secret too short (<64 bytes required for HS512).");
             }
             return Keys.hmacShaKeyFor(decoded);
         }
@@ -182,8 +184,8 @@ public final class JwtTokenProvider implements TokenProvider {
                 throw new IllegalStateException("JWT secret is null");
             }
             byte[] raw = secret.getBytes(StandardCharsets.UTF_8);
-            if (raw.length < 32) {
-                throw new IllegalStateException("Plain JWT secret too short (<32 bytes).");
+            if (raw.length < 64) {
+                throw new IllegalStateException("Plain JWT secret too short (<64 bytes required for HS512).");
             }
             return Keys.hmacShaKeyFor(raw);
         }
