@@ -1,5 +1,6 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.infrastructure.config.SecurityJwtProperties;
@@ -23,6 +24,7 @@ public final class JwtTokenProvider implements TokenProvider {
     private final SecurityJwtProperties props;
     private final Clock clock;
     private final Key key;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     JwtTokenProvider(SecurityJwtProperties props, Clock clock) {
         this.props = Objects.requireNonNull(props, "SecurityJwtProperties is required");
@@ -110,37 +112,39 @@ public final class JwtTokenProvider implements TokenProvider {
 
     @Override
     public Optional<String> extractJti(String token) {
-        if (token == null || token.isBlank())
-            return Optional.empty();
+        if (token == null || token.isBlank()) return Optional.empty();
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .setAllowedClockSkewSeconds(Long.MAX_VALUE / 1000)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-            return Optional.ofNullable(claims.getId());
-        } catch (JwtException | IllegalArgumentException ex) {
+            Map<?, ?> payload = parsePayloadUnsafe(token);
+            Object jti = payload.get("jti");
+            return jti != null ? Optional.of(jti.toString()) : Optional.empty();
+        } catch (Exception ex) {
             return Optional.empty();
         }
     }
 
     @Override
     public Optional<Long> extractExpirationEpochSeconds(String token) {
-        if (token == null || token.isBlank())
-            return Optional.empty();
+        if (token == null || token.isBlank()) return Optional.empty();
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .setAllowedClockSkewSeconds(Long.MAX_VALUE / 1000)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-            return Optional.ofNullable(claims.getExpiration())
-                    .map(date -> date.toInstant().getEpochSecond());
-        } catch (JwtException | IllegalArgumentException ex) {
+            Map<?, ?> payload = parsePayloadUnsafe(token);
+            Object exp = payload.get("exp");
+            if (exp == null) return Optional.empty();
+            return Optional.of(((Number) exp).longValue());
+        } catch (Exception ex) {
             return Optional.empty();
         }
+    }
+
+    /**
+     * Decodes the JWT payload without signature or time validation.
+     * Used only for claim extraction (JTI, expiration) — NOT for authentication.
+     */
+    private Map<?, ?> parsePayloadUnsafe(String token) throws Exception {
+        String[] parts = token.split("\\.");
+        if (parts.length < 2) throw new IllegalArgumentException("Invalid JWT structure");
+        byte[] payloadBytes = Base64.getUrlDecoder().decode(parts[1]);
+        String payload = new String(payloadBytes, StandardCharsets.UTF_8);
+        return objectMapper.readValue(payload, Map.class);
     }
 
     public String generateServiceToken(String serviceName, Set<String> scopes) {
@@ -167,9 +171,6 @@ public final class JwtTokenProvider implements TokenProvider {
                 .compact();
     }
 
-    // -------------------------
-    // Helpers
-    // -------------------------
     private static Key resolveKey(SecurityJwtProperties props) {
         if (props.hasSecretBase64()) {
             byte[] decoded = Base64.getDecoder().decode(props.secretBase64());
