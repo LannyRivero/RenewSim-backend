@@ -56,7 +56,9 @@ class UserJpaRepositoryIT {
         e.setUsername(username);
         e.setEmail(email);
         e.setPasswordHash("pw12345");
-        e.setEnabled(enabled);
+        e.setStatus(enabled
+                ? com.renewsim.backend.user_service.domain.model.UserStatus.ACTIVE
+                : com.renewsim.backend.user_service.domain.model.UserStatus.INACTIVE);
         return repo.save(e);
     }
 
@@ -84,7 +86,7 @@ class UserJpaRepositoryIT {
     @DisplayName("should filter summaries by username fragment")
     void testSearchSummariesByUsername() {
         createUser("charlie", "charlie@mail.com", true);
-        createUser("charlotte", "charlotte@mail.com", true); 
+        createUser("charlotte", "charlotte@mail.com", true);
         createUser("david", "david@mail.com", true);
 
         Page<UserJpaRepository.UserSummary> page = repo.searchSummaries(
