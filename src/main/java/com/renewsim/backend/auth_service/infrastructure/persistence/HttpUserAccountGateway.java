@@ -93,6 +93,20 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         }
     }
 
+    @Override
+    public Optional<UserSnapshot> findById(Long userId) {
+        try {
+            OperationResponse<ExternalUserSnapshot> response = userServiceClient.getSnapshotById(userId);
+            ExternalUserSnapshot external = response != null ? response.data() : null;
+            return Optional.ofNullable(mapToSnapshot(external));
+        } catch (FeignException.NotFound e) {
+            return Optional.empty();
+        } catch (FeignException e) {
+            log.error("Error fetching user by id={} from UserServiceClient", userId, e);
+            throw e;
+        }
+    }
+
     private UserSnapshot mapToSnapshot(ExternalUserSnapshot external) {
         if (external == null)
             return null;

@@ -51,6 +51,26 @@ public class UserController {
         }
 
         // ----------------------------------------------------
+        // GET /users/{id}/snapshot → Internal snapshot by ID
+        // ----------------------------------------------------
+        @Operation(summary = "Get user snapshot by ID", description = "Requires role SERVICE_AUTH (internal use)", security = @SecurityRequirement(name = "bearerAuth"))
+        @GetMapping("/{id}/snapshot")
+        @PreAuthorize("hasRole('SERVICE_AUTH')")
+        public ResponseEntity<OperationResponse<UserCredentialsDTO>> getSnapshot(@PathVariable Long id) {
+                var user = getUserUseCase.getDomainUserById(id);
+
+                var credentials = new UserCredentialsDTO(
+                                user.getId(),
+                                user.getEmail(),
+                                user.getEmail(),
+                                user.getPasswordHash(),
+                                user.getRoles(),
+                                user.getStatus().name().equals("ACTIVE"));
+
+                return ResponseEntity.ok(ApiResponseFactory.ok(credentials, "Snapshot retrieved successfully"));
+        }
+
+        // ----------------------------------------------------
         // GET /users/by-username → Filter by username
         // ----------------------------------------------------
         @Operation(summary = "Get user by username", description = "Requires role ADMIN or scope user:read", security = @SecurityRequirement(name = "bearerAuth"))

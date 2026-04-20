@@ -31,4 +31,7 @@ public interface UserServiceClient {
 
         @PutMapping("/api/v1/users/{id}/activate")
         OperationResponse<Void> activateUser(@PathVariable("id") Long userId);
+
+        @GetMapping("/api/v1/users/{id}/snapshot")
+        OperationResponse<ExternalUserSnapshot> getSnapshotById(@PathVariable("id") Long userId);
 }

@@ -37,6 +37,19 @@ public class GetUserService implements GetUserUseCase {
     }
 
     @Override
+    public User getDomainUserById(Long id) {
+        org.slf4j.MDC.put("action", "getDomainUserById");
+        org.slf4j.MDC.put("userId", String.valueOf(id));
+        try {
+            log.info("Fetching domain user by id={}", id);
+            return userRepositoryPort.findById(id)
+                    .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+        } finally {
+            org.slf4j.MDC.clear();
+        }
+    }
+
+    @Override
     public UserResponse getUserByUsernameOrEmail(String username, String email) {
         org.slf4j.MDC.put("action", "getUserByUsernameOrEmail");
         org.slf4j.MDC.put("username", username);
@@ -51,13 +64,15 @@ public class GetUserService implements GetUserUseCase {
                 log.info("Fetching user by username={}", username);
                 return userRepositoryPort.findByUsername(username)
                         .map(mapper::toResponse)
-                        .orElseThrow(() -> new UserNotFoundException("User with username '" + username + "' not found"));
+                        .orElseThrow(() -> new UserNotFoundException(
+                                "User with username '" + username + "' not found"));
             }
 
             log.info("Fetching user by email={}", email);
             return userRepositoryPort.findByEmail(email)
                     .map(mapper::toResponse)
-                    .orElseThrow(() -> new UserNotFoundException("User with email '" + email + "' not found"));
+                    .orElseThrow(
+                            () -> new UserNotFoundException("User with email '" + email + "' not found"));
         } finally {
             org.slf4j.MDC.clear();
         }
@@ -73,12 +88,15 @@ public class GetUserService implements GetUserUseCase {
 
             if (username != null && !username.isBlank()) {
                 return userRepositoryPort.findByUsername(username)
-                        .orElseThrow(() -> new UserNotFoundException("User with username '" + username + "' not found"));
+                        .orElseThrow(() -> new UserNotFoundException(
+                                "User with username '" + username + "' not found"));
             }
 
             if (email != null && !email.isBlank()) {
                 return userRepositoryPort.findByEmail(email)
-                        .orElseThrow(() -> new UserNotFoundException("User with email '" + email + "' not found"));
+                        .orElseThrow(
+                                () -> new UserNotFoundException(
+                                        "User with email '" + email + "' not found"));
             }
 
             throw new InvalidUserDataException("Either username or email must be provided");

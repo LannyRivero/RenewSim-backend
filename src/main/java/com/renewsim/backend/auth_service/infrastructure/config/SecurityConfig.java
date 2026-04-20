@@ -65,9 +65,14 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**")
                         .permitAll()
-                        // Auth endpoints
+                        // Auth endpoints — public
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/step1").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login/step2").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/activate").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/resend-otp").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
                         // User service internal endpoints
                         .requestMatchers("/api/v1/users/exists").permitAll()
                         .requestMatchers("/api/v1/users/by-username").permitAll()

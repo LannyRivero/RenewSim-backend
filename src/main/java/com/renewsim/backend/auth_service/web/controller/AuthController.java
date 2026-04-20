@@ -31,6 +31,7 @@ public class AuthController {
         private final ActivateAccountUseCase activateAccountUseCase;
         private final ResendOtpUseCase resendOtpUseCase;
         private final LogoutUseCase logoutUseCase;
+        private final RefreshTokenUseCase refreshTokenUseCase;
 
         // ----------------------------------------------------
         // POST /auth/login → legacy single-factor (kept for compatibility)
@@ -159,5 +160,21 @@ public class AuthController {
 
                 LogoutResultDTO result = logoutUseCase.execute(new LogoutCommand(token, username));
                 return ResponseEntity.ok(ApiResponseFactory.ok(result, result.message()));
+        }
+
+        // ----------------------------------------------------
+        // POST /auth/refresh → Rotate refresh token
+        // ----------------------------------------------------
+        @PostMapping(value = "/refresh", consumes = "application/json")
+        @Operation(summary = "Refresh access token", description = "Rotates the refresh token and issues a new access token.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Token refreshed", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RefreshTokenResultDTO.class))),
+                        @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token", content = @Content)
+        })
+        public ResponseEntity<OperationResponse<RefreshTokenResultDTO>> refresh(
+                        @Valid @RequestBody RefreshTokenRequestDTO request) {
+                RefreshTokenResultDTO result = refreshTokenUseCase.execute(
+                                new RefreshTokenCommand(request.refreshToken()));
+                return ResponseEntity.ok(ApiResponseFactory.ok(result, "Token refreshed successfully"));
         }
 }
