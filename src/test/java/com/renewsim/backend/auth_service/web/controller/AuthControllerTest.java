@@ -30,26 +30,25 @@ class AuthControllerTest {
     private AuthUseCase authUseCase;
 
     @BeforeEach
-    void setUp() {
-        authUseCase = Mockito.mock(AuthUseCase.class);
+void setUp() {
+    authUseCase = Mockito.mock(AuthUseCase.class);
+    AuthController controller = new AuthController(
+            authUseCase,
+            Mockito.mock(LoginStep1UseCase.class),
+            Mockito.mock(LoginStep2UseCase.class),
+            Mockito.mock(ActivateAccountUseCase.class),
+            Mockito.mock(ResendOtpUseCase.class),
+            Mockito.mock(LogoutUseCase.class),
+            Mockito.mock(RefreshTokenUseCase.class));
+    final LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+    validator.afterPropertiesSet();
 
-        AuthController controller = new AuthController(
-                authUseCase,
-                Mockito.mock(LoginStep1UseCase.class),
-                Mockito.mock(LoginStep2UseCase.class),
-                Mockito.mock(ActivateAccountUseCase.class),
-                Mockito.mock(ResendOtpUseCase.class),
-                Mockito.mock(LogoutUseCase.class));
+    mvc = standaloneSetup(controller)
+            .setValidator(validator)
+            .build();
 
-        final LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
-        validator.afterPropertiesSet();
-
-        mvc = standaloneSetup(controller)
-                .setValidator(validator)
-                .build();
-
-        mapper = new ObjectMapper();
-    }
+    mapper = new ObjectMapper();
+}
 
     @Test
     @DisplayName("login -> should return 200 and response body")
