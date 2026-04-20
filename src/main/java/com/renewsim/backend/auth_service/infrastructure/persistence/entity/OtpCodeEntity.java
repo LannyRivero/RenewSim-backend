@@ -20,7 +20,7 @@ public class OtpCodeEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "code", nullable = false, length = 10)
+    @Column(name = "code", nullable = false, length = 255)
     private String codeHash;
 
     @Enumerated(EnumType.STRING)

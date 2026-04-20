@@ -36,8 +36,13 @@ public class LogoutService implements LogoutUseCase {
                     .map(UserSnapshot::id)
                     .orElse(null);
 
-            tokenBlacklistPort.blacklist(jti, userId, expiresAt);
-            log.info("Token blacklisted for username={} jti={}", command.username(), jti);
+            if (userId != null) {
+                tokenBlacklistPort.blacklist(jti, userId, expiresAt);
+                log.info("Token blacklisted for username={} jti={}", command.username(), jti);
+            } else {
+                log.warn("Could not resolve userId for username={} during logout — token not blacklisted",
+                        command.username());
+            }
         });
 
         userAccountGateway.findByEmail(command.username())
