@@ -16,6 +16,7 @@ import java.util.Set;
         @Index(name = "idx_users_username", columnList = "username"),
         @Index(name = "idx_users_email", columnList = "email"),
         @Index(name = "idx_users_status", columnList = "status")
+        @Index(name = "idx_users_status", columnList = "status")
 })
 public class UserEntity {
 
@@ -150,6 +151,7 @@ public class UserEntity {
 
     @PreUpdate
     public void preUpdate() {
+        this.enabled = (this.status == UserStatus.ACTIVE);
         this.updatedAt = Instant.now();
     }
 

@@ -2,6 +2,7 @@ package com.renewsim.backend.user_service.application.mapper;
 
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.domain.model.UserStatus;
+import com.renewsim.backend.user_service.domain.model.UserStatus;
 import com.renewsim.backend.user_service.web.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.web.dto.UserResponse;
 import com.renewsim.backend.user_service.infrastructure.persistence.entity.UserEntity;
@@ -10,6 +11,9 @@ import com.renewsim.backend.shared.domain.vo.RoleName;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -101,6 +105,24 @@ public interface UserServiceMapper {
                 .map(RoleEntity::getName)
                 .collect(Collectors.toSet());
     }
+
+    default Set<String> mapRoleNamesToStrings(Set<RoleName> roleNames) {
+        if (roleNames == null || roleNames.isEmpty()) {
+            return Set.of();
+        }
+        return roleNames.stream()
+                .map(RoleName::name)
+                .collect(Collectors.toSet());
+    }
+
+    default LocalDateTime toLocalDateTime(Instant instant) {
+        return instant == null ? null : LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+    }
+
+    default Instant toInstant(LocalDateTime localDateTime) {
+        return localDateTime == null ? null : localDateTime.toInstant(ZoneOffset.UTC);
+    }
+}
 
     default Set<String> mapRoleNamesToStrings(Set<RoleName> roleNames) {
         if (roleNames == null || roleNames.isEmpty()) {
