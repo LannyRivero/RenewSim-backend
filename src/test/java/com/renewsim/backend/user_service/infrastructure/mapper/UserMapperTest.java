@@ -32,6 +32,7 @@ class UserMapperTest {
         entity.setUsername("charlie");
         entity.setEmail("charlie@mail.com");
         entity.setPasswordHash(VALID_HASH);
+        entity.setStatus(UserStatus.ACTIVE);
         entity.setRoles(Set.of(userRole, adminRole));
 
         User user = mapper.toDomain(entity);

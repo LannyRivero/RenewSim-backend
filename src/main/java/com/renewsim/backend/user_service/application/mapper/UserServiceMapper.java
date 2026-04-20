@@ -33,7 +33,9 @@ public interface UserServiceMapper {
                 entity.getPhone(),
                 UserStatus.valueOf(entity.getStatus().name()),
                 mapRoleEntitiesToRoleNames(entity.getRoles()),
-                toLocalDateTime(entity.getCreatedAt()),
+                entity.getCreatedAt() != null
+                        ? toLocalDateTime(entity.getCreatedAt())
+                        : java.time.LocalDateTime.now(),
                 toLocalDateTime(entity.getActivatedAt()));
     }
 
