@@ -27,30 +27,29 @@ public class LogoutService implements LogoutUseCase {
     @Transactional
     public LogoutResultDTO execute(LogoutCommand command) {
 
+        Long userId = userAccountGateway.findByEmail(command.username())
+                .map(UserSnapshot::id)
+                .orElse(null);
+
+        // Blacklist JTI siempre que exista — aunque userId sea null.
+        // Un token debe invalidarse independientemente de si el usuario se resuelve.
         tokenProvider.extractJti(command.accessToken()).ifPresent(jti -> {
             long expiresAt = tokenProvider
                     .extractExpirationEpochSeconds(command.accessToken())
                     .orElse(0L);
 
-            Long userId = userAccountGateway.findByEmail(command.username())
-                    .map(UserSnapshot::id)
-                    .orElse(null);
-
-            if (userId != null) {
-                tokenBlacklistPort.blacklist(jti, userId, expiresAt);
-                log.info("Token blacklisted for username={} jti={}", command.username(), jti);
-            } else {
-                log.warn("Could not resolve userId for username={} during logout — token not blacklisted",
-                        command.username());
-            }
+            tokenBlacklistPort.blacklist(jti, userId, expiresAt);
+            log.info("Token blacklisted jti={} userId={}", jti, userId);
         });
 
-        userAccountGateway.findByEmail(command.username())
-                .map(UserSnapshot::id)
-                .ifPresent(userId -> {
-                    refreshTokenRepositoryPort.revokeAllByUserId(userId);
-                    log.info("Refresh tokens revoked for userId={}", userId);
-                });
+        // Revocar refresh tokens solo si el usuario existe
+        if (userId != null) {
+            refreshTokenRepositoryPort.revokeAllByUserId(userId);
+            log.info("Refresh tokens revoked for userId={}", userId);
+        } else {
+            log.warn("Could not resolve userId for username={} during logout — refresh tokens not revoked",
+                    command.username());
+        }
 
         return new LogoutResultDTO("Logged out successfully");
     }

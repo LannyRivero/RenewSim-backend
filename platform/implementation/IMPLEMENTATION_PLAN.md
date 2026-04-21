@@ -93,30 +93,30 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
 ## Fase 2: User & Auth Service
 
 - [ ] 2. Fase 2: User & Auth Service
-  - [ ] 2.1 Implementar `User` aggregate root con invariantes (domain layer, sin Spring)
+  - [x] 2.1 Implementar `User` aggregate root con invariantes (domain layer, sin Spring)
     - Clase `User` en `user_service/domain/model/` con campos: id, email, passwordHash, fullName, phone, status (`UserStatus` enum: ACTIVE/INACTIVE/SUSPENDED), roles, createdAt, activatedAt
     - Métodos: `activate()`, `suspend()`, `hasRole(String)`, `addRole(Role)`, `removeRole(Role)`
     - Validar que email no sea nulo, passwordHash no sea nulo
     - _Requirements: 1.1, 1.7_
 
-  - [ ] 2.2 Implementar `UserRepository` port (interfaz en `domain/repository`)
+  - [x] 2.2 Implementar `UserRepository` port (interfaz en `domain/repository`)
     - Métodos: `save(User)`, `findById(Long)`, `findByEmail(String)`, `existsByEmail(String)`, `delete(Long)`
     - Sin anotaciones Spring ni JPA
     - _Requirements: 1.1, 3.1_
 
-  - [ ] 2.3 Implementar `UserJpaRepository` adapter (infrastructure/persistence)
+  - [x] 2.3 Implementar `UserJpaRepository` adapter (infrastructure/persistence)
     - `UserEntity` con anotaciones JPA mapeando tabla `users`
     - `UserJpaRepository extends JpaRepository<UserEntity, Long>`
     - `UserRepositoryAdapter implements UserRepository` usando MapStruct `UserMapper` para conversión Entity ↔ Domain
     - _Requirements: 1.1_
 
-  - [ ] 2.4 Implementar `RegisterUserCommand` + `RegisterUserUseCase`
+  - [x] 2.4 Implementar `RegisterUserCommand` + `RegisterUserUseCase`
     - `RegisterUserCommand` record: email, rawPassword, fullName
     - `RegisterUserUseCase` interfaz en `application/port/in/`
     - `RegisterUserService` implementación: validar email único (409 si existe), hashear password con BCrypt strength 12, crear User INACTIVE con rol USER, persistir, disparar evento de activación
     - _Requirements: 1.1, 1.3, 1.7_
 
-  - [ ] 2.5 Implementar `POST /api/v1/users/register` controller + DTOs
+  - [x] 2.5 Implementar `POST /api/v1/users/register` controller + DTOs
     - `RegisterRequestDTO` record: `@Email @NotBlank email`, `@NotBlank @Size(min=8,max=100) password`, `@NotBlank fullName`
     - `RegisterResponseDTO` record: id, email, fullName, status, message
     - `UserController` con `@PostMapping("/register")` → HTTP 201

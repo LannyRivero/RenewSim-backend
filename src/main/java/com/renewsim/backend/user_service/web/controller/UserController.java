@@ -182,7 +182,7 @@ public class UserController {
         // ----------------------------------------------------
         @Operation(summary = "Check if user exists", description = "Requires role ADMIN or scope user:read", security = @SecurityRequirement(name = "bearerAuth"))
         @GetMapping("/exists")
-        @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN')")
+        @PreAuthorize("hasAuthority('SCOPE_user:read') or hasRole('ADMIN') or hasRole('SERVICE_AUTH')")
         public ResponseEntity<OperationResponse<Boolean>> exists(
                         @RequestParam(required = false) String username,
                         @RequestParam(required = false) String email) {

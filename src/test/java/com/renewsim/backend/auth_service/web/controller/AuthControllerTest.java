@@ -5,7 +5,8 @@ import com.renewsim.backend.auth_service.application.port.in.*;
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
 import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
-
+import com.renewsim.backend.auth_service.web.dto.RegisterResponseDTO;
+import com.renewsim.backend.user_service.domain.model.UserStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,7 @@ class AuthControllerTest {
                                 Mockito.mock(ResendOtpUseCase.class),
                                 Mockito.mock(LogoutUseCase.class),
                                 Mockito.mock(RefreshTokenUseCase.class));
+
                 final LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
                 validator.afterPropertiesSet();
 
@@ -51,17 +53,16 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("login -> should return 200 and response body")
-        void testShouldLoginAndReturnOk() throws Exception {
-                final AuthRequestDTO req = new AuthRequestDTO("john", "secret");
-
-                final AuthResponseDTO res = AuthResponseDTO.builder()
+        @DisplayName("login -> devuelve 200 y response body")
+        void login_validCredentials_returns200() throws Exception {
+                AuthRequestDTO req = new AuthRequestDTO("john", "secret");
+                AuthResponseDTO res = AuthResponseDTO.builder()
                                 .username("john")
                                 .token("jwt-token")
                                 .tokenType("Bearer")
                                 .expiresAt(Instant.now().plusSeconds(3600))
                                 .roles(Set.of("USER"))
-                                .scopes(Set.of("read"))
+                                .scopes(Set.of("read:simulations"))
                                 .build();
 
                 when(authUseCase.login(any())).thenReturn(res);
@@ -79,18 +80,17 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("register -> should return 201 and response body")
-        void testShouldRegisterAndReturnCreated() throws Exception {
-                final RegisterRequestDTO req = new RegisterRequestDTO("mary", "StrongPass_1", "mary@example.com");
+        @DisplayName("register -> devuelve 201 y RegisterResponseDTO")
+        void register_validRequest_returns201() throws Exception {
+                RegisterRequestDTO req = new RegisterRequestDTO(
+                                "mary@example.com", "StrongPass_1!", "Mary Doe");
 
-                final AuthResponseDTO res = AuthResponseDTO.builder()
-                                .username("mary")
-                                .token("jwt-created")
-                                .tokenType("Bearer")
-                                .expiresAt(Instant.now().plusSeconds(3600))
-                                .roles(Set.of("USER"))
-                                .scopes(Set.of("read"))
-                                .build();
+                RegisterResponseDTO res = new RegisterResponseDTO(
+                                1L,
+                                "mary@example.com",
+                                "Mary Doe",
+                                UserStatus.INACTIVE,
+                                "User registered successfully. Please check your email to activate your account.");
 
                 when(authUseCase.register(any())).thenReturn(res);
 
@@ -98,37 +98,31 @@ class AuthControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(req)))
                                 .andExpect(status().isCreated())
-                                .andExpect(jsonPath("$.data.username").value("mary"))
-                                .andExpect(jsonPath("$.data.token").value("jwt-created"));
+                                .andExpect(jsonPath("$.data.email").value("mary@example.com"))
+                                .andExpect(jsonPath("$.data.fullName").value("Mary Doe"))
+                                .andExpect(jsonPath("$.data.status").value("INACTIVE"))
+                                .andExpect(jsonPath("$.data.message").exists());
 
                 verify(authUseCase).register(any());
         }
 
         @Test
-        @DisplayName("login -> should return 400 when payload is invalid (@Valid)")
-        void testShouldReturnBadRequestWhenInvalidBody() throws Exception {
-                final String invalidJson = """
-                                {"username":null,"password":null}
-                                """;
-
+        @DisplayName("login -> devuelve 400 cuando el payload es inválido (@Valid)")
+        void login_invalidPayload_returns400() throws Exception {
                 mvc.perform(post("/api/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(invalidJson))
+                                .content("{\"username\":null,\"password\":null}"))
                                 .andExpect(status().isBadRequest());
 
                 verifyNoInteractions(authUseCase);
         }
 
         @Test
-        @DisplayName("register -> should return 400 when registration payload is invalid (@Valid)")
-        void testShouldReturnBadRequestWhenInvalidRegistrationBody() throws Exception {
-                final String invalidJson = """
-                                {"username":null,"password":null,"email":null}
-                                """;
-
+        @DisplayName("register -> devuelve 400 cuando el payload es inválido (@Valid)")
+        void register_invalidPayload_returns400() throws Exception {
                 mvc.perform(post("/api/v1/auth/register")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(invalidJson))
+                                .content("{\"email\":null,\"password\":null,\"fullName\":null}"))
                                 .andExpect(status().isBadRequest());
 
                 verifyNoInteractions(authUseCase);

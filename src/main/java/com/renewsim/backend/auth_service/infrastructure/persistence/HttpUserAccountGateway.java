@@ -6,6 +6,7 @@ import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.dto.OperationResponse;
+import com.renewsim.backend.user_service.domain.model.UserStatus;
 import com.renewsim.backend.user_service.web.dto.UserCreateRequest;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -28,17 +29,12 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     public Optional<UserSnapshot> findByEmail(String email) {
         try {
             OperationResponse<ExternalUserSnapshot> response = userServiceClient.getCredentials(null, email);
-            ExternalUserSnapshot external = response != null ? response.data() : null;
-
-            log.debug("Fetched ExternalUserSnapshot: username={}, email={}",
-                    external != null ? external.username() : null,
-                    external != null ? external.email() : null);
-
-            return Optional.ofNullable(mapToSnapshot(external));
+            return Optional.ofNullable(mapToSnapshot(
+                    response != null ? response.data() : null));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
         } catch (FeignException e) {
-            log.error("Error fetching user by email={} from UserServiceClient", email, e);
+            log.error("Error fetching user by email={}", email, e);
             throw e;
         }
     }
@@ -47,17 +43,12 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     public Optional<UserSnapshot> findByUsername(String username) {
         try {
             OperationResponse<ExternalUserSnapshot> response = userServiceClient.getCredentials(username, null);
-            ExternalUserSnapshot external = response != null ? response.data() : null;
-
-            log.debug("Fetched ExternalUserSnapshot: username={}, email={}",
-                    external != null ? external.username() : null,
-                    external != null ? external.email() : null);
-
-            return Optional.ofNullable(mapToSnapshot(external));
+            return Optional.ofNullable(mapToSnapshot(
+                    response != null ? response.data() : null));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
         } catch (FeignException e) {
-            log.error("Error fetching user by username={} from UserServiceClient", username, e);
+            log.error("Error fetching user by username={}", username, e);
             throw e;
         }
     }
@@ -69,18 +60,27 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     }
 
     @Override
-    public UserSnapshot createUser(String username, String rawPassword, String email, Set<RoleName> roles) {
+    public boolean existsByEmail(String email) {
+        OperationResponse<Boolean> response = userServiceClient.existsByUsernameOrEmail(null, email);
+        return response != null && Boolean.TRUE.equals(response.data());
+    }
+
+    @Override
+    public UserSnapshot createUser(String fullName, String rawPassword,
+            String email, Set<RoleName> roles) {
+        // username derivado del email — único y compatible con la regex
+        // ^[a-z0-9._-]{3,32}$
+        String username = deriveUsername(email);
+
         UserCreateRequest request = new UserCreateRequest(
                 username,
                 email,
                 rawPassword,
-                null,
+                fullName,
                 null);
 
         OperationResponse<ExternalUserSnapshot> response = userServiceClient.createUser(request);
-        ExternalUserSnapshot created = response != null ? response.data() : null;
-
-        return mapToSnapshot(created);
+        return mapToSnapshot(response != null ? response.data() : null);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         try {
             userServiceClient.activateUser(userId);
         } catch (FeignException e) {
-            log.error("Error activating userId={} via UserServiceClient", userId, e);
+            log.error("Error activating userId={}", userId, e);
             throw e;
         }
     }
@@ -97,14 +97,31 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     public Optional<UserSnapshot> findById(Long userId) {
         try {
             OperationResponse<ExternalUserSnapshot> response = userServiceClient.getSnapshotById(userId);
-            ExternalUserSnapshot external = response != null ? response.data() : null;
-            return Optional.ofNullable(mapToSnapshot(external));
+            return Optional.ofNullable(mapToSnapshot(
+                    response != null ? response.data() : null));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
         } catch (FeignException e) {
-            log.error("Error fetching user by id={} from UserServiceClient", userId, e);
+            log.error("Error fetching user by id={}", userId, e);
             throw e;
         }
+    }
+
+    // ----------------------------------------------------
+    // Helpers
+    // ----------------------------------------------------
+
+    /**
+     * Deriva un username del email para cumplir la regex ^[a-z0-9._-]{3,32}$.
+     * Toma la parte local del email, la pasa a minúsculas y trunca a 32 chars.
+     * Ejemplo: "John.Doe@Example.com" -> "john.doe"
+     */
+    private String deriveUsername(String email) {
+        String localPart = email.split("@")[0].toLowerCase();
+        // reemplaza caracteres no permitidos por punto
+        localPart = localPart.replaceAll("[^a-z0-9._-]", ".");
+        // trunca a 32 chars
+        return localPart.length() > 32 ? localPart.substring(0, 32) : localPart;
     }
 
     private UserSnapshot mapToSnapshot(ExternalUserSnapshot external) {
@@ -117,12 +134,28 @@ public class HttpUserAccountGateway implements UserAccountGateway {
                 .map(RoleName::valueOf)
                 .collect(Collectors.toUnmodifiableSet());
 
+        UserStatus status = parseStatus(external.status());
+        boolean enabled = status == UserStatus.ACTIVE;
+
         return new UserSnapshot(
                 external.id(),
                 external.username(),
+                external.fullName(),
                 external.passwordHash(),
                 external.email(),
                 roles,
-                true);
+                status,
+                enabled);
+    }
+
+    private UserStatus parseStatus(String status) {
+        if (status == null)
+            return UserStatus.INACTIVE;
+        try {
+            return UserStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown UserStatus value: {}", status);
+            return UserStatus.INACTIVE;
+        }
     }
 }

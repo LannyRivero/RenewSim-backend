@@ -13,13 +13,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping(value = "/api/v1/auth", produces = "application/json")
@@ -57,13 +60,13 @@ public class AuthController {
         @PostMapping(value = "/register", consumes = "application/json")
         @Operation(summary = "User registration")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "201", description = "User registered successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponseDTO.class))),
+                        @ApiResponse(responseCode = "201", description = "User registered successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RegisterResponseDTO.class))),
                         @ApiResponse(responseCode = "409", description = "User already exists", content = @Content),
                         @ApiResponse(responseCode = "400", description = "Validation error", content = @Content)
         })
-        public ResponseEntity<OperationResponse<AuthResponseDTO>> register(
+        public ResponseEntity<OperationResponse<RegisterResponseDTO>> register(
                         @Valid @RequestBody RegisterRequestDTO request) {
-                AuthResponseDTO response = authUseCase.register(request);
+                RegisterResponseDTO response = authUseCase.register(request);
                 return ResponseEntity.status(201)
                                 .body(ApiResponseFactory.created(response, "User registered successfully"));
         }
@@ -199,14 +202,16 @@ public class AuthController {
         }
 
         // ----------------------------------------------------
-        // Helper
+        // Helper — cookie con SameSite=Strict (fix D2-02)
         // ----------------------------------------------------
         private void addRefreshTokenCookie(HttpServletResponse response, String rawRefreshToken) {
-                Cookie cookie = new Cookie("refresh_token", rawRefreshToken);
-                cookie.setHttpOnly(true);
-                cookie.setSecure(true);
-                cookie.setPath("/api/v1/auth/refresh");
-                cookie.setMaxAge(7 * 24 * 60 * 60);
-                response.addCookie(cookie);
+                ResponseCookie cookie = ResponseCookie.from("refresh_token", rawRefreshToken)
+                                .httpOnly(true)
+                                .secure(true)
+                                .path("/api/v1/auth/refresh")
+                                .maxAge(Duration.ofDays(7))
+                                .sameSite("Strict")
+                                .build();
+                response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         }
 }
