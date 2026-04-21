@@ -7,13 +7,17 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface UserAccountGateway {
-
     Optional<UserSnapshot> findByUsername(String username);
 
     Optional<UserSnapshot> findByEmail(String email);
 
+    Optional<UserSnapshot> findById(Long userId);
+
     boolean existsByUsername(String username);
 
-    UserSnapshot createUser(String username, String rawPassword, String email, Set<RoleName> roles);
-    
+    boolean existsByEmail(String email);
+
+    UserSnapshot createUser(String fullName, String rawPassword, String email, Set<RoleName> roles);
+
+    void activateUser(Long userId);
 }

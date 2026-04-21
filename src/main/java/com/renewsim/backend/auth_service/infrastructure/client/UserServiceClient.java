@@ -29,4 +29,9 @@ public interface UserServiceClient {
                         @RequestParam(required = false) String username,
                         @RequestParam(required = false) String email);
 
+        @PutMapping("/api/v1/users/{id}/activate")
+        OperationResponse<Void> activateUser(@PathVariable("id") Long userId);
+
+        @GetMapping("/api/v1/users/{id}/snapshot")
+        OperationResponse<ExternalUserSnapshot> getSnapshotById(@PathVariable("id") Long userId);
 }

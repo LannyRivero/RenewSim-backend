@@ -1,5 +1,6 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.infrastructure.config.SecurityJwtProperties;
@@ -23,6 +24,7 @@ public final class JwtTokenProvider implements TokenProvider {
     private final SecurityJwtProperties props;
     private final Clock clock;
     private final Key key;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     JwtTokenProvider(SecurityJwtProperties props, Clock clock) {
         this.props = Objects.requireNonNull(props, "SecurityJwtProperties is required");
@@ -62,7 +64,7 @@ public final class JwtTokenProvider implements TokenProvider {
                 .setNotBefore(Date.from(nbf))
                 .setExpiration(Date.from(exp))
                 .addClaims(claims)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -85,7 +87,7 @@ public final class JwtTokenProvider implements TokenProvider {
             Jws<Claims> jws = builder.build().parseClaimsJws(token);
 
             JwsHeader<?> header = jws.getHeader();
-            if (!SignatureAlgorithm.HS256.getValue().equals(header.getAlgorithm())) {
+            if (!SignatureAlgorithm.HS512.getValue().equals(header.getAlgorithm())) {
                 return Optional.empty();
             }
 
@@ -108,18 +110,53 @@ public final class JwtTokenProvider implements TokenProvider {
         return props.expirationSeconds();
     }
 
+    @Override
+    public Optional<String> extractJti(String token) {
+        if (token == null || token.isBlank()) return Optional.empty();
+        try {
+            Map<?, ?> payload = parsePayloadUnsafe(token);
+            Object jti = payload.get("jti");
+            return jti != null ? Optional.of(jti.toString()) : Optional.empty();
+        } catch (Exception ex) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<Long> extractExpirationEpochSeconds(String token) {
+        if (token == null || token.isBlank()) return Optional.empty();
+        try {
+            Map<?, ?> payload = parsePayloadUnsafe(token);
+            Object exp = payload.get("exp");
+            if (exp == null) return Optional.empty();
+            return Optional.of(((Number) exp).longValue());
+        } catch (Exception ex) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Decodes the JWT payload without signature or time validation.
+     * Used only for claim extraction (JTI, expiration) — NOT for authentication.
+     */
+    private Map<?, ?> parsePayloadUnsafe(String token) throws Exception {
+        String[] parts = token.split("\\.");
+        if (parts.length < 2) throw new IllegalArgumentException("Invalid JWT structure");
+        byte[] payloadBytes = Base64.getUrlDecoder().decode(parts[1]);
+        String payload = new String(payloadBytes, StandardCharsets.UTF_8);
+        return objectMapper.readValue(payload, Map.class);
+    }
+
     public String generateServiceToken(String serviceName, Set<String> scopes) {
         Objects.requireNonNull(serviceName, "serviceName must not be null");
 
         Instant now = Instant.now(clock);
         Instant exp = now.plusSeconds(props.serviceExpirationSeconds());
 
-
         Map<String, Object> claims = new HashMap<>(2);
         claims.put("roles", Set.of("SERVICE_AUTH"));
         if (scopes != null && !scopes.isEmpty()) {
             claims.put("scopes", Set.copyOf(scopes));
-
         }
 
         return Jwts.builder()
@@ -130,19 +167,15 @@ public final class JwtTokenProvider implements TokenProvider {
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(exp))
                 .addClaims(claims)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
-
     }
 
-    // -------------------------
-    // Helpers
-    // -------------------------
     private static Key resolveKey(SecurityJwtProperties props) {
         if (props.hasSecretBase64()) {
             byte[] decoded = Base64.getDecoder().decode(props.secretBase64());
-            if (decoded.length < 32) {
-                throw new IllegalStateException("Decoded Base64 JWT secret too short (<32 bytes).");
+            if (decoded.length < 64) {
+                throw new IllegalStateException("Decoded Base64 JWT secret too short (<64 bytes required for HS512).");
             }
             return Keys.hmacShaKeyFor(decoded);
         }
@@ -152,12 +185,11 @@ public final class JwtTokenProvider implements TokenProvider {
                 throw new IllegalStateException("JWT secret is null");
             }
             byte[] raw = secret.getBytes(StandardCharsets.UTF_8);
-            if (raw.length < 32) {
-                throw new IllegalStateException("Plain JWT secret too short (<32 bytes).");
+            if (raw.length < 64) {
+                throw new IllegalStateException("Plain JWT secret too short (<64 bytes required for HS512).");
             }
             return Keys.hmacShaKeyFor(raw);
         }
         throw new IllegalStateException("No JWT secret configured (secretBase64 or secret required).");
     }
-
 }

@@ -12,50 +12,53 @@ import java.util.Optional;
 
 public interface UserJpaRepository extends JpaRepository<UserEntity, Long> {
 
-    // Checks
-    boolean existsByUsernameIgnoreCase(String username);
-    boolean existsByEmailIgnoreCase(String email);
-    boolean existsByUsernameIgnoreCaseOrEmailIgnoreCase(String username, String email);
+  boolean existsByUsernameIgnoreCase(String username);
 
-    // Lookups
-    Optional<UserEntity> findByUsernameIgnoreCase(String username);
-    Optional<UserEntity> findByEmailIgnoreCase(String email);
+  boolean existsByEmailIgnoreCase(String email);
 
-    // Projection for lightweight listing
-    interface UserSummary {
-        Long getId();
-        String getUsername();
-        String getEmail();
-    }
+  boolean existsByUsernameIgnoreCaseOrEmailIgnoreCase(String username, String email);
 
-    @Query("SELECT u.id as id, u.username as username, u.email as email FROM UserEntity u")
-    List<UserSummary> findAllSummaries();
+  Optional<UserEntity> findByUsernameIgnoreCase(String username);
 
-    // Search with optional filters (paginable)
-    @Query("""
-           SELECT u FROM UserEntity u
-           WHERE (:username IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%')))
-             AND (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')))
-             AND (:enabled IS NULL OR u.enabled = :enabled)
-           """)
-    Page<UserEntity> search(
-            @Param("username") String username,
-            @Param("email") String email,
-            @Param("enabled") Boolean enabled,
-            Pageable pageable);
+  Optional<UserEntity> findByEmailIgnoreCase(String email);
 
-    @Query("""
-           SELECT u.id as id, u.username as username, u.email as email
-           FROM UserEntity u
-           WHERE (:username IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%')))
-             AND (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')))
-             AND (:enabled IS NULL OR u.enabled = :enabled)
-           """)
-    Page<UserSummary> searchSummaries(
-            @Param("username") String username,
-            @Param("email") String email,
-            @Param("enabled") Boolean enabled,
-            Pageable pageable);
+  interface UserSummary {
+    Long getId();
+
+    String getUsername();
+
+    String getEmail();
+  }
+
+  @Query("SELECT u.id as id, u.username as username, u.email as email FROM UserEntity u")
+  List<UserSummary> findAllSummaries();
+
+  @Query("""
+      SELECT u FROM UserEntity u
+      WHERE (:username IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%')))
+        AND (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')))
+        AND (:enabled IS NULL
+             OR (:enabled = true AND u.status = 'ACTIVE')
+             OR (:enabled = false AND u.status <> 'ACTIVE'))
+      """)
+  Page<UserEntity> search(
+      @Param("username") String username,
+      @Param("email") String email,
+      @Param("enabled") Boolean enabled,
+      Pageable pageable);
+
+  @Query("""
+      SELECT u.id as id, u.username as username, u.email as email
+      FROM UserEntity u
+      WHERE (:username IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%')))
+        AND (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')))
+        AND (:enabled IS NULL
+             OR (:enabled = true AND u.status = 'ACTIVE')
+             OR (:enabled = false AND u.status <> 'ACTIVE'))
+      """)
+  Page<UserSummary> searchSummaries(
+      @Param("username") String username,
+      @Param("email") String email,
+      @Param("enabled") Boolean enabled,
+      Pageable pageable);
 }
-
-

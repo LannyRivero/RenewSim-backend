@@ -19,13 +19,7 @@ class DtoSmokeTest {
     @DisplayName("should create and read PageResponse correctly")
     void testPageResponse() {
         PageResponse<String> response = new PageResponse<>(
-                List.of("one", "two"),
-                0,
-                2,
-                2L,
-                1,
-                true
-        );
+                List.of("one", "two"), 0, 2, 2L, 1, true);
 
         assertThat(response.content()).containsExactly("one", "two");
         assertThat(response.page()).isEqualTo(0);
@@ -39,13 +33,14 @@ class DtoSmokeTest {
     @DisplayName("should create and read UserCredentialsDTO correctly")
     void testUserCredentialsDTO() {
         UserCredentialsDTO dto = new UserCredentialsDTO(
+                1L,
                 "john",
                 "john@example.com",
                 "securePass",
                 Set.of(RoleName.USER, RoleName.ADMIN),
-                true
-        );
+                true);
 
+        assertThat(dto.id()).isEqualTo(1L);
         assertThat(dto.username()).isEqualTo("john");
         assertThat(dto.email()).isEqualTo("john@example.com");
         assertThat(dto.passwordHash()).isEqualTo("securePass");
@@ -56,15 +51,10 @@ class DtoSmokeTest {
     @Test
     @DisplayName("should create and read UserFilterRequest correctly")
     void testUserFilterRequest() {
-        UserFilterRequest filter = new UserFilterRequest(
-                "alice",
-                "alice@example.com",
-                true
-        );
+        UserFilterRequest filter = new UserFilterRequest("alice", "alice@example.com", true);
 
         assertThat(filter.username()).isEqualTo("alice");
         assertThat(filter.email()).isEqualTo("alice@example.com");
         assertThat(filter.enabled()).isTrue();
     }
 }
-

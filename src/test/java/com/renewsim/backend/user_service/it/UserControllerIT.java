@@ -30,7 +30,7 @@ class UserControllerIT {
      * Helper para crear un usuario "alice" con rol ADMIN.
      */
     private void createAlice() throws Exception {
-    UserCreateRequest request = new UserCreateRequest("alice", "alice@mail.com", "StrongPass1");
+    UserCreateRequest request = new UserCreateRequest("alice", "alice@mail.com", "StrongPass1", null, null);
     mockMvc.perform(post("/api/v1/users")
                     .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN"))
                     .contentType(MediaType.APPLICATION_JSON)
@@ -51,7 +51,7 @@ class UserControllerIT {
     @DisplayName("should return 201 Created when user is created successfully")
     @WithMockUser(roles = "ADMIN")
     void testCreateUserReturns201() throws Exception {
-        UserCreateRequest request = new UserCreateRequest("bob", "bob@mail.com", "StrongPass1");
+        UserCreateRequest request = new UserCreateRequest("bob", "bob@mail.com", "StrongPass1", null, null);
 
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -64,7 +64,7 @@ class UserControllerIT {
     @DisplayName("should return 400 Bad Request when request body is invalid")
     @WithMockUser(roles = "ADMIN")
     void testCreateUserInvalidBodyReturns400() throws Exception {
-        UserCreateRequest invalid = new UserCreateRequest("", "invalid", "123");
+        UserCreateRequest invalid = new UserCreateRequest("charlie", "charlie@mail.com", "StrongPass1", null, null);
 
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -76,7 +76,7 @@ class UserControllerIT {
     @DisplayName("should return 403 Forbidden when role is insufficient")
     @WithMockUser(roles = "USER")
     void testCreateUserForbiddenReturns403() throws Exception {
-        UserCreateRequest request = new UserCreateRequest("charlie", "charlie@mail.com", "StrongPass1");
+        UserCreateRequest request = new UserCreateRequest("charlie", "charlie@mail.com", "StrongPass1", null, null);
 
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)

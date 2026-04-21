@@ -1,28 +1,28 @@
 package com.renewsim.backend.auth_service.web.dto;
 
+import com.renewsim.backend.shared.domain.vo.RoleName;
+import com.renewsim.backend.user_service.domain.model.UserStatus;
+
 import java.util.Set;
 
-import com.renewsim.backend.shared.domain.vo.RoleName;
-
 public record UserSnapshot(
+        Long id,
         String username,
+        String fullName,
         String passwordHash,
-        String email,  
+        String email,
         Set<RoleName> roles,
+        UserStatus status,
         boolean enabled) {
-
-    /*
-        * Factory method to create an active user (enabled = true).
-     */
-
-    public static UserSnapshot active(String username, String passwordHash, String email, Set<RoleName> roles) {
-        return new UserSnapshot(username, passwordHash, email, roles, true);
+    public static UserSnapshot active(Long id, String username, String fullName,
+            String passwordHash, String email, Set<RoleName> roles) {
+        return new UserSnapshot(id, username, fullName, passwordHash, email, roles,
+                UserStatus.ACTIVE, true);
     }
 
-    /*
-        * Factory method to create a disabled user (enabled = false).
-     */
-    public static UserSnapshot disabled(String username, String passwordHash, String email, Set<RoleName> roles) {
-        return new UserSnapshot(username, passwordHash, email, roles, false);
+    public static UserSnapshot disabled(Long id, String username, String fullName,
+            String passwordHash, String email, Set<RoleName> roles) {
+        return new UserSnapshot(id, username, fullName, passwordHash, email, roles,
+                UserStatus.INACTIVE, false);
     }
 }

@@ -8,7 +8,6 @@ import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Method;
 import java.security.Key;
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -22,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class JwtTokenProviderTest {
 
     private static String randomBase64Key() {
-        byte[] keyBytes = new byte[32];
+        byte[] keyBytes = new byte[64];
         new SecureRandom().nextBytes(keyBytes);
         return Base64.getEncoder().encodeToString(keyBytes);
     }
@@ -43,9 +42,7 @@ class JwtTokenProviderTest {
                 expirationSeconds,
                 nbfSkewSeconds,
                 clockSkewSeconds,
-                serviceExpirationSeconds
-
-        );
+                serviceExpirationSeconds);
     }
 
     private static JwtParser parserWith(String base64Key, Clock clock, String reqIss, String reqAud, Long skew) {
@@ -96,11 +93,11 @@ class JwtTokenProviderTest {
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
         Clock clock = Clock.fixed(base, ZoneOffset.UTC);
 
-        var goodProps = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L,3600L);
+        var goodProps = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
         var signer = new JwtTokenProvider(goodProps, clock);
-        String token = signer.generate(new AuthenticatedUser("john", Set.of(), Set.of()));
+        String token = signer.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));
 
-        var badProps = props("WRONG", "renewsim-app", base64Key, 3600L, 0L, 60L,3600L);
+        var badProps = props("WRONG", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
         var validator = new JwtTokenProvider(badProps, clock);
 
         assertThat(validator.validate(token)).isEmpty();
@@ -113,11 +110,11 @@ class JwtTokenProviderTest {
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
         Clock clock = Clock.fixed(base, ZoneOffset.UTC);
 
-        var goodProps = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L,3600L);
+        var goodProps = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
         var signer = new JwtTokenProvider(goodProps, clock);
-        String token = signer.generate(new AuthenticatedUser("john", Set.of(), Set.of()));
+        String token = signer.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));
 
-        var badProps = props("renewsim-auth", "WRONG", base64Key, 3600L, 0L, 60L,3600L);
+        var badProps = props("renewsim-auth", "WRONG", base64Key, 3600L, 0L, 60L, 3600L);
         var validator = new JwtTokenProvider(badProps, clock);
 
         assertThat(validator.validate(token)).isEmpty();
@@ -133,7 +130,7 @@ class JwtTokenProviderTest {
         var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 60L, 0L, 3600L);
         var provider = new JwtTokenProvider(p, clock);
 
-        String token = provider.generate(new AuthenticatedUser("john", Set.of(), Set.of()));
+        String token = provider.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));
 
         assertThat(provider.validate(token)).isEmpty();
     }
@@ -184,7 +181,7 @@ class JwtTokenProviderTest {
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
         Clock clock = Clock.fixed(base, ZoneOffset.UTC);
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, 60L, 0L, 0L,60L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 60L, 0L, 0L, 60L);
         JwtTokenProvider validator = new JwtTokenProvider(p, clock);
 
         Key attackerSigningKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(attackerKey));
@@ -195,7 +192,7 @@ class JwtTokenProviderTest {
                 .setIssuedAt(Date.from(base))
                 .setNotBefore(Date.from(base))
                 .setExpiration(Date.from(base.plusSeconds(60)))
-                .signWith(attackerSigningKey, SignatureAlgorithm.HS256)
+                .signWith(attackerSigningKey, SignatureAlgorithm.HS512)
                 .compact();
 
         assertThat(validator.validate(forged)).isEmpty();
@@ -226,7 +223,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("constructor -> throws exception if key < 32 bytes (plain secret)")
+    @DisplayName("constructor -> throws exception if key < 64 bytes (plain secret)")
     void constructor_throws_shortPlainSecret() {
         var tooShortPlain = "short-key";
         var p = new SecurityJwtProperties(
@@ -275,17 +272,6 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("toStringSet -> empty when claim is not a collection")
-    void toStringSet_ShouldReturnEmpty_WhenClaimNotCollection() throws Exception {
-        Method m = JwtTokenProvider.class.getDeclaredMethod("toStringSet", Object.class);
-        m.setAccessible(true);
-
-        @SuppressWarnings("unchecked")
-        Set<String> result = (Set<String>) m.invoke(null, "single-role");
-        assertThat(result).isEmpty();
-    }
-
-    @Test
     @DisplayName("generate -> includes unique jti")
     void generate_includesJti() {
         String base64Key = randomBase64Key();
@@ -295,7 +281,7 @@ class JwtTokenProviderTest {
         var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
         var provider = new JwtTokenProvider(p, clock);
 
-        String token = provider.generate(new AuthenticatedUser("john", Set.of(), Set.of()));
+        String token = provider.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));
 
         Claims claims = parserWith(base64Key, clock, "renewsim-auth", "renewsim-app", 60L)
                 .parseClaimsJws(token).getBody();
@@ -305,7 +291,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("constructor -> throws exception when both secrets are missing (plain and base64)")
+    @DisplayName("constructor -> throws exception when both secrets are missing")
     void constructor_throws_whenBothSecretsMissing() {
         var p = new SecurityJwtProperties(
                 "iss", "aud",
@@ -330,6 +316,52 @@ class JwtTokenProviderTest {
         assertThat(java.lang.reflect.Modifier.isPublic(mod)).isFalse();
         assertThat(java.lang.reflect.Modifier.isPrivate(mod)).isFalse();
         assertThat(java.lang.reflect.Modifier.isProtected(mod)).isFalse();
+    }
+
+    @Test
+    @DisplayName("extractJti -> returns jti from valid token")
+    void extractJti_returnsJti() {
+        String base64Key = randomBase64Key();
+        Clock clock = Clock.fixed(Instant.parse("2025-01-01T10:00:00Z"), ZoneOffset.UTC);
+
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var provider = new JwtTokenProvider(p, clock);
+
+        String token = provider.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));
+        var jti = provider.extractJti(token);
+
+        assertThat(jti).isPresent();
+        assertThat(assertUUID(jti.get())).isTrue();
+    }
+
+    @Test
+    @DisplayName("extractJti -> empty for blank token")
+    void extractJti_emptyForBlank() {
+        String base64Key = randomBase64Key();
+        Clock clock = Clock.fixed(Instant.parse("2025-01-01T10:00:00Z"), ZoneOffset.UTC);
+
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var provider = new JwtTokenProvider(p, clock);
+
+        assertThat(provider.extractJti("")).isEmpty();
+        assertThat(provider.extractJti(null)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("extractExpirationEpochSeconds -> returns correct expiration")
+    void extractExpiration_returnsCorrectValue() {
+        String base64Key = randomBase64Key();
+        Instant base = Instant.parse("2025-01-01T10:00:00Z");
+        Clock clock = Clock.fixed(base, ZoneOffset.UTC);
+
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var provider = new JwtTokenProvider(p, clock);
+
+        String token = provider.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));
+        var exp = provider.extractExpirationEpochSeconds(token);
+
+        assertThat(exp).isPresent();
+        assertThat(exp.get()).isEqualTo(base.plusSeconds(3600).getEpochSecond());
     }
 
     private static boolean assertUUID(String maybeUuid) {

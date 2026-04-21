@@ -5,22 +5,25 @@ import com.renewsim.backend.shared.domain.vo.RoleName;
 
 import java.util.Set;
 
-/**
- * Test mother for UserSnapshot objects.
- */
 public final class UserSnapshotMother {
 
-    private static final String DEFAULT_HASH = "$2a$10$dummyHash";
+    private static final String DEFAULT_HASH = "$2a$10$dummyHashxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 
     private UserSnapshotMother() {
     }
 
     public static UserSnapshot activeUser(String username, Set<RoleName> roles) {
-        return UserSnapshot.active(username, username + "@example.com", DEFAULT_HASH, roles);
+        return UserSnapshot.active(1L, username, "Full Name", DEFAULT_HASH,
+                username + "@example.com", roles);
     }
 
     public static UserSnapshot disabledUser(String username, Set<RoleName> roles) {
-        return UserSnapshot.disabled(username, username + "@example.com", DEFAULT_HASH, roles);
+        return UserSnapshot.disabled(1L, username, "Full Name", DEFAULT_HASH,
+                username + "@example.com", roles);
+    }
+
+    public static UserSnapshot withEmail(String email, Set<RoleName> roles) {
+        String username = email.split("@")[0];
+        return UserSnapshot.active(1L, username, "Full Name", DEFAULT_HASH, email, roles);
     }
 }
-

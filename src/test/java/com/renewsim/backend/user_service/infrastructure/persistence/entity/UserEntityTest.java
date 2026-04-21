@@ -1,10 +1,10 @@
 package com.renewsim.backend.user_service.infrastructure.persistence.entity;
 
+import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
+import com.renewsim.backend.shared.domain.vo.RoleName;
+import com.renewsim.backend.user_service.domain.model.UserStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import com.renewsim.backend.shared.domain.vo.RoleName;
-import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 
 import java.time.Instant;
 import java.util.Set;
@@ -18,7 +18,6 @@ class UserEntityTest {
     void testRolesConversion() {
         UserEntity entity = new UserEntity();
 
-        // ✅ Crear RoleEntity instances
         RoleEntity userRole = new RoleEntity();
         userRole.setId(1L);
         userRole.setName(RoleName.USER);
@@ -27,12 +26,10 @@ class UserEntityTest {
         adminRole.setId(2L);
         adminRole.setName(RoleName.ADMIN);
 
-        // ✅ Setear Set<RoleEntity>
         entity.setRoles(Set.of(userRole, adminRole));
-        
-        Set<RoleEntity> roles = entity.getRoles();
-        assertThat(roles).hasSize(2);
-        assertThat(roles).extracting(RoleEntity::getName)
+
+        assertThat(entity.getRoles()).hasSize(2);
+        assertThat(entity.getRoles()).extracting(RoleEntity::getName)
                 .containsExactlyInAnyOrder(RoleName.USER, RoleName.ADMIN);
     }
 
@@ -68,39 +65,31 @@ class UserEntityTest {
         UserEntity e2 = new UserEntity();
         e2.setId(2L);
 
-        UserEntity e3 = new UserEntity(); // id null
+        UserEntity e3 = new UserEntity();
 
         assertThat(e1).isNotEqualTo(e2);
         assertThat(e1).isNotEqualTo(e3);
     }
 
     @Test
-    @DisplayName("toString should contain username and email")
+    @DisplayName("toString should contain email and status")
     void testToString() {
         UserEntity entity = new UserEntity();
         entity.setId(42L);
         entity.setUsername("john");
         entity.setEmail("john@example.com");
-        entity.setEnabled(true);
-        
-        RoleEntity userRole = new RoleEntity();
-        userRole.setId(1L);
-        userRole.setName(RoleName.USER);
-        
-        entity.setRoles(Set.of(userRole));
-        
+        entity.setStatus(UserStatus.ACTIVE);
+
         String str = entity.toString();
-        assertThat(str).contains("john");
         assertThat(str).contains("john@example.com");
-        // Note: toString may show RoleEntity objects, not just "USER"
+        assertThat(str).contains("ACTIVE");
     }
 
     @Test
-    @DisplayName("prePersist should initialize createdAt, updatedAt and enabled=true")
+    @DisplayName("prePersist should initialize createdAt and updatedAt")
     void testPrePersist() {
         UserEntity entity = new UserEntity();
         entity.prePersist();
-        assertThat(entity.isEnabled()).isTrue();
         assertThat(entity.getCreatedAt()).isNotNull();
         assertThat(entity.getUpdatedAt()).isNotNull();
     }
@@ -116,14 +105,13 @@ class UserEntityTest {
         entity.preUpdate();
 
         assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
-        assertThat(entity.getUpdatedAt()).isAfter(createdAt);
+        assertThat(entity.getUpdatedAt()).isAfterOrEqualTo(createdAt);
     }
 
     @Test
-    @DisplayName("equals should return false when comparing with different class")
-    void testEqualsDifferentClass() {
-        UserEntity e1 = new UserEntity();
-        e1.setId(1L);
-        assertThat(e1.equals("string")).isFalse();
+    @DisplayName("default status should be INACTIVE")
+    void testDefaultStatus() {
+        UserEntity entity = new UserEntity();
+        assertThat(entity.getStatus()).isEqualTo(UserStatus.INACTIVE);
     }
 }

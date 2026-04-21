@@ -19,94 +19,74 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring", implementationName = "UserServiceMapperImpl", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserServiceMapper {
 
-    // -------- Entity -> Domain --------
     default User toDomain(UserEntity entity) {
-        if (entity == null) {
+        if (entity == null)
             return null;
-        }
-        
         return User.reconstitute(
-            entity.getId(),
-            entity.getEmail(),
-            entity.getPasswordHash(),
-            entity.getFullName(),
-            entity.getPhone(),
-            UserStatus.valueOf(entity.getStatus().name()),
-            mapRoleEntitiesToRoleNames(entity.getRoles()),
-            toLocalDateTime(entity.getCreatedAt()),
-            toLocalDateTime(entity.getActivatedAt())
-        );
+                entity.getId(),
+                entity.getEmail(),
+                entity.getPasswordHash(),
+                entity.getFullName(),
+                entity.getPhone(),
+                UserStatus.valueOf(entity.getStatus().name()),
+                mapRoleEntitiesToRoleNames(entity.getRoles()),
+                entity.getCreatedAt() != null
+                        ? toLocalDateTime(entity.getCreatedAt())
+                        : LocalDateTime.now(),
+                toLocalDateTime(entity.getActivatedAt()));
     }
 
-    // -------- Domain -> Entity --------
     default UserEntity toEntity(User domain) {
-        if (domain == null) {
+        if (domain == null)
             return null;
-        }
-
         UserEntity entity = new UserEntity();
         entity.setId(domain.getId());
         entity.setEmail(domain.getEmail());
         entity.setPasswordHash(domain.getPasswordHash());
         entity.setFullName(domain.getFullName());
         entity.setPhone(domain.getPhone());
-        entity.setStatus(UserEntity.UserStatus.valueOf(domain.getStatus().name()));
+        entity.setStatus(UserStatus.valueOf(domain.getStatus().name()));
         entity.setActivatedAt(toInstant(domain.getActivatedAt()));
-        // roles handled separately in adapter
-        // createdAt/updatedAt managed by JPA
-
         return entity;
     }
 
-    // -------- Domain -> DTO --------
     default UserResponse toResponse(User domain) {
-        if (domain == null) {
+        if (domain == null)
             return null;
-        }
-
         return new UserResponse(
-            domain.getId(),
-            domain.getEmail(), // username = email for now
-            domain.getEmail(),
-            domain.getFullName(),
-            domain.getPhone(),
-            domain.getStatus().name(),
-            mapRoleNamesToStrings(domain.getRoles()),
-            toInstant(domain.getCreatedAt()),
-            toInstant(domain.getActivatedAt())
-        );
+                domain.getId(),
+                domain.getEmail(),
+                domain.getEmail(),
+                domain.getFullName(),
+                domain.getPhone(),
+                domain.getStatus().name(),
+                mapRoleNamesToStrings(domain.getRoles()),
+                toInstant(domain.getCreatedAt()),
+                toInstant(domain.getActivatedAt()));
     }
 
-    // -------- CreateRequest -> Domain --------
     default User toDomain(UserCreateRequest request, String hashedPassword) {
-        if (request == null) {
+        if (request == null)
             return null;
-        }
-        
         return User.create(
-            request.email(),
-            hashedPassword,
-            request.fullName(),
-            request.phone(),
-            Set.of(RoleName.USER)
-        );
+                request.email(),
+                hashedPassword,
+                request.fullName(),
+                request.phone(),
+                Set.of(RoleName.USER));
     }
 
-    // -------- Helper methods --------
-    
     default Set<RoleName> mapRoleEntitiesToRoleNames(Set<RoleEntity> roleEntities) {
-        if (roleEntities == null || roleEntities.isEmpty()) {
+        if (roleEntities == null || roleEntities.isEmpty())
             return Set.of();
-        }
         return roleEntities.stream()
                 .map(RoleEntity::getName)
                 .collect(Collectors.toSet());
     }
 
     default Set<String> mapRoleNamesToStrings(Set<RoleName> roleNames) {
-        if (roleNames == null || roleNames.isEmpty()) {
+        if (roleNames == null || roleNames.isEmpty())
             return Set.of();
-        }
         return roleNames.stream()
                 .map(RoleName::name)
                 .collect(Collectors.toSet());

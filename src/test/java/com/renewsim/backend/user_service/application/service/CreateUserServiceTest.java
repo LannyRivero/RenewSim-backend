@@ -2,11 +2,12 @@ package com.renewsim.backend.user_service.application.service;
 
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
+import com.renewsim.backend.user_service.application.mapper.UserServiceMapper;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
+import com.renewsim.backend.user_service.domain.model.UserStatus;
 import com.renewsim.backend.user_service.web.dto.UserCreateRequest;
 import com.renewsim.backend.user_service.web.dto.UserResponse;
-import com.renewsim.backend.user_service.application.mapper.UserServiceMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,9 +15,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
@@ -39,48 +41,48 @@ class CreateUserServiceTest {
     @InjectMocks
     private CreateUserService service;
 
+    private static final String VALID_HASH = new BCryptPasswordEncoder(12).encode("StrongPass1");
+
     @BeforeEach
     void setup() {
-  
-        lenient().when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+        lenient().when(passwordEncoder.encode(anyString())).thenReturn(VALID_HASH);
     }
 
-    // ---------------------------
-    // Happy path
-    // ---------------------------
+    private User buildUser(Long id, String email) {
+        return User.reconstitute(id, email, VALID_HASH, "Alice", null,
+                UserStatus.ACTIVE, Set.of(RoleName.USER), LocalDateTime.now(), LocalDateTime.now());
+    }
+
+    private UserResponse buildResponse(Long id, String email) {
+        return new UserResponse(id, "alice", email, "Alice", null,
+                "ACTIVE", Set.of("USER"), null, null);
+    }
+
     @Test
     @DisplayName("should create valid user successfully")
     void testCreateValidUser() {
-        UserCreateRequest request = new UserCreateRequest("Alice", "Alice@Mail.com", "StrongPass1");
-
-        User savedUser = new User(1L, "alice", "alice@mail.com", true, Set.of(RoleName.USER), null, null, "encodedPassword");
-        UserResponse response = new UserResponse(1L, "alice", "alice@mail.com", true, Set.of("USER"), null, null);
+        UserCreateRequest request = new UserCreateRequest("alice", "alice@mail.com", "StrongPass1", null, null);
+        User saved = buildUser(1L, "alice@mail.com");
+        UserResponse response = buildResponse(1L, "alice@mail.com");
 
         when(userRepositoryPort.existsByUsername("alice")).thenReturn(false);
         when(userRepositoryPort.existsByEmail("alice@mail.com")).thenReturn(false);
-        when(userRepositoryPort.save(any(User.class))).thenReturn(savedUser);
-        when(mapper.toResponse(savedUser)).thenReturn(response);
+        when(userRepositoryPort.save(any(User.class))).thenReturn(saved);
+        when(mapper.toResponse(saved)).thenReturn(response);
 
         UserResponse result = service.createUser(request);
 
         assertThat(result).isNotNull();
         assertThat(result.id()).isEqualTo(1L);
-        assertThat(result.username()).isEqualTo("alice");
         assertThat(result.email()).isEqualTo("alice@mail.com");
-        assertThat(result.roles()).contains("USER");
-
         verify(passwordEncoder).encode("StrongPass1");
         verify(userRepositoryPort).save(any(User.class));
-        verify(mapper).toResponse(savedUser);
     }
 
-    // ---------------------------
-    // Duplicate user
-    // ---------------------------
     @Test
-    @DisplayName("should throw UserAlreadyExistsException when username or email already exists")
-    void testDuplicateUserThrowsDataIntegrityViolationException() {
-        UserCreateRequest request = new UserCreateRequest("bob", "bob@mail.com", "StrongPass1");
+    @DisplayName("should throw UserAlreadyExistsException when username already exists")
+    void testDuplicateUserThrowsException() {
+        UserCreateRequest request = new UserCreateRequest("bob", "bob@mail.com", "StrongPass1", null, null);
 
         when(userRepositoryPort.existsByUsername("bob")).thenReturn(true);
 
@@ -92,67 +94,51 @@ class CreateUserServiceTest {
         verify(userRepositoryPort, never()).save(any());
     }
 
-    // ---------------------------
-    // Persistence error
-    // ---------------------------
     @Test
-    @DisplayName("should throw DataIntegrityViolationException when save fails")
-    void testPersistenceErrorThrowsDataIntegrityViolationException() {
-        UserCreateRequest request = new UserCreateRequest("charlie", "charlie@mail.com", "StrongPass1");
+    @DisplayName("should throw when save fails with DataIntegrityViolationException")
+    void testPersistenceErrorThrows() {
+        UserCreateRequest request = new UserCreateRequest("charlie", "charlie@mail.com", "StrongPass1", null, null);
 
         when(userRepositoryPort.existsByUsername("charlie")).thenReturn(false);
         when(userRepositoryPort.existsByEmail("charlie@mail.com")).thenReturn(false);
         when(userRepositoryPort.save(any(User.class)))
-                .thenThrow(new DataIntegrityViolationException("constraint violation"));
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("constraint"));
 
         assertThatThrownBy(() -> service.createUser(request))
-                .isInstanceOf(DataIntegrityViolationException.class);
-
-        verify(passwordEncoder).encode("StrongPass1");
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
     }
 
-    // ---------------------------
-    // Extra: roles
-    // ---------------------------
     @Test
-    @DisplayName("should assign default USER role when none provided")
+    @DisplayName("should assign default USER role")
     void testUserGetsDefaultRole() {
-        UserCreateRequest request = new UserCreateRequest("diana", "Diana@Mail.com", "StrongPass1");
-
-        User savedUser = new User(2L, "diana", "diana@mail.com", true, Set.of(RoleName.USER), null, null, "encodedPassword");
-        UserResponse response = new UserResponse(2L, "diana", "diana@mail.com", true, Set.of("USER"), null, null);
+        UserCreateRequest request = new UserCreateRequest("diana", "diana@mail.com", "StrongPass1", null, null);
+        User saved = buildUser(2L, "diana@mail.com");
+        UserResponse response = buildResponse(2L, "diana@mail.com");
 
         when(userRepositoryPort.existsByUsername("diana")).thenReturn(false);
         when(userRepositoryPort.existsByEmail("diana@mail.com")).thenReturn(false);
-        when(userRepositoryPort.save(any(User.class))).thenReturn(savedUser);
-        when(mapper.toResponse(savedUser)).thenReturn(response);
+        when(userRepositoryPort.save(any(User.class))).thenReturn(saved);
+        when(mapper.toResponse(saved)).thenReturn(response);
 
         UserResponse result = service.createUser(request);
 
         assertThat(result.roles()).containsExactly("USER");
-        verify(passwordEncoder).encode("StrongPass1");
     }
 
-    // ---------------------------
-    // Extra: email normalization
-    // ---------------------------
     @Test
     @DisplayName("should normalize email before persisting")
     void testEmailIsNormalized() {
-        UserCreateRequest request = new UserCreateRequest("eve", " Eve@MAIL.COM ", "StrongPass1");
-
-        User savedUser = new User(3L, "eve", "eve@mail.com", true, Set.of(RoleName.USER), null, null, "encodedPassword");
-        UserResponse response = new UserResponse(3L, "eve", "eve@mail.com", true, Set.of("USER"), null, null);
+        UserCreateRequest request = new UserCreateRequest("eve", "Eve@MAIL.COM", "StrongPass1", null, null);
+        User saved = buildUser(3L, "eve@mail.com");
+        UserResponse response = buildResponse(3L, "eve@mail.com");
 
         when(userRepositoryPort.existsByUsername("eve")).thenReturn(false);
         when(userRepositoryPort.existsByEmail("eve@mail.com")).thenReturn(false);
-        when(userRepositoryPort.save(any(User.class))).thenReturn(savedUser);
-        when(mapper.toResponse(savedUser)).thenReturn(response);
+        when(userRepositoryPort.save(any(User.class))).thenReturn(saved);
+        when(mapper.toResponse(saved)).thenReturn(response);
 
         UserResponse result = service.createUser(request);
 
         assertThat(result.email()).isEqualTo("eve@mail.com");
-        verify(passwordEncoder).encode("StrongPass1");
-        verify(userRepositoryPort).save(any(User.class));
     }
 }

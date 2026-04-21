@@ -9,11 +9,6 @@ import java.util.regex.Pattern;
 
 import com.renewsim.backend.shared.domain.vo.RoleName;
 
-/**
- * User aggregate root.
- * Manages user identity, status, and role assignments.
- * Pure domain object without framework annotations.
- */
 public class User {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
@@ -29,20 +24,8 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime activatedAt;
 
-    /**
-     * Private constructor enforcing invariants.
-     * Only accessible via factory methods.
-     */
-    private User(
-            Long id,
-            String email,
-            String passwordHash,
-            String fullName,
-            String phone,
-            UserStatus status,
-            Set<RoleName> roles,
-            LocalDateTime createdAt,
-            LocalDateTime activatedAt) {
+    private User(Long id, String email, String passwordHash, String fullName, String phone,
+            UserStatus status, Set<RoleName> roles, LocalDateTime createdAt, LocalDateTime activatedAt) {
         this.id = id;
         this.email = requireValidEmail(email);
         this.passwordHash = requireValidPasswordHash(passwordHash);
@@ -54,111 +37,69 @@ public class User {
         this.activatedAt = activatedAt;
     }
 
-    /**
-     * Factory method for creating new users (without ID).
-     * Initial status is always INACTIVE.
-     */
-    public static User create(
-            String email,
-            String passwordHash,
-            String fullName,
-            String phone,
-            Set<RoleName> roles) {
-        return new User(
-                null,
-                email,
-                passwordHash,
-                fullName,
-                phone,
-                UserStatus.INACTIVE,
-                roles,
-                LocalDateTime.now(),
-                null);
+    public static User create(String email, String passwordHash, String fullName,
+            String phone, Set<RoleName> roles) {
+        return new User(null, email, passwordHash, fullName, phone,
+                UserStatus.INACTIVE, roles, LocalDateTime.now(), null);
     }
 
-    /**
-     * Factory method for reconstituting users from persistence.
-     */
-    public static User reconstitute(
-            Long id,
-            String email,
-            String passwordHash,
-            String fullName,
-            String phone,
-            UserStatus status,
-            Set<RoleName> roles,
-            LocalDateTime createdAt,
-            LocalDateTime activatedAt) {
-        return new User(
-                id, email, passwordHash, fullName, phone,
+    public static User reconstitute(Long id, String email, String passwordHash, String fullName,
+            String phone, UserStatus status, Set<RoleName> roles,
+            LocalDateTime createdAt, LocalDateTime activatedAt) {
+        return new User(id, email, passwordHash, fullName, phone,
                 status, roles, createdAt, activatedAt);
     }
 
-    /**
-     * Activates the user account.
-     * Idempotent: if already ACTIVE, does nothing.
-     */
     public void activate() {
-        if (this.status == UserStatus.ACTIVE) {
+        if (this.status == UserStatus.ACTIVE)
             return;
-        }
         this.status = UserStatus.ACTIVE;
         this.activatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Suspends the user account temporarily.
-     * Idempotent operation.
-     */
     public void suspend() {
-        if (this.status == UserStatus.SUSPENDED) {
+        if (this.status == UserStatus.SUSPENDED)
             return;
-        }
         this.status = UserStatus.SUSPENDED;
     }
 
-    /**
-     * Checks if user has a specific role.
-     */
     public boolean hasRole(RoleName roleName) {
         return roles.contains(roleName);
     }
 
-    /**
-     * Adds a role to the user.
-     * Prevents duplicates via Set semantics.
-     */
     public void addRole(RoleName roleName) {
         Objects.requireNonNull(roleName, "RoleName cannot be null");
         this.roles.add(roleName);
     }
 
-    /**
-     * Removes a role from the user.
-     */
     public void removeRole(RoleName roleName) {
         Objects.requireNonNull(roleName, "RoleName cannot be null");
         this.roles.remove(roleName);
     }
 
+    public void updateProfile(String fullName, String phone) {
+        this.fullName = fullName;
+        this.phone = phone;
+    }
+
+    public void changePassword(String newPasswordHash) {
+        this.passwordHash = requireValidPasswordHash(newPasswordHash);
+    }
+
     private String requireValidEmail(String email) {
-        if (email == null || email.isBlank()) {
+        if (email == null || email.isBlank())
             throw new IllegalArgumentException("Email cannot be null or empty");
-        }
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
+        if (!EMAIL_PATTERN.matcher(email).matches())
             throw new IllegalArgumentException("Email format is invalid: " + email);
-        }
         return email.toLowerCase().trim();
     }
 
     private String requireValidPasswordHash(String passwordHash) {
-        if (passwordHash == null || passwordHash.isBlank()) {
+        if (passwordHash == null || passwordHash.isBlank())
             throw new IllegalArgumentException("PasswordHash cannot be null or empty");
-        }
-        if (!BCRYPT_PATTERN.matcher(passwordHash).matches()) {
+        if (!BCRYPT_PATTERN.matcher(passwordHash).matches())
             throw new IllegalArgumentException(
                     "PasswordHash must be a valid BCrypt hash (starts with $2a$, $2b$, or $2y$)");
-        }
         return passwordHash;
     }
 
@@ -186,9 +127,6 @@ public class User {
         return status;
     }
 
-    /**
-     * Returns an immutable copy of roles.
-     */
     public Set<RoleName> getRoles() {
         return Collections.unmodifiableSet(roles);
     }
