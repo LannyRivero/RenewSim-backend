@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class ActivateAccountService implements ActivateAccountUseCase {
 
@@ -22,7 +23,6 @@ public class ActivateAccountService implements ActivateAccountUseCase {
     private final UserAccountGateway userAccountGateway;
 
     @Override
-    @Transactional
     public ActivateAccountResultDTO execute(ActivateAccountCommand command) {
         String rawToken = command.token();
         String tokenHash = TokenHasher.hash(rawToken);
