@@ -54,8 +54,7 @@ public class LoginStep1Service implements LoginStep1UseCase {
         OtpCode otpCode = OtpCode.issue(user.id(), hashedOtp, OtpCode.Purpose.LOGIN);
         otpCodeRepositoryPort.save(otpCode);
 
-        // Deliver OTP via email — adapter is profile-specific (logging in local/test,
-        // SMTP in prod)
+        // Deliver OTP via email — adapter is profile-specific
         emailPort.sendOtp(user.email(), rawOtp, OTP_EXPIRES_IN_SECONDS);
         log.info("OTP sent for userId={}", user.id());
 

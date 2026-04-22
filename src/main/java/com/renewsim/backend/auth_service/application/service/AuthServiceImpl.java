@@ -32,66 +32,67 @@ import static com.renewsim.backend.auth_service.domain.error.AuthErrorCode.*;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthUseCase {
 
-        private final UserAccountGateway userAccountGateway;
-        private final AuthValidator authValidator;
-        private final AuthResponseMapper authResponseMapper;
-        private final ActivationTokenRepositoryPort activationTokenRepositoryPort;
-        private final EmailPort emailPort;
+    private final UserAccountGateway userAccountGateway;
+    private final AuthValidator authValidator;
+    private final AuthResponseMapper authResponseMapper;
+    private final ActivationTokenRepositoryPort activationTokenRepositoryPort;
+    private final EmailPort emailPort;
 
-        @Override
-        public AuthResponseDTO login(AuthRequestDTO request) {
-                authValidator.validateCredentials(request);
+    @Override
+    public AuthResponseDTO login(AuthRequestDTO request) {
+        authValidator.validateCredentials(request);
 
-                String loginInput = request.getUsername();
+        String loginInput = request.getUsername();
 
-                UserSnapshot user = (loginInput.contains("@")
-                                ? userAccountGateway.findByEmail(loginInput)
-                                : userAccountGateway.findByUsername(loginInput))
-                                .orElseThrow(() -> new AuthenticationException(
-                                                ErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS)));
+        UserSnapshot user = (loginInput.contains("@")
+                ? userAccountGateway.findByEmail(loginInput)
+                : userAccountGateway.findByUsername(loginInput))
+                .orElseThrow(() -> new AuthenticationException(
+                        ErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS)));
 
-                authValidator.validateUserEnable(user.enabled());
-                authValidator.validatePassword(request.getPassword(), user.passwordHash());
+        authValidator.validateUserEnable(user.enabled());
+        authValidator.validatePassword(request.getPassword(), user.passwordHash());
 
-                return authResponseMapper.toAuthResponseDTO(user);
+        return authResponseMapper.toAuthResponseDTO(user);
+    }
+
+    @Override
+    @Transactional
+    public RegisterResponseDTO register(RegisterRequestDTO request) {
+        // Structural validation is covered by @Valid in the controller.
+        // Here we only enforce business invariants.
+        if (userAccountGateway.existsByEmail(request.email())) {
+            throw new ResourceConflictException(
+                    AUTH_EMAIL_CONFLICT.code(),
+                    AUTH_EMAIL_CONFLICT.defaultMessage());
         }
 
-        @Override
-        @Transactional
-        public RegisterResponseDTO register(RegisterRequestDTO request) {
-                // Structural validation is covered by @Valid in the controller.
-                // Here we only enforce business invariants.
-                if (userAccountGateway.existsByEmail(request.email())) {
-                        throw new ResourceConflictException(
-                                        AUTH_EMAIL_CONFLICT.code(),
-                                        AUTH_EMAIL_CONFLICT.defaultMessage());
-                }
+        UserSnapshot user = userAccountGateway.createUser(
+                request.fullName(),
+                request.password(),
+                request.email(),
+                Set.of(RoleName.USER));
 
-                UserSnapshot user = userAccountGateway.createUser(
-                                request.fullName(),
-                                request.password(),
-                                request.email(),
-                                Set.of(RoleName.USER));
+        // Invalidate any previous activation tokens for this user
+        activationTokenRepositoryPort.deleteByUserId(user.id());
 
-                // Generate a cryptographically random activation token (UUID v4 = 122 bits of
-                // entropy).
-                // The raw value is sent to the user; only its SHA-256 hash is stored in the DB.
-                String rawToken = UUID.randomUUID().toString();
-                String tokenHash = TokenHasher.hash(rawToken);
+        // Generate a cryptographically random token (UUID v4 = 122 bits of entropy).
+        // The raw value is sent to the user; only its SHA-256 hash is stored in the DB.
+        String rawToken = UUID.randomUUID().toString();
+        String tokenHash = TokenHasher.hash(rawToken);
 
-                ActivationToken activationToken = ActivationToken.issue(user.id(), tokenHash);
-                activationTokenRepositoryPort.save(activationToken);
+        ActivationToken activationToken = ActivationToken.issue(user.id(), tokenHash);
+        activationTokenRepositoryPort.save(activationToken);
 
-                // Deliver activation email — adapter is profile-specific (logging in
-                // local/test, SMTP in prod)
-                emailPort.sendActivationEmail(user.email(), rawToken);
-                log.info("Activation email sent for userId={}", user.id());
+        // Deliver activation email — adapter is profile-specific
+        emailPort.sendActivationEmail(user.email(), rawToken);
+        log.info("Activation email sent for userId={}", user.id());
 
-                return new RegisterResponseDTO(
-                                user.id(),
-                                user.email(),
-                                user.fullName(),
-                                user.status(),
-                                "User registered successfully. Please check your email to activate your account.");
-        }
+        return new RegisterResponseDTO(
+                user.id(),
+                user.email(),
+                user.fullName(),
+                user.status(),
+                "User registered successfully. Please check your email to activate your account.");
+    }
 }
