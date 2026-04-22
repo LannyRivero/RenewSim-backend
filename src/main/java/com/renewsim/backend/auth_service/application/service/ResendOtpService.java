@@ -2,6 +2,7 @@ package com.renewsim.backend.auth_service.application.service;
 
 import com.renewsim.backend.auth_service.application.command.ResendOtpCommand;
 import com.renewsim.backend.auth_service.application.port.in.ResendOtpUseCase;
+import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.ResendOtpResultDTO;
@@ -25,6 +26,7 @@ public class ResendOtpService implements ResendOtpUseCase {
     private final OtpCodeRepositoryPort otpCodeRepositoryPort;
     private final OtpGenerator otpGenerator;
     private final PasswordEncoder passwordEncoder;
+    private final EmailPort emailPort;
 
     @Override
     @Transactional
@@ -36,9 +38,7 @@ public class ResendOtpService implements ResendOtpUseCase {
 
         if (user == null || !user.enabled()) {
             log.warn("ResendOtp attempted for unknown or disabled email");
-            return new ResendOtpResultDTO(
-                    "If your account exists and is active, a new OTP has been sent.",
-                    OTP_EXPIRES_IN_SECONDS);
+            return genericResponse();
         }
 
         // Invalidate all previous OTPs for this user
@@ -50,9 +50,14 @@ public class ResendOtpService implements ResendOtpUseCase {
         OtpCode otpCode = OtpCode.issue(user.id(), hashedOtp, OtpCode.Purpose.LOGIN);
         otpCodeRepositoryPort.save(otpCode);
 
-        // TODO: send OTP via email (EmailPort — Task 2.9)
-        log.info("OTP resent for userId={} [email delivery pending]", user.id());
+        // Deliver OTP via email — adapter is profile-specific
+        emailPort.sendOtp(user.email(), rawOtp, OTP_EXPIRES_IN_SECONDS);
+        log.info("OTP resent for userId={}", user.id());
 
+        return genericResponse();
+    }
+
+    private static ResendOtpResultDTO genericResponse() {
         return new ResendOtpResultDTO(
                 "If your account exists and is active, a new OTP has been sent.",
                 OTP_EXPIRES_IN_SECONDS);

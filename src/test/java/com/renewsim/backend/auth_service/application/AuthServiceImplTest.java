@@ -1,9 +1,12 @@
 package com.renewsim.backend.auth_service.application;
 
 import com.renewsim.backend.auth_service.application.mapper.AuthResponseMapper;
+import com.renewsim.backend.auth_service.application.port.out.ActivationTokenRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.service.AuthServiceImpl;
 import com.renewsim.backend.auth_service.domain.AuthValidator;
+import com.renewsim.backend.auth_service.domain.model.ActivationToken;
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
 import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
@@ -27,24 +30,29 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest extends UnitTestBase {
 
-    @Mock
-    private UserAccountGateway userAccountGateway;
-    @Mock
-    private AuthValidator authValidator;
-    @Mock
-    private AuthResponseMapper authResponseMapper;
+    @Mock private UserAccountGateway userAccountGateway;
+    @Mock private AuthValidator authValidator;
+    @Mock private AuthResponseMapper authResponseMapper;
+    @Mock private ActivationTokenRepositoryPort activationTokenRepositoryPort;
+    @Mock private EmailPort emailPort;
 
     private AuthServiceImpl authService;
     private UserSnapshot snapshot;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthServiceImpl(userAccountGateway, authValidator, authResponseMapper);
+        authService = new AuthServiceImpl(
+                userAccountGateway,
+                authValidator,
+                authResponseMapper,
+                activationTokenRepositoryPort,
+                emailPort);
         snapshot = UserSnapshotMother.activeUser("john", Set.of(RoleName.USER));
     }
 
@@ -147,11 +155,13 @@ class AuthServiceImplTest extends UnitTestBase {
         verify(userAccountGateway).existsByEmail("john@example.com");
         verify(userAccountGateway, never()).createUser(any(), any(), any(), any());
         verifyNoInteractions(authResponseMapper);
+        verifyNoInteractions(activationTokenRepositoryPort);
+        verifyNoInteractions(emailPort);
     }
 
     @Test
-    @DisplayName("register: datos válidos → crea usuario y devuelve RegisterResponseDTO")
-    void register_validData_createsUserAndReturnsDTO() {
+    @DisplayName("register: datos válidos → crea usuario, persiste token y envía email")
+    void register_validData_createsUserPersistsTokenAndSendsEmail() {
         RegisterRequestDTO request = new RegisterRequestDTO(
                 "john@example.com", "SecurePass1!", "John Doe");
 
@@ -159,6 +169,8 @@ class AuthServiceImplTest extends UnitTestBase {
         when(userAccountGateway.createUser("John Doe", "SecurePass1!",
                 "john@example.com", Set.of(RoleName.USER)))
                 .thenReturn(snapshot);
+        when(activationTokenRepositoryPort.save(any(ActivationToken.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
         RegisterResponseDTO result = authService.register(request);
 
@@ -171,7 +183,43 @@ class AuthServiceImplTest extends UnitTestBase {
         verify(userAccountGateway).existsByEmail("john@example.com");
         verify(userAccountGateway).createUser("John Doe", "SecurePass1!",
                 "john@example.com", Set.of(RoleName.USER));
+        verify(activationTokenRepositoryPort).save(any(ActivationToken.class));
+        verify(emailPort).sendActivationEmail(eq(snapshot.email()), any(String.class));
         verifyNoInteractions(authResponseMapper);
+    }
+
+    @Test
+    @DisplayName("register: el token de activación que se persiste tiene el userId correcto")
+    void register_validData_activationTokenHasCorrectUserId() {
+        RegisterRequestDTO request = new RegisterRequestDTO(
+                "john@example.com", "SecurePass1!", "John Doe");
+
+        when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
+        when(userAccountGateway.createUser(any(), any(), any(), any())).thenReturn(snapshot);
+        when(activationTokenRepositoryPort.save(any(ActivationToken.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        authService.register(request);
+
+        verify(activationTokenRepositoryPort)
+                .save(argThat(token -> token.getUserId().equals(snapshot.id()) && !token.isUsed()));
+    }
+
+    @Test
+    @DisplayName("register: sendActivationEmail recibe email del usuario y un token no vacío")
+    void register_validData_emailPortReceivesCorrectEmailAndNonBlankToken() {
+        RegisterRequestDTO request = new RegisterRequestDTO(
+                "john@example.com", "SecurePass1!", "John Doe");
+
+        when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
+        when(userAccountGateway.createUser(any(), any(), any(), any())).thenReturn(snapshot);
+        when(activationTokenRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        authService.register(request);
+
+        verify(emailPort).sendActivationEmail(
+                eq(snapshot.email()),
+                argThat(token -> token != null && !token.isBlank()));
     }
 
     @Test
@@ -182,6 +230,7 @@ class AuthServiceImplTest extends UnitTestBase {
 
         when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
         when(userAccountGateway.createUser(any(), any(), any(), any())).thenReturn(snapshot);
+        when(activationTokenRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         authService.register(request);
 
