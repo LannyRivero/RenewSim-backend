@@ -32,6 +32,7 @@ public class UserController {
         private final GetMyProfileUseCase getMyProfileUseCase;
         private final UpdateMyProfileUseCase updateMyProfileUseCase;
         private final ChangeMyPasswordUseCase changeMyPasswordUseCase;
+        private final ActivateUserUseCase activateUserUseCase;
 
         // ----------------------------------------------------
         // POST /users → Create
@@ -206,11 +207,9 @@ public class UserController {
         // ----------------------------------------------------
         // PUT /users/{id}/activate → Activate user account
         // ----------------------------------------------------
-        @Operation(summary = "Activate user account", description = "Requires role SERVICE_AUTH (internal use)", security = @SecurityRequirement(name = "bearerAuth"))
         @PutMapping("/{id}/activate")
-        @PreAuthorize("hasRole('SERVICE_AUTH')")
         public ResponseEntity<OperationResponse<Void>> activate(@PathVariable Long id) {
-                // TODO: implement ActivateUserUseCase in user_service (Task 2.6)
+                activateUserUseCase.activate(id);
                 return ResponseEntity.ok(ApiResponseFactory.noContent("User activated successfully"));
         }
 }
