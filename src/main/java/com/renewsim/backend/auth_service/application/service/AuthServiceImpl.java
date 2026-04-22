@@ -1,9 +1,13 @@
 package com.renewsim.backend.auth_service.application.service;
 
 import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
+import com.renewsim.backend.auth_service.application.port.out.ActivationTokenRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.mapper.AuthResponseMapper;
 import com.renewsim.backend.auth_service.domain.AuthValidator;
+import com.renewsim.backend.auth_service.domain.model.ActivationToken;
+import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
 import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
@@ -14,13 +18,16 @@ import com.renewsim.backend.shared.error.ErrorMessageFactory;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.shared.exception.ResourceConflictException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
+import java.util.UUID;
 
 import static com.renewsim.backend.auth_service.domain.error.AuthErrorCode.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthUseCase {
@@ -28,6 +35,8 @@ public class AuthServiceImpl implements AuthUseCase {
         private final UserAccountGateway userAccountGateway;
         private final AuthValidator authValidator;
         private final AuthResponseMapper authResponseMapper;
+        private final ActivationTokenRepositoryPort activationTokenRepositoryPort;
+        private final EmailPort emailPort;
 
         @Override
         public AuthResponseDTO login(AuthRequestDTO request) {
@@ -50,8 +59,8 @@ public class AuthServiceImpl implements AuthUseCase {
         @Override
         @Transactional
         public RegisterResponseDTO register(RegisterRequestDTO request) {
-                // Validación estructural cubierta por @Valid en el controller.
-                // Aquí solo validamos invariantes de negocio.
+                // Structural validation is covered by @Valid in the controller.
+                // Here we only enforce business invariants.
                 if (userAccountGateway.existsByEmail(request.email())) {
                         throw new ResourceConflictException(
                                         AUTH_EMAIL_CONFLICT.code(),
@@ -63,6 +72,20 @@ public class AuthServiceImpl implements AuthUseCase {
                                 request.password(),
                                 request.email(),
                                 Set.of(RoleName.USER));
+
+                // Generate a cryptographically random activation token (UUID v4 = 122 bits of
+                // entropy).
+                // The raw value is sent to the user; only its SHA-256 hash is stored in the DB.
+                String rawToken = UUID.randomUUID().toString();
+                String tokenHash = TokenHasher.hash(rawToken);
+
+                ActivationToken activationToken = ActivationToken.issue(user.id(), tokenHash);
+                activationTokenRepositoryPort.save(activationToken);
+
+                // Deliver activation email — adapter is profile-specific (logging in
+                // local/test, SMTP in prod)
+                emailPort.sendActivationEmail(user.email(), rawToken);
+                log.info("Activation email sent for userId={}", user.id());
 
                 return new RegisterResponseDTO(
                                 user.id(),

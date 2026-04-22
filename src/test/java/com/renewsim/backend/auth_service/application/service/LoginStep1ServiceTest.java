@@ -1,6 +1,7 @@
 package com.renewsim.backend.auth_service.application.service;
 
 import com.renewsim.backend.auth_service.application.command.LoginStep1Command;
+import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.LoginStep1ResultDTO;
@@ -23,6 +24,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +39,8 @@ class LoginStep1ServiceTest {
         private OtpGenerator otpGenerator;
         @Mock
         private PasswordEncoder passwordEncoder;
+        @Mock
+        private EmailPort emailPort;
 
         @InjectMocks
         private LoginStep1Service service;
@@ -51,8 +55,8 @@ class LoginStep1ServiceTest {
         }
 
         @Test
-        @DisplayName("credenciales válidas -> mensaje genérico e invalida OTP anterior")
-        void execute_validCredentials_generatesOtp() {
+        @DisplayName("credenciales válidas → genera OTP, persiste y envía email")
+        void execute_validCredentials_generatesOtpAndSendsEmail() {
                 when(userAccountGateway.findByEmail("john@example.com"))
                                 .thenReturn(Optional.of(activeUser));
                 when(passwordEncoder.matches("secret", activeUser.passwordHash())).thenReturn(true);
@@ -70,11 +74,12 @@ class LoginStep1ServiceTest {
                 verify(otpCodeRepositoryPort).save(any(OtpCode.class));
                 verify(otpGenerator).generate();
                 verify(passwordEncoder).encode("123456");
+                verify(emailPort).sendOtp(eq(activeUser.email()), eq("123456"), eq(300));
         }
 
         @Test
-        @DisplayName("email desconocido -> mensaje genérico sin generar OTP")
-        void execute_unknownEmail_returnsGenericMessage() {
+        @DisplayName("email desconocido → respuesta genérica sin generar OTP ni enviar email")
+        void execute_unknownEmail_returnsGenericMessageWithoutEmail() {
                 when(userAccountGateway.findByEmail("unknown@example.com"))
                                 .thenReturn(Optional.empty());
 
@@ -84,11 +89,12 @@ class LoginStep1ServiceTest {
                 assertThat(result.message()).contains("If your account exists");
                 verifyNoInteractions(otpGenerator);
                 verifyNoInteractions(otpCodeRepositoryPort);
+                verifyNoInteractions(emailPort);
         }
 
         @Test
-        @DisplayName("usuario desactivado -> mensaje genérico sin generar OTP")
-        void execute_disabledUser_returnsGenericMessage() {
+        @DisplayName("usuario desactivado → respuesta genérica sin generar OTP ni enviar email")
+        void execute_disabledUser_returnsGenericMessageWithoutEmail() {
                 when(userAccountGateway.findByEmail("jane@example.com"))
                                 .thenReturn(Optional.of(disabledUser));
 
@@ -98,11 +104,12 @@ class LoginStep1ServiceTest {
                 assertThat(result.message()).contains("If your account exists");
                 verifyNoInteractions(otpGenerator);
                 verifyNoInteractions(otpCodeRepositoryPort);
+                verifyNoInteractions(emailPort);
         }
 
         @Test
-        @DisplayName("password incorrecta -> mensaje genérico sin generar OTP")
-        void execute_wrongPassword_returnsGenericMessage() {
+        @DisplayName("password incorrecta → respuesta genérica sin generar OTP ni enviar email")
+        void execute_wrongPassword_returnsGenericMessageWithoutEmail() {
                 when(userAccountGateway.findByEmail("john@example.com"))
                                 .thenReturn(Optional.of(activeUser));
                 when(passwordEncoder.matches("wrongpass", activeUser.passwordHash())).thenReturn(false);
@@ -113,10 +120,11 @@ class LoginStep1ServiceTest {
                 assertThat(result.message()).contains("If your account exists");
                 verifyNoInteractions(otpGenerator);
                 verifyNoInteractions(otpCodeRepositoryPort);
+                verifyNoInteractions(emailPort);
         }
 
         @Test
-        @DisplayName("credenciales válidas -> expiresInSeconds es 300")
+        @DisplayName("credenciales válidas → expiresInSeconds es 300")
         void execute_validCredentials_expiresIn300Seconds() {
                 when(userAccountGateway.findByEmail("john@example.com"))
                                 .thenReturn(Optional.of(activeUser));
@@ -129,5 +137,20 @@ class LoginStep1ServiceTest {
                                 new LoginStep1Command("john@example.com", "secret"));
 
                 assertThat(result.expiresInSeconds()).isEqualTo(300);
+        }
+
+        @Test
+        @DisplayName("credenciales válidas → sendOtp recibe el OTP correcto y TTL de 300s")
+        void execute_validCredentials_emailPortReceivesCorrectOtpAndTtl() {
+                when(userAccountGateway.findByEmail("john@example.com"))
+                                .thenReturn(Optional.of(activeUser));
+                when(passwordEncoder.matches("secret", activeUser.passwordHash())).thenReturn(true);
+                when(otpGenerator.generate()).thenReturn("999888");
+                when(passwordEncoder.encode("999888")).thenReturn("$hashed");
+                when(otpCodeRepositoryPort.save(any())).thenAnswer(i -> i.getArgument(0));
+
+                service.execute(new LoginStep1Command("john@example.com", "secret"));
+
+                verify(emailPort).sendOtp(activeUser.email(), "999888", 300);
         }
 }
