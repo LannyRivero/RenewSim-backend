@@ -4,8 +4,9 @@ import com.renewsim.backend.auth_service.application.command.ActivateAccountComm
 import com.renewsim.backend.auth_service.application.port.in.ActivateAccountUseCase;
 import com.renewsim.backend.auth_service.application.port.out.ActivationTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.domain.model.ActivationToken;
 import com.renewsim.backend.auth_service.application.result.ActivateAccountResultDTO;
+import com.renewsim.backend.auth_service.domain.model.ActivationToken;
+import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,21 +24,21 @@ public class ActivateAccountService implements ActivateAccountUseCase {
     @Override
     @Transactional
     public ActivateAccountResultDTO execute(ActivateAccountCommand command) {
+        String rawToken = command.token();
+        String tokenHash = TokenHasher.hash(rawToken);
 
         ActivationToken token = activationTokenRepositoryPort
-                .findByTokenHash(command.token())
+                .findByTokenHash(tokenHash)
                 .orElseThrow(() -> new AuthenticationException("Invalid or expired activation token"));
 
         if (!token.isValid()) {
             throw new AuthenticationException("Invalid or expired activation token");
         }
 
-        // Mark token as consumed
+        userAccountGateway.activateUser(token.getUserId());
+
         token.markUsed();
         activationTokenRepositoryPort.save(token);
-
-        // Activate the user account
-        userAccountGateway.activateUser(token.getUserId());
 
         log.info("Account activated for userId={}", token.getUserId());
 
