@@ -12,30 +12,24 @@ import org.springframework.stereotype.Component;
  * <strong>Status: STUB — NOT YET IMPLEMENTED (Phase 5 / D2-01-smtp)</strong>
  *
  * <p>
- * This class is the placeholder that satisfies Spring's bean requirement
- * on non-local profiles. All methods throw
- * {@link UnsupportedOperationException}
- * until a real SMTP / SES implementation is provided.
+ * This class satisfies Spring's bean requirement on non-local profiles.
+ * All methods throw {@link UnsupportedOperationException} until a real
+ * SMTP / SES implementation is provided.
  *
  * <p>
  * Implementation checklist (Phase 5):
  * <ol>
- * <li>Add {@code spring-boot-starter-mail} dependency in pom.xml.</li>
- * <li>Inject {@code JavaMailSender} and a {@code TemplateEngine} (Thymeleaf
- * or FreeMarker) for HTML templates.</li>
- * <li>Configure {@code spring.mail.*} properties in
- * {@code application-docker.yml} and {@code application-prod.yml}
- * using environment variables — never hardcode credentials.</li>
- * <li>Replace the {@link UnsupportedOperationException} calls with real
- * {@code MimeMessage} construction and {@code mailSender.send()} calls.</li>
- * <li>Add Resilience4j retry around {@code mailSender.send()} to handle
- * transient SMTP failures.</li>
- * <li>Write integration tests with GreenMail or MockMvc mail capture.</li>
+ * <li>Add {@code spring-boot-starter-mail} in pom.xml.</li>
+ * <li>Inject {@code JavaMailSender} and a template engine.</li>
+ * <li>Configure {@code spring.mail.*} via env vars — never hardcode.</li>
+ * <li>Replace {@link UnsupportedOperationException} with real send logic.</li>
+ * <li>Add Resilience4j retry around {@code mailSender.send()}.</li>
+ * <li>Write integration tests with GreenMail.</li>
  * </ol>
  *
  * <p>
- * <strong>Security rule:</strong> never log raw OTPs or activation tokens
- * in this adapter — log only {@code to} address and a masked reference.
+ * <strong>Security rule:</strong> never log raw OTPs or activation tokens —
+ * log only the recipient address and a masked reference.
  */
 @Slf4j
 @Component
@@ -44,16 +38,14 @@ public class SmtpEmailAdapter implements EmailPort {
 
     @Override
     public void sendOtp(String toEmail, String rawOtp, int expiresInSeconds) {
-        // TODO Phase 5 — implement SMTP delivery
-        log.error("SmtpEmailAdapter.sendOtp() is not implemented. Email NOT sent to={}", toEmail);
+        log.error("SmtpEmailAdapter.sendOtp() not implemented. Email NOT sent to={}", toEmail);
         throw new UnsupportedOperationException(
                 "SmtpEmailAdapter is not implemented yet. See D2-01-smtp in the backlog.");
     }
 
     @Override
     public void sendActivationEmail(String toEmail, String activationToken) {
-        // TODO Phase 5 — implement SMTP delivery
-        log.error("SmtpEmailAdapter.sendActivationEmail() is not implemented. Email NOT sent to={}", toEmail);
+        log.error("SmtpEmailAdapter.sendActivationEmail() not implemented. Email NOT sent to={}", toEmail);
         throw new UnsupportedOperationException(
                 "SmtpEmailAdapter is not implemented yet. See D2-01-smtp in the backlog.");
     }

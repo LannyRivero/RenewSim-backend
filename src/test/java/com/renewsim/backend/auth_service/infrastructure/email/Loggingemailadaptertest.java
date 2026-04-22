@@ -29,7 +29,7 @@ class LoggingEmailAdapterTest {
     }
 
     @Test
-    @DisplayName("sendOtp: email nulo → lanza IllegalArgumentException")
+    @DisplayName("sendOtp: email nulo → lanza IllegalArgumentException con campo 'toEmail'")
     void sendOtp_nullEmail_throwsIllegalArgument() {
         assertThatThrownBy(() -> adapter.sendOtp(null, "123456", 300))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -45,7 +45,7 @@ class LoggingEmailAdapterTest {
     }
 
     @Test
-    @DisplayName("sendOtp: OTP nulo → lanza IllegalArgumentException")
+    @DisplayName("sendOtp: OTP nulo → lanza IllegalArgumentException con campo 'rawOtp'")
     void sendOtp_nullOtp_throwsIllegalArgument() {
         assertThatThrownBy(() -> adapter.sendOtp("user@example.com", null, 300))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -67,8 +67,7 @@ class LoggingEmailAdapterTest {
     @Test
     @DisplayName("sendActivationEmail: parámetros válidos → no lanza excepción")
     void sendActivationEmail_validParams_doesNotThrow() {
-        assertThatCode(() -> adapter.sendActivationEmail(
-                "user@example.com", "some-raw-token-value"))
+        assertThatCode(() -> adapter.sendActivationEmail("user@example.com", "raw-token-value"))
                 .doesNotThrowAnyException();
     }
 

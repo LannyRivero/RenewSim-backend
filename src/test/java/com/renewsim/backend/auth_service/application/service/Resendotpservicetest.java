@@ -53,12 +53,11 @@ class ResendOtpServiceTest {
     }
 
     @Test
-    @DisplayName("email válido → invalida OTP anterior, genera nuevo y envía email")
+    @DisplayName("email válido → invalida OTP previo, genera nuevo y envía email")
     void execute_validEmail_resetsOtpAndSendsEmail() {
-        when(userAccountGateway.findByEmail("john@example.com"))
-                .thenReturn(Optional.of(activeUser));
+        when(userAccountGateway.findByEmail("john@example.com")).thenReturn(Optional.of(activeUser));
         when(otpGenerator.generate()).thenReturn("111222");
-        when(passwordEncoder.encode("111222")).thenReturn("$hashed_111222");
+        when(passwordEncoder.encode("111222")).thenReturn("$hashed");
         when(otpCodeRepositoryPort.save(any(OtpCode.class))).thenAnswer(i -> i.getArgument(0));
 
         ResendOtpResultDTO result = service.execute(new ResendOtpCommand("john@example.com"));
@@ -72,39 +71,32 @@ class ResendOtpServiceTest {
     }
 
     @Test
-    @DisplayName("email desconocido → respuesta genérica sin interacción con email")
-    void execute_unknownEmail_returnsGenericMessageWithoutEmail() {
-        when(userAccountGateway.findByEmail("ghost@example.com"))
-                .thenReturn(Optional.empty());
+    @DisplayName("email desconocido → respuesta genérica, sin OTP ni email")
+    void execute_unknownEmail_returnsGenericWithoutEmail() {
+        when(userAccountGateway.findByEmail("ghost@example.com")).thenReturn(Optional.empty());
 
         ResendOtpResultDTO result = service.execute(new ResendOtpCommand("ghost@example.com"));
 
         assertThat(result.message()).contains("If your account exists");
-        verifyNoInteractions(otpGenerator);
-        verifyNoInteractions(otpCodeRepositoryPort);
-        verifyNoInteractions(emailPort);
+        verifyNoInteractions(otpGenerator, otpCodeRepositoryPort, emailPort);
     }
 
     @Test
-    @DisplayName("usuario desactivado → respuesta genérica sin interacción con email")
-    void execute_disabledUser_returnsGenericMessageWithoutEmail() {
+    @DisplayName("usuario desactivado → respuesta genérica, sin OTP ni email")
+    void execute_disabledUser_returnsGenericWithoutEmail() {
         UserSnapshot disabled = UserSnapshotMother.disabledUser("jane", Set.of(RoleName.USER));
-        when(userAccountGateway.findByEmail("jane@example.com"))
-                .thenReturn(Optional.of(disabled));
+        when(userAccountGateway.findByEmail("jane@example.com")).thenReturn(Optional.of(disabled));
 
         ResendOtpResultDTO result = service.execute(new ResendOtpCommand("jane@example.com"));
 
         assertThat(result.message()).contains("If your account exists");
-        verifyNoInteractions(otpGenerator);
-        verifyNoInteractions(otpCodeRepositoryPort);
-        verifyNoInteractions(emailPort);
+        verifyNoInteractions(otpGenerator, otpCodeRepositoryPort, emailPort);
     }
 
     @Test
     @DisplayName("email válido → sendOtp recibe TTL de 300 segundos")
     void execute_validEmail_emailPortReceives300SecondTtl() {
-        when(userAccountGateway.findByEmail("john@example.com"))
-                .thenReturn(Optional.of(activeUser));
+        when(userAccountGateway.findByEmail("john@example.com")).thenReturn(Optional.of(activeUser));
         when(otpGenerator.generate()).thenReturn("333444");
         when(passwordEncoder.encode("333444")).thenReturn("$hash");
         when(otpCodeRepositoryPort.save(any())).thenAnswer(i -> i.getArgument(0));

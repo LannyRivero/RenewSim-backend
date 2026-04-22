@@ -15,21 +15,21 @@ import org.springframework.stereotype.Component;
  *
  * <p>
  * <strong>Security rule:</strong> this adapter intentionally prints
- * sensitive data (raw OTPs, activation tokens) to the console. It must
- * <em>never</em> be activated on {@code docker} or {@code prod} profiles,
- * which is enforced by the {@code @Profile} annotation.
+ * sensitive data (raw OTPs, activation tokens) to the console. It MUST
+ * NEVER be activated on {@code docker} or {@code prod} profiles — enforced
+ * by the {@code @Profile} annotation.
  *
  * <p>
- * Trade-off: a logging adapter is simpler than a Greenmail/mock-SMTP
- * setup and is sufficient for the thesis scope. A real {@code SmtpEmailAdapter}
- * bound to {@code docker|prod} must replace this before going live.
+ * Trade-off accepted: logging stub is simpler than a Greenmail/MockSMTP
+ * setup and sufficient for the thesis scope. A real {@code SmtpEmailAdapter}
+ * bound to {@code docker|prod} replaces this before going live.
  */
 @Slf4j
 @Component
 @Profile({ "local", "test" })
 public class LoggingEmailAdapter implements EmailPort {
 
-    private static final String SEPARATOR = "=".repeat(60);
+    private static final String SEP = "=".repeat(60);
 
     @Override
     public void sendOtp(String toEmail, String rawOtp, int expiresInSeconds) {
@@ -43,7 +43,7 @@ public class LoggingEmailAdapter implements EmailPort {
                 OTP           : {}
                 Expires in    : {} seconds
                 {}""",
-                SEPARATOR, toEmail, rawOtp, expiresInSeconds, SEPARATOR);
+                SEP, toEmail, rawOtp, expiresInSeconds, SEP);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class LoggingEmailAdapter implements EmailPort {
         validateNotBlank(toEmail, "toEmail");
         validateNotBlank(activationToken, "activationToken");
 
-        String activationUrl = "http://localhost:8080/api/v1/auth/activate?token=" + activationToken;
+        String url = "http://localhost:8080/api/v1/auth/activate?token=" + activationToken;
 
         log.warn("""
                 {}
@@ -59,12 +59,8 @@ public class LoggingEmailAdapter implements EmailPort {
                 To            : {}
                 Activation URL: {}
                 {}""",
-                SEPARATOR, toEmail, activationUrl, SEPARATOR);
+                SEP, toEmail, url, SEP);
     }
-
-    // ─────────────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────────────
 
     private static void validateNotBlank(String value, String field) {
         if (value == null || value.isBlank()) {

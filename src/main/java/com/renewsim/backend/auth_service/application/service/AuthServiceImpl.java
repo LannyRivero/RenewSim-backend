@@ -73,11 +73,7 @@ public class AuthServiceImpl implements AuthUseCase {
                 request.email(),
                 Set.of(RoleName.USER));
 
-        // Invalidate any previous activation tokens for this user
-        activationTokenRepositoryPort.deleteByUserId(user.id());
 
-        // Generate a cryptographically random token (UUID v4 = 122 bits of entropy).
-        // The raw value is sent to the user; only its SHA-256 hash is stored in the DB.
         String rawToken = UUID.randomUUID().toString();
         String tokenHash = TokenHasher.hash(rawToken);
 

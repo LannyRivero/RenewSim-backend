@@ -32,6 +32,12 @@ public class ActivationTokenPersistenceAdapter implements ActivationTokenReposit
         return repo.findByTokenHash(tokenHash).map(this::toDomain);
     }
 
+    @Override
+    @Transactional
+    public void deleteByUserId(Long userId) {
+        repo.deleteByUserId(userId);
+    }
+
     // --- Mapping ---
 
     private ActivationTokenEntity toEntity(ActivationToken domain) {
