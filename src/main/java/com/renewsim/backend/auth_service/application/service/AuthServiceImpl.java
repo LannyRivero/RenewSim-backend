@@ -40,9 +40,9 @@ public class AuthServiceImpl implements AuthUseCase {
 
     @Override
     public AuthResult login(AuthCommand command) {
-        credentialsValidator.validateCredentials(command.getUsername(), command.getPassword());
+        credentialsValidator.validateCredentials(command.username(), command.password());
 
-        String loginInput = command.getUsername();
+        String loginInput = command.username();
 
         UserSnapshot user = (loginInput.contains("@")
                 ? userAccountGateway.findByEmail(loginInput)
@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthUseCase {
                         ErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS)));
 
         credentialsValidator.validateUserEnabled(user.enabled());
-        credentialsValidator.validatePassword(command.getPassword(), user.passwordHash());
+        credentialsValidator.validatePassword(command.password(), user.passwordHash());
 
         var authResponseDTO = authResponseMapper.toAuthResponseDTO(user);
         return new AuthResult(
@@ -67,16 +67,19 @@ public class AuthServiceImpl implements AuthUseCase {
     @Override
     @Transactional
     public RegisterResult register(RegisterCommand command) {
-        if (userAccountGateway.existsByEmail(command.getEmail())) {
+        if (userAccountGateway.existsByEmail(command.email())) {
             throw new ResourceConflictException(
                     AUTH_EMAIL_CONFLICT.code(),
                     AUTH_EMAIL_CONFLICT.defaultMessage());
         }
 
+        String username = deriveUsername(command.email());
+
         UserSnapshot user = userAccountGateway.createUser(
-                command.getFullName(),
-                command.getPassword(),
-                command.getEmail(),
+                username,
+                command.fullName(),
+                command.password(),
+                command.email(),
                 Set.of(RoleName.USER));
 
         String rawToken = UUID.randomUUID().toString();
@@ -94,5 +97,12 @@ public class AuthServiceImpl implements AuthUseCase {
                 user.fullName(),
                 user.status(),
                 "User registered successfully. Please check your email to activate your account.");
+    }
+
+    // Regla de negocio: derivar username válido (^[a-z0-9._-]{3,32}$) desde email
+    private String deriveUsername(String email) {
+        String localPart = email.split("@")[0].toLowerCase();
+        localPart = localPart.replaceAll("[^a-z0-9._-]", ".");
+        return localPart.length() > 32 ? localPart.substring(0, 32) : localPart;
     }
 }
