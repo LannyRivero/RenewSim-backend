@@ -10,7 +10,7 @@ import com.renewsim.backend.auth_service.application.result.ResendOtpResultDTO;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
