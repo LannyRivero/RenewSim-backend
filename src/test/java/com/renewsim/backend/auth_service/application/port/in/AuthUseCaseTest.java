@@ -4,7 +4,8 @@ import com.renewsim.backend.auth_service.application.command.AuthCommand;
 import com.renewsim.backend.auth_service.application.command.RegisterCommand;
 import com.renewsim.backend.auth_service.application.result.AuthResult;
 import com.renewsim.backend.auth_service.application.result.RegisterResult;
-import com.renewsim.backend.user_service.domain.model.UserStatus;
+import com.renewsim.backend.auth_service.domain.model.AuthUserStatus;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,7 @@ class AuthUseCaseTest {
     void register_contract_returnsRegisterResult() {
         RegisterCommand command = new RegisterCommand("John Doe", "SecurePass1!", "john@example.com");
         RegisterResult expected = new RegisterResult(
-                1L, "john@example.com", "John Doe", UserStatus.INACTIVE,
+                1L, "john@example.com", "John Doe", AuthUserStatus.INACTIVE,
                 "User registered successfully. Please check your email to activate your account.");
 
         when(authUseCase.register(command)).thenReturn(expected);
@@ -61,7 +62,7 @@ class AuthUseCaseTest {
         assertThat(result).isNotNull();
         assertThat(result.email()).isEqualTo("john@example.com");
         assertThat(result.fullName()).isEqualTo("John Doe");
-        assertThat(result.status()).isEqualTo(UserStatus.INACTIVE);
+        assertThat(result.status()).isEqualTo(AuthUserStatus.INACTIVE);
         assertThat(result.message()).contains("registered successfully");
         verify(authUseCase).register(command);
     }

@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.auth_service.application.port.in.*;
 import com.renewsim.backend.auth_service.application.result.AuthResult;
 import com.renewsim.backend.auth_service.application.result.RegisterResult;
+import com.renewsim.backend.auth_service.domain.model.AuthUserStatus;
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
-import com.renewsim.backend.user_service.domain.model.UserStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -80,7 +80,7 @@ class AuthControllerTest {
                                 "mary@example.com", "StrongPass_1!", "Mary Doe");
 
                 when(authUseCase.register(any())).thenReturn(new RegisterResult(
-                                1L, "mary@example.com", "Mary Doe", UserStatus.INACTIVE,
+                                1L, "mary@example.com", "Mary Doe", AuthUserStatus.INACTIVE,
                                 "User registered successfully. Please check your email to activate your account."));
 
                 mvc.perform(post("/api/v1/auth/register")
