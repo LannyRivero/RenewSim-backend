@@ -8,6 +8,7 @@ import com.renewsim.backend.auth_service.application.port.out.RefreshTokenReposi
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.LoginStep2ResultDTO;
+import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
@@ -16,7 +17,6 @@ import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +34,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
     private final RefreshTokenRepositoryPort refreshTokenRepositoryPort;
     private final TokenProvider tokenProvider;
     private final CredentialsValidator credentialsValidator;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoderPort passwordEncoderPort;
 
     @Override
     @Transactional
@@ -55,7 +55,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
             throw new AuthenticationException("Invalid or expired OTP");
         }
 
-        if (!passwordEncoder.matches(command.otpCode(), otpCode.getCodeHash())) {
+        if (!passwordEncoderPort.matches(command.otpCode(), otpCode.getCodeHash())) {
             throw new AuthenticationException("Invalid or expired OTP");
         }
 
