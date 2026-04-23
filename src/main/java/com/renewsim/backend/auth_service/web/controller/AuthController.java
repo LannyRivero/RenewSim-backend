@@ -98,13 +98,13 @@ public class AuthController {
         @PostMapping(value = "/login/step1", consumes = "application/json")
         @Operation(summary = "2FA login step 1", description = "Validates credentials and sends OTP. Response is always generic.")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "OTP sent (or silently ignored)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginStep1ResultDTO.class))),
+                        @ApiResponse(responseCode = "200", description = "OTP sent (or silently ignored)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginStep1Result.class))),
                         @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
                         @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content)
         })
-        public ResponseEntity<OperationResponse<LoginStep1ResultDTO>> loginStep1(
+        public ResponseEntity<OperationResponse<LoginStep1Result>> loginStep1(
                         @Valid @RequestBody LoginStep1RequestDTO request) {
-                LoginStep1ResultDTO result = loginStep1UseCase.execute(
+                LoginStep1Result result = loginStep1UseCase.execute(
                                 new LoginStep1Command(request.email(), request.password()));
                 return ResponseEntity.ok(ApiResponseFactory.ok(result, result.message()));
         }
@@ -115,20 +115,20 @@ public class AuthController {
         @PostMapping(value = "/login/step2", consumes = "application/json")
         @Operation(summary = "2FA login step 2", description = "Validates OTP and issues JWT. Refresh token set as HttpOnly cookie.")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Authentication successful", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginStep2ResultDTO.class))),
+                        @ApiResponse(responseCode = "200", description = "Authentication successful", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginStep2Result.class))),
                         @ApiResponse(responseCode = "401", description = "Invalid or expired OTP", content = @Content),
                         @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
                         @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content)
         })
-        public ResponseEntity<OperationResponse<LoginStep2ResultDTO>> loginStep2(
+        public ResponseEntity<OperationResponse<LoginStep2Result>> loginStep2(
                         @Valid @RequestBody LoginStep2RequestDTO request,
                         HttpServletResponse response) {
-                LoginStep2ResultDTO result = loginStep2UseCase.execute(
+                LoginStep2Result result = loginStep2UseCase.execute(
                                 new LoginStep2Command(request.email(), request.otpCode()));
 
                 addRefreshTokenCookie(response, result.rawRefreshToken());
 
-                LoginStep2ResultDTO safeResult = new LoginStep2ResultDTO(
+                LoginStep2Result safeResult = new LoginStep2Result(
                                 result.accessToken(), result.tokenType(), result.expiresIn(),
                                 result.username(), result.roles(), null);
 
@@ -141,13 +141,13 @@ public class AuthController {
         @PostMapping(value = "/activate", consumes = "application/json")
         @Operation(summary = "Activate user account")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Account activated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ActivateAccountResultDTO.class))),
+                        @ApiResponse(responseCode = "200", description = "Account activated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ActivateAccountResult.class))),
                         @ApiResponse(responseCode = "401", description = "Invalid or expired token", content = @Content),
                         @ApiResponse(responseCode = "400", description = "Validation error", content = @Content)
         })
-        public ResponseEntity<OperationResponse<ActivateAccountResultDTO>> activate(
+        public ResponseEntity<OperationResponse<ActivateAccountResult>> activate(
                         @Valid @RequestBody ActivateAccountRequestDTO request) {
-                ActivateAccountResultDTO result = activateAccountUseCase.execute(
+                ActivateAccountResult result = activateAccountUseCase.execute(
                                 new ActivateAccountCommand(request.token()));
                 return ResponseEntity.ok(ApiResponseFactory.ok(result, result.message()));
         }
@@ -158,13 +158,13 @@ public class AuthController {
         @PostMapping(value = "/resend-otp", consumes = "application/json")
         @Operation(summary = "Resend OTP", description = "Response is always generic.")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "OTP resent (or silently ignored)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResendOtpResultDTO.class))),
+                        @ApiResponse(responseCode = "200", description = "OTP resent (or silently ignored)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResendOtpResult.class))),
                         @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
                         @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content)
         })
-        public ResponseEntity<OperationResponse<ResendOtpResultDTO>> resendOtp(
+        public ResponseEntity<OperationResponse<ResendOtpResult>> resendOtp(
                         @Valid @RequestBody ResendOtpRequestDTO request) {
-                ResendOtpResultDTO result = resendOtpUseCase.execute(
+                ResendOtpResult result = resendOtpUseCase.execute(
                                 new ResendOtpCommand(request.email()));
                 return ResponseEntity.ok(ApiResponseFactory.ok(result, result.message()));
         }
@@ -198,10 +198,10 @@ public class AuthController {
         @PostMapping(value = "/refresh")
         @Operation(summary = "Refresh access token", description = "Reads refresh token from HttpOnly cookie, rotates it, issues new access token.")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Token refreshed", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RefreshTokenResultDTO.class))),
+                        @ApiResponse(responseCode = "200", description = "Token refreshed", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RefreshTokenResult.class))),
                         @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token", content = @Content)
         })
-        public ResponseEntity<OperationResponse<RefreshTokenResultDTO>> refresh(
+        public ResponseEntity<OperationResponse<RefreshTokenResult>> refresh(
                         @CookieValue(name = "refresh_token", required = false) String refreshTokenCookie,
                         HttpServletResponse response) {
 
@@ -210,12 +210,12 @@ public class AuthController {
                                         .body(ApiResponseFactory.ok(null, "Refresh token missing"));
                 }
 
-                RefreshTokenResultDTO result = refreshTokenUseCase.execute(
+                RefreshTokenResult result = refreshTokenUseCase.execute(
                                 new RefreshTokenCommand(refreshTokenCookie));
 
                 addRefreshTokenCookie(response, result.rawRefreshToken());
 
-                RefreshTokenResultDTO safeResult = new RefreshTokenResultDTO(
+                RefreshTokenResult safeResult = new RefreshTokenResult(
                                 result.accessToken(), result.tokenType(), result.expiresIn(),
                                 result.username(), result.roles(), null);
 

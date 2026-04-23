@@ -6,7 +6,7 @@ import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.ResendOtpResultDTO;
+import com.renewsim.backend.auth_service.application.result.ResendOtpResult;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
 import com.renewsim.backend.shared.domain.vo.RoleName;
@@ -60,7 +60,7 @@ class ResendOtpServiceTest {
         when(passwordEncoder.encode("111222")).thenReturn("$hashed");
         when(otpCodeRepositoryPort.save(any(OtpCode.class))).thenAnswer(i -> i.getArgument(0));
 
-        ResendOtpResultDTO result = service.execute(new ResendOtpCommand("john@example.com"));
+        ResendOtpResult result = service.execute(new ResendOtpCommand("john@example.com"));
 
         assertThat(result.message()).contains("If your account exists");
         assertThat(result.expiresInSeconds()).isEqualTo(300);
@@ -75,7 +75,7 @@ class ResendOtpServiceTest {
     void execute_unknownEmail_returnsGenericWithoutEmail() {
         when(userAccountGateway.findByEmail("ghost@example.com")).thenReturn(Optional.empty());
 
-        ResendOtpResultDTO result = service.execute(new ResendOtpCommand("ghost@example.com"));
+        ResendOtpResult result = service.execute(new ResendOtpCommand("ghost@example.com"));
 
         assertThat(result.message()).contains("If your account exists");
         verifyNoInteractions(otpGenerator, otpCodeRepositoryPort, emailPort);
@@ -87,7 +87,7 @@ class ResendOtpServiceTest {
         UserSnapshot disabled = UserSnapshotMother.disabledUser("jane", Set.of(RoleName.USER));
         when(userAccountGateway.findByEmail("jane@example.com")).thenReturn(Optional.of(disabled));
 
-        ResendOtpResultDTO result = service.execute(new ResendOtpCommand("jane@example.com"));
+        ResendOtpResult result = service.execute(new ResendOtpCommand("jane@example.com"));
 
         assertThat(result.message()).contains("If your account exists");
         verifyNoInteractions(otpGenerator, otpCodeRepositoryPort, emailPort);

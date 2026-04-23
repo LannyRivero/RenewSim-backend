@@ -6,7 +6,7 @@ import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryP
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.LoginStep2ResultDTO;
+import com.renewsim.backend.auth_service.application.result.LoginStep2Result;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
@@ -77,7 +77,7 @@ class LoginStep2ServiceTest {
                 when(otpCodeRepositoryPort.save(any(OtpCode.class)))
                                 .thenAnswer(i -> i.getArgument(0));
 
-                LoginStep2ResultDTO result = service.execute(
+                LoginStep2Result result = service.execute(
                                 new LoginStep2Command("john@example.com", "123456"));
 
                 assertThat(result.accessToken()).isEqualTo("jwt-token");

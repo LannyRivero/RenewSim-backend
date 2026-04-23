@@ -7,7 +7,7 @@ import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryP
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.LoginStep2ResultDTO;
+import com.renewsim.backend.auth_service.application.result.LoginStep2Result;
 import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
@@ -38,7 +38,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
 
     @Override
     @Transactional
-    public LoginStep2ResultDTO execute(LoginStep2Command command) {
+    public LoginStep2Result execute(LoginStep2Command command) {
 
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
@@ -79,7 +79,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
 
         log.info("Login step2 successful for userId={}", user.id());
 
-        return new LoginStep2ResultDTO(
+        return new LoginStep2Result(
                 accessToken,
                 "Bearer",
                 tokenProvider.expiresInSeconds(),

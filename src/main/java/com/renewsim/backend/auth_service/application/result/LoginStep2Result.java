@@ -6,7 +6,7 @@ import java.util.Set;
  * Result for login step 2.
  * Contains the issued JWT access token and metadata.
  */
-public record LoginStep2ResultDTO(
+public record LoginStep2Result(
         String accessToken,
         String tokenType,
         long expiresIn,
