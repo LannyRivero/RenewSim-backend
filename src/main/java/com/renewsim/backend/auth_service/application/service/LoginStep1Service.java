@@ -11,6 +11,7 @@ import com.renewsim.backend.auth_service.application.result.LoginStep1ResultDTO;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
+import com.renewsim.backend.shared.exception.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,7 +43,13 @@ public class LoginStep1Service implements LoginStep1UseCase {
             return genericResponse();
         }
 
-        credentialsValidator.validatePassword(command.password(), user.passwordHash());
+        // Intentionally generic response on wrong password — no timing/enumeration leak
+        try {
+            credentialsValidator.validatePassword(command.password(), user.passwordHash());
+        } catch (AuthenticationException e) {
+            log.warn("Login step1 invalid password for userId={}", user.id());
+            return genericResponse();
+        }
 
         // Invalidate any previous OTP for this user
         otpCodeRepositoryPort.invalidateAllByUserId(user.id(), OtpCode.Purpose.LOGIN);
