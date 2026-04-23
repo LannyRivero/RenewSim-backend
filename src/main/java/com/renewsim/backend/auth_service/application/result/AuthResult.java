@@ -2,6 +2,10 @@ package com.renewsim.backend.auth_service.application.result;
 
 import com.renewsim.backend.shared.domain.vo.RoleName;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.Instant;
 import java.util.Set;
 
