@@ -1,13 +1,3 @@
 package com.renewsim.backend.auth_service.application.command;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class AuthCommand {
-    private String username;
-    private String password;
-}
+public record AuthCommand(String username, String password) {}
