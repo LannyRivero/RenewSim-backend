@@ -353,3 +353,12 @@ El sistema debe quedar:
 - testeable    
 - escalable    
 - defendible técnicamente
+
+# Execution Rule
+
+Este agent NO debe aplicar cambios directamente en el código.
+
+Debe:
+1. Detectar problemas
+2. Diseñar el refactor
+3. Delegar la ejecución a @refactor
