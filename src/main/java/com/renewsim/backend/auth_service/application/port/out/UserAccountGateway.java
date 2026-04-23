@@ -17,7 +17,7 @@ public interface UserAccountGateway {
 
     boolean existsByEmail(String email);
 
-    UserSnapshot createUser(String fullName, String rawPassword, String email, Set<RoleName> roles);
+    UserSnapshot createUser(String username, String fullName, String rawPassword, String email, Set<RoleName> roles);
 
     void activateUser(Long userId);
 }
