@@ -1,22 +1,12 @@
 package com.renewsim.backend.auth_service.application.result;
 
-import com.renewsim.backend.shared.domain.vo.RoleName;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.Instant;
 import java.util.Set;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class AuthResult {
-    private String token;
-    private String tokenType;
-    private Instant expiresAt;
-    private String username;
-    private Set<RoleName> roles;
-    private Set<String> scopes;
-}
+public record AuthResult(
+        String token,
+        String tokenType,
+        Instant expiresAt,
+        String username,
+        Set<String> roles,
+        Set<String> scopes) {}
