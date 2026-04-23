@@ -12,7 +12,6 @@ import com.renewsim.backend.auth_service.application.result.RegisterResult;
 import com.renewsim.backend.auth_service.application.service.AuthServiceImpl;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.ActivationToken;
-import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.shared.exception.ResourceConflictException;
@@ -24,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 
@@ -35,177 +35,189 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
 
-    @Mock private UserAccountGateway userAccountGateway;
-    @Mock private CredentialsValidator credentialsValidator;
-    @Mock private AuthResponseMapper authResponseMapper;
-    @Mock private ActivationTokenRepositoryPort activationTokenRepositoryPort;
-    @Mock private EmailPort emailPort;
+        @Mock
+        private UserAccountGateway userAccountGateway;
+        @Mock
+        private CredentialsValidator credentialsValidator;
+        @Mock
+        private AuthResponseMapper authResponseMapper;
+        @Mock
+        private ActivationTokenRepositoryPort activationTokenRepositoryPort;
+        @Mock
+        private EmailPort emailPort;
 
-    private AuthServiceImpl authService;
-    private UserSnapshot snapshot;
+        private AuthServiceImpl authService;
+        private UserSnapshot snapshot;
 
-    @BeforeEach
-    void setUp() {
-        authService = new AuthServiceImpl(
-                userAccountGateway,
-                credentialsValidator,
-                authResponseMapper,
-                activationTokenRepositoryPort,
-                emailPort);
-        snapshot = UserSnapshotMother.activeUser("john", Set.of(RoleName.USER));
-    }
+        @BeforeEach
+        void setUp() {
+                authService = new AuthServiceImpl(
+                                userAccountGateway,
+                                credentialsValidator,
+                                authResponseMapper,
+                                activationTokenRepositoryPort,
+                                emailPort);
+                snapshot = UserSnapshotMother.activeUser("john", Set.of(RoleName.USER));
+        }
 
-    // ─────────────────────────────────────────────────────
-    // LOGIN
-    // ─────────────────────────────────────────────────────
+        // ─────────────────────────────────────────────────────
+        // LOGIN
+        // ─────────────────────────────────────────────────────
 
-    @Test
-    @DisplayName("login: credenciales válidas por username → devuelve AuthResult del mapper")
-    void login_validUsername_returnsAuthResult() {
-        AuthCommand command = new AuthCommand("john", "secret");
+        @Test
+        @DisplayName("login: credenciales válidas por username → devuelve AuthResult del mapper")
+        void login_validUsername_returnsAuthResult() {
+                AuthCommand command = new AuthCommand("john", "secret");
 
-        when(userAccountGateway.findByUsername("john")).thenReturn(Optional.of(snapshot));
-        when(authResponseMapper.toAuthResponseDTO(snapshot))
-                .thenReturn(AuthResponseDTO.builder()
-                        .username("john")
-                        .token("jwt-token")
-                        .roles(Set.of("USER"))
-                        .scopes(Set.of("read:simulations"))
-                        .build());
+                AuthResult expectedResult = new AuthResult(
+                                "jwt-token",
+                                "Bearer",
+                                Instant.now().plusSeconds(3600),
+                                "john",
+                                Set.of("USER"),
+                                Set.of("read:simulations"));
 
-        AuthResult result = authService.login(command);
+                when(userAccountGateway.findByUsername("john")).thenReturn(Optional.of(snapshot));
+                when(authResponseMapper.toAuthResult(snapshot)).thenReturn(expectedResult);
 
-        assertThat(result).isNotNull();
-        assertThat(result.username()).isEqualTo("john");
-        assertThat(result.token()).isEqualTo("jwt-token");
+                AuthResult result = authService.login(command);
 
-        verify(credentialsValidator).validateCredentials("john", "secret");
-        verify(credentialsValidator).validateUserEnabled(true);
-        verify(credentialsValidator).validatePassword("secret", snapshot.passwordHash());
-        verify(userAccountGateway).findByUsername("john");
-        verify(authResponseMapper).toAuthResponseDTO(snapshot);
-    }
+                assertThat(result).isNotNull();
+                assertThat(result.username()).isEqualTo("john");
+                assertThat(result.token()).isEqualTo("jwt-token");
+                assertThat(result.roles()).containsExactly("USER");
+                assertThat(result.scopes()).containsExactly("read:simulations");
 
-    @Test
-    @DisplayName("login: login con email → busca por email")
-    void login_withEmail_searchesByEmail() {
-        AuthCommand command = new AuthCommand("john@example.com", "secret");
-        UserSnapshot emailSnapshot = UserSnapshotMother.withEmail("john@example.com", Set.of(RoleName.USER));
+                verify(credentialsValidator).validateCredentials("john", "secret");
+                verify(credentialsValidator).validateUserEnabled(true);
+                verify(credentialsValidator).validatePassword("secret", snapshot.passwordHash());
+                verify(userAccountGateway).findByUsername("john");
+                verify(authResponseMapper).toAuthResult(snapshot);
+        }
 
-        when(userAccountGateway.findByEmail("john@example.com")).thenReturn(Optional.of(emailSnapshot));
-        when(authResponseMapper.toAuthResponseDTO(emailSnapshot))
-                .thenReturn(AuthResponseDTO.builder()
-                        .username("john@example.com")
-                        .token("jwt-token")
-                        .roles(Set.of("USER"))
-                        .scopes(Set.of())
-                        .build());
+        @Test
+        @DisplayName("login: login con email → busca por email")
+        void login_withEmail_searchesByEmail() {
+                AuthCommand command = new AuthCommand("john@example.com", "secret");
+                UserSnapshot emailSnapshot = UserSnapshotMother.withEmail("john@example.com", Set.of(RoleName.USER));
 
-        AuthResult result = authService.login(command);
+                AuthResult expectedResult = new AuthResult(
+                                "jwt-token",
+                                "Bearer",
+                                Instant.now().plusSeconds(3600),
+                                "john@example.com",
+                                Set.of("USER"),
+                                Set.of());
 
-        assertThat(result).isNotNull();
-        verify(userAccountGateway).findByEmail("john@example.com");
-        verify(userAccountGateway, never()).findByUsername(any());
-    }
+                when(userAccountGateway.findByEmail("john@example.com")).thenReturn(Optional.of(emailSnapshot));
+                when(authResponseMapper.toAuthResult(emailSnapshot)).thenReturn(expectedResult);
 
-    @Test
-    @DisplayName("login: validateCredentials lanza excepción → no consulta BD")
-    void login_invalidCredentials_throwsBeforeGateway() {
-        AuthCommand command = new AuthCommand("john", "bad");
-        doThrow(new AuthenticationException("Invalid credentials"))
-                .when(credentialsValidator).validateCredentials("john", "bad");
+                AuthResult result = authService.login(command);
 
-        assertThatThrownBy(() -> authService.login(command))
-                .isInstanceOf(AuthenticationException.class)
-                .hasMessageContaining("Invalid credentials");
+                assertThat(result).isNotNull();
+                assertThat(result.username()).isEqualTo("john@example.com");
+                verify(userAccountGateway).findByEmail("john@example.com");
+                verify(userAccountGateway, never()).findByUsername(any());
+        }
 
-        verifyNoInteractions(userAccountGateway);
-        verifyNoInteractions(authResponseMapper);
-    }
+        @Test
+        @DisplayName("login: validateCredentials lanza excepción → no consulta BD")
+        void login_invalidCredentials_throwsBeforeGateway() {
+                AuthCommand command = new AuthCommand("john", "bad");
+                doThrow(new AuthenticationException("Invalid credentials"))
+                                .when(credentialsValidator).validateCredentials("john", "bad");
 
-    @Test
-    @DisplayName("login: usuario no encontrado → lanza AuthenticationException")
-    void login_userNotFound_throwsAuthenticationException() {
-        AuthCommand command = new AuthCommand("john", "secret");
-        when(userAccountGateway.findByUsername("john")).thenReturn(Optional.empty());
+                assertThatThrownBy(() -> authService.login(command))
+                                .isInstanceOf(AuthenticationException.class)
+                                .hasMessageContaining("Invalid credentials");
 
-        assertThatThrownBy(() -> authService.login(command))
-                .isInstanceOf(AuthenticationException.class);
+                verifyNoInteractions(userAccountGateway);
+                verifyNoInteractions(authResponseMapper);
+        }
 
-        verify(userAccountGateway).findByUsername("john");
-        verifyNoInteractions(authResponseMapper);
-    }
+        @Test
+        @DisplayName("login: usuario no encontrado → lanza AuthenticationException")
+        void login_userNotFound_throwsAuthenticationException() {
+                AuthCommand command = new AuthCommand("john", "secret");
+                when(userAccountGateway.findByUsername("john")).thenReturn(Optional.empty());
 
-    // ─────────────────────────────────────────────────────
-    // REGISTER
-    // ─────────────────────────────────────────────────────
+                assertThatThrownBy(() -> authService.login(command))
+                                .isInstanceOf(AuthenticationException.class);
 
-    @Test
-    @DisplayName("register: email ya existe → lanza ResourceConflictException")
-    void register_emailAlreadyExists_throwsConflict() {
-        RegisterCommand command = new RegisterCommand("John Doe", "SecurePass1!", "john@example.com");
-        when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(true);
+                verify(userAccountGateway).findByUsername("john");
+                verifyNoInteractions(authResponseMapper);
+        }
 
-        assertThatThrownBy(() -> authService.register(command))
-                .isInstanceOf(ResourceConflictException.class);
+        // ─────────────────────────────────────────────────────
+        // REGISTER
+        // ─────────────────────────────────────────────────────
 
-        verify(userAccountGateway).existsByEmail("john@example.com");
-        verify(userAccountGateway, never()).createUser(any(), any(), any(), any(), any());
-        verifyNoInteractions(activationTokenRepositoryPort);
-        verifyNoInteractions(emailPort);
-    }
+        @Test
+        @DisplayName("register: email ya existe → lanza ResourceConflictException")
+        void register_emailAlreadyExists_throwsConflict() {
+                RegisterCommand command = new RegisterCommand("John Doe", "SecurePass1!", "john@example.com");
+                when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(true);
 
-    @Test
-    @DisplayName("register: datos válidos → crea usuario con username derivado, persiste token y envía email")
-    void register_validData_createsUserPersistsTokenAndSendsEmail() {
-        RegisterCommand command = new RegisterCommand("John Doe", "SecurePass1!", "john@example.com");
+                assertThatThrownBy(() -> authService.register(command))
+                                .isInstanceOf(ResourceConflictException.class);
 
-        when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
-        when(userAccountGateway.createUser(eq("john"), eq("John Doe"), eq("SecurePass1!"),
-                eq("john@example.com"), eq(Set.of(RoleName.USER))))
-                .thenReturn(snapshot);
-        when(activationTokenRepositoryPort.save(any(ActivationToken.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+                verify(userAccountGateway).existsByEmail("john@example.com");
+                verify(userAccountGateway, never()).createUser(any(), any(), any(), any(), any());
+                verifyNoInteractions(activationTokenRepositoryPort);
+                verifyNoInteractions(emailPort);
+        }
 
-        RegisterResult result = authService.register(command);
+        @Test
+        @DisplayName("register: datos válidos → crea usuario con username derivado, persiste token y envía email")
+        void register_validData_createsUserPersistsTokenAndSendsEmail() {
+                RegisterCommand command = new RegisterCommand("John Doe", "SecurePass1!", "john@example.com");
 
-        assertThat(result).isNotNull();
-        assertThat(result.email()).isEqualTo(snapshot.email());
-        assertThat(result.fullName()).isEqualTo(snapshot.fullName());
-        assertThat(result.message()).contains("registered successfully");
+                when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
+                when(userAccountGateway.createUser(eq("john"), eq("John Doe"), eq("SecurePass1!"),
+                                eq("john@example.com"), eq(Set.of(RoleName.USER))))
+                                .thenReturn(snapshot);
+                when(activationTokenRepositoryPort.save(any(ActivationToken.class)))
+                                .thenAnswer(inv -> inv.getArgument(0));
 
-        verify(activationTokenRepositoryPort).save(any(ActivationToken.class));
-        verify(emailPort).sendActivationEmail(eq(snapshot.email()), any(String.class));
-    }
+                RegisterResult result = authService.register(command);
 
-    @Test
-    @DisplayName("register: username se deriva correctamente del email")
-    void register_derivesUsernameFromEmail() {
-        RegisterCommand command = new RegisterCommand("John Doe", "pass", "john@example.com");
+                assertThat(result).isNotNull();
+                assertThat(result.email()).isEqualTo(snapshot.email());
+                assertThat(result.fullName()).isEqualTo(snapshot.fullName());
+                assertThat(result.message()).contains("registered successfully");
 
-        when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
-        when(userAccountGateway.createUser(eq("john"), any(), any(), any(), any()))
-                .thenReturn(snapshot);
-        when(activationTokenRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
+                verify(activationTokenRepositoryPort).save(any(ActivationToken.class));
+                verify(emailPort).sendActivationEmail(eq(snapshot.email()), any(String.class));
+        }
 
-        authService.register(command);
+        @Test
+        @DisplayName("register: username se deriva correctamente del email")
+        void register_derivesUsernameFromEmail() {
+                RegisterCommand command = new RegisterCommand("John Doe", "pass", "john@example.com");
 
-        verify(userAccountGateway).createUser(eq("john"), any(), any(), any(), any());
-    }
+                when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
+                when(userAccountGateway.createUser(eq("john"), any(), any(), any(), any()))
+                                .thenReturn(snapshot);
+                when(activationTokenRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-    @Test
-    @DisplayName("register: el token de activación tiene el userId correcto")
-    void register_activationTokenHasCorrectUserId() {
-        RegisterCommand command = new RegisterCommand("John Doe", "pass", "john@example.com");
+                authService.register(command);
 
-        when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
-        when(userAccountGateway.createUser(any(), any(), any(), any(), any())).thenReturn(snapshot);
-        when(activationTokenRepositoryPort.save(any(ActivationToken.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+                verify(userAccountGateway).createUser(eq("john"), any(), any(), any(), any());
+        }
 
-        authService.register(command);
+        @Test
+        @DisplayName("register: el token de activación tiene el userId correcto")
+        void register_activationTokenHasCorrectUserId() {
+                RegisterCommand command = new RegisterCommand("John Doe", "pass", "john@example.com");
 
-        verify(activationTokenRepositoryPort)
-                .save(argThat(token -> token.getUserId().equals(snapshot.id()) && !token.isUsed()));
-    }
+                when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
+                when(userAccountGateway.createUser(any(), any(), any(), any(), any())).thenReturn(snapshot);
+                when(activationTokenRepositoryPort.save(any(ActivationToken.class)))
+                                .thenAnswer(inv -> inv.getArgument(0));
+
+                authService.register(command);
+
+                verify(activationTokenRepositoryPort)
+                                .save(argThat(token -> token.getUserId().equals(snapshot.id()) && !token.isUsed()));
+        }
 }

@@ -53,15 +53,7 @@ public class AuthServiceImpl implements AuthUseCase {
         credentialsValidator.validateUserEnabled(user.enabled());
         credentialsValidator.validatePassword(command.password(), user.passwordHash());
 
-        var authResponseDTO = authResponseMapper.toAuthResponseDTO(user);
-        return new AuthResult(
-                authResponseDTO.getToken(),
-                authResponseDTO.getTokenType(),
-                authResponseDTO.getExpiresAt(),
-                authResponseDTO.getUsername(),
-                authResponseDTO.getRoles(),
-                authResponseDTO.getScopes()
-        );
+        return authResponseMapper.toAuthResult(user);
     }
 
     @Override
