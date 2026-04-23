@@ -359,7 +359,7 @@ git checkout -- .
 | Use case (port in) | `VerbNounUseCase`         | `LoginStep1UseCase`         |
 | Service (impl)     | `VerbNounService`         | `LoginStep1Service`         |
 | Command            | `VerbNounCommand`         | `LoginStep1Command`         |
-| Result DTO         | `VerbNounResultDTO`       | `LoginStep1ResultDTO`       |
+| Result DTO         | `VerbNounResultDTO`       | `LoginStep1Result`       |
 | Port out           | `NounPort` / `NounGateway`| `OtpCodeRepositoryPort`     |
 | Adapter            | `NounPersistenceAdapter`  | `UserPersistenceAdapter`    |
 | JPA Repo           | `NounJpaRepository`       | `UserJpaRepository`         |
