@@ -53,24 +53,13 @@ public class CredentialsValidator {
      * Valida si la contraseña en texto plano coincide con el hash almacenado.
      * Usa el PasswordEncoderPort (abstracción de la capa de aplicación).
      *
-     * @param rawPassword      contraseña en texto plano
-     * @param encodedPassword  hash almacenado
+     * @param rawPassword     contraseña en texto plano
+     * @param encodedPassword hash almacenado
      */
     public void validatePassword(String rawPassword, String encodedPassword) {
         if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
             throw new AuthenticationException(
                     ErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS));
         }
-    }
-
-    /**
-     * Codifica (hashea) una contraseña en texto plano.
-     * Útil para el registro de nuevos usuarios.
-     *
-     * @param rawPassword contraseña en texto plano
-     * @return el hash de la contraseña
-     */
-    public String encodePassword(String rawPassword) {
-        return passwordEncoder.encode(rawPassword);
     }
 }
