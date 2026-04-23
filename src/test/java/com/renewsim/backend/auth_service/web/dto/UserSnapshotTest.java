@@ -1,5 +1,6 @@
 package com.renewsim.backend.auth_service.web.dto;
 
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.user_service.domain.model.UserStatus;
 import org.junit.jupiter.api.DisplayName;

@@ -2,10 +2,10 @@ package com.renewsim.backend.auth_service.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.auth_service.application.port.in.*;
+import com.renewsim.backend.auth_service.application.result.AuthResult;
+import com.renewsim.backend.auth_service.application.result.RegisterResult;
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
-import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
 import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
-import com.renewsim.backend.auth_service.web.dto.RegisterResponseDTO;
 import com.renewsim.backend.user_service.domain.model.UserStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -56,16 +56,10 @@ class AuthControllerTest {
         @DisplayName("login -> devuelve 200 y response body")
         void login_validCredentials_returns200() throws Exception {
                 AuthRequestDTO req = new AuthRequestDTO("john", "secret");
-                AuthResponseDTO res = AuthResponseDTO.builder()
-                                .username("john")
-                                .token("jwt-token")
-                                .tokenType("Bearer")
-                                .expiresAt(Instant.now().plusSeconds(3600))
-                                .roles(Set.of("USER"))
-                                .scopes(Set.of("read:simulations"))
-                                .build();
 
-                when(authUseCase.login(any())).thenReturn(res);
+                when(authUseCase.login(any())).thenReturn(new AuthResult(
+                                "jwt-token", "Bearer", Instant.now().plusSeconds(3600),
+                                "john", Set.of("USER"), Set.of("read:simulations")));
 
                 mvc.perform(post("/api/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -85,14 +79,9 @@ class AuthControllerTest {
                 RegisterRequestDTO req = new RegisterRequestDTO(
                                 "mary@example.com", "StrongPass_1!", "Mary Doe");
 
-                RegisterResponseDTO res = new RegisterResponseDTO(
-                                1L,
-                                "mary@example.com",
-                                "Mary Doe",
-                                UserStatus.INACTIVE,
-                                "User registered successfully. Please check your email to activate your account.");
-
-                when(authUseCase.register(any())).thenReturn(res);
+                when(authUseCase.register(any())).thenReturn(new RegisterResult(
+                                1L, "mary@example.com", "Mary Doe", UserStatus.INACTIVE,
+                                "User registered successfully. Please check your email to activate your account."));
 
                 mvc.perform(post("/api/v1/auth/register")
                                 .contentType(MediaType.APPLICATION_JSON)

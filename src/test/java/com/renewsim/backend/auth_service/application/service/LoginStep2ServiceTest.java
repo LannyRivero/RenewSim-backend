@@ -1,6 +1,7 @@
 package com.renewsim.backend.auth_service.application.service;
 
 import com.renewsim.backend.auth_service.application.command.LoginStep2Command;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
@@ -9,7 +10,6 @@ import com.renewsim.backend.auth_service.application.result.LoginStep2ResultDTO;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
@@ -20,7 +20,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
+import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 
 import java.util.Optional;
 import java.util.Set;
@@ -43,7 +44,9 @@ class LoginStep2ServiceTest {
         @Mock
         private TokenProvider tokenProvider;
         @Mock
-        private PasswordEncoder passwordEncoder;
+        private PasswordEncoderPort passwordEncoderPort;
+        @Mock
+        private CredentialsValidator credentialsValidator;
 
         @InjectMocks
         private LoginStep2Service service;
@@ -66,7 +69,7 @@ class LoginStep2ServiceTest {
                                 .thenReturn(Optional.of(activeUser));
                 when(otpCodeRepositoryPort.findLatestValidByUserId(activeUser.id(), OtpCode.Purpose.LOGIN))
                                 .thenReturn(Optional.of(validOtp));
-                when(passwordEncoder.matches("123456", "$hashed_otp")).thenReturn(true);
+                when(passwordEncoderPort.matches("123456", "$hashed_otp")).thenReturn(true);
                 when(tokenProvider.generate(any(AuthenticatedUser.class))).thenReturn("jwt-token");
                 when(tokenProvider.expiresInSeconds()).thenReturn(3600L);
                 when(refreshTokenRepositoryPort.save(any(RefreshToken.class)))
@@ -133,7 +136,7 @@ class LoginStep2ServiceTest {
                                 .thenReturn(Optional.of(activeUser));
                 when(otpCodeRepositoryPort.findLatestValidByUserId(activeUser.id(), OtpCode.Purpose.LOGIN))
                                 .thenReturn(Optional.of(validOtp));
-                when(passwordEncoder.matches("wrongotp", "$hashed_otp")).thenReturn(false);
+                when(passwordEncoderPort.matches("wrongotp", "$hashed_otp")).thenReturn(false);
 
                 assertThatThrownBy(() -> service.execute(
                                 new LoginStep2Command("john@example.com", "wrongotp")))
@@ -151,7 +154,7 @@ class LoginStep2ServiceTest {
                                 .thenReturn(Optional.of(activeUser));
                 when(otpCodeRepositoryPort.findLatestValidByUserId(activeUser.id(), OtpCode.Purpose.LOGIN))
                                 .thenReturn(Optional.of(validOtp));
-                when(passwordEncoder.matches("123456", "$hashed_otp")).thenReturn(true);
+                when(passwordEncoderPort.matches("123456", "$hashed_otp")).thenReturn(true);
                 when(tokenProvider.generate(any())).thenReturn("jwt");
                 when(tokenProvider.expiresInSeconds()).thenReturn(3600L);
                 when(refreshTokenRepositoryPort.save(any())).thenAnswer(i -> i.getArgument(0));

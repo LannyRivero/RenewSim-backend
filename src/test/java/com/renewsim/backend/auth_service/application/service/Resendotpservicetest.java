@@ -1,13 +1,14 @@
 package com.renewsim.backend.auth_service.application.service;
 
 import com.renewsim.backend.auth_service.application.command.ResendOtpCommand;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.ResendOtpResultDTO;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 import java.util.Set;
@@ -38,7 +38,7 @@ class ResendOtpServiceTest {
     @Mock
     private OtpGenerator otpGenerator;
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private PasswordEncoderPort passwordEncoder;
     @Mock
     private EmailPort emailPort;
 

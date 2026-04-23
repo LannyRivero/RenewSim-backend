@@ -1,14 +1,17 @@
 package com.renewsim.backend.auth_service.application.service;
 
 import com.renewsim.backend.auth_service.application.command.LoginStep1Command;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.LoginStep1ResultDTO;
+import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
+import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 import java.util.Set;
@@ -34,7 +36,8 @@ class LoginStep1ServiceTest {
     @Mock private UserAccountGateway userAccountGateway;
     @Mock private OtpCodeRepositoryPort otpCodeRepositoryPort;
     @Mock private OtpGenerator otpGenerator;
-    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private CredentialsValidator credentialsValidator;
+    @Mock private PasswordEncoderPort passwordEncoderPort;
     @Mock private EmailPort emailPort;
 
     @InjectMocks
@@ -54,9 +57,9 @@ class LoginStep1ServiceTest {
     void execute_validCredentials_generatesOtpAndSendsEmail() {
         when(userAccountGateway.findByEmail("john@example.com"))
                 .thenReturn(Optional.of(activeUser));
-        when(passwordEncoder.matches("secret", activeUser.passwordHash())).thenReturn(true);
+        doNothing().when(credentialsValidator).validatePassword("secret", activeUser.passwordHash());
         when(otpGenerator.generate()).thenReturn("123456");
-        when(passwordEncoder.encode("123456")).thenReturn("$hashed_otp");
+        when(passwordEncoderPort.encode("123456")).thenReturn("$hashed_otp");
         when(otpCodeRepositoryPort.save(any(OtpCode.class))).thenAnswer(i -> i.getArgument(0));
 
         LoginStep1ResultDTO result = service.execute(
@@ -68,7 +71,7 @@ class LoginStep1ServiceTest {
         verify(otpCodeRepositoryPort).invalidateAllByUserId(activeUser.id(), OtpCode.Purpose.LOGIN);
         verify(otpCodeRepositoryPort).save(any(OtpCode.class));
         verify(otpGenerator).generate();
-        verify(passwordEncoder).encode("123456");
+        verify(passwordEncoderPort).encode("123456");
         verify(emailPort).sendOtp(eq(activeUser.email()), eq("123456"), eq(300));
     }
 
@@ -107,7 +110,8 @@ class LoginStep1ServiceTest {
     void execute_wrongPassword_returnsGenericMessageWithoutEmail() {
         when(userAccountGateway.findByEmail("john@example.com"))
                 .thenReturn(Optional.of(activeUser));
-        when(passwordEncoder.matches("wrongpass", activeUser.passwordHash())).thenReturn(false);
+        doThrow(new AuthenticationException("Invalid credentials"))
+                .when(credentialsValidator).validatePassword("wrongpass", activeUser.passwordHash());
 
         LoginStep1ResultDTO result = service.execute(
                 new LoginStep1Command("john@example.com", "wrongpass"));
@@ -123,9 +127,9 @@ class LoginStep1ServiceTest {
     void execute_validCredentials_expiresIn300Seconds() {
         when(userAccountGateway.findByEmail("john@example.com"))
                 .thenReturn(Optional.of(activeUser));
-        when(passwordEncoder.matches("secret", activeUser.passwordHash())).thenReturn(true);
+        doNothing().when(credentialsValidator).validatePassword("secret", activeUser.passwordHash());
         when(otpGenerator.generate()).thenReturn("654321");
-        when(passwordEncoder.encode("654321")).thenReturn("$hashed_otp2");
+        when(passwordEncoderPort.encode("654321")).thenReturn("$hashed_otp2");
         when(otpCodeRepositoryPort.save(any(OtpCode.class))).thenAnswer(i -> i.getArgument(0));
 
         LoginStep1ResultDTO result = service.execute(
@@ -139,9 +143,9 @@ class LoginStep1ServiceTest {
     void execute_validCredentials_emailPortReceivesCorrectOtpAndTtl() {
         when(userAccountGateway.findByEmail("john@example.com"))
                 .thenReturn(Optional.of(activeUser));
-        when(passwordEncoder.matches("secret", activeUser.passwordHash())).thenReturn(true);
+        doNothing().when(credentialsValidator).validatePassword("secret", activeUser.passwordHash());
         when(otpGenerator.generate()).thenReturn("999888");
-        when(passwordEncoder.encode("999888")).thenReturn("$hashed");
+        when(passwordEncoderPort.encode("999888")).thenReturn("$hashed");
         when(otpCodeRepositoryPort.save(any())).thenAnswer(i -> i.getArgument(0));
 
         service.execute(new LoginStep1Command("john@example.com", "secret"));

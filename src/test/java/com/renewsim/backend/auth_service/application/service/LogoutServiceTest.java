@@ -1,12 +1,12 @@
 package com.renewsim.backend.auth_service.application.service;
 
 import com.renewsim.backend.auth_service.application.command.LogoutCommand;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenBlacklistPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.LogoutResultDTO;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
 

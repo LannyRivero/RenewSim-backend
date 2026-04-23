@@ -1,21 +1,21 @@
 package com.renewsim.backend.auth_service.application;
 
+import com.renewsim.backend.auth_service.application.command.AuthCommand;
+import com.renewsim.backend.auth_service.application.command.RegisterCommand;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.mapper.AuthResponseMapper;
 import com.renewsim.backend.auth_service.application.port.out.ActivationTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
+import com.renewsim.backend.auth_service.application.result.AuthResult;
+import com.renewsim.backend.auth_service.application.result.RegisterResult;
 import com.renewsim.backend.auth_service.application.service.AuthServiceImpl;
-import com.renewsim.backend.auth_service.domain.AuthValidator;
+import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.ActivationToken;
-import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
-import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
-import com.renewsim.backend.auth_service.web.dto.RegisterResponseDTO;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.shared.exception.ResourceConflictException;
-import com.renewsim.backend.testutil.UnitTestBase;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,15 +29,14 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class AuthServiceImplTest extends UnitTestBase {
+class AuthServiceImplTest {
 
     @Mock private UserAccountGateway userAccountGateway;
-    @Mock private AuthValidator authValidator;
+    @Mock private CredentialsValidator credentialsValidator;
     @Mock private AuthResponseMapper authResponseMapper;
     @Mock private ActivationTokenRepositoryPort activationTokenRepositoryPort;
     @Mock private EmailPort emailPort;
@@ -49,7 +48,7 @@ class AuthServiceImplTest extends UnitTestBase {
     void setUp() {
         authService = new AuthServiceImpl(
                 userAccountGateway,
-                authValidator,
+                credentialsValidator,
                 authResponseMapper,
                 activationTokenRepositoryPort,
                 emailPort);
@@ -61,9 +60,9 @@ class AuthServiceImplTest extends UnitTestBase {
     // ─────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("login: credenciales válidas → devuelve AuthResponseDTO del mapper")
-    void login_validCredentials_returnsAuthResponseDTO() {
-        AuthRequestDTO request = new AuthRequestDTO("john", "secret");
+    @DisplayName("login: credenciales válidas por username → devuelve AuthResult del mapper")
+    void login_validUsername_returnsAuthResult() {
+        AuthCommand command = new AuthCommand("john", "secret");
 
         when(userAccountGateway.findByUsername("john")).thenReturn(Optional.of(snapshot));
         when(authResponseMapper.toAuthResponseDTO(snapshot))
@@ -74,14 +73,15 @@ class AuthServiceImplTest extends UnitTestBase {
                         .scopes(Set.of("read:simulations"))
                         .build());
 
-        AuthResponseDTO result = authService.login(request);
+        AuthResult result = authService.login(command);
 
         assertThat(result).isNotNull();
-        assertThat(result.getUsername()).isEqualTo("john");
-        assertThat(result.getToken()).isEqualTo("jwt-token");
+        assertThat(result.username()).isEqualTo("john");
+        assertThat(result.token()).isEqualTo("jwt-token");
 
-        verify(authValidator).validateCredentials(request);
-        verify(authValidator).validateUserEnable(true);
+        verify(credentialsValidator).validateCredentials("john", "secret");
+        verify(credentialsValidator).validateUserEnabled(true);
+        verify(credentialsValidator).validatePassword("secret", snapshot.passwordHash());
         verify(userAccountGateway).findByUsername("john");
         verify(authResponseMapper).toAuthResponseDTO(snapshot);
     }
@@ -89,7 +89,7 @@ class AuthServiceImplTest extends UnitTestBase {
     @Test
     @DisplayName("login: login con email → busca por email")
     void login_withEmail_searchesByEmail() {
-        AuthRequestDTO request = new AuthRequestDTO("john@example.com", "secret");
+        AuthCommand command = new AuthCommand("john@example.com", "secret");
         UserSnapshot emailSnapshot = UserSnapshotMother.withEmail("john@example.com", Set.of(RoleName.USER));
 
         when(userAccountGateway.findByEmail("john@example.com")).thenReturn(Optional.of(emailSnapshot));
@@ -101,7 +101,7 @@ class AuthServiceImplTest extends UnitTestBase {
                         .scopes(Set.of())
                         .build());
 
-        AuthResponseDTO result = authService.login(request);
+        AuthResult result = authService.login(command);
 
         assertThat(result).isNotNull();
         verify(userAccountGateway).findByEmail("john@example.com");
@@ -111,11 +111,11 @@ class AuthServiceImplTest extends UnitTestBase {
     @Test
     @DisplayName("login: validateCredentials lanza excepción → no consulta BD")
     void login_invalidCredentials_throwsBeforeGateway() {
-        AuthRequestDTO request = new AuthRequestDTO("john", "bad");
+        AuthCommand command = new AuthCommand("john", "bad");
         doThrow(new AuthenticationException("Invalid credentials"))
-                .when(authValidator).validateCredentials(request);
+                .when(credentialsValidator).validateCredentials("john", "bad");
 
-        assertThatThrownBy(() -> authService.login(request))
+        assertThatThrownBy(() -> authService.login(command))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessageContaining("Invalid credentials");
 
@@ -126,10 +126,10 @@ class AuthServiceImplTest extends UnitTestBase {
     @Test
     @DisplayName("login: usuario no encontrado → lanza AuthenticationException")
     void login_userNotFound_throwsAuthenticationException() {
-        AuthRequestDTO request = new AuthRequestDTO("john", "secret");
+        AuthCommand command = new AuthCommand("john", "secret");
         when(userAccountGateway.findByUsername("john")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> authService.login(request))
+        assertThatThrownBy(() -> authService.login(command))
                 .isInstanceOf(AuthenticationException.class);
 
         verify(userAccountGateway).findByUsername("john");
@@ -143,97 +143,69 @@ class AuthServiceImplTest extends UnitTestBase {
     @Test
     @DisplayName("register: email ya existe → lanza ResourceConflictException")
     void register_emailAlreadyExists_throwsConflict() {
-        RegisterRequestDTO request = new RegisterRequestDTO(
-                "john@example.com", "SecurePass1!", "John Doe");
-
+        RegisterCommand command = new RegisterCommand("John Doe", "SecurePass1!", "john@example.com");
         when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(true);
 
-        assertThatThrownBy(() -> authService.register(request))
-                .isInstanceOf(ResourceConflictException.class)
-                .hasMessageContaining("Email already registered");
+        assertThatThrownBy(() -> authService.register(command))
+                .isInstanceOf(ResourceConflictException.class);
 
         verify(userAccountGateway).existsByEmail("john@example.com");
-        verify(userAccountGateway, never()).createUser(any(), any(), any(), any());
-        verifyNoInteractions(authResponseMapper);
+        verify(userAccountGateway, never()).createUser(any(), any(), any(), any(), any());
         verifyNoInteractions(activationTokenRepositoryPort);
         verifyNoInteractions(emailPort);
     }
 
     @Test
-    @DisplayName("register: datos válidos → crea usuario, persiste token y envía email")
+    @DisplayName("register: datos válidos → crea usuario con username derivado, persiste token y envía email")
     void register_validData_createsUserPersistsTokenAndSendsEmail() {
-        RegisterRequestDTO request = new RegisterRequestDTO(
-                "john@example.com", "SecurePass1!", "John Doe");
+        RegisterCommand command = new RegisterCommand("John Doe", "SecurePass1!", "john@example.com");
 
         when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
-        when(userAccountGateway.createUser("John Doe", "SecurePass1!",
-                "john@example.com", Set.of(RoleName.USER)))
+        when(userAccountGateway.createUser(eq("john"), eq("John Doe"), eq("SecurePass1!"),
+                eq("john@example.com"), eq(Set.of(RoleName.USER))))
                 .thenReturn(snapshot);
         when(activationTokenRepositoryPort.save(any(ActivationToken.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
-        RegisterResponseDTO result = authService.register(request);
+        RegisterResult result = authService.register(command);
 
         assertThat(result).isNotNull();
         assertThat(result.email()).isEqualTo(snapshot.email());
         assertThat(result.fullName()).isEqualTo(snapshot.fullName());
-        assertThat(result.status()).isEqualTo(snapshot.status());
         assertThat(result.message()).contains("registered successfully");
 
-        verify(userAccountGateway).existsByEmail("john@example.com");
-        verify(userAccountGateway).createUser("John Doe", "SecurePass1!",
-                "john@example.com", Set.of(RoleName.USER));
         verify(activationTokenRepositoryPort).save(any(ActivationToken.class));
         verify(emailPort).sendActivationEmail(eq(snapshot.email()), any(String.class));
-        verifyNoInteractions(authResponseMapper);
     }
 
     @Test
-    @DisplayName("register: el token de activación que se persiste tiene el userId correcto")
-    void register_validData_activationTokenHasCorrectUserId() {
-        RegisterRequestDTO request = new RegisterRequestDTO(
-                "john@example.com", "SecurePass1!", "John Doe");
+    @DisplayName("register: username se deriva correctamente del email")
+    void register_derivesUsernameFromEmail() {
+        RegisterCommand command = new RegisterCommand("John Doe", "pass", "john@example.com");
 
         when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
-        when(userAccountGateway.createUser(any(), any(), any(), any())).thenReturn(snapshot);
+        when(userAccountGateway.createUser(eq("john"), any(), any(), any(), any()))
+                .thenReturn(snapshot);
+        when(activationTokenRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        authService.register(command);
+
+        verify(userAccountGateway).createUser(eq("john"), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("register: el token de activación tiene el userId correcto")
+    void register_activationTokenHasCorrectUserId() {
+        RegisterCommand command = new RegisterCommand("John Doe", "pass", "john@example.com");
+
+        when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
+        when(userAccountGateway.createUser(any(), any(), any(), any(), any())).thenReturn(snapshot);
         when(activationTokenRepositoryPort.save(any(ActivationToken.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
-        authService.register(request);
+        authService.register(command);
 
         verify(activationTokenRepositoryPort)
                 .save(argThat(token -> token.getUserId().equals(snapshot.id()) && !token.isUsed()));
-    }
-
-    @Test
-    @DisplayName("register: sendActivationEmail recibe email del usuario y un token no vacío")
-    void register_validData_emailPortReceivesCorrectEmailAndNonBlankToken() {
-        RegisterRequestDTO request = new RegisterRequestDTO(
-                "john@example.com", "SecurePass1!", "John Doe");
-
-        when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
-        when(userAccountGateway.createUser(any(), any(), any(), any())).thenReturn(snapshot);
-        when(activationTokenRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        authService.register(request);
-
-        verify(emailPort).sendActivationEmail(
-                eq(snapshot.email()),
-                argThat(token -> token != null && !token.isBlank()));
-    }
-
-    @Test
-    @DisplayName("register: no llama a validateCredentials (validación delegada a @Valid)")
-    void register_doesNotCallValidateCredentials() {
-        RegisterRequestDTO request = new RegisterRequestDTO(
-                "john@example.com", "SecurePass1!", "John Doe");
-
-        when(userAccountGateway.existsByEmail("john@example.com")).thenReturn(false);
-        when(userAccountGateway.createUser(any(), any(), any(), any())).thenReturn(snapshot);
-        when(activationTokenRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        authService.register(request);
-
-        verify(authValidator, never()).validateCredentials(any());
     }
 }

@@ -53,12 +53,12 @@ public class AuthController {
                 AuthCommand command = new AuthCommand(request.getUsername(), request.getPassword());
                 AuthResult result = authUseCase.login(command);
                 AuthResponseDTO response = new AuthResponseDTO(
-                        result.getToken(),
-                        result.getTokenType(),
-                        result.getExpiresAt(),
-                        result.getUsername(),
-                        result.getRoles(),
-                        result.getScopes()
+                        result.token(),
+                        result.tokenType(),
+                        result.expiresAt(),
+                        result.username(),
+                        result.roles(),
+                        result.scopes()
                 );
                 return ResponseEntity.ok(ApiResponseFactory.ok(response, "Login successful"));
         }
@@ -76,17 +76,17 @@ public class AuthController {
         public ResponseEntity<OperationResponse<RegisterResponseDTO>> register(
                         @Valid @RequestBody RegisterRequestDTO request) {
                 RegisterCommand command = new RegisterCommand(
-                        request.getFullName(),
-                        request.getPassword(),
-                        request.getEmail()
+                        request.fullName(),
+                        request.password(),
+                        request.email()
                 );
                 RegisterResult result = authUseCase.register(command);
                 RegisterResponseDTO response = new RegisterResponseDTO(
-                        result.getId(),
-                        result.getEmail(),
-                        result.getFullName(),
-                        result.getStatus(),
-                        result.getMessage()
+                        result.id(),
+                        result.email(),
+                        result.fullName(),
+                        result.status(),
+                        result.message()
                 );
                 return ResponseEntity.status(201)
                                 .body(ApiResponseFactory.created(response, "User registered successfully"));

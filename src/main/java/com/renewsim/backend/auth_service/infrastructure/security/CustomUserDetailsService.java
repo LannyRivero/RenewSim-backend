@@ -1,7 +1,7 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

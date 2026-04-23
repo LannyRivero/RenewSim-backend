@@ -1,10 +1,10 @@
 package com.renewsim.backend.auth_service.application.mapper;
 
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.ScopePolicy;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
-import com.renewsim.backend.auth_service.domain.TokenTimeService;
+import com.renewsim.backend.auth_service.application.service.TokenTimeService;
 import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
 

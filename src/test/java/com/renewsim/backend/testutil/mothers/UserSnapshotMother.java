@@ -1,6 +1,6 @@
 package com.renewsim.backend.testutil.mothers;
 
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 
 import java.util.Set;

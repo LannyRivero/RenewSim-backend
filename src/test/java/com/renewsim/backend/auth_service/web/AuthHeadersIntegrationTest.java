@@ -3,8 +3,9 @@ package com.renewsim.backend.auth_service.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
 import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
-import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
+import com.renewsim.backend.auth_service.application.result.AuthResult;
 import org.junit.jupiter.api.DisplayName;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,10 +37,8 @@ class AuthHeadersIntegrationTest {
         @DisplayName("Auth /login returns security and no-cache headers on 200")
         void loginOk_hasSecurityAndNoCacheHeaders() throws Exception {
                 Mockito.when(authUseCase.login(any()))
-                                .thenReturn(AuthResponseDTO.builder()
-                                                .token("token-123")
-                                                .username("user@test.com")
-                                                .build());
+                                .thenReturn(new AuthResult("token-123", "Bearer", null,
+                                                "user@test.com", Set.of(), Set.of()));
 
                 AuthRequestDTO req = new AuthRequestDTO("user@test.com", "StrongPass123!");
 

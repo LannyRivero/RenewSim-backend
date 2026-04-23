@@ -1,4 +1,6 @@
 package com.renewsim.backend.auth_service.web.dto;
+
+import com.renewsim.backend.auth_service.infrastructure.security.LoginUsernameProbe;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
