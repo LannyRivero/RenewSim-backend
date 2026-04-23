@@ -4,7 +4,7 @@ import com.renewsim.backend.auth_service.application.command.ActivateAccountComm
 import com.renewsim.backend.auth_service.application.port.in.ActivateAccountUseCase;
 import com.renewsim.backend.auth_service.application.port.out.ActivationTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.ActivateAccountResultDTO;
+import com.renewsim.backend.auth_service.application.result.ActivateAccountResult;
 import com.renewsim.backend.auth_service.domain.model.ActivationToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.exception.AuthenticationException;
@@ -23,7 +23,7 @@ public class ActivateAccountService implements ActivateAccountUseCase {
     private final UserAccountGateway userAccountGateway;
 
     @Override
-    public ActivateAccountResultDTO execute(ActivateAccountCommand command) {
+    public ActivateAccountResult execute(ActivateAccountCommand command) {
         String rawToken = command.token();
         String tokenHash = TokenHasher.hash(rawToken);
 
@@ -42,6 +42,6 @@ public class ActivateAccountService implements ActivateAccountUseCase {
 
         log.info("Account activated for userId={}", token.getUserId());
 
-        return new ActivateAccountResultDTO("Account activated successfully");
+        return new ActivateAccountResult("Account activated successfully");
     }
 }

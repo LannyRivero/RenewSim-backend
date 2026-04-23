@@ -7,7 +7,7 @@ import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.LoginStep1ResultDTO;
+import com.renewsim.backend.auth_service.application.result.LoginStep1Result;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
@@ -33,7 +33,7 @@ public class LoginStep1Service implements LoginStep1UseCase {
 
     @Override
     @Transactional
-    public LoginStep1ResultDTO execute(LoginStep1Command command) {
+    public LoginStep1Result execute(LoginStep1Command command) {
         // Intentionally generic response — never reveal whether email exists
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
                 .orElse(null);
@@ -67,8 +67,8 @@ public class LoginStep1Service implements LoginStep1UseCase {
         return genericResponse();
     }
 
-    private static LoginStep1ResultDTO genericResponse() {
-        return new LoginStep1ResultDTO(
+    private static LoginStep1Result genericResponse() {
+        return new LoginStep1Result(
                 "If your account exists and is active, you will receive an OTP.",
                 OTP_EXPIRES_IN_SECONDS);
     }
