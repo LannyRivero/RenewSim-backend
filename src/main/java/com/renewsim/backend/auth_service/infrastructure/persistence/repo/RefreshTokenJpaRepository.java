@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.Optional;
 
 public interface RefreshTokenJpaRepository extends JpaRepository<RefreshTokenEntity, Long> {
@@ -15,9 +16,12 @@ public interface RefreshTokenJpaRepository extends JpaRepository<RefreshTokenEnt
     @Modifying
     @Query("""
             UPDATE RefreshTokenEntity r
-            SET r.revoked = true, r.revokedAt = CURRENT_TIMESTAMP
+            SET r.revoked = true,
+                r.revokedAt = :revokedAt
             WHERE r.userId = :userId
               AND r.revoked = false
             """)
-    void revokeAllByUserId(@Param("userId") Long userId);
+    void revokeAllByUserId(
+            @Param("userId") Long userId,
+            @Param("revokedAt") Instant revokedAt);
 }

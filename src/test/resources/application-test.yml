@@ -39,7 +39,7 @@ security:
   jwt:
     issuer: renewsim-test
     audience: renewsim-clients
-    secret-base64: c2VjdXJlX3Rlc3Rfc2VjcmV0X2tleV8zMmJ5dGVzX2Jhc2U2NA==
+    secret-base64: QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQQ==
     expiration-seconds: 3600
     not-before-skew-seconds: 0
     allowed-clock-skew-seconds: 60
