@@ -4,14 +4,15 @@ import com.renewsim.backend.auth_service.application.command.ResendOtpCommand;
 import com.renewsim.backend.auth_service.application.port.in.ResendOtpUseCase;
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.ResendOtpResultDTO;
+import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
 import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,8 @@ public class ResendOtpService implements ResendOtpUseCase {
     private final UserAccountGateway userAccountGateway;
     private final OtpCodeRepositoryPort otpCodeRepositoryPort;
     private final OtpGenerator otpGenerator;
-    private final PasswordEncoder passwordEncoder;
+    private final CredentialsValidator credentialsValidator;
+    private final PasswordEncoderPort passwordEncoder;
     private final EmailPort emailPort;
 
     @Override

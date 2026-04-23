@@ -1,12 +1,12 @@
 package com.renewsim.backend.auth_service.application.port.in;
 
-import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
-import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
-import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
-import com.renewsim.backend.auth_service.web.dto.RegisterResponseDTO;
+import com.renewsim.backend.auth_service.application.command.AuthCommand;
+import com.renewsim.backend.auth_service.application.command.RegisterCommand;
+import com.renewsim.backend.auth_service.application.result.AuthResult;
+import com.renewsim.backend.auth_service.application.result.RegisterResult;
 
 public interface AuthUseCase {
-    AuthResponseDTO login(AuthRequestDTO request);
+    AuthResult login(AuthCommand command);
 
-    RegisterResponseDTO register(RegisterRequestDTO request);
+    RegisterResult register(RegisterCommand command);
 }

@@ -1,18 +1,18 @@
 package com.renewsim.backend.auth_service.application.service;
 
+import com.renewsim.backend.auth_service.application.command.AuthCommand;
+import com.renewsim.backend.auth_service.application.command.RegisterCommand;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
 import com.renewsim.backend.auth_service.application.port.out.ActivationTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.mapper.AuthResponseMapper;
-import com.renewsim.backend.auth_service.domain.AuthValidator;
+import com.renewsim.backend.auth_service.application.result.AuthResult;
+import com.renewsim.backend.auth_service.application.result.RegisterResult;
+import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.ActivationToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
-import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
-import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
-import com.renewsim.backend.auth_service.web.dto.RegisterRequestDTO;
-import com.renewsim.backend.auth_service.web.dto.RegisterResponseDTO;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.error.ErrorMessageFactory;
 import com.renewsim.backend.shared.exception.AuthenticationException;
@@ -33,16 +33,16 @@ import static com.renewsim.backend.auth_service.domain.error.AuthErrorCode.*;
 public class AuthServiceImpl implements AuthUseCase {
 
     private final UserAccountGateway userAccountGateway;
-    private final AuthValidator authValidator;
+    private final CredentialsValidator credentialsValidator;
     private final AuthResponseMapper authResponseMapper;
     private final ActivationTokenRepositoryPort activationTokenRepositoryPort;
     private final EmailPort emailPort;
 
     @Override
-    public AuthResponseDTO login(AuthRequestDTO request) {
-        authValidator.validateCredentials(request);
+    public AuthResult login(AuthCommand command) {
+        credentialsValidator.validateCredentials(command.getUsername(), command.getPassword());
 
-        String loginInput = request.getUsername();
+        String loginInput = command.getUsername();
 
         UserSnapshot user = (loginInput.contains("@")
                 ? userAccountGateway.findByEmail(loginInput)
@@ -50,29 +50,34 @@ public class AuthServiceImpl implements AuthUseCase {
                 .orElseThrow(() -> new AuthenticationException(
                         ErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS)));
 
-        authValidator.validateUserEnable(user.enabled());
-        authValidator.validatePassword(request.getPassword(), user.passwordHash());
+        credentialsValidator.validateUserEnabled(user.enabled());
+        credentialsValidator.validatePassword(command.getPassword(), user.passwordHash());
 
-        return authResponseMapper.toAuthResponseDTO(user);
+        var authResponseDTO = authResponseMapper.toAuthResponseDTO(user);
+        return new AuthResult(
+                authResponseDTO.getToken(),
+                authResponseDTO.getTokenType(),
+                authResponseDTO.getExpiresAt(),
+                authResponseDTO.getUsername(),
+                authResponseDTO.getRoles(),
+                authResponseDTO.getScopes()
+        );
     }
 
     @Override
     @Transactional
-    public RegisterResponseDTO register(RegisterRequestDTO request) {
-        // Structural validation is covered by @Valid in the controller.
-        // Here we only enforce business invariants.
-        if (userAccountGateway.existsByEmail(request.email())) {
+    public RegisterResult register(RegisterCommand command) {
+        if (userAccountGateway.existsByEmail(command.getEmail())) {
             throw new ResourceConflictException(
                     AUTH_EMAIL_CONFLICT.code(),
                     AUTH_EMAIL_CONFLICT.defaultMessage());
         }
 
         UserSnapshot user = userAccountGateway.createUser(
-                request.fullName(),
-                request.password(),
-                request.email(),
+                command.getFullName(),
+                command.getPassword(),
+                command.getEmail(),
                 Set.of(RoleName.USER));
-
 
         String rawToken = UUID.randomUUID().toString();
         String tokenHash = TokenHasher.hash(rawToken);
@@ -80,11 +85,10 @@ public class AuthServiceImpl implements AuthUseCase {
         ActivationToken activationToken = ActivationToken.issue(user.id(), tokenHash);
         activationTokenRepositoryPort.save(activationToken);
 
-        // Deliver activation email — adapter is profile-specific
         emailPort.sendActivationEmail(user.email(), rawToken);
         log.info("Activation email sent for userId={}", user.id());
 
-        return new RegisterResponseDTO(
+        return new RegisterResult(
                 user.id(),
                 user.email(),
                 user.fullName(),
