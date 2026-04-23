@@ -1,4 +1,4 @@
-package com.renewsim.backend.auth_service.web.dto;
+package com.renewsim.backend.auth_service.infrastructure.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -11,4 +11,3 @@ public class LoginUsernameProbe {
     public void setUsername(String username) { this.username = username; }
     public void setEmail(String email) { this.email = email; }
 }
-

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -29,17 +30,18 @@ public class OtpCodePersistenceAdapter implements OtpCodeRepositoryPort {
     @Override
     @Transactional(readOnly = true)
     public Optional<OtpCode> findLatestValidByUserId(Long userId, OtpCode.Purpose purpose) {
-        return repo.findLatestValidByUserIdAndPurpose(userId, purpose)
+        return repo.findFirstByUserIdAndPurposeAndVerifiedAtIsNullAndExpiresAtAfterOrderByIssuedAtDesc(
+                userId,
+                purpose,
+                Instant.now())
                 .map(this::toDomain);
     }
 
     @Override
     @Transactional
     public void invalidateAllByUserId(Long userId, OtpCode.Purpose purpose) {
-        repo.invalidateAllByUserIdAndPurpose(userId, purpose);
+        repo.invalidateAllByUserIdAndPurpose(userId, purpose, Instant.now());
     }
-
-    // --- Mapping ---
 
     private OtpCodeEntity toEntity(OtpCode domain) {
         OtpCodeEntity entity = new OtpCodeEntity();

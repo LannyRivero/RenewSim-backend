@@ -89,8 +89,8 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
             String json = new String(buf, StandardCharsets.UTF_8);
             if (json.isBlank()) return null;
 
-            com.renewsim.backend.auth_service.web.dto.LoginUsernameProbe probe =
-                    objectMapper.readValue(json, com.renewsim.backend.auth_service.web.dto.LoginUsernameProbe.class);
+            com.renewsim.backend.auth_service.infrastructure.security.LoginUsernameProbe probe =
+                    objectMapper.readValue(json, com.renewsim.backend.auth_service.infrastructure.security.LoginUsernameProbe.class);
             String u = probe.getUsername();
             return (u == null || u.isBlank()) ? null : u.trim();
         } catch (Exception ex) {

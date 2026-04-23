@@ -9,5 +9,7 @@ public interface ActivationTokenJpaRepository extends JpaRepository<ActivationTo
 
     Optional<ActivationTokenEntity> findByTokenHash(String tokenHash);
 
+    Optional<ActivationTokenEntity> findTopByUserIdOrderByIssuedAtDesc(Long userId);
+
     void deleteByUserId(Long userId);
 }

@@ -1,15 +1,15 @@
 package com.renewsim.backend.auth_service.application.service;
 
 import com.renewsim.backend.auth_service.application.command.RefreshTokenCommand;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.in.RefreshTokenUseCase;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.RefreshTokenResultDTO;
+import com.renewsim.backend.auth_service.application.result.RefreshTokenResult;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
 
         @Override
         @Transactional
-        public RefreshTokenResultDTO execute(RefreshTokenCommand command) {
+        public RefreshTokenResult execute(RefreshTokenCommand command) {
 
                 String tokenHash = TokenHasher.hash(command.refreshToken());
 
@@ -69,7 +69,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
 
                 log.info("Refresh token rotated for userId={}", existing.getUserId());
 
-                return new RefreshTokenResultDTO(
+                return new RefreshTokenResult(
                                 newAccessToken,
                                 "Bearer",
                                 tokenProvider.expiresInSeconds(),

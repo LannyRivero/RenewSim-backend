@@ -1,26 +1,24 @@
 package com.renewsim.backend.auth_service.infrastructure.client;
 
-import java.util.Set;
-
+import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
+import feign.RequestInterceptor;
 import org.springframework.context.annotation.Bean;
 
-import com.renewsim.backend.auth_service.infrastructure.security.JwtTokenProvider;
-
-import feign.RequestInterceptor;
+import java.util.Set;
 
 public class FeignAuthConfig {
-    private final JwtTokenProvider jwtTokenProvider;
 
-    public FeignAuthConfig(JwtTokenProvider jwtTokenProvider) {
-        this.jwtTokenProvider = jwtTokenProvider;
+    private final TokenProvider tokenProvider;
+
+    public FeignAuthConfig(TokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
     }
 
-    @Bean 
+    @Bean
     public RequestInterceptor requestInterceptor() {
         return template -> {
-            String token = jwtTokenProvider.generateServiceToken("auth-service",Set.of("user:write","user:read"));
+            String token = tokenProvider.generateServiceToken("auth-service", Set.of("user:write", "user:read"));
             template.header("Authorization", "Bearer " + token);
         };
     }
-
 }

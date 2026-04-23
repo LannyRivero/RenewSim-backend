@@ -1,9 +1,10 @@
 package com.renewsim.backend.auth_service.infrastructure.persistence;
 
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
+import com.renewsim.backend.auth_service.domain.model.AuthUserStatus;
+import com.renewsim.backend.auth_service.infrastructure.client.ExternalUserSnapshot;
 import com.renewsim.backend.auth_service.infrastructure.client.UserServiceClient;
-import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.user_service.domain.model.UserStatus;
@@ -66,19 +67,9 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     }
 
     @Override
-    public UserSnapshot createUser(String fullName, String rawPassword,
+    public UserSnapshot createUser(String username, String fullName, String rawPassword,
             String email, Set<RoleName> roles) {
-        // username derivado del email — único y compatible con la regex
-        // ^[a-z0-9._-]{3,32}$
-        String username = deriveUsername(email);
-
-        UserCreateRequest request = new UserCreateRequest(
-                username,
-                email,
-                rawPassword,
-                fullName,
-                null);
-
+        UserCreateRequest request = new UserCreateRequest(username, email, rawPassword, fullName, null);
         OperationResponse<ExternalUserSnapshot> response = userServiceClient.createUser(request);
         return mapToSnapshot(response != null ? response.data() : null);
     }
@@ -107,23 +98,6 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         }
     }
 
-    // ----------------------------------------------------
-    // Helpers
-    // ----------------------------------------------------
-
-    /**
-     * Deriva un username del email para cumplir la regex ^[a-z0-9._-]{3,32}$.
-     * Toma la parte local del email, la pasa a minúsculas y trunca a 32 chars.
-     * Ejemplo: "John.Doe@Example.com" -> "john.doe"
-     */
-    private String deriveUsername(String email) {
-        String localPart = email.split("@")[0].toLowerCase();
-        // reemplaza caracteres no permitidos por punto
-        localPart = localPart.replaceAll("[^a-z0-9._-]", ".");
-        // trunca a 32 chars
-        return localPart.length() > 32 ? localPart.substring(0, 32) : localPart;
-    }
-
     private UserSnapshot mapToSnapshot(ExternalUserSnapshot external) {
         if (external == null)
             return null;
@@ -134,8 +108,9 @@ public class HttpUserAccountGateway implements UserAccountGateway {
                 .map(RoleName::valueOf)
                 .collect(Collectors.toUnmodifiableSet());
 
-        UserStatus status = parseStatus(external.status());
-        boolean enabled = status == UserStatus.ACTIVE;
+        UserStatus externalStatus = parseExternalStatus(external.status());
+        AuthUserStatus authStatus = mapToAuthUserStatus(externalStatus);
+        boolean enabled = authStatus == AuthUserStatus.ACTIVE;
 
         return new UserSnapshot(
                 external.id(),
@@ -144,11 +119,11 @@ public class HttpUserAccountGateway implements UserAccountGateway {
                 external.passwordHash(),
                 external.email(),
                 roles,
-                status,
+                authStatus,
                 enabled);
     }
 
-    private UserStatus parseStatus(String status) {
+    private UserStatus parseExternalStatus(String status) {
         if (status == null)
             return UserStatus.INACTIVE;
         try {
@@ -157,5 +132,18 @@ public class HttpUserAccountGateway implements UserAccountGateway {
             log.warn("Unknown UserStatus value: {}", status);
             return UserStatus.INACTIVE;
         }
+    }
+
+    /**
+     * Maps external UserStatus (from user_service) to internal AuthUserStatus
+     * (auth_service).
+     * This decouples the bounded contexts.
+     */
+    private AuthUserStatus mapToAuthUserStatus(UserStatus externalStatus) {
+        return switch (externalStatus) {
+            case ACTIVE -> AuthUserStatus.ACTIVE;
+            case INACTIVE -> AuthUserStatus.INACTIVE;
+            case SUSPENDED -> AuthUserStatus.SUSPENDED;
+        };
     }
 }

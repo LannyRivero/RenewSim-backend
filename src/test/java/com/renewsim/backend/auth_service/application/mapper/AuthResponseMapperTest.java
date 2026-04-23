@@ -1,10 +1,10 @@
 package com.renewsim.backend.auth_service.application.mapper;
 
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.ScopePolicy;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
-import com.renewsim.backend.auth_service.domain.TokenTimeService;
-import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
+import com.renewsim.backend.auth_service.application.result.AuthResult;
+import com.renewsim.backend.auth_service.application.service.TokenTimeService;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
 
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -27,8 +27,8 @@ class AuthResponseMapperTest {
     private final AuthResponseMapper mapper = new AuthResponseMapper(tokenProvider, scopePolicy, tokenTimeService);
 
     @Test
-    @DisplayName("Should build AuthResponseDTO correctly from UserSnapshot")
-    void shouldBuildAuthResponseCorrectly() {
+    @DisplayName("Should build AuthResult correctly from UserSnapshot")
+    void shouldBuildAuthResultCorrectly() {
         // Given
         UserSnapshot user = UserSnapshotMother.activeUser("john", Set.of(RoleName.USER));
 
@@ -39,19 +39,19 @@ class AuthResponseMapperTest {
         when(tokenProvider.generate(any())).thenReturn("jwt-token");
 
         // When
-        AuthResponseDTO response = mapper.toAuthResponseDTO(user);
+        AuthResult result = mapper.toAuthResult(user);
 
         // Then
-        assertEquals("jwt-token", response.getToken());
-        assertEquals("Bearer", response.getTokenType());
-        assertEquals(fixedExpireAt, response.getExpiresAt());
-        assertEquals("john", response.getUsername());
-        assertTrue(response.getRoles().contains("USER"));
-        assertTrue(response.getScopes().contains("sim:read"));
+        assertThat(result).isNotNull();
+        assertThat(result.token()).isEqualTo("jwt-token");
+        assertThat(result.tokenType()).isEqualTo("Bearer");
+        assertThat(result.expiresAt()).isEqualTo(fixedExpireAt);
+        assertThat(result.username()).isEqualTo("john");
+        assertThat(result.roles()).containsExactly("USER");
+        assertThat(result.scopes()).containsExactly("sim:read");
 
         verify(tokenTimeService).calculateExpiration();
         verify(scopePolicy).getScopes(Set.of(RoleName.USER));
         verify(tokenProvider).generate(any());
     }
-
 }

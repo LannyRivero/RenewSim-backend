@@ -4,14 +4,15 @@ import com.renewsim.backend.auth_service.application.command.ResendOtpCommand;
 import com.renewsim.backend.auth_service.application.port.in.ResendOtpUseCase;
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.ResendOtpResultDTO;
+import com.renewsim.backend.auth_service.application.result.ResendOtpResult;
+import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,12 +26,13 @@ public class ResendOtpService implements ResendOtpUseCase {
     private final UserAccountGateway userAccountGateway;
     private final OtpCodeRepositoryPort otpCodeRepositoryPort;
     private final OtpGenerator otpGenerator;
-    private final PasswordEncoder passwordEncoder;
+    private final CredentialsValidator credentialsValidator;
+    private final PasswordEncoderPort passwordEncoder;
     private final EmailPort emailPort;
 
     @Override
     @Transactional
-    public ResendOtpResultDTO execute(ResendOtpCommand command) {
+    public ResendOtpResult execute(ResendOtpCommand command) {
 
         // Generic response — never reveal whether email exists
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
@@ -57,8 +59,8 @@ public class ResendOtpService implements ResendOtpUseCase {
         return genericResponse();
     }
 
-    private static ResendOtpResultDTO genericResponse() {
-        return new ResendOtpResultDTO(
+    private static ResendOtpResult genericResponse() {
+        return new ResendOtpResult(
                 "If your account exists and is active, a new OTP has been sent.",
                 OTP_EXPIRES_IN_SECONDS);
     }

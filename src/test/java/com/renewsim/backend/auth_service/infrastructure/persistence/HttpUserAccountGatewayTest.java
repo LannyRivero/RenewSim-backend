@@ -1,8 +1,8 @@
 package com.renewsim.backend.auth_service.infrastructure.persistence;
 
 import com.renewsim.backend.auth_service.infrastructure.client.UserServiceClient;
-import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
+import com.renewsim.backend.auth_service.infrastructure.client.ExternalUserSnapshot;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.user_service.domain.model.UserStatus;
@@ -74,7 +74,7 @@ class HttpUserAccountGatewayTest {
                 .thenReturn(OperationResponse.ok(externalCreated, "Created"));
 
         UserSnapshot result = gateway.createUser(
-                "John Doe", "secret", "john@example.com", Set.of(RoleName.USER));
+                "john.doe", "John Doe", "secret", "john@example.com", Set.of(RoleName.USER));
 
         assertThat(result.fullName()).isEqualTo("John Doe");
         assertThat(result.email()).isEqualTo("john@example.com");

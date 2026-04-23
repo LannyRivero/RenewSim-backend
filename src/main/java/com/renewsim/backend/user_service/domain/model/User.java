@@ -51,15 +51,23 @@ public class User {
     }
 
     public void activate() {
-        if (this.status == UserStatus.ACTIVE)
+        if (this.status == UserStatus.ACTIVE) {
             return;
+        }
+        if (this.status != UserStatus.INACTIVE) {
+            throw new IllegalStateException("Only INACTIVE users can be activated");
+        }
         this.status = UserStatus.ACTIVE;
         this.activatedAt = LocalDateTime.now();
     }
 
     public void suspend() {
-        if (this.status == UserStatus.SUSPENDED)
+        if (this.status == UserStatus.SUSPENDED) {
             return;
+        }
+        if (this.status != UserStatus.ACTIVE) {
+            throw new IllegalStateException("Only ACTIVE users can be suspended");
+        }
         this.status = UserStatus.SUSPENDED;
     }
 
@@ -87,19 +95,23 @@ public class User {
     }
 
     private String requireValidEmail(String email) {
-        if (email == null || email.isBlank())
+        if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email cannot be null or empty");
-        if (!EMAIL_PATTERN.matcher(email).matches())
+        }
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
             throw new IllegalArgumentException("Email format is invalid: " + email);
+        }
         return email.toLowerCase().trim();
     }
 
     private String requireValidPasswordHash(String passwordHash) {
-        if (passwordHash == null || passwordHash.isBlank())
+        if (passwordHash == null || passwordHash.isBlank()) {
             throw new IllegalArgumentException("PasswordHash cannot be null or empty");
-        if (!BCRYPT_PATTERN.matcher(passwordHash).matches())
+        }
+        if (!BCRYPT_PATTERN.matcher(passwordHash).matches()) {
             throw new IllegalArgumentException(
                     "PasswordHash must be a valid BCrypt hash (starts with $2a$, $2b$, or $2y$)");
+        }
         return passwordHash;
     }
 

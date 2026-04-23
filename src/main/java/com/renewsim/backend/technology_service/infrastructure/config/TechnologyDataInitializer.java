@@ -10,16 +10,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-/**
- * Loads default technology data in development environments.
- * Uses the TechnologyFactory to ensure all domain validations are respected.
- * 
- * TEMPORARILY DISABLED: Schema mismatch between TechnologyFactory and MySQL schema.
- * TODO: Update TechnologyFactory to match current schema or create V9 migration.
- */
 @Slf4j
 @Component
-@Profile("!local")  // ← DESHABILITADO temporalmente
+@Profile("!test")
 public class TechnologyDataInitializer implements CommandLineRunner {
 
     private final TechnologyRepositoryPort repository;
@@ -30,9 +23,8 @@ public class TechnologyDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        log.info("🚀 Starting TechnologyDataInitializer (profile: local)");
+        log.info("🚀 Starting TechnologyDataInitializer");
 
-        // Only initialize if repository is empty
         if (repository.findAll().isEmpty()) {
             log.info("🧱 No technologies found. Loading initial dataset...");
 
@@ -43,7 +35,6 @@ public class TechnologyDataInitializer implements CommandLineRunner {
             );
 
             defaultTechnologies.forEach(tech -> {
-                // Avoid duplicates by name
                 boolean exists = repository.existsByName(tech.getName());
                 if (!exists) {
                     repository.save(tech);

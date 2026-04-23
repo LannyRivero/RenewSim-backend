@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -35,10 +36,8 @@ public class RefreshTokenPersistenceAdapter implements RefreshTokenRepositoryPor
     @Override
     @Transactional
     public void revokeAllByUserId(Long userId) {
-        repo.revokeAllByUserId(userId);
+        repo.revokeAllByUserId(userId, Instant.now());
     }
-
-    // --- Mapping ---
 
     private RefreshTokenEntity toEntity(RefreshToken domain) {
         RefreshTokenEntity entity = new RefreshTokenEntity();

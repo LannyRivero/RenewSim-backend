@@ -3,7 +3,6 @@ package com.renewsim.backend.auth_service.infrastructure.client;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-import com.renewsim.backend.auth_service.web.dto.ExternalUserSnapshot;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.user_service.web.dto.UserCreateRequest;
 

@@ -1,21 +1,22 @@
 package com.renewsim.backend.auth_service.application.service;
 
 import com.renewsim.backend.auth_service.application.command.LoginStep2Command;
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.in.LoginStep2UseCase;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.LoginStep2ResultDTO;
+import com.renewsim.backend.auth_service.application.result.LoginStep2Result;
+import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
+import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
-import com.renewsim.backend.auth_service.web.dto.UserSnapshot;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,11 +33,12 @@ public class LoginStep2Service implements LoginStep2UseCase {
     private final OtpCodeRepositoryPort otpCodeRepositoryPort;
     private final RefreshTokenRepositoryPort refreshTokenRepositoryPort;
     private final TokenProvider tokenProvider;
-    private final PasswordEncoder passwordEncoder;
+    private final CredentialsValidator credentialsValidator;
+    private final PasswordEncoderPort passwordEncoderPort;
 
     @Override
     @Transactional
-    public LoginStep2ResultDTO execute(LoginStep2Command command) {
+    public LoginStep2Result execute(LoginStep2Command command) {
 
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
@@ -53,7 +55,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
             throw new AuthenticationException("Invalid or expired OTP");
         }
 
-        if (!passwordEncoder.matches(command.otpCode(), otpCode.getCodeHash())) {
+        if (!passwordEncoderPort.matches(command.otpCode(), otpCode.getCodeHash())) {
             throw new AuthenticationException("Invalid or expired OTP");
         }
 
@@ -77,7 +79,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
 
         log.info("Login step2 successful for userId={}", user.id());
 
-        return new LoginStep2ResultDTO(
+        return new LoginStep2Result(
                 accessToken,
                 "Bearer",
                 tokenProvider.expiresInSeconds(),

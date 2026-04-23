@@ -6,7 +6,7 @@ import com.renewsim.backend.auth_service.infrastructure.security.AuthNoCacheFilt
 import com.renewsim.backend.auth_service.infrastructure.security.JwtAuthenticationFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimitingFilter;
 import com.renewsim.backend.auth_service.web.controller.AuthController;
-import com.renewsim.backend.auth_service.web.dto.AuthResponseDTO;
+import com.renewsim.backend.auth_service.application.result.AuthResult;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -60,14 +60,8 @@ class SecurityConfigTest {
         @BeforeEach
         void setUp() {
                 Mockito.when(authUseCase.login(any())).thenReturn(
-                                AuthResponseDTO.builder()
-                                                .username("john")
-                                                .token("mock-token")
-                                                .tokenType("Bearer")
-                                                .roles(Set.of("USER"))
-                                                .scopes(Set.of("read"))
-                                                .expiresAt(Instant.now().plusSeconds(3600))
-                                                .build());
+                                new AuthResult("mock-token", "Bearer", Instant.now().plusSeconds(3600),
+                                                "john", Set.of("USER"), Set.of("read")));
         }
 
         @Test
