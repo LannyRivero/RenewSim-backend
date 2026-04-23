@@ -6,7 +6,7 @@ import com.renewsim.backend.auth_service.application.port.in.RefreshTokenUseCase
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.RefreshTokenResultDTO;
+import com.renewsim.backend.auth_service.application.result.RefreshTokenResult;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
@@ -31,7 +31,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
 
         @Override
         @Transactional
-        public RefreshTokenResultDTO execute(RefreshTokenCommand command) {
+        public RefreshTokenResult execute(RefreshTokenCommand command) {
 
                 String tokenHash = TokenHasher.hash(command.refreshToken());
 
@@ -69,7 +69,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
 
                 log.info("Refresh token rotated for userId={}", existing.getUserId());
 
-                return new RefreshTokenResultDTO(
+                return new RefreshTokenResult(
                                 newAccessToken,
                                 "Bearer",
                                 tokenProvider.expiresInSeconds(),

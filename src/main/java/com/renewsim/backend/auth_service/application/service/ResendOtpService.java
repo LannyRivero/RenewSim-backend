@@ -6,7 +6,8 @@ import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.ResendOtpResultDTO;
+import com.renewsim.backend.auth_service.application.result.RefreshTokenResult;
+import com.renewsim.backend.auth_service.application.result.ResendOtpResult;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
@@ -32,7 +33,7 @@ public class ResendOtpService implements ResendOtpUseCase {
 
     @Override
     @Transactional
-    public ResendOtpResultDTO execute(ResendOtpCommand command) {
+    public ResendOtpResult execute(ResendOtpCommand command) {
 
         // Generic response — never reveal whether email exists
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
@@ -59,8 +60,8 @@ public class ResendOtpService implements ResendOtpUseCase {
         return genericResponse();
     }
 
-    private static ResendOtpResultDTO genericResponse() {
-        return new ResendOtpResultDTO(
+    private static ResendOtpResult genericResponse() {
+        return new ResendOtpResult(
                 "If your account exists and is active, a new OTP has been sent.",
                 OTP_EXPIRES_IN_SECONDS);
     }

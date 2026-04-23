@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.renewsim.backend.auth_service.application.command.ActivateAccountCommand;
 import com.renewsim.backend.auth_service.application.port.out.ActivationTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.ActivateAccountResultDTO;
+import com.renewsim.backend.auth_service.application.result.ActivateAccountResult;
 import com.renewsim.backend.auth_service.domain.model.ActivationToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.exception.AuthenticationException;
@@ -54,7 +54,7 @@ class ActivateAccountServiceTest {
 
                 when(activationTokenRepositoryPort.findByTokenHash(tokenHash)).thenReturn(Optional.of(token));
 
-                ActivateAccountResultDTO result = activateAccountService.execute(new ActivateAccountCommand(rawToken));
+                ActivateAccountResult result = activateAccountService.execute(new ActivateAccountCommand(rawToken));
 
                 assertEquals("Account activated successfully", result.message());
                 assertTrue(token.isUsed());
