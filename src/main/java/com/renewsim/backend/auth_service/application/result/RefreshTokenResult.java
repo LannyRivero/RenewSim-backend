@@ -6,7 +6,7 @@ import java.util.Set;
  * Result for refresh token rotation.
  * Contains the new JWT access token.
  */
-public record RefreshTokenResultDTO(
+public record RefreshTokenResult(
         String accessToken,
         String tokenType,
         long expiresIn,
