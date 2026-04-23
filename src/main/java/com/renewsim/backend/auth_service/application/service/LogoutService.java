@@ -7,7 +7,7 @@ import com.renewsim.backend.auth_service.application.port.out.RefreshTokenReposi
 import com.renewsim.backend.auth_service.application.port.out.TokenBlacklistPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.LogoutResultDTO;
+import com.renewsim.backend.auth_service.application.result.LogoutResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class LogoutService implements LogoutUseCase {
 
     @Override
     @Transactional
-    public LogoutResultDTO execute(LogoutCommand command) {
+    public LogoutResult execute(LogoutCommand command) {
 
         Long userId = userAccountGateway.findByEmail(command.username())
                 .map(UserSnapshot::id)
@@ -51,6 +51,6 @@ public class LogoutService implements LogoutUseCase {
                     command.username());
         }
 
-        return new LogoutResultDTO("Logged out successfully");
+        return new LogoutResult("Logged out successfully");
     }
 }

@@ -175,10 +175,10 @@ public class AuthController {
         @PostMapping(value = "/logout")
         @Operation(summary = "Logout", description = "Invalidates access token and revokes all refresh tokens.")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Logged out successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LogoutResultDTO.class))),
+                        @ApiResponse(responseCode = "200", description = "Logged out successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LogoutResult.class))),
                         @ApiResponse(responseCode = "401", description = "Not authenticated", content = @Content)
         })
-        public ResponseEntity<OperationResponse<LogoutResultDTO>> logout(
+        public ResponseEntity<OperationResponse<LogoutResult>> logout(
                         @RequestHeader("Authorization") String authHeader,
                         @AuthenticationPrincipal AuthenticatedUser principal) {
 
@@ -188,7 +188,7 @@ public class AuthController {
 
                 String username = principal != null ? principal.username() : "";
 
-                LogoutResultDTO result = logoutUseCase.execute(new LogoutCommand(token, username));
+                LogoutResult result = logoutUseCase.execute(new LogoutCommand(token, username));
                 return ResponseEntity.ok(ApiResponseFactory.ok(result, result.message()));
         }
 

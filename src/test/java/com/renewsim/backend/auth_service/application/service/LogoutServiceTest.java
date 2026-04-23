@@ -6,7 +6,7 @@ import com.renewsim.backend.auth_service.application.port.out.RefreshTokenReposi
 import com.renewsim.backend.auth_service.application.port.out.TokenBlacklistPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.LogoutResultDTO;
+import com.renewsim.backend.auth_service.application.result.LogoutResult;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
 
@@ -57,7 +57,7 @@ class LogoutServiceTest {
                 when(userAccountGateway.findByEmail("john@example.com"))
                                 .thenReturn(Optional.of(activeUser));
 
-                LogoutResultDTO result = service.execute(
+                LogoutResult result = service.execute(
                                 new LogoutCommand("valid-token", "john@example.com"));
 
                 assertThat(result.message()).isEqualTo("Logged out successfully");
@@ -72,7 +72,7 @@ class LogoutServiceTest {
                 when(userAccountGateway.findByEmail("john@example.com"))
                                 .thenReturn(Optional.of(activeUser));
 
-                LogoutResultDTO result = service.execute(
+                LogoutResult result = service.execute(
                                 new LogoutCommand("no-jti-token", "john@example.com"));
 
                 assertThat(result.message()).isEqualTo("Logged out successfully");
@@ -89,7 +89,7 @@ class LogoutServiceTest {
                 when(userAccountGateway.findByEmail("unknown@example.com"))
                                 .thenReturn(Optional.empty());
 
-                LogoutResultDTO result = service.execute(
+                LogoutResult result = service.execute(
                                 new LogoutCommand("valid-token", "unknown@example.com"));
 
                 assertThat(result.message()).isEqualTo("Logged out successfully");
@@ -117,7 +117,7 @@ class LogoutServiceTest {
                 when(tokenProvider.extractJti(anyString())).thenReturn(Optional.empty());
                 when(userAccountGateway.findByEmail(anyString())).thenReturn(Optional.empty());
 
-                LogoutResultDTO result = service.execute(
+                LogoutResult result = service.execute(
                                 new LogoutCommand("any-token", "any@example.com"));
 
                 assertThat(result.message()).isEqualTo("Logged out successfully");
