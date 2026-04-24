@@ -2,22 +2,16 @@ package com.renewsim.backend.auth_service.infrastructure.persistence;
 
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.domain.model.AuthUserStatus;
 import com.renewsim.backend.auth_service.infrastructure.client.ExternalUserSnapshot;
 import com.renewsim.backend.auth_service.infrastructure.client.UserServiceClient;
-import com.renewsim.backend.shared.domain.vo.RoleName;
+import com.renewsim.backend.auth_service.infrastructure.mapper.UserSnapshotMapper;
 import com.renewsim.backend.shared.dto.OperationResponse;
-import com.renewsim.backend.user_service.domain.model.UserStatus;
-import com.renewsim.backend.user_service.web.dto.UserCreateRequest;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -25,12 +19,13 @@ import java.util.stream.Collectors;
 public class HttpUserAccountGateway implements UserAccountGateway {
 
     private final UserServiceClient userServiceClient;
+    private final UserSnapshotMapper userSnapshotMapper;
 
     @Override
     public Optional<UserSnapshot> findByEmail(String email) {
         try {
             OperationResponse<ExternalUserSnapshot> response = userServiceClient.getCredentials(null, email);
-            return Optional.ofNullable(mapToSnapshot(
+            return Optional.ofNullable(userSnapshotMapper.toSnapshot(
                     response != null ? response.data() : null));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
@@ -44,7 +39,7 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     public Optional<UserSnapshot> findByUsername(String username) {
         try {
             OperationResponse<ExternalUserSnapshot> response = userServiceClient.getCredentials(username, null);
-            return Optional.ofNullable(mapToSnapshot(
+            return Optional.ofNullable(userSnapshotMapper.toSnapshot(
                     response != null ? response.data() : null));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
@@ -68,10 +63,12 @@ public class HttpUserAccountGateway implements UserAccountGateway {
 
     @Override
     public UserSnapshot createUser(String username, String fullName, String rawPassword,
-            String email, Set<RoleName> roles) {
-        UserCreateRequest request = new UserCreateRequest(username, email, rawPassword, fullName, null);
+            String email, java.util.Set<com.renewsim.backend.shared.domain.vo.RoleName> roles) {
+        com.renewsim.backend.auth_service.application.dto.InternalUserCreateRequest request =
+                new com.renewsim.backend.auth_service.application.dto.InternalUserCreateRequest(
+                        username, email, rawPassword, fullName);
         OperationResponse<ExternalUserSnapshot> response = userServiceClient.createUser(request);
-        return mapToSnapshot(response != null ? response.data() : null);
+        return userSnapshotMapper.toSnapshot(response != null ? response.data() : null);
     }
 
     @Override
@@ -88,7 +85,7 @@ public class HttpUserAccountGateway implements UserAccountGateway {
     public Optional<UserSnapshot> findById(Long userId) {
         try {
             OperationResponse<ExternalUserSnapshot> response = userServiceClient.getSnapshotById(userId);
-            return Optional.ofNullable(mapToSnapshot(
+            return Optional.ofNullable(userSnapshotMapper.toSnapshot(
                     response != null ? response.data() : null));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
@@ -96,54 +93,5 @@ public class HttpUserAccountGateway implements UserAccountGateway {
             log.error("Error fetching user by id={}", userId, e);
             throw e;
         }
-    }
-
-    private UserSnapshot mapToSnapshot(ExternalUserSnapshot external) {
-        if (external == null)
-            return null;
-
-        Set<RoleName> roles = Optional.ofNullable(external.roles())
-                .orElse(Collections.emptySet())
-                .stream()
-                .map(RoleName::valueOf)
-                .collect(Collectors.toUnmodifiableSet());
-
-        UserStatus externalStatus = parseExternalStatus(external.status());
-        AuthUserStatus authStatus = mapToAuthUserStatus(externalStatus);
-        boolean enabled = authStatus == AuthUserStatus.ACTIVE;
-
-        return new UserSnapshot(
-                external.id(),
-                external.username(),
-                external.fullName(),
-                external.passwordHash(),
-                external.email(),
-                roles,
-                authStatus,
-                enabled);
-    }
-
-    private UserStatus parseExternalStatus(String status) {
-        if (status == null)
-            return UserStatus.INACTIVE;
-        try {
-            return UserStatus.valueOf(status);
-        } catch (IllegalArgumentException e) {
-            log.warn("Unknown UserStatus value: {}", status);
-            return UserStatus.INACTIVE;
-        }
-    }
-
-    /**
-     * Maps external UserStatus (from user_service) to internal AuthUserStatus
-     * (auth_service).
-     * This decouples the bounded contexts.
-     */
-    private AuthUserStatus mapToAuthUserStatus(UserStatus externalStatus) {
-        return switch (externalStatus) {
-            case ACTIVE -> AuthUserStatus.ACTIVE;
-            case INACTIVE -> AuthUserStatus.INACTIVE;
-            case SUSPENDED -> AuthUserStatus.SUSPENDED;
-        };
     }
 }
