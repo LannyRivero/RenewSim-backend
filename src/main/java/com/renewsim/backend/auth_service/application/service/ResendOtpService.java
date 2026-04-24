@@ -5,34 +5,55 @@ import com.renewsim.backend.auth_service.application.port.in.ResendOtpUseCase;
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
+import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.ResendOtpResult;
-import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
-@Service
-@RequiredArgsConstructor
+import java.time.Clock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ResendOtpService implements ResendOtpUseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(ResendOtpService.class);
 
     private static final int OTP_EXPIRES_IN_SECONDS = 300;
 
     private final UserAccountGateway userAccountGateway;
     private final OtpCodeRepositoryPort otpCodeRepositoryPort;
     private final OtpGenerator otpGenerator;
-    private final CredentialsValidator credentialsValidator;
     private final PasswordEncoderPort passwordEncoder;
     private final EmailPort emailPort;
+    private final TransactionalPort transactionalPort;
+    private final Clock clock;
+
+    public ResendOtpService(
+            UserAccountGateway userAccountGateway,
+            OtpCodeRepositoryPort otpCodeRepositoryPort,
+            OtpGenerator otpGenerator,
+            PasswordEncoderPort passwordEncoder,
+            EmailPort emailPort,
+            TransactionalPort transactionalPort,
+            Clock clock) {
+        this.userAccountGateway = userAccountGateway;
+        this.otpCodeRepositoryPort = otpCodeRepositoryPort;
+        this.otpGenerator = otpGenerator;
+        this.passwordEncoder = passwordEncoder;
+        this.emailPort = emailPort;
+        this.transactionalPort = transactionalPort;
+        this.clock = clock;
+    }
 
     @Override
-    @Transactional
-    public ResendOtpResult execute(ResendOtpCommand command) {
+        public ResendOtpResult execute(ResendOtpCommand command) {
+                return transactionalPort.execute(() -> executeInternal(command));
+        }
+
+    private ResendOtpResult executeInternal(ResendOtpCommand command) {
 
         // Generic response — never reveal whether email exists
         UserSnapshot user = userAccountGateway.findByEmail(command.email())

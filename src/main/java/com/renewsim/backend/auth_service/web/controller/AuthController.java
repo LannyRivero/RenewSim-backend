@@ -30,67 +30,12 @@ import java.time.Duration;
 @Tag(name = "Authentication", description = "Endpoints for authentication and registration of users.")
 public class AuthController {
 
-        private final AuthUseCase authUseCase;
         private final LoginStep1UseCase loginStep1UseCase;
         private final LoginStep2UseCase loginStep2UseCase;
         private final ActivateAccountUseCase activateAccountUseCase;
         private final ResendOtpUseCase resendOtpUseCase;
         private final LogoutUseCase logoutUseCase;
         private final RefreshTokenUseCase refreshTokenUseCase;
-
-        // ----------------------------------------------------
-        // POST /auth/login → legacy single-factor
-        // ----------------------------------------------------
-        @PostMapping(value = "/login", consumes = "application/json")
-        @Operation(summary = "User login (single-factor)")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Login successful", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponseDTO.class))),
-                        @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content),
-                        @ApiResponse(responseCode = "400", description = "Validation error", content = @Content)
-        })
-        public ResponseEntity<OperationResponse<AuthResponseDTO>> login(
-                        @Valid @RequestBody AuthRequestDTO request) {
-                AuthCommand command = new AuthCommand(request.getUsername(), request.getPassword());
-                AuthResult result = authUseCase.login(command);
-                AuthResponseDTO response = new AuthResponseDTO(
-                        result.token(),
-                        result.tokenType(),
-                        result.expiresAt(),
-                        result.username(),
-                        result.roles(),
-                        result.scopes()
-                );
-                return ResponseEntity.ok(ApiResponseFactory.ok(response, "Login successful"));
-        }
-
-        // ----------------------------------------------------
-        // POST /auth/register → Register new user
-        // ----------------------------------------------------
-        @PostMapping(value = "/register", consumes = "application/json")
-        @Operation(summary = "User registration")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "201", description = "User registered successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RegisterResponseDTO.class))),
-                        @ApiResponse(responseCode = "409", description = "User already exists", content = @Content),
-                        @ApiResponse(responseCode = "400", description = "Validation error", content = @Content)
-        })
-        public ResponseEntity<OperationResponse<RegisterResponseDTO>> register(
-                        @Valid @RequestBody RegisterRequestDTO request) {
-                RegisterCommand command = new RegisterCommand(
-                        request.fullName(),
-                        request.password(),
-                        request.email()
-                );
-                RegisterResult result = authUseCase.register(command);
-                RegisterResponseDTO response = new RegisterResponseDTO(
-                        result.id(),
-                        result.email(),
-                        result.fullName(),
-                        result.status(),
-                        result.message()
-                );
-                return ResponseEntity.status(201)
-                                .body(ApiResponseFactory.created(response, "User registered successfully"));
-        }
 
         // ----------------------------------------------------
         // POST /auth/login/step1 → Validate credentials, send OTP

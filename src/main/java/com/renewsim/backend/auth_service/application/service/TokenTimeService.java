@@ -1,42 +1,33 @@
 package com.renewsim.backend.auth_service.application.service;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-
 /**
- * Servicio de aplicación para cálculos de tiempo en tokens.
+ * Servicio de aplicación que encapsula configuración de tiempos de expiración.
  * 
- * Ubicación: Capa de Aplicación (no Domain).
- * Responsabilidad: Orquestar tiempos de expiración para tokens.
+ * Responsabilidad: Proveer valores de configuración para tokens JWT.
  * 
- * NOTA: Aunque es lógica simple, necesita @Component para inyección de dependencias.
- * La capa de aplicación puede conocer detalles técnicos de tiempo,
- * pero no debe exponer frameworks en el dominio.
+ * @since 1.0.0
  */
-@Component
 public class TokenTimeService {
 
-    @Value("${jwt.expiration.minutes:60}")
-    private int expirationMinutes;
+    private final long accessTokenValiditySeconds;
+    private final long refreshTokenValiditySeconds;
 
-    /**
-     * Calcula el instante de expiración basado en el tiempo actual.
-     * 
-     * @return el instante de expiración
-     */
-    public Instant calculateExpiration() {
-        return Instant.now().plus(expirationMinutes, ChronoUnit.MINUTES);
+    public TokenTimeService(long accessTokenValiditySeconds, long refreshTokenValiditySeconds) {
+        if (accessTokenValiditySeconds <= 0) {
+            throw new IllegalArgumentException("accessTokenValiditySeconds must be positive");
+        }
+        if (refreshTokenValiditySeconds <= 0) {
+            throw new IllegalArgumentException("refreshTokenValiditySeconds must be positive");
+        }
+        this.accessTokenValiditySeconds = accessTokenValiditySeconds;
+        this.refreshTokenValiditySeconds = refreshTokenValiditySeconds;
     }
 
-    /**
-     * Verifica si el tiempo actual ha pasado el instante de expiración.
-     * 
-     * @return true si ha expirado, false en caso contrario
-     */
-    public boolean isExpired() {
-        return Instant.now().isAfter(calculateExpiration());
+    public long getAccessTokenValiditySeconds() {
+        return accessTokenValiditySeconds;
+    }
+
+    public long getRefreshTokenValiditySeconds() {
+        return refreshTokenValiditySeconds;
     }
 }

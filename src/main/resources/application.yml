@@ -164,3 +164,12 @@ springdoc:
     tags-sorter: alpha
     enabled: ${SWAGGER_ENABLED:true}
     disable-swagger-default-url: true
+
+# =============================
+# JWT TOKEN EXPIRATION CONFIG
+# =============================
+jwt:
+  access-token:
+    expiration: 3600
+  refresh-token:
+    expiration: 604800

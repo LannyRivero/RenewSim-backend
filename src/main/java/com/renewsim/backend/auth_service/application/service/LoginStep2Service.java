@@ -4,42 +4,68 @@ import com.renewsim.backend.auth_service.application.command.LoginStep2Command;
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.in.LoginStep2UseCase;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
+import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.LoginStep2Result;
-import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
-import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.exception.AuthenticationException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Slf4j
-@Service
-@RequiredArgsConstructor
+/**
+ * Implementación del caso de uso de autenticación - Paso 2.
+ *
+ * Valida el código OTP proporcionado y genera tokens de acceso
+ * y refresh para el usuario autenticado.
+ *
+ * @since 1.0.0
+ */
 public class LoginStep2Service implements LoginStep2UseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(LoginStep2Service.class);
 
     private final UserAccountGateway userAccountGateway;
     private final OtpCodeRepositoryPort otpCodeRepositoryPort;
     private final RefreshTokenRepositoryPort refreshTokenRepositoryPort;
     private final TokenProvider tokenProvider;
-    private final CredentialsValidator credentialsValidator;
     private final PasswordEncoderPort passwordEncoderPort;
+    private final TransactionalPort transactionalPort;
+    private final Clock clock;
+
+    public LoginStep2Service(
+            UserAccountGateway userAccountGateway,
+            OtpCodeRepositoryPort otpCodeRepositoryPort,
+            RefreshTokenRepositoryPort refreshTokenRepositoryPort,
+            TokenProvider tokenProvider,
+            PasswordEncoderPort passwordEncoderPort,
+            TransactionalPort transactionalPort,
+            Clock clock) {
+        this.userAccountGateway = userAccountGateway;
+        this.otpCodeRepositoryPort = otpCodeRepositoryPort;
+        this.refreshTokenRepositoryPort = refreshTokenRepositoryPort;
+        this.tokenProvider = tokenProvider;
+        this.clock = clock;
+        this.passwordEncoderPort = passwordEncoderPort;
+        this.transactionalPort = transactionalPort;
+    }
 
     @Override
-    @Transactional
     public LoginStep2Result execute(LoginStep2Command command) {
+        return transactionalPort.execute(() -> executeInternal(command));
+    }
 
+    private LoginStep2Result executeInternal(LoginStep2Command command) {
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 

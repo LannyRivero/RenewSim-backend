@@ -6,22 +6,30 @@ import com.renewsim.backend.auth_service.application.port.in.LoginStep1UseCase;
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
+import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.LoginStep1Result;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
 import com.renewsim.backend.shared.exception.AuthenticationException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
-@Service
-@RequiredArgsConstructor
+import java.time.Clock;
+
+/**
+ * Implementación del caso de uso de autenticación - Paso 1.
+ *
+ * Valida credenciales básicas (email + password) y genera un OTP
+ * que será enviado al email del usuario. Diseñado para prevenir
+ * ataques de enumeración de usuarios mediante respuestas genéricas.
+ *
+ * @since 1.0.0
+ */
 public class LoginStep1Service implements LoginStep1UseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(LoginStep1Service.class);
     private static final int OTP_EXPIRES_IN_SECONDS = 300;
 
     private final UserAccountGateway userAccountGateway;
@@ -30,10 +38,34 @@ public class LoginStep1Service implements LoginStep1UseCase {
     private final CredentialsValidator credentialsValidator;
     private final PasswordEncoderPort passwordEncoder;
     private final EmailPort emailPort;
+    private final TransactionalPort transactionalPort;
+    private final Clock clock; // TODO: Fase 2 - pasar a OtpCode.issue()
+
+    public LoginStep1Service(
+            UserAccountGateway userAccountGateway,
+            OtpCodeRepositoryPort otpCodeRepositoryPort,
+            OtpGenerator otpGenerator,
+            CredentialsValidator credentialsValidator,
+            PasswordEncoderPort passwordEncoder,
+            EmailPort emailPort,
+            TransactionalPort transactionalPort,
+            Clock clock) {
+        this.userAccountGateway = userAccountGateway;
+        this.otpCodeRepositoryPort = otpCodeRepositoryPort;
+        this.otpGenerator = otpGenerator;
+        this.credentialsValidator = credentialsValidator;
+        this.passwordEncoder = passwordEncoder;
+        this.emailPort = emailPort;
+        this.transactionalPort = transactionalPort;
+        this.clock = clock;
+    }
 
     @Override
-    @Transactional
     public LoginStep1Result execute(LoginStep1Command command) {
+        return transactionalPort.execute(() -> executeInternal(command));
+    }
+
+    private LoginStep1Result executeInternal(LoginStep1Command command) {
         // Intentionally generic response — never reveal whether email exists
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
                 .orElse(null);
