@@ -82,7 +82,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
 
                 String newRawRefreshToken = UUID.randomUUID().toString();
                 String newHashedRefreshToken = TokenHasher.hash(newRawRefreshToken);
-                RefreshToken newRefreshToken = RefreshToken.issue(existing.getUserId(), newHashedRefreshToken);
+                RefreshToken newRefreshToken = RefreshToken.issue(existing.getUserId(), newHashedRefreshToken, clock);
                 refreshTokenRepositoryPort.save(newRefreshToken);
 
                 log.info("Refresh token rotated for userId={}", existing.getUserId());

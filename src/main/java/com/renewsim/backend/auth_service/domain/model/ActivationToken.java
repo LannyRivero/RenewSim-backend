@@ -1,6 +1,7 @@
 package com.renewsim.backend.auth_service.domain.model;
 
 import java.time.LocalDateTime;
+import java.time.Clock;
 import java.util.Objects;
 
 /**
@@ -40,7 +41,11 @@ public class ActivationToken {
      * TTL is 24 hours from issuedAt.
      */
     public static ActivationToken issue(Long userId, String tokenHash) {
-        LocalDateTime now = LocalDateTime.now();
+        return issue(userId, tokenHash, Clock.systemDefaultZone());
+    }
+
+    public static ActivationToken issue(Long userId, String tokenHash, Clock clock) {
+        LocalDateTime now = LocalDateTime.now(clock);
         return new ActivationToken(null, userId, tokenHash, now, now.plusHours(24), false);
     }
 

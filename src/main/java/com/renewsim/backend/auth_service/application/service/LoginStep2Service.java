@@ -100,7 +100,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
         // Use SHA-256 hash for deterministic lookup — BCrypt is non-deterministic
         String rawRefreshToken = UUID.randomUUID().toString();
         String hashedRefreshToken = TokenHasher.hash(rawRefreshToken);
-        RefreshToken refreshToken = RefreshToken.issue(user.id(), hashedRefreshToken);
+        RefreshToken refreshToken = RefreshToken.issue(user.id(), hashedRefreshToken, clock);
         refreshTokenRepositoryPort.save(refreshToken);
 
         log.info("Login step2 successful for userId={}", user.id());

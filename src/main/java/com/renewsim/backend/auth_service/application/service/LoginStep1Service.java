@@ -39,7 +39,7 @@ public class LoginStep1Service implements LoginStep1UseCase {
     private final PasswordEncoderPort passwordEncoder;
     private final EmailPort emailPort;
     private final TransactionalPort transactionalPort;
-    private final Clock clock; // TODO: Fase 2 - pasar a OtpCode.issue()
+    private final Clock clock;
 
     public LoginStep1Service(
             UserAccountGateway userAccountGateway,
@@ -89,7 +89,7 @@ public class LoginStep1Service implements LoginStep1UseCase {
         // Generate and persist new OTP
         String rawOtp = otpGenerator.generate();
         String hashedOtp = passwordEncoder.encode(rawOtp);
-        OtpCode otpCode = OtpCode.issue(user.id(), hashedOtp, OtpCode.Purpose.LOGIN);
+        OtpCode otpCode = OtpCode.issue(user.id(), hashedOtp, OtpCode.Purpose.LOGIN, clock);
         otpCodeRepositoryPort.save(otpCode);
 
         // Deliver OTP via email — adapter is profile-specific

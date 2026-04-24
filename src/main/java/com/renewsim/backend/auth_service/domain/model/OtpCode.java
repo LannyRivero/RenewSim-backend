@@ -1,6 +1,7 @@
 package com.renewsim.backend.auth_service.domain.model;
 
 import java.time.LocalDateTime;
+import java.time.Clock;
 import java.util.Objects;
 
 /**
@@ -49,7 +50,11 @@ public class OtpCode {
      * TTL is 5 minutes from issuedAt.
      */
     public static OtpCode issue(Long userId, String codeHash, Purpose purpose) {
-        LocalDateTime now = LocalDateTime.now();
+        return issue(userId, codeHash, purpose, Clock.systemDefaultZone());
+    }
+
+    public static OtpCode issue(Long userId, String codeHash, Purpose purpose, Clock clock) {
+        LocalDateTime now = LocalDateTime.now(clock);
         return new OtpCode(null, userId, codeHash, purpose, now, now.plusMinutes(5), false);
     }
 
