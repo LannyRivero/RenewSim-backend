@@ -5,12 +5,19 @@ import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
+import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.ResendOtpResult;
+import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
+
+import java.time.Clock;
+import java.util.Optional;
+import java.util.Set;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,9 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,6 +45,12 @@ class ResendOtpServiceTest {
     private PasswordEncoderPort passwordEncoder;
     @Mock
     private EmailPort emailPort;
+    @Mock
+    private TransactionalPort transactionalPort;
+    @Mock
+    private Clock clock;
+    @Mock
+    private UserAccountValidator userAccountValidator;
 
     @InjectMocks
     private ResendOtpService service;
@@ -50,6 +60,16 @@ class ResendOtpServiceTest {
     @BeforeEach
     void setUp() {
         activeUser = UserSnapshotMother.withEmail("john@example.com", Set.of(RoleName.USER));
+
+        // Mock transactionalPort to execute the supplier directly
+        when(transactionalPort.execute(any())).thenAnswer(inv -> {
+                java.util.function.Supplier<?> supplier = inv.getArgument(0);
+                return supplier.get();
+        });
+
+        // Mock clock to return a valid zone
+        when(clock.getZone()).thenReturn(java.time.ZoneId.systemDefault());
+        when(clock.instant()).thenReturn(java.time.Instant.now());
     }
 
     @Test
