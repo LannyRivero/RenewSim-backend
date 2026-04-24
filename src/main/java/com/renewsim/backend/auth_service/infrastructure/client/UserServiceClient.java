@@ -3,14 +3,14 @@ package com.renewsim.backend.auth_service.infrastructure.client;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
+import com.renewsim.backend.auth_service.application.dto.InternalUserCreateRequest;
 import com.renewsim.backend.shared.dto.OperationResponse;
-import com.renewsim.backend.user_service.web.dto.UserCreateRequest;
 
 @FeignClient(name = "user-service", contextId = "authUserClient", url = "${user-service.url}", configuration = FeignAuthConfig.class)
 public interface UserServiceClient {
 
         @PostMapping("/api/v1/users")
-        OperationResponse<ExternalUserSnapshot> createUser(@RequestBody UserCreateRequest request);
+        OperationResponse<ExternalUserSnapshot> createUser(@RequestBody InternalUserCreateRequest request);
 
         @GetMapping("/api/v1/users/internal/credentials")
         OperationResponse<ExternalUserSnapshot> getCredentials(
