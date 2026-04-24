@@ -64,16 +64,20 @@ public class ActivationToken {
 
     /**
      * Returns true if the token has passed its expiration time.
+     * 
+     * @param clock Clock to determine current time
      */
-    public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiresAt);
+    public boolean isExpired(Clock clock) {
+        return LocalDateTime.now(clock).isAfter(expiresAt);
     }
 
     /**
      * Returns true if the token can still be used: not consumed and not expired.
+     * 
+     * @param clock Clock to determine current time
      */
-    public boolean isValid() {
-        return !used && !isExpired();
+    public boolean isValid(Clock clock) {
+        return !used && !isExpired(clock);
     }
 
     /**
