@@ -4,7 +4,7 @@ import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPor
 import com.renewsim.backend.shared.error.ErrorMessageFactory;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+
 
 import static com.renewsim.backend.auth_service.domain.error.AuthErrorCode.AUTH_INVALID_CREDENTIALS;
 
@@ -18,7 +18,7 @@ import static com.renewsim.backend.auth_service.domain.error.AuthErrorCode.AUTH_
  * dependencias.
  * Recibe parámetros primitivos o objetos del dominio, no DTOs de la capa web.
  */
-@Component
+
 @RequiredArgsConstructor
 public class CredentialsValidator {
 

@@ -140,4 +140,9 @@ public class ApplicationServiceConfig {
             @Value("${jwt.refresh-token.expiration}") long refreshTokenExpiration) {
         return new TokenTimeService(accessTokenExpiration, refreshTokenExpiration);
     }
+
+    @Bean
+    public CredentialsValidator credentialsValidator(PasswordEncoderPort passwordEncoder) {
+        return new CredentialsValidator(passwordEncoder);
+    }
 }
