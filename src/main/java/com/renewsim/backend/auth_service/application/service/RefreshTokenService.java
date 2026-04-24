@@ -24,77 +24,77 @@ import java.util.stream.Collectors;
 
 public class RefreshTokenService implements RefreshTokenUseCase {
 
-        private static final Logger log = LoggerFactory.getLogger(RefreshTokenService.class);
+    private static final Logger log = LoggerFactory.getLogger(RefreshTokenService.class);
 
-        private final RefreshTokenRepositoryPort refreshTokenRepositoryPort;
-        private final UserAccountGateway userAccountGateway;
-        private final TokenProvider tokenProvider;
-        private final TransactionalPort transactionalPort;
-        private final Clock clock;
-        private final UserAccountValidator userAccountValidator;
+    private final RefreshTokenRepositoryPort refreshTokenRepositoryPort;
+    private final UserAccountGateway userAccountGateway;
+    private final TokenProvider tokenProvider;
+    private final TransactionalPort transactionalPort;
+    private final Clock clock;
+    private final UserAccountValidator userAccountValidator;
 
-        public RefreshTokenService(
-                        RefreshTokenRepositoryPort refreshTokenRepositoryPort,
-                        UserAccountGateway userAccountGateway,
-                        TokenProvider tokenProvider,
-                        TransactionalPort transactionalPort,
-                        Clock clock,
-                        UserAccountValidator userAccountValidator) {
-                this.refreshTokenRepositoryPort = refreshTokenRepositoryPort;
-                this.userAccountGateway = userAccountGateway;
-                this.tokenProvider = tokenProvider;
-                this.transactionalPort = transactionalPort;
-                this.clock = clock;
-                this.userAccountValidator = userAccountValidator;
+    public RefreshTokenService(
+            RefreshTokenRepositoryPort refreshTokenRepositoryPort,
+            UserAccountGateway userAccountGateway,
+            TokenProvider tokenProvider,
+            TransactionalPort transactionalPort,
+            Clock clock,
+            UserAccountValidator userAccountValidator) {
+        this.refreshTokenRepositoryPort = refreshTokenRepositoryPort;
+        this.userAccountGateway = userAccountGateway;
+        this.tokenProvider = tokenProvider;
+        this.transactionalPort = transactionalPort;
+        this.clock = clock;
+        this.userAccountValidator = userAccountValidator;
+    }
+
+    @Override
+    public RefreshTokenResult execute(RefreshTokenCommand command) {
+        return transactionalPort.execute(() -> executeInternal(command));
+    }
+
+    private RefreshTokenResult executeInternal(RefreshTokenCommand command) {
+
+        String tokenHash = TokenHasher.hash(command.refreshToken());
+
+        RefreshToken existing = refreshTokenRepositoryPort
+                .findByTokenHash(tokenHash)
+                .orElseThrow(() -> new AuthenticationException("Invalid or expired refresh token"));
+
+        if (!existing.isValid(clock)) {  // <-- CAMBIO AQUÍ
+            throw new AuthenticationException("Invalid or expired refresh token");
         }
 
-        @Override
-        public RefreshTokenResult execute(RefreshTokenCommand command) {
-                return transactionalPort.execute(() -> executeInternal(command));
-        }
+        existing.revoke();
+        refreshTokenRepositoryPort.save(existing);
 
-        private RefreshTokenResult executeInternal(RefreshTokenCommand command) {
+        UserSnapshot user = userAccountGateway.findById(existing.getUserId())
+                .orElseThrow(() -> new AuthenticationException("User not found"));
 
-                String tokenHash = TokenHasher.hash(command.refreshToken());
+        userAccountValidator.validateEnabledOrThrow(user);
 
-                RefreshToken existing = refreshTokenRepositoryPort
-                                .findByTokenHash(tokenHash)
-                                .orElseThrow(() -> new AuthenticationException("Invalid or expired refresh token"));
+        Set<String> roleNames = user.roles().stream()
+                .map(Enum::name)
+                .collect(Collectors.toSet());
 
-                if (!existing.isValid()) {
-                        throw new AuthenticationException("Invalid or expired refresh token");
-                }
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser(
+                user.email(), roleNames, Set.of());
 
-                existing.revoke();
-                refreshTokenRepositoryPort.save(existing);
+        String newAccessToken = tokenProvider.generate(authenticatedUser);
 
-                UserSnapshot user = userAccountGateway.findById(existing.getUserId())
-                                .orElseThrow(() -> new AuthenticationException("User not found"));
+        String newRawRefreshToken = UUID.randomUUID().toString();
+        String newHashedRefreshToken = TokenHasher.hash(newRawRefreshToken);
+        RefreshToken newRefreshToken = RefreshToken.issue(existing.getUserId(), newHashedRefreshToken, clock);
+        refreshTokenRepositoryPort.save(newRefreshToken);
 
-                userAccountValidator.validateEnabledOrThrow(user);
+        log.info("Refresh token rotated for userId={}", existing.getUserId());
 
-                Set<String> roleNames = user.roles().stream()
-                                .map(Enum::name)
-                                .collect(Collectors.toSet());
-
-                AuthenticatedUser authenticatedUser = new AuthenticatedUser(
-                                user.email(), roleNames, Set.of());
-
-                String newAccessToken = tokenProvider.generate(authenticatedUser);
-
-                String newRawRefreshToken = UUID.randomUUID().toString();
-                String newHashedRefreshToken = TokenHasher.hash(newRawRefreshToken);
-                RefreshToken newRefreshToken = RefreshToken.issue(existing.getUserId(), newHashedRefreshToken, clock);
-                refreshTokenRepositoryPort.save(newRefreshToken);
-
-                log.info("Refresh token rotated for userId={}", existing.getUserId());
-
-                return new RefreshTokenResult(
-                                newAccessToken,
-                                "Bearer",
-                                tokenProvider.expiresInSeconds(),
-                                user.email(),
-                                roleNames,
-                                newRawRefreshToken);
-        }
+        return new RefreshTokenResult(
+                newAccessToken,
+                "Bearer",
+                tokenProvider.expiresInSeconds(),
+                user.email(),
+                roleNames,
+                newRawRefreshToken);
+    }
 }

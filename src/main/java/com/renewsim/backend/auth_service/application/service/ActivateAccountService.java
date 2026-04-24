@@ -55,7 +55,7 @@ public class ActivateAccountService implements ActivateAccountUseCase {
                 .findByTokenHash(tokenHash)
                 .orElseThrow(() -> new AuthenticationException("Invalid or expired activation token"));
 
-        if (!token.isValid()) {
+        if (!token.isValid(clock)) {  // <-- CAMBIO AQUÍ
             throw new AuthenticationException("Invalid or expired activation token");
         }
 

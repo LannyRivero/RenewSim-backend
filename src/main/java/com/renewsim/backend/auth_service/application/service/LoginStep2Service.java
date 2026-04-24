@@ -79,7 +79,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
                 .findLatestValidByUserId(user.id(), OtpCode.Purpose.LOGIN)
                 .orElseThrow(() -> new AuthenticationException("Invalid or expired OTP"));
 
-        if (!otpCode.isValid()) {
+        if (!otpCode.isValid(clock)) {
             throw new AuthenticationException("Invalid or expired OTP");
         }
 
