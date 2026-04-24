@@ -64,9 +64,11 @@ public class RefreshToken {
 
     /**
      * Returns true if the token is still within its validity window.
+     * 
+     * @param clock Clock to determine current time
      */
-    public boolean isValid() {
-        return !revoked && LocalDateTime.now().isBefore(expiresAt);
+    public boolean isValid(Clock clock) {
+        return !revoked && LocalDateTime.now(clock).isBefore(expiresAt);
     }
 
     /**
