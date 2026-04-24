@@ -10,6 +10,7 @@ import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.LoginStep1Result;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
+import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
 import com.renewsim.backend.shared.exception.AuthenticationException;
@@ -40,6 +41,7 @@ public class LoginStep1Service implements LoginStep1UseCase {
     private final EmailPort emailPort;
     private final TransactionalPort transactionalPort;
     private final Clock clock;
+    private final UserAccountValidator userAccountValidator;
 
     public LoginStep1Service(
             UserAccountGateway userAccountGateway,
@@ -49,7 +51,8 @@ public class LoginStep1Service implements LoginStep1UseCase {
             PasswordEncoderPort passwordEncoder,
             EmailPort emailPort,
             TransactionalPort transactionalPort,
-            Clock clock) {
+            Clock clock,
+            UserAccountValidator userAccountValidator) {
         this.userAccountGateway = userAccountGateway;
         this.otpCodeRepositoryPort = otpCodeRepositoryPort;
         this.otpGenerator = otpGenerator;
@@ -58,6 +61,7 @@ public class LoginStep1Service implements LoginStep1UseCase {
         this.emailPort = emailPort;
         this.transactionalPort = transactionalPort;
         this.clock = clock;
+        this.userAccountValidator = userAccountValidator;
     }
 
     @Override
@@ -70,7 +74,7 @@ public class LoginStep1Service implements LoginStep1UseCase {
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
                 .orElse(null);
 
-        if (user == null || !user.enabled()) {
+        if (user == null || !userAccountValidator.isEnabled(user)) {
             log.warn("Login step1 attempted for unknown or disabled email");
             return genericResponse();
         }

@@ -8,6 +8,7 @@ import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.RefreshTokenResult;
+import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
@@ -30,18 +31,21 @@ public class RefreshTokenService implements RefreshTokenUseCase {
         private final TokenProvider tokenProvider;
         private final TransactionalPort transactionalPort;
         private final Clock clock;
+        private final UserAccountValidator userAccountValidator;
 
         public RefreshTokenService(
                         RefreshTokenRepositoryPort refreshTokenRepositoryPort,
                         UserAccountGateway userAccountGateway,
                         TokenProvider tokenProvider,
                         TransactionalPort transactionalPort,
-                        Clock clock) {
+                        Clock clock,
+                        UserAccountValidator userAccountValidator) {
                 this.refreshTokenRepositoryPort = refreshTokenRepositoryPort;
                 this.userAccountGateway = userAccountGateway;
                 this.tokenProvider = tokenProvider;
                 this.transactionalPort = transactionalPort;
                 this.clock = clock;
+                this.userAccountValidator = userAccountValidator;
         }
 
         @Override
@@ -67,9 +71,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
                 UserSnapshot user = userAccountGateway.findById(existing.getUserId())
                                 .orElseThrow(() -> new AuthenticationException("User not found"));
 
-                if (!user.enabled()) {
-                        throw new AuthenticationException("Account is not active");
-                }
+                userAccountValidator.validateEnabledOrThrow(user);
 
                 Set<String> roleNames = user.roles().stream()
                                 .map(Enum::name)

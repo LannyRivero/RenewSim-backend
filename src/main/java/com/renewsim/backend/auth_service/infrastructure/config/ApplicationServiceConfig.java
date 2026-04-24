@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
+import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
 
 /**
  * Configuración de beans para la capa de aplicación.
@@ -31,7 +32,8 @@ public class ApplicationServiceConfig {
             PasswordEncoderPort passwordEncoder,
             EmailPort emailPort,
             TransactionalPort transactionalPort,
-            Clock clock) {
+            Clock clock,
+            UserAccountValidator userAccountValidator) {
         return new LoginStep1Service(
                 userAccountGateway,
                 otpCodeRepositoryPort,
@@ -40,8 +42,8 @@ public class ApplicationServiceConfig {
                 passwordEncoder,
                 emailPort,
                 transactionalPort,
-                clock
-
+                clock,
+                userAccountValidator
         );
     }
 
@@ -54,7 +56,8 @@ public class ApplicationServiceConfig {
             TokenProvider tokenProvider,
             RefreshTokenRepositoryPort refreshTokenRepositoryPort,
             TransactionalPort transactionalPort,
-            Clock clock) {
+            Clock clock,
+            UserAccountValidator userAccountValidator) {
         return new LoginStep2Service(
                 userAccountGateway,
                 otpCodeRepositoryPort,
@@ -62,8 +65,9 @@ public class ApplicationServiceConfig {
                 tokenProvider,
                 passwordEncoder,
                 transactionalPort,
-                clock);
-
+                clock,
+                userAccountValidator
+        );
     }
 
     @Bean
@@ -104,13 +108,15 @@ public class ApplicationServiceConfig {
             UserAccountGateway userAccountGateway,
             TokenProvider tokenProvider,
             TransactionalPort transactionalPort,
-            Clock clock) {
+            Clock clock,
+            UserAccountValidator userAccountValidator) {
         return new RefreshTokenService(
                 refreshTokenRepositoryPort,
                 userAccountGateway,
                 tokenProvider,
                 transactionalPort,
-                clock
+                clock,
+                userAccountValidator
 
         );
     }
@@ -144,5 +150,10 @@ public class ApplicationServiceConfig {
     @Bean
     public CredentialsValidator credentialsValidator(PasswordEncoderPort passwordEncoder) {
         return new CredentialsValidator(passwordEncoder);
+    }
+
+    @Bean
+    public UserAccountValidator userAccountValidator() {
+        return new UserAccountValidator();
     }
 }

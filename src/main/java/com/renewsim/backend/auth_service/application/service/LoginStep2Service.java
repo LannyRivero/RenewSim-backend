@@ -10,6 +10,7 @@ import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.LoginStep2Result;
+import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
@@ -42,6 +43,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
     private final PasswordEncoderPort passwordEncoderPort;
     private final TransactionalPort transactionalPort;
     private final Clock clock;
+    private final UserAccountValidator userAccountValidator;
 
     public LoginStep2Service(
             UserAccountGateway userAccountGateway,
@@ -50,14 +52,16 @@ public class LoginStep2Service implements LoginStep2UseCase {
             TokenProvider tokenProvider,
             PasswordEncoderPort passwordEncoderPort,
             TransactionalPort transactionalPort,
-            Clock clock) {
+            Clock clock,
+            UserAccountValidator userAccountValidator) {
         this.userAccountGateway = userAccountGateway;
         this.otpCodeRepositoryPort = otpCodeRepositoryPort;
         this.refreshTokenRepositoryPort = refreshTokenRepositoryPort;
         this.tokenProvider = tokenProvider;
-        this.clock = clock;
         this.passwordEncoderPort = passwordEncoderPort;
         this.transactionalPort = transactionalPort;
+        this.clock = clock;
+        this.userAccountValidator = userAccountValidator;
     }
 
     @Override
@@ -69,9 +73,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
-        if (!user.enabled()) {
-            throw new AuthenticationException("Account is not active");
-        }
+        userAccountValidator.validateEnabledOrThrow(user);
 
         OtpCode otpCode = otpCodeRepositoryPort
                 .findLatestValidByUserId(user.id(), OtpCode.Purpose.LOGIN)
