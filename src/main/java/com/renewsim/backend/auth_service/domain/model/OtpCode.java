@@ -8,6 +8,8 @@ import java.util.Objects;
  * OTP code entity.
  * Represents a one-time password issued for a specific purpose (LOGIN, etc.).
  * Pure domain object — no framework dependencies.
+ * 
+ * This class is IMMUTABLE. All state-changing operations return new instances.
  */
 public class OtpCode {
 
@@ -23,7 +25,7 @@ public class OtpCode {
     private final Purpose purpose;
     private final LocalDateTime issuedAt;
     private final LocalDateTime expiresAt;
-    private boolean used;
+    private final boolean used; // CAMBIO: ahora es final
 
     private OtpCode(
             Long id,
@@ -91,11 +93,20 @@ public class OtpCode {
     }
 
     /**
-     * Marks this OTP as consumed.
-     * Idempotent: calling twice has no additional effect.
+     * Returns a new OtpCode with used=true.
+     * The original instance remains unchanged (immutability).
+     *
+     * @return a new OtpCode instance with used=true
      */
-    public void markUsed() {
-        this.used = true;
+    public OtpCode markUsed() {
+        return new OtpCode(
+                this.id,
+                this.userId,
+                this.codeHash,
+                this.purpose,
+                this.issuedAt,
+                this.expiresAt,
+                true);
     }
 
     // --- Getters ---

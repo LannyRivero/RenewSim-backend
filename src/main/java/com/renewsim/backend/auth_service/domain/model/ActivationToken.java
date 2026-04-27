@@ -8,6 +8,8 @@ import java.util.Objects;
  * Activation token entity.
  * Represents a single-use token issued to verify a user's email address.
  * Pure domain object — no framework dependencies.
+ * 
+ * This class is IMMUTABLE. All state-changing operations return new instances.
  */
 public class ActivationToken {
 
@@ -16,7 +18,7 @@ public class ActivationToken {
     private final String tokenHash;
     private final LocalDateTime issuedAt;
     private final LocalDateTime expiresAt;
-    private boolean used;
+    private final boolean used;  
 
     private ActivationToken(
             Long id,
@@ -81,11 +83,19 @@ public class ActivationToken {
     }
 
     /**
-     * Marks this token as consumed.
-     * Idempotent: calling twice has no additional effect.
+     * Returns a new ActivationToken with used=true.
+     * The original instance remains unchanged (immutability).
+     *
+     * @return a new ActivationToken instance with used=true
      */
-    public void markUsed() {
-        this.used = true;
+    public ActivationToken markUsed() {
+        return new ActivationToken(
+            this.id,
+            this.userId,
+            this.tokenHash,
+            this.issuedAt,
+            this.expiresAt,
+            true);
     }
 
     // --- Getters ---

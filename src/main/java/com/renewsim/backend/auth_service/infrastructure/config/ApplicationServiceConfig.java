@@ -42,8 +42,7 @@ public class ApplicationServiceConfig {
                 emailPort,
                 transactionalPort,
                 timeProvider.getClock(),
-                userAccountValidator
-        );
+                userAccountValidator);
     }
 
     @Bean
@@ -65,8 +64,7 @@ public class ApplicationServiceConfig {
                 passwordEncoder,
                 transactionalPort,
                 timeProvider.getClock(),
-                userAccountValidator
-        );
+                userAccountValidator);
     }
 
     @Bean
@@ -128,7 +126,8 @@ public class ApplicationServiceConfig {
             PasswordEncoderPort passwordEncoder,
             EmailPort emailPort,
             TransactionalPort transactionalPort,
-            TimeProvider timeProvider) {
+            TimeProvider timeProvider,
+            UserAccountValidator userAccountValidator) {
         return new ResendOtpService(
                 userAccountGateway,
                 otpCodeRepositoryPort,
@@ -136,7 +135,8 @@ public class ApplicationServiceConfig {
                 passwordEncoder,
                 emailPort,
                 transactionalPort,
-                timeProvider.getClock());
+                timeProvider.getClock(),
+                userAccountValidator);
     }
 
     @Bean

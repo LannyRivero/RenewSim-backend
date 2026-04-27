@@ -11,6 +11,7 @@ import com.renewsim.backend.auth_service.application.result.ResendOtpResult;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
+import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
 
 import java.time.Clock;
 
@@ -30,6 +31,7 @@ public class ResendOtpService implements ResendOtpUseCase {
     private final EmailPort emailPort;
     private final TransactionalPort transactionalPort;
     private final Clock clock;
+    private final UserAccountValidator userAccountValidator;
 
     public ResendOtpService(
             UserAccountGateway userAccountGateway,
@@ -38,7 +40,8 @@ public class ResendOtpService implements ResendOtpUseCase {
             PasswordEncoderPort passwordEncoder,
             EmailPort emailPort,
             TransactionalPort transactionalPort,
-            Clock clock) {
+            Clock clock,
+            UserAccountValidator userAccountValidator) {
         this.userAccountGateway = userAccountGateway;
         this.otpCodeRepositoryPort = otpCodeRepositoryPort;
         this.otpGenerator = otpGenerator;
@@ -46,12 +49,13 @@ public class ResendOtpService implements ResendOtpUseCase {
         this.emailPort = emailPort;
         this.transactionalPort = transactionalPort;
         this.clock = clock;
+        this.userAccountValidator = userAccountValidator;
     }
 
     @Override
-        public ResendOtpResult execute(ResendOtpCommand command) {
-                return transactionalPort.execute(() -> executeInternal(command));
-        }
+    public ResendOtpResult execute(ResendOtpCommand command) {
+        return transactionalPort.execute(() -> executeInternal(command));
+    }
 
     private ResendOtpResult executeInternal(ResendOtpCommand command) {
 
@@ -59,8 +63,9 @@ public class ResendOtpService implements ResendOtpUseCase {
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
                 .orElse(null);
 
-        if (user == null || !user.enabled()) {
-            log.warn("ResendOtp attempted for unknown or disabled email");
+        // REFACTOR: Usar validator para mantener consistencia y no revelar existencia
+        if (user == null || !userAccountValidator.isEnabled(user)) {
+            log.debug("ResendOtp attempted for credentials");
             return genericResponse();
         }
 
@@ -70,7 +75,7 @@ public class ResendOtpService implements ResendOtpUseCase {
         // Generate and persist new OTP
         String rawOtp = otpGenerator.generate();
         String hashedOtp = passwordEncoder.encode(rawOtp);
-        OtpCode otpCode = OtpCode.issue(user.id(), hashedOtp, OtpCode.Purpose.LOGIN);
+        OtpCode otpCode = OtpCode.issue(user.id(), hashedOtp, OtpCode.Purpose.LOGIN, clock);
         otpCodeRepositoryPort.save(otpCode);
 
         // Deliver OTP via email — adapter is profile-specific

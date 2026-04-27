@@ -87,8 +87,8 @@ public class LoginStep2Service implements LoginStep2UseCase {
             throw new AuthenticationException("Invalid or expired OTP");
         }
 
-        otpCode.markUsed();
-        otpCodeRepositoryPort.save(otpCode);
+        OtpCode usedOtpCode = otpCode.markUsed();
+        otpCodeRepositoryPort.save(usedOtpCode);
 
         Set<String> roleNames = user.roles().stream()
                 .map(Enum::name)

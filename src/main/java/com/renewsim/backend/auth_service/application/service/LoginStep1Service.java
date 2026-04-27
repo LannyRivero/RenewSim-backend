@@ -75,7 +75,7 @@ public class LoginStep1Service implements LoginStep1UseCase {
                 .orElse(null);
 
         if (user == null || !userAccountValidator.isEnabled(user)) {
-            log.warn("Login step1 attempted for unknown or disabled email");
+            log.debug("Login step1 attempted for credentials");
             return genericResponse();
         }
 
@@ -83,7 +83,7 @@ public class LoginStep1Service implements LoginStep1UseCase {
         try {
             credentialsValidator.validatePassword(command.password(), user.passwordHash());
         } catch (AuthenticationException e) {
-            log.warn("Login step1 invalid password for userId={}", user.id());
+            log.warn("Login step1 failed for credentials");
             return genericResponse();
         }
 

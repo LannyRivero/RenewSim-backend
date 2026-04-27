@@ -55,14 +55,15 @@ public class ActivateAccountService implements ActivateAccountUseCase {
                 .findByTokenHash(tokenHash)
                 .orElseThrow(() -> new AuthenticationException("Invalid or expired activation token"));
 
-        if (!token.isValid(clock)) {  // <-- CAMBIO AQUÍ
+        if (!token.isValid(clock)) {
             throw new AuthenticationException("Invalid or expired activation token");
         }
 
         userAccountGateway.activateUser(token.getUserId());
 
-        token.markUsed();
-        activationTokenRepositoryPort.save(token);
+        // REFACTOR: Usar el patrón inmutable - markUsed() retorna nueva instancia
+        ActivationToken usedToken = token.markUsed();
+        activationTokenRepositoryPort.save(usedToken);
 
         log.info("Account activated for userId={}", token.getUserId());
 
