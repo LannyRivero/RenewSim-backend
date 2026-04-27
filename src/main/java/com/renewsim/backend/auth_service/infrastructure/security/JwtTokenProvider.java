@@ -27,7 +27,7 @@ public final class JwtTokenProvider implements TokenProvider {
 
     JwtTokenProvider(SecurityJwtProperties props, Clock clock, JwtClaimsExtractor claimsExtractor) {
         this.props = Objects.requireNonNull(props, "SecurityJwtProperties is required");
-        this.clock = (clock != null) ? clock : Clock.systemUTC();
+        this.clock = Objects.requireNonNull(clock, "clock is required");
         this.key = resolveKey(props);
         this.claimsExtractor = Objects.requireNonNull(claimsExtractor, "claimsExtractor is required");
     }

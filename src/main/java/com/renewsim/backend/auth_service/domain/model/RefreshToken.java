@@ -17,6 +17,7 @@ public class RefreshToken {
     private final LocalDateTime issuedAt;
     private final LocalDateTime expiresAt;
     private final boolean revoked;
+    private final LocalDateTime revokedAt;
 
     private RefreshToken(
             Long id,
@@ -24,7 +25,8 @@ public class RefreshToken {
             String tokenHash,
             LocalDateTime issuedAt,
             LocalDateTime expiresAt,
-            boolean revoked) {
+            boolean revoked,
+            LocalDateTime revokedAt) {
         this.id = id;
         this.userId = Objects.requireNonNull(userId, "userId cannot be null");
         this.tokenHash = requireNonBlank(tokenHash, "tokenHash");
@@ -34,6 +36,7 @@ public class RefreshToken {
             throw new IllegalArgumentException("expiresAt must be after issuedAt");
         }
         this.revoked = revoked;
+        this.revokedAt = revokedAt;
     }
 
     /**
@@ -46,7 +49,7 @@ public class RefreshToken {
 
     public static RefreshToken issue(Long userId, String tokenHash, Clock clock) {
         LocalDateTime now = LocalDateTime.now(clock);
-        return new RefreshToken(null, userId, tokenHash, now, now.plusDays(7), false);
+        return new RefreshToken(null, userId, tokenHash, now, now.plusDays(7), false, null);
     }
 
     /**
@@ -58,8 +61,9 @@ public class RefreshToken {
             String tokenHash,
             LocalDateTime issuedAt,
             LocalDateTime expiresAt,
-            boolean revoked) {
-        return new RefreshToken(id, userId, tokenHash, issuedAt, expiresAt, revoked);
+            boolean revoked,
+            LocalDateTime revokedAt) {
+        return new RefreshToken(id, userId, tokenHash, issuedAt, expiresAt, revoked, revokedAt);
     }
 
     /**
@@ -75,16 +79,18 @@ public class RefreshToken {
      * Factory method that returns a new RefreshToken with revoked=true.
      * The original token remains unchanged (immutability).
      *
+     * @param clock Clock to determine current time
      * @return a new RefreshToken instance with revoked=true
      */
-    public RefreshToken revoked() {
+    public RefreshToken revoked(Clock clock) {
         return new RefreshToken(
             this.id,
             this.userId,
             this.tokenHash,
             this.issuedAt,
             this.expiresAt,
-            true);
+            true,
+            LocalDateTime.now(clock));
     }
 
     // --- Getters ---
@@ -113,6 +119,10 @@ public class RefreshToken {
         return revoked;
     }
 
+    public LocalDateTime getRevokedAt() {
+        return revokedAt;
+    }
+
     // --- Helpers ---
 
     private static String requireNonBlank(String value, String field) {
@@ -125,6 +135,6 @@ public class RefreshToken {
     @Override
     public String toString() {
         return "RefreshToken{id=" + id + ", userId=" + userId +
-                ", revoked=" + revoked + ", expiresAt=" + expiresAt + "}";
+                ", revoked=" + revoked + ", revokedAt=" + revokedAt + ", expiresAt=" + expiresAt + "}";
     }
 }

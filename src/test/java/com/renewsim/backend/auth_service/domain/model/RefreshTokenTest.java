@@ -69,7 +69,7 @@ class RefreshTokenTest {
     @DisplayName("isValid() returns false when revoked")
     void isValid_revoked_returnsFalse() {
         RefreshToken token = RefreshToken.issue(USER_ID, HASH, FIXED_CLOCK);
-        RefreshToken revoked = token.revoked();
+        RefreshToken revoked = token.revoked(FIXED_CLOCK);
         assertThat(revoked.isValid(FIXED_CLOCK)).isFalse();
     }
 
@@ -83,7 +83,7 @@ class RefreshTokenTest {
         
         RefreshToken token = RefreshToken.reconstitute(
                 1L, USER_ID, HASH,
-                issuedAt, expiresAt, false);
+                issuedAt, expiresAt, false, null);
 
         assertThat(token.isValid(FIXED_CLOCK)).isFalse();
     }
@@ -98,7 +98,7 @@ class RefreshTokenTest {
         
         RefreshToken token = RefreshToken.reconstitute(
                 1L, USER_ID, HASH,
-                issuedAt, expiresAt, true);
+                issuedAt, expiresAt, true, issuedAt);
 
         assertThat(token.isValid(FIXED_CLOCK)).isFalse();
     }
@@ -109,15 +109,16 @@ class RefreshTokenTest {
     @DisplayName("revoked() creates new token with revoked=true")
     void revoked_createsNewToken() {
         RefreshToken token = RefreshToken.issue(USER_ID, HASH, FIXED_CLOCK);
-        RefreshToken revoked = token.revoked();
+        RefreshToken revoked = token.revoked(FIXED_CLOCK);
         assertThat(revoked.isRevoked()).isTrue();
+        assertThat(revoked.getRevokedAt()).isNotNull();
     }
 
     @Test
     @DisplayName("revoked() preserves original token (immutability)")
     void revoked_originalTokenUnchanged() {
         RefreshToken token = RefreshToken.issue(USER_ID, HASH, FIXED_CLOCK);
-        RefreshToken revoked = token.revoked();
+        RefreshToken revoked = token.revoked(FIXED_CLOCK);
         assertThat(token.isRevoked()).isFalse();
         assertThat(token.isValid(FIXED_CLOCK)).isTrue();
     }
@@ -126,8 +127,8 @@ class RefreshTokenTest {
     @DisplayName("revoked() is idempotent")
     void revoked_idempotent() {
         RefreshToken token = RefreshToken.issue(USER_ID, HASH, FIXED_CLOCK);
-        RefreshToken revoked1 = token.revoked();
-        RefreshToken revoked2 = token.revoked();
+        RefreshToken revoked1 = token.revoked(FIXED_CLOCK);
+        RefreshToken revoked2 = token.revoked(FIXED_CLOCK);
         assertThat(revoked1.isRevoked()).isTrue();
         assertThat(revoked2.isRevoked()).isTrue();
     }
@@ -139,7 +140,7 @@ class RefreshTokenTest {
     void reconstitute_expiresAtNotAfterIssuedAt_throws() {
         LocalDateTime now = LocalDateTime.now(FIXED_CLOCK);
         assertThatThrownBy(() -> RefreshToken.reconstitute(
-                1L, USER_ID, HASH, now, now, false))
+                1L, USER_ID, HASH, now, now, false, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("expiresAt must be after issuedAt");
     }
@@ -149,9 +150,10 @@ class RefreshTokenTest {
     void reconstitute_restoresFields() {
         LocalDateTime issued = LocalDateTime.parse("2026-04-23T10:00:00");
         LocalDateTime expires = issued.plusDays(7);
+        LocalDateTime revokedAt = LocalDateTime.parse("2026-04-25T14:30:00");
 
         RefreshToken token = RefreshToken.reconstitute(
-                99L, USER_ID, HASH, issued, expires, true);
+                99L, USER_ID, HASH, issued, expires, true, revokedAt);
 
         assertThat(token.getId()).isEqualTo(99L);
         assertThat(token.getUserId()).isEqualTo(USER_ID);
@@ -159,5 +161,6 @@ class RefreshTokenTest {
         assertThat(token.getIssuedAt()).isEqualTo(issued);
         assertThat(token.getExpiresAt()).isEqualTo(expires);
         assertThat(token.isRevoked()).isTrue();
+        assertThat(token.getRevokedAt()).isEqualTo(revokedAt);
     }
 }

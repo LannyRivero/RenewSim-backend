@@ -65,7 +65,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
             throw new AuthenticationException("Invalid or expired refresh token");
         }
 
-        RefreshToken revoked = existing.revoked();
+        RefreshToken revoked = existing.revoked(clock);
         refreshTokenRepositoryPort.save(revoked);
 
         UserSnapshot user = userAccountGateway.findById(existing.getUserId())
@@ -87,7 +87,8 @@ public class RefreshTokenService implements RefreshTokenUseCase {
         RefreshToken newRefreshToken = RefreshToken.issue(existing.getUserId(), newHashedRefreshToken, clock);
         refreshTokenRepositoryPort.save(newRefreshToken);
 
-        log.info("Refresh token rotated for userId={}", existing.getUserId());
+        log.info("AUDIT: Refresh token rotated for userId={}, oldTokenId={}, newTokenId={}, ipAddress={}", 
+                existing.getUserId(), existing.getId(), newRefreshToken.getId(), "N/A");
 
         return new RefreshTokenResult(
                 newAccessToken,

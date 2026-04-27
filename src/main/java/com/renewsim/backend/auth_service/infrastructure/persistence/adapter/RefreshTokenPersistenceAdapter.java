@@ -47,8 +47,8 @@ public class RefreshTokenPersistenceAdapter implements RefreshTokenRepositoryPor
         entity.setIssuedAt(domain.getIssuedAt().toInstant(ZoneOffset.UTC));
         entity.setExpiresAt(domain.getExpiresAt().toInstant(ZoneOffset.UTC));
         entity.setRevoked(domain.isRevoked());
-        if (domain.isRevoked()) {
-            entity.setRevokedAt(Instant.now());
+        if (domain.getRevokedAt() != null) {
+            entity.setRevokedAt(domain.getRevokedAt().toInstant(ZoneOffset.UTC));
         }
         return entity;
     }
@@ -60,6 +60,7 @@ public class RefreshTokenPersistenceAdapter implements RefreshTokenRepositoryPor
                 entity.getTokenHash(),
                 LocalDateTime.ofInstant(entity.getIssuedAt(), ZoneOffset.UTC),
                 LocalDateTime.ofInstant(entity.getExpiresAt(), ZoneOffset.UTC),
-                entity.isRevoked());
+                entity.isRevoked(),
+                entity.getRevokedAt() != null ? LocalDateTime.ofInstant(entity.getRevokedAt(), ZoneOffset.UTC) : null);
     }
 }
