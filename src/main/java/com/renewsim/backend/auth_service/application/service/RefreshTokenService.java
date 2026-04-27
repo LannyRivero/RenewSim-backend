@@ -65,8 +65,8 @@ public class RefreshTokenService implements RefreshTokenUseCase {
             throw new AuthenticationException("Invalid or expired refresh token");
         }
 
-        existing.revoke();
-        refreshTokenRepositoryPort.save(existing);
+        RefreshToken revoked = existing.revoked();
+        refreshTokenRepositoryPort.save(revoked);
 
         UserSnapshot user = userAccountGateway.findById(existing.getUserId())
                 .orElseThrow(() -> new AuthenticationException("User not found"));

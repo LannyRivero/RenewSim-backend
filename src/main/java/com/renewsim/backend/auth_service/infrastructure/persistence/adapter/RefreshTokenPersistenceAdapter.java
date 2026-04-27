@@ -48,7 +48,7 @@ public class RefreshTokenPersistenceAdapter implements RefreshTokenRepositoryPor
         entity.setExpiresAt(domain.getExpiresAt().toInstant(ZoneOffset.UTC));
         entity.setRevoked(domain.isRevoked());
         if (domain.isRevoked()) {
-            entity.setRevokedAt(domain.getIssuedAt().toInstant(ZoneOffset.UTC));
+            entity.setRevokedAt(Instant.now());
         }
         return entity;
     }

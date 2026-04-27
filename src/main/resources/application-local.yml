@@ -84,7 +84,8 @@ security:
     max-attempts: 5
     window: 60s
     retry-after: 60s
-    login-path: /api/v1/auth/login
+    login-path: /api/v1/auth/login/step1
+    refresh-path: /api/v1/auth/refresh
 
 # =============================
 # CORS (permisivo en local)

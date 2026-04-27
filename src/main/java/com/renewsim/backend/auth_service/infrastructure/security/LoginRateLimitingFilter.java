@@ -33,7 +33,13 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         if (!"POST".equalsIgnoreCase(request.getMethod())) return true;
         String uri = request.getRequestURI();
-        if (uri == null || !uri.startsWith(props.getLoginPath())) return true;
+        if (uri == null) return true;
+
+        // Apply to both login and refresh endpoints
+        boolean isLoginPath = uri.startsWith(props.getLoginPath());
+        boolean isRefreshPath = uri.startsWith(props.getRefreshPath());
+
+        if (!isLoginPath && !isRefreshPath) return true;
 
         String ct = request.getContentType();
         if (ct == null) return true;

@@ -47,7 +47,8 @@ security:
     window: 60
     block-seconds: 300
     retry-after: 60
-    login-path: /api/v1/auth/login
+    login-path: /api/v1/auth/login/step1
+    refresh-path: /api/v1/auth/refresh
 
 # =============================
 # AUTH SCOPES (YamlScopePolicy)

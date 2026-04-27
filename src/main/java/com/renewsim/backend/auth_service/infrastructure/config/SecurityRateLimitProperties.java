@@ -39,6 +39,10 @@ public class SecurityRateLimitProperties {
     @Pattern(regexp = "^/.*", message = "loginPath must start with '/'")
     private String loginPath = "/api/v1/auth/login";
 
+    @NotBlank
+    @Pattern(regexp = "^/.*", message = "refreshPath must start with '/'")
+    private String refreshPath = "/api/v1/auth/refresh";
+
     public int getWindowSeconds() {
         return Math.toIntExact(window.getSeconds());
     }

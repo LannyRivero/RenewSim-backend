@@ -2,6 +2,8 @@ package com.renewsim.backend.auth_service.infrastructure.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.springframework.stereotype.Component;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
@@ -10,6 +12,7 @@ import java.util.Map;
  * Utility class for extracting claims from JWT tokens without validation.
  * Used only for claim extraction (JTI, expiration) — NOT for authentication.
  */
+@Component
 public final class JwtClaimsExtractor {
 
     private final ObjectMapper objectMapper;

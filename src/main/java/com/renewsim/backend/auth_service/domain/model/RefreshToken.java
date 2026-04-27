@@ -16,7 +16,7 @@ public class RefreshToken {
     private final String tokenHash;
     private final LocalDateTime issuedAt;
     private final LocalDateTime expiresAt;
-    private boolean revoked;
+    private final boolean revoked;
 
     private RefreshToken(
             Long id,
@@ -72,11 +72,19 @@ public class RefreshToken {
     }
 
     /**
-     * Revokes this refresh token permanently.
-     * Idempotent: calling twice has no additional effect.
+     * Factory method that returns a new RefreshToken with revoked=true.
+     * The original token remains unchanged (immutability).
+     *
+     * @return a new RefreshToken instance with revoked=true
      */
-    public void revoke() {
-        this.revoked = true;
+    public RefreshToken revoked() {
+        return new RefreshToken(
+            this.id,
+            this.userId,
+            this.tokenHash,
+            this.issuedAt,
+            this.expiresAt,
+            true);
     }
 
     // --- Getters ---

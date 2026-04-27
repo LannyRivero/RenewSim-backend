@@ -3,6 +3,7 @@ package com.renewsim.backend.auth_service.infrastructure.security;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.infrastructure.config.SecurityJwtProperties;
+import com.renewsim.backend.auth_service.infrastructure.security.JwtClaimsExtractor;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -25,11 +26,11 @@ public final class JwtTokenProvider implements TokenProvider {
     private final Key key;
     private final JwtClaimsExtractor claimsExtractor;
 
-    JwtTokenProvider(SecurityJwtProperties props, Clock clock) {
+    JwtTokenProvider(SecurityJwtProperties props, Clock clock, JwtClaimsExtractor claimsExtractor) {
         this.props = Objects.requireNonNull(props, "SecurityJwtProperties is required");
         this.clock = (clock != null) ? clock : Clock.systemUTC();
         this.key = resolveKey(props);
-        this.claimsExtractor = new JwtClaimsExtractor();
+        this.claimsExtractor = Objects.requireNonNull(claimsExtractor, "claimsExtractor is required");
     }
 
     @Override
