@@ -69,8 +69,8 @@ class RefreshTokenTest {
     @DisplayName("isValid() returns false when revoked")
     void isValid_revoked_returnsFalse() {
         RefreshToken token = RefreshToken.issue(USER_ID, HASH, FIXED_CLOCK);
-        token.revoke();
-        assertThat(token.isValid(FIXED_CLOCK)).isFalse();
+        RefreshToken revoked = token.revoked();
+        assertThat(revoked.isValid(FIXED_CLOCK)).isFalse();
     }
 
     @Test
@@ -103,23 +103,33 @@ class RefreshTokenTest {
         assertThat(token.isValid(FIXED_CLOCK)).isFalse();
     }
 
-    // --- revoke() ---
+    // --- revoked() ---
 
     @Test
-    @DisplayName("revoke() sets revoked to true")
-    void revoke_setsRevoked() {
+    @DisplayName("revoked() creates new token with revoked=true")
+    void revoked_createsNewToken() {
         RefreshToken token = RefreshToken.issue(USER_ID, HASH, FIXED_CLOCK);
-        token.revoke();
-        assertThat(token.isRevoked()).isTrue();
+        RefreshToken revoked = token.revoked();
+        assertThat(revoked.isRevoked()).isTrue();
     }
 
     @Test
-    @DisplayName("revoke() is idempotent")
-    void revoke_idempotent() {
+    @DisplayName("revoked() preserves original token (immutability)")
+    void revoked_originalTokenUnchanged() {
         RefreshToken token = RefreshToken.issue(USER_ID, HASH, FIXED_CLOCK);
-        token.revoke();
-        token.revoke();
-        assertThat(token.isRevoked()).isTrue();
+        RefreshToken revoked = token.revoked();
+        assertThat(token.isRevoked()).isFalse();
+        assertThat(token.isValid(FIXED_CLOCK)).isTrue();
+    }
+
+    @Test
+    @DisplayName("revoked() is idempotent")
+    void revoked_idempotent() {
+        RefreshToken token = RefreshToken.issue(USER_ID, HASH, FIXED_CLOCK);
+        RefreshToken revoked1 = token.revoked();
+        RefreshToken revoked2 = token.revoked();
+        assertThat(revoked1.isRevoked()).isTrue();
+        assertThat(revoked2.isRevoked()).isTrue();
     }
 
     // --- reconstitute() ---

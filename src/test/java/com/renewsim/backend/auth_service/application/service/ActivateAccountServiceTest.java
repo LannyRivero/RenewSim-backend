@@ -27,8 +27,6 @@ import com.renewsim.backend.auth_service.domain.model.ActivationToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 
-import java.time.Clock;
-
 @ExtendWith(MockitoExtension.class)
 class ActivateAccountServiceTest {
 

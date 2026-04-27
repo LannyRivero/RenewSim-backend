@@ -6,7 +6,6 @@ import com.renewsim.backend.auth_service.application.port.out.*;
 import com.renewsim.backend.auth_service.application.result.LoginStep1Result;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
-import com.renewsim.backend.auth_service.domain.model.AuthUserStatus;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
 import com.renewsim.backend.shared.domain.vo.RoleName;

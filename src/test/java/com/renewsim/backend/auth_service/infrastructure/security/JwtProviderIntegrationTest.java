@@ -34,8 +34,8 @@ class JwtProviderIntegrationTest {
         }
 
         @Bean
-        JwtTokenProvider jwtTokenProvider(SecurityJwtProperties props) {
-            return new JwtTokenProvider(props, null);
+        JwtTokenProvider jwtTokenProvider(SecurityJwtProperties props, JwtClaimsExtractor claimsExtractor) {
+            return new JwtTokenProvider(props, null, claimsExtractor);
         }
     }
 
