@@ -4,7 +4,6 @@ import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.domain.model.AuthUserStatus;
 import com.renewsim.backend.auth_service.infrastructure.client.ExternalUserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -17,7 +16,6 @@ import java.util.stream.Collectors;
  * Decouples the mapping logic from the gateway implementation.
  */
 @Component
-@Slf4j
 public class UserSnapshotMapper {
 
     public UserSnapshot toSnapshot(ExternalUserSnapshot external) {
@@ -30,7 +28,13 @@ public class UserSnapshotMapper {
                 .map(RoleName::valueOf)
                 .collect(Collectors.toUnmodifiableSet());
 
-        AuthUserStatus authStatus = mapToAuthUserStatus(external.status());
+        AuthUserStatus authStatus = external.status() == null
+                ? AuthUserStatus.INACTIVE
+                : switch (external.status()) {
+                    case "ACTIVE" -> AuthUserStatus.ACTIVE;
+                    case "SUSPENDED" -> AuthUserStatus.SUSPENDED;
+                    default -> AuthUserStatus.INACTIVE;
+                  };
         boolean enabled = authStatus == AuthUserStatus.ACTIVE;
 
         return new UserSnapshot(
@@ -42,23 +46,5 @@ public class UserSnapshotMapper {
                 roles,
                 authStatus,
                 enabled);
-    }
-
-    /**
-     * Maps external user status string to internal AuthUserStatus.
-     * This decouples the bounded contexts.
-     */
-    private AuthUserStatus mapToAuthUserStatus(String externalStatus) {
-        if (externalStatus == null)
-            return AuthUserStatus.INACTIVE;
-
-        return switch (externalStatus) {
-            case "ACTIVE" -> AuthUserStatus.ACTIVE;
-            case "SUSPENDED" -> AuthUserStatus.SUSPENDED;
-            default -> {
-                log.warn("Unknown external status value: {}", externalStatus);
-                yield AuthUserStatus.INACTIVE;
-            }
-        };
     }
 }

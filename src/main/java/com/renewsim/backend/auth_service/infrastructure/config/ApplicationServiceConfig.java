@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.time.Clock;
 import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
 
 /**
@@ -32,7 +31,7 @@ public class ApplicationServiceConfig {
             PasswordEncoderPort passwordEncoder,
             EmailPort emailPort,
             TransactionalPort transactionalPort,
-            Clock clock,
+            TimeProvider timeProvider,
             UserAccountValidator userAccountValidator) {
         return new LoginStep1Service(
                 userAccountGateway,
@@ -42,7 +41,7 @@ public class ApplicationServiceConfig {
                 passwordEncoder,
                 emailPort,
                 transactionalPort,
-                clock,
+                timeProvider.getClock(),
                 userAccountValidator
         );
     }
@@ -56,7 +55,7 @@ public class ApplicationServiceConfig {
             TokenProvider tokenProvider,
             RefreshTokenRepositoryPort refreshTokenRepositoryPort,
             TransactionalPort transactionalPort,
-            Clock clock,
+            TimeProvider timeProvider,
             UserAccountValidator userAccountValidator) {
         return new LoginStep2Service(
                 userAccountGateway,
@@ -65,7 +64,7 @@ public class ApplicationServiceConfig {
                 tokenProvider,
                 passwordEncoder,
                 transactionalPort,
-                clock,
+                timeProvider.getClock(),
                 userAccountValidator
         );
     }
@@ -77,14 +76,14 @@ public class ApplicationServiceConfig {
             RefreshTokenRepositoryPort refreshTokenRepositoryPort,
             UserAccountGateway userAccountGateway,
             TransactionalPort transactionalPort,
-            Clock clock) {
+            TimeProvider timeProvider) {
         return new LogoutService(
                 tokenProvider,
                 tokenBlacklistPort,
                 refreshTokenRepositoryPort,
                 userAccountGateway,
                 transactionalPort,
-                clock);
+                timeProvider.getClock());
     }
 
     @Bean
@@ -92,12 +91,12 @@ public class ApplicationServiceConfig {
             ActivationTokenRepositoryPort activationTokenRepositoryPort,
             UserAccountGateway userAccountGateway,
             TransactionalPort transactionalPort,
-            Clock clock) {
+            TimeProvider timeProvider) {
         return new ActivateAccountService(
                 activationTokenRepositoryPort,
                 userAccountGateway,
                 transactionalPort,
-                clock
+                timeProvider.getClock()
 
         );
     }
@@ -108,14 +107,14 @@ public class ApplicationServiceConfig {
             UserAccountGateway userAccountGateway,
             TokenProvider tokenProvider,
             TransactionalPort transactionalPort,
-            Clock clock,
+            TimeProvider timeProvider,
             UserAccountValidator userAccountValidator) {
         return new RefreshTokenService(
                 refreshTokenRepositoryPort,
                 userAccountGateway,
                 tokenProvider,
                 transactionalPort,
-                clock,
+                timeProvider.getClock(),
                 userAccountValidator
 
         );
@@ -129,7 +128,7 @@ public class ApplicationServiceConfig {
             PasswordEncoderPort passwordEncoder,
             EmailPort emailPort,
             TransactionalPort transactionalPort,
-            Clock clock) {
+            TimeProvider timeProvider) {
         return new ResendOtpService(
                 userAccountGateway,
                 otpCodeRepositoryPort,
@@ -137,7 +136,7 @@ public class ApplicationServiceConfig {
                 passwordEncoder,
                 emailPort,
                 transactionalPort,
-                clock);
+                timeProvider.getClock());
     }
 
     @Bean
