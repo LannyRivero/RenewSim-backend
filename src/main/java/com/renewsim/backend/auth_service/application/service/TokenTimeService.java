@@ -1,5 +1,7 @@
 package com.renewsim.backend.auth_service.application.service;
 
+import java.time.Instant;
+
 /**
  * Servicio de aplicación que encapsula configuración de tiempos de expiración.
  * 
@@ -29,5 +31,9 @@ public class TokenTimeService {
 
     public long getRefreshTokenValiditySeconds() {
         return refreshTokenValiditySeconds;
+    }
+
+    public Instant calculateExpiration() {
+        return Instant.now().plusSeconds(accessTokenValiditySeconds);
     }
 }

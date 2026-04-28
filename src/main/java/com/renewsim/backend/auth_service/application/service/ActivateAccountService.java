@@ -24,49 +24,49 @@ import java.time.Clock;
  */
 public class ActivateAccountService implements ActivateAccountUseCase {
 
-    private static final Logger log = LoggerFactory.getLogger(ActivateAccountService.class);
+        private static final Logger log = LoggerFactory.getLogger(ActivateAccountService.class);
 
-    private final ActivationTokenRepositoryPort activationTokenRepositoryPort;
-    private final UserAccountGateway userAccountGateway;
-    private final TransactionalPort transactionalPort;
-    private final Clock clock;
+        private final ActivationTokenRepositoryPort activationTokenRepositoryPort;
+        private final UserAccountGateway userAccountGateway;
+        private final TransactionalPort transactionalPort;
+        private final Clock clock;
 
-    public ActivateAccountService(
-            ActivationTokenRepositoryPort activationTokenRepositoryPort,
-            UserAccountGateway userAccountGateway,
-            TransactionalPort transactionalPort,
-            Clock clock) {
-        this.activationTokenRepositoryPort = activationTokenRepositoryPort;
-        this.userAccountGateway = userAccountGateway;
-        this.transactionalPort = transactionalPort;
-        this.clock = clock;
-    }
-
-    @Override
-    public ActivateAccountResult execute(ActivateAccountCommand command) {
-        return transactionalPort.execute(() -> executeInternal(command));
-    }
-
-    private ActivateAccountResult executeInternal(ActivateAccountCommand command) {
-        String rawToken = command.token();
-        String tokenHash = TokenHasher.hash(rawToken);
-
-        ActivationToken token = activationTokenRepositoryPort
-                .findByTokenHash(tokenHash)
-                .orElseThrow(() -> new AuthenticationException("Invalid or expired activation token"));
-
-        if (!token.isValid(clock)) {
-            throw new AuthenticationException("Invalid or expired activation token");
+        public ActivateAccountService(
+                        ActivationTokenRepositoryPort activationTokenRepositoryPort,
+                        UserAccountGateway userAccountGateway,
+                        TransactionalPort transactionalPort,
+                        Clock clock) {
+                this.activationTokenRepositoryPort = activationTokenRepositoryPort;
+                this.userAccountGateway = userAccountGateway;
+                this.transactionalPort = transactionalPort;
+                this.clock = clock;
         }
 
-        userAccountGateway.activateUser(token.getUserId());
+        @Override
+        public ActivateAccountResult execute(ActivateAccountCommand command) {
+                return transactionalPort.execute(() -> executeInternal(command));
+        }
 
-        // REFACTOR: Usar el patrón inmutable - markUsed() retorna nueva instancia
-        ActivationToken usedToken = token.markUsed();
-        activationTokenRepositoryPort.save(usedToken);
+        private ActivateAccountResult executeInternal(ActivateAccountCommand command) {
+                String rawToken = command.token();
+                String tokenHash = TokenHasher.hash(rawToken);
 
-        log.info("Account activated for userId={}", token.getUserId());
+                ActivationToken token = activationTokenRepositoryPort
+                                .findByTokenHash(tokenHash)
+                                .orElseThrow(() -> new AuthenticationException("Invalid or expired activation token"));
 
-        return new ActivateAccountResult("Account activated successfully");
-    }
+                if (!token.isValid(clock)) {
+                        throw new AuthenticationException("Invalid or expired activation token");
+                }
+
+                userAccountGateway.activateUser(token.getUserId());
+
+                // REFACTOR: Usar el patrón inmutable - markUsed() retorna nueva instancia
+                ActivationToken usedToken = token.markUsed();
+                activationTokenRepositoryPort.save(usedToken);
+
+                log.info("Account activated for userId={}", token.getUserId());
+
+                return new ActivateAccountResult("Account activated successfully");
+        }
 }

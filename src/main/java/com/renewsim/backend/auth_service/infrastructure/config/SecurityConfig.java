@@ -104,7 +104,7 @@ public class SecurityConfig {
         // 3) No-cache for auth endpoints only
         http.addFilterAfter(authNoCacheFilter(), SecurityHeadersFilter.class);
 
-        // 4) Rate limiting for POST /api/v1/auth/login only
+        // 4) Rate limiting for login and refresh endpoints
         http.addFilterAfter(loginRateLimitingFilter, AuthNoCacheFilter.class);
 
         // 5) JWT auth before UsernamePasswordAuthenticationFilter
@@ -126,4 +126,4 @@ public class SecurityConfig {
         return hierarchy;
     }
 
-}
+}    

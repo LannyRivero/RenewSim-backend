@@ -18,7 +18,7 @@ public class ActivationToken {
     private final String tokenHash;
     private final LocalDateTime issuedAt;
     private final LocalDateTime expiresAt;
-    private final boolean used;  
+    private final boolean used;
 
     private ActivationToken(
             Long id,
@@ -90,12 +90,12 @@ public class ActivationToken {
      */
     public ActivationToken markUsed() {
         return new ActivationToken(
-            this.id,
-            this.userId,
-            this.tokenHash,
-            this.issuedAt,
-            this.expiresAt,
-            true);
+                this.id,
+                this.userId,
+                this.tokenHash,
+                this.issuedAt,
+                this.expiresAt,
+                true);
     }
 
     // --- Getters ---
@@ -125,7 +125,6 @@ public class ActivationToken {
     }
 
     // --- Helpers ---
-
     private static String requireNonBlank(String value, String field) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(field + " cannot be null or blank");

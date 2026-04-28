@@ -74,13 +74,15 @@ public class LoginStep2Service implements LoginStep2UseCase {
 
     private LoginStep2Result executeInternal(LoginStep2Command command) {
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
-                .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+                .orElseThrow(() -> new AuthenticationException("Invalid or expired OTP"));
 
         userAccountValidator.validateEnabledOrThrow(user);
 
-        // TODO: Implement proper failure tracking (e.g., failed_attempts table or column)
+        // TODO: Implement proper failure tracking (e.g., failed_attempts table or
+        // column)
         // Current countFailedAttempts only counts valid OTPs, not wrong submissions
-        // long failedAttempts = otpCodeRepositoryPort.countFailedAttempts(user.id(), OtpCode.Purpose.LOGIN);
+        // long failedAttempts = otpCodeRepositoryPort.countFailedAttempts(user.id(),
+        // OtpCode.Purpose.LOGIN);
         // if (failedAttempts >= MAX_FAILED_OTP_ATTEMPTS) { ... }
 
         OtpCode otpCode = otpCodeRepositoryPort
@@ -92,7 +94,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
         }
 
         if (!passwordEncoderPort.matches(command.otpCode(), otpCode.getCodeHash())) {
-            log.debug("Invalid OTP for userId={}, failed attempt {}", user.id(), failedAttempts + 1);
+            log.debug("Invalid OTP for userId={}", user.id());
             throw new AuthenticationException("Invalid or expired OTP");
         }
 

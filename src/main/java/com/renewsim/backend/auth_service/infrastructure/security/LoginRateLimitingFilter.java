@@ -26,25 +26,30 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 public class LoginRateLimitingFilter extends OncePerRequestFilter {
 
-    private final LoginRateLimiter rateLimiter;             
-    private final ObjectMapper objectMapper;                 
-    private final SecurityRateLimitProperties props;         
+    private final LoginRateLimiter rateLimiter;
+    private final ObjectMapper objectMapper;
+    private final SecurityRateLimitProperties props;
+
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-        if (!"POST".equalsIgnoreCase(request.getMethod())) return true;
+        if (!"POST".equalsIgnoreCase(request.getMethod()))
+            return true;
         String uri = request.getRequestURI();
-        if (uri == null) return true;
+        if (uri == null)
+            return true;
 
         // Apply to both login and refresh endpoints
         boolean isLoginPath = uri.startsWith(props.getLoginPath());
         boolean isRefreshPath = uri.startsWith(props.getRefreshPath());
 
-        if (!isLoginPath && !isRefreshPath) return true;
+        if (!isLoginPath && !isRefreshPath)
+            return true;
 
         // Login requires JSON, refresh doesn't (uses cookies)
         if (isLoginPath) {
             String ct = request.getContentType();
-            if (ct == null) return true;
+            if (ct == null)
+                return true;
             return !MediaType.parseMediaType(ct).isCompatibleWith(MediaType.APPLICATION_JSON);
         }
         // Apply rate limiting to refresh regardless of Content-Type
@@ -53,8 +58,8 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain chain) throws ServletException, IOException {
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain chain) throws ServletException, IOException {
 
         ContentCachingRequestWrapper wrapped = new ContentCachingRequestWrapper(request);
 
@@ -80,8 +85,8 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
                 response.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 response.getOutputStream().write(objectMapper.writeValueAsBytes(body));
 
-                log.warn("Rate limit exceeded key={}, ip={}, user={}, retryAfter={}s, window={}s, threshold={}",
-                        key, ip, username, retryAfter, props.getWindowSeconds(), props.getThreshold());
+                log.warn("Rate limit exceeded key={}, ip={}, user={}, retryAfter={}s, threshold={}",
+                        key, ip, username, retryAfter, props.getThreshold());
                 return;
             }
 
@@ -96,12 +101,14 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
     private String extractUsernameSafe(ContentCachingRequestWrapper req) {
         try {
             byte[] buf = req.getContentAsByteArray();
-            if (buf == null || buf.length == 0) return null;
+            if (buf == null || buf.length == 0)
+                return null;
             String json = new String(buf, StandardCharsets.UTF_8);
-            if (json.isBlank()) return null;
+            if (json.isBlank())
+                return null;
 
-            com.renewsim.backend.auth_service.infrastructure.security.LoginUsernameProbe probe =
-                    objectMapper.readValue(json, com.renewsim.backend.auth_service.infrastructure.security.LoginUsernameProbe.class);
+            com.renewsim.backend.auth_service.infrastructure.security.LoginUsernameProbe probe = objectMapper.readValue(
+                    json, com.renewsim.backend.auth_service.infrastructure.security.LoginUsernameProbe.class);
             String u = probe.getUsername();
             return (u == null || u.isBlank()) ? null : u.trim();
         } catch (Exception ex) {
