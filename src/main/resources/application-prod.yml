@@ -122,6 +122,15 @@ technology-service:
   url: ${TECHNOLOGY_SERVICE_URL:http://localhost:8080}
 
 # =============================
+# BREVO EMAIL (prod)
+# =============================
+email:
+  brevo:
+    api-key: ${BREVO_API_KEY:}
+    sender-email: ${BREVO_SENDER_EMAIL:}
+    sender-name: ${BREVO_SENDER_NAME:RenewSim}
+
+# =============================
 # OPENAPI/SWAGGER (DISABLED IN PROD)
 # =============================
 springdoc:

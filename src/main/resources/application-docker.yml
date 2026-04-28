@@ -117,3 +117,12 @@ role-service:
 
 technology-service:
   url: http://renewsim-backend:8080
+
+# =============================
+# BREVO EMAIL (docker)
+# =============================
+email:
+  brevo:
+    api-key: ${BREVO_API_KEY:}
+    sender-email: ${BREVO_SENDER_EMAIL:}
+    sender-name: ${BREVO_SENDER_NAME:RenewSim}
