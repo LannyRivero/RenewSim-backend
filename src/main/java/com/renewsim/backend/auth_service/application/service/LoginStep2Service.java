@@ -35,8 +35,9 @@ import java.util.stream.Collectors;
 public class LoginStep2Service implements LoginStep2UseCase {
 
     private static final Logger log = LoggerFactory.getLogger(LoginStep2Service.class);
-    private static final int MAX_FAILED_OTP_ATTEMPTS = 5;
-    private static final int LOCKOUT_DURATION_MINUTES = 15;
+    // TODO: Re-enable lockout when failure persistence is implemented
+    // private static final int MAX_FAILED_OTP_ATTEMPTS = 5;
+    // private static final int LOCKOUT_DURATION_MINUTES = 15;
 
     private final UserAccountGateway userAccountGateway;
     private final OtpCodeRepositoryPort otpCodeRepositoryPort;
@@ -77,11 +78,10 @@ public class LoginStep2Service implements LoginStep2UseCase {
 
         userAccountValidator.validateEnabledOrThrow(user);
 
-        long failedAttempts = otpCodeRepositoryPort.countFailedAttempts(user.id(), OtpCode.Purpose.LOGIN);
-        if (failedAttempts >= MAX_FAILED_OTP_ATTEMPTS) {
-            log.warn("Account temporarily locked due to too many failed OTP attempts: userId={}", user.id());
-            throw new AuthenticationException("Account temporarily locked. Please try again later.");
-        }
+        // TODO: Implement proper failure tracking (e.g., failed_attempts table or column)
+        // Current countFailedAttempts only counts valid OTPs, not wrong submissions
+        // long failedAttempts = otpCodeRepositoryPort.countFailedAttempts(user.id(), OtpCode.Purpose.LOGIN);
+        // if (failedAttempts >= MAX_FAILED_OTP_ATTEMPTS) { ... }
 
         OtpCode otpCode = otpCodeRepositoryPort
                 .findLatestValidByUserId(user.id(), OtpCode.Purpose.LOGIN)

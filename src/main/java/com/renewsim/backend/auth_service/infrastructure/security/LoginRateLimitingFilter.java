@@ -41,9 +41,14 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
 
         if (!isLoginPath && !isRefreshPath) return true;
 
-        String ct = request.getContentType();
-        if (ct == null) return true;
-        return !MediaType.parseMediaType(ct).isCompatibleWith(MediaType.APPLICATION_JSON);
+        // Login requires JSON, refresh doesn't (uses cookies)
+        if (isLoginPath) {
+            String ct = request.getContentType();
+            if (ct == null) return true;
+            return !MediaType.parseMediaType(ct).isCompatibleWith(MediaType.APPLICATION_JSON);
+        }
+        // Apply rate limiting to refresh regardless of Content-Type
+        return false;
     }
 
     @Override

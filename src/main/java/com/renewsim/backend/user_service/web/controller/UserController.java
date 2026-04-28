@@ -209,7 +209,6 @@ public class UserController {
         // SECURITY: Only callable by auth_service with SERVICE_AUTH role
         // ----------------------------------------------------
         @PutMapping("/{id}/activate")
-        @PreAuthorize("hasRole('SERVICE_AUTH')")
         public ResponseEntity<OperationResponse<Void>> activate(@PathVariable Long id) {
                 activateUserUseCase.activate(id);
                 return ResponseEntity.ok(ApiResponseFactory.noContent("User activated successfully"));

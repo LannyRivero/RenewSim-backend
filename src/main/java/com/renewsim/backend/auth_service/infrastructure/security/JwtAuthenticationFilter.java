@@ -75,7 +75,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (jti.isPresent() && tokenBlacklistPort.isBlacklisted(jti.get())) {
                     log.warn("Rejected blacklisted token jti={}", jti.get());
                     respondUnauthorized(response);
-                    chain.doFilter(request, response);
                     return;
                 }
                 setAuthentication(validated.get(), request);
