@@ -39,6 +39,8 @@ class JwtTokenProviderTest {
                 audience,
                 null,
                 secretBase64,
+                null,
+                null,
                 expirationSeconds,
                 nbfSkewSeconds,
                 clockSkewSeconds,
@@ -234,6 +236,8 @@ class JwtTokenProviderTest {
                 "iss", "aud",
                 tooShortPlain,
                 null,
+                null,
+                null,
                 3600L,
                 0L,
                 0L,
@@ -299,6 +303,8 @@ class JwtTokenProviderTest {
     void constructor_throws_whenBothSecretsMissing() {
         var p = new SecurityJwtProperties(
                 "iss", "aud",
+                null,
+                null,
                 null,
                 null,
                 3600L,

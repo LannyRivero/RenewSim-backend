@@ -29,4 +29,17 @@ public interface OtpCodeJpaRepository extends JpaRepository<OtpCodeEntity, Long>
                         @Param("userId") Long userId,
                         @Param("purpose") OtpCode.Purpose purpose,
                         @Param("verifiedAt") Instant verifiedAt);
+
+        @Query("""
+                        SELECT COUNT(o)
+                        FROM OtpCodeEntity o
+                        WHERE o.userId = :userId
+                          AND o.purpose = :purpose
+                          AND o.verifiedAt IS NULL
+                          AND o.expiresAt > :now
+                        """)
+        long countFailedAttempts(
+                        @Param("userId") Long userId,
+                        @Param("purpose") OtpCode.Purpose purpose,
+                        @Param("now") Instant now);
 }

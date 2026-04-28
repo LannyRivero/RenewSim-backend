@@ -145,24 +145,23 @@ public final class JwtTokenProvider implements TokenProvider {
     }
 
     private static Key resolveKey(SecurityJwtProperties props) {
-        if (props.hasSecretBase64()) {
-            byte[] decoded = Base64.getDecoder().decode(props.secretBase64());
+        String envSecret = props.effectiveSecret();
+        String envSecretBase64 = props.effectiveSecretBase64();
+
+        if (envSecretBase64 != null && !envSecretBase64.isBlank()) {
+            byte[] decoded = Base64.getDecoder().decode(envSecretBase64);
             if (decoded.length < 64) {
                 throw new IllegalStateException("Decoded Base64 JWT secret too short (<64 bytes required for HS512).");
             }
             return Keys.hmacShaKeyFor(decoded);
         }
-        if (props.hasPlainSecret()) {
-            String secret = props.secret();
-            if (secret == null) {
-                throw new IllegalStateException("JWT secret is null");
-            }
-            byte[] raw = secret.getBytes(StandardCharsets.UTF_8);
+        if (envSecret != null && !envSecret.isBlank()) {
+            byte[] raw = envSecret.getBytes(StandardCharsets.UTF_8);
             if (raw.length < 64) {
                 throw new IllegalStateException("Plain JWT secret too short (<64 bytes required for HS512).");
             }
             return Keys.hmacShaKeyFor(raw);
         }
-        throw new IllegalStateException("No JWT secret configured (secretBase64 or secret required).");
+        throw new IllegalStateException("No JWT secret configured (JWT_SECRET or JWT_SECRET_BASE64 env var required).");
     }
 }

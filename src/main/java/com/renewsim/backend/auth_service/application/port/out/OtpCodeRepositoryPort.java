@@ -15,4 +15,6 @@ public interface OtpCodeRepositoryPort {
     Optional<OtpCode> findLatestValidByUserId(Long userId, OtpCode.Purpose purpose);
 
     void invalidateAllByUserId(Long userId, OtpCode.Purpose purpose);
+
+    long countFailedAttempts(Long userId, OtpCode.Purpose purpose);
 }

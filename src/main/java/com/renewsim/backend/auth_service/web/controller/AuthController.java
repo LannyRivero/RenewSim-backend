@@ -174,7 +174,7 @@ public class AuthController {
                 ResponseCookie cookie = ResponseCookie.from("refresh_token", rawRefreshToken)
                                 .httpOnly(true)
                                 .secure(true)
-                                .path("/api/v1/auth/refresh")
+                                .path("/")
                                 .maxAge(Duration.ofDays(7))
                                 .sameSite("Strict")
                                 .build();
