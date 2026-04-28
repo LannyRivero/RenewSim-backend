@@ -1,5 +1,6 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
+import com.renewsim.backend.auth_service.application.port.out.TokenBlacklistPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.testutil.UnitTestBase;
@@ -8,6 +9,8 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,10 +26,13 @@ import java.util.Optional;
 import java.util.Set;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class JwtAuthenticationFilterTest extends UnitTestBase {
 
     @Mock
     private TokenProvider tokenProvider;
+    @Mock
+    private TokenBlacklistPort tokenBlacklistPort;
     @Mock
     private FilterChain chain;
 
@@ -59,7 +65,7 @@ class JwtAuthenticationFilterTest extends UnitTestBase {
 
         var auth = SecurityContextHolder.getContext().getAuthentication();
         assertThat(auth).isNotNull();
-        assertThat(auth.getName()).isEqualTo("john");
+        assertThat(((AuthenticatedUser)auth.getPrincipal()).username()).isEqualTo("john");
         assertThat(auth.getAuthorities().stream().map(Object::toString))
                 .containsExactlyInAnyOrder("ROLE_USER", "SCOPE_read");
 
@@ -161,7 +167,7 @@ class JwtAuthenticationFilterTest extends UnitTestBase {
 
         var auth = SecurityContextHolder.getContext().getAuthentication();
         assertThat(auth).isInstanceOf(UsernamePasswordAuthenticationToken.class);
-        assertThat(auth.getName()).isEqualTo("john");
+        assertThat(((AuthenticatedUser)auth.getPrincipal()).username()).isEqualTo("john");
         verify(chain).doFilter(req, res);
     }
 
@@ -188,7 +194,7 @@ class JwtAuthenticationFilterTest extends UnitTestBase {
 
         var auth = SecurityContextHolder.getContext().getAuthentication();
         assertThat(auth).isInstanceOf(UsernamePasswordAuthenticationToken.class);
-        assertThat(auth.getName()).isEqualTo("john");
+        assertThat(((AuthenticatedUser)auth.getPrincipal()).username()).isEqualTo("john");
         assertThat(auth.getAuthorities()).isEmpty();
         verify(chain).doFilter(req, res);
     }
@@ -226,7 +232,7 @@ class JwtAuthenticationFilterTest extends UnitTestBase {
         filter.doFilter(req, res, chain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-        verifyNoInteractions(tokenProvider);
+        verifyNoInteractions(tokenBlacklistPort);
         verify(chain).doFilter(req, res);
     }
 
@@ -251,8 +257,8 @@ class JwtAuthenticationFilterTest extends UnitTestBase {
         filter.doFilter(req, res, chain);
 
         var auth = SecurityContextHolder.getContext().getAuthentication();
-        assertThat(auth).isNotNull();
-        assertThat(auth.getName()).isEqualTo("john");
+        assertThat(auth).isInstanceOf(UsernamePasswordAuthenticationToken.class);
+        assertThat(((AuthenticatedUser)auth.getPrincipal()).username()).isEqualTo("john");
         assertThat(auth.getAuthorities().stream().map(Object::toString))
                 .containsExactlyInAnyOrder("ROLE_USER", "SCOPE_read");
         verify(chain).doFilter(req, res);

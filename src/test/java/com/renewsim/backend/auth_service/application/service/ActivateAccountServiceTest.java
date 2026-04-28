@@ -6,9 +6,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.renewsim.backend.auth_service.application.command.ActivateAccountCommand;
 import com.renewsim.backend.auth_service.application.port.out.ActivationTokenRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.ActivateAccountResult;
 import com.renewsim.backend.auth_service.domain.model.ActivationToken;
@@ -33,8 +36,23 @@ class ActivateAccountServiceTest {
         @Mock
         private UserAccountGateway userAccountGateway;
 
+        @Mock
+        private TransactionalPort transactionalPort;
+
+        @Mock
+        private Clock clock;
+
         @InjectMocks
         private ActivateAccountService activateAccountService;
+
+        @BeforeEach
+        void setUp() {
+                // Mock transactionalPort to execute the supplier directly
+                when(transactionalPort.execute(any())).thenAnswer(inv -> {
+                        java.util.function.Supplier<?> supplier = inv.getArgument(0);
+                        return supplier.get();
+                });
+        }
 
         @Test
         @DisplayName("Should activate account when token is valid")

@@ -5,10 +5,15 @@ import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenBlacklistPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
+import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.application.result.LogoutResultDTO;
+import com.renewsim.backend.auth_service.application.result.LogoutResult;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
+
+import java.time.Clock;
+import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,9 +22,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -37,6 +39,10 @@ class LogoutServiceTest {
         private RefreshTokenRepositoryPort refreshTokenRepositoryPort;
         @Mock
         private UserAccountGateway userAccountGateway;
+        @Mock
+        private TransactionalPort transactionalPort;
+        @Mock
+        private Clock clock;
 
         @InjectMocks
         private LogoutService service;
@@ -46,6 +52,12 @@ class LogoutServiceTest {
         @BeforeEach
         void setUp() {
                 activeUser = UserSnapshotMother.withEmail("john@example.com", Set.of(RoleName.USER));
+
+                // Mock transactionalPort to execute the supplier directly
+                when(transactionalPort.execute(any())).thenAnswer(inv -> {
+                        java.util.function.Supplier<?> supplier = inv.getArgument(0);
+                        return supplier.get();
+                });
         }
 
         @Test
@@ -57,7 +69,7 @@ class LogoutServiceTest {
                 when(userAccountGateway.findByEmail("john@example.com"))
                                 .thenReturn(Optional.of(activeUser));
 
-                LogoutResultDTO result = service.execute(
+                LogoutResult result = service.execute(
                                 new LogoutCommand("valid-token", "john@example.com"));
 
                 assertThat(result.message()).isEqualTo("Logged out successfully");
@@ -72,7 +84,7 @@ class LogoutServiceTest {
                 when(userAccountGateway.findByEmail("john@example.com"))
                                 .thenReturn(Optional.of(activeUser));
 
-                LogoutResultDTO result = service.execute(
+                LogoutResult result = service.execute(
                                 new LogoutCommand("no-jti-token", "john@example.com"));
 
                 assertThat(result.message()).isEqualTo("Logged out successfully");
@@ -89,7 +101,7 @@ class LogoutServiceTest {
                 when(userAccountGateway.findByEmail("unknown@example.com"))
                                 .thenReturn(Optional.empty());
 
-                LogoutResultDTO result = service.execute(
+                LogoutResult result = service.execute(
                                 new LogoutCommand("valid-token", "unknown@example.com"));
 
                 assertThat(result.message()).isEqualTo("Logged out successfully");
@@ -117,7 +129,7 @@ class LogoutServiceTest {
                 when(tokenProvider.extractJti(anyString())).thenReturn(Optional.empty());
                 when(userAccountGateway.findByEmail(anyString())).thenReturn(Optional.empty());
 
-                LogoutResultDTO result = service.execute(
+                LogoutResult result = service.execute(
                                 new LogoutCommand("any-token", "any@example.com"));
 
                 assertThat(result.message()).isEqualTo("Logged out successfully");

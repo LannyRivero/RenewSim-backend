@@ -2,22 +2,17 @@ package com.renewsim.backend.auth_service.infrastructure.persistence;
 
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
-import com.renewsim.backend.auth_service.domain.model.AuthUserStatus;
 import com.renewsim.backend.auth_service.infrastructure.client.ExternalUserSnapshot;
 import com.renewsim.backend.auth_service.infrastructure.client.UserServiceClient;
-import com.renewsim.backend.shared.domain.vo.RoleName;
+import com.renewsim.backend.auth_service.infrastructure.mapper.UserSnapshotMapper;
 import com.renewsim.backend.shared.dto.OperationResponse;
-import com.renewsim.backend.user_service.domain.model.UserStatus;
-import com.renewsim.backend.user_service.web.dto.UserCreateRequest;
 import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -25,12 +20,14 @@ import java.util.stream.Collectors;
 public class HttpUserAccountGateway implements UserAccountGateway {
 
     private final UserServiceClient userServiceClient;
+    private final UserSnapshotMapper userSnapshotMapper;
 
+    @CircuitBreaker(name = "userService", fallbackMethod = "fallbackFindByEmail")
     @Override
     public Optional<UserSnapshot> findByEmail(String email) {
         try {
             OperationResponse<ExternalUserSnapshot> response = userServiceClient.getCredentials(null, email);
-            return Optional.ofNullable(mapToSnapshot(
+            return Optional.ofNullable(userSnapshotMapper.toSnapshot(
                     response != null ? response.data() : null));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
@@ -40,11 +37,12 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         }
     }
 
+    @CircuitBreaker(name = "userService", fallbackMethod = "fallbackFindByUsername")
     @Override
     public Optional<UserSnapshot> findByUsername(String username) {
         try {
             OperationResponse<ExternalUserSnapshot> response = userServiceClient.getCredentials(username, null);
-            return Optional.ofNullable(mapToSnapshot(
+            return Optional.ofNullable(userSnapshotMapper.toSnapshot(
                     response != null ? response.data() : null));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
@@ -54,26 +52,32 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         }
     }
 
+    @CircuitBreaker(name = "userService", fallbackMethod = "fallbackExistsByUsername")
     @Override
     public boolean existsByUsername(String username) {
         OperationResponse<Boolean> response = userServiceClient.existsByUsernameOrEmail(username, null);
         return response != null && Boolean.TRUE.equals(response.data());
     }
 
+    @CircuitBreaker(name = "userService", fallbackMethod = "fallbackExistsByEmail")
     @Override
     public boolean existsByEmail(String email) {
         OperationResponse<Boolean> response = userServiceClient.existsByUsernameOrEmail(null, email);
         return response != null && Boolean.TRUE.equals(response.data());
     }
 
+    @CircuitBreaker(name = "userService", fallbackMethod = "fallbackCreateUser")
     @Override
     public UserSnapshot createUser(String username, String fullName, String rawPassword,
-            String email, Set<RoleName> roles) {
-        UserCreateRequest request = new UserCreateRequest(username, email, rawPassword, fullName, null);
+            String email, java.util.Set<com.renewsim.backend.shared.domain.vo.RoleName> roles) {
+        com.renewsim.backend.auth_service.application.dto.InternalUserCreateRequest request =
+                new com.renewsim.backend.auth_service.application.dto.InternalUserCreateRequest(
+                        username, email, rawPassword, fullName);
         OperationResponse<ExternalUserSnapshot> response = userServiceClient.createUser(request);
-        return mapToSnapshot(response != null ? response.data() : null);
+        return userSnapshotMapper.toSnapshot(response != null ? response.data() : null);
     }
 
+    @CircuitBreaker(name = "userService", fallbackMethod = "fallbackActivateUser")
     @Override
     public void activateUser(Long userId) {
         try {
@@ -84,11 +88,12 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         }
     }
 
+    @CircuitBreaker(name = "userService", fallbackMethod = "fallbackFindById")
     @Override
     public Optional<UserSnapshot> findById(Long userId) {
         try {
             OperationResponse<ExternalUserSnapshot> response = userServiceClient.getSnapshotById(userId);
-            return Optional.ofNullable(mapToSnapshot(
+            return Optional.ofNullable(userSnapshotMapper.toSnapshot(
                     response != null ? response.data() : null));
         } catch (FeignException.NotFound e) {
             return Optional.empty();
@@ -98,52 +103,47 @@ public class HttpUserAccountGateway implements UserAccountGateway {
         }
     }
 
-    private UserSnapshot mapToSnapshot(ExternalUserSnapshot external) {
-        if (external == null)
-            return null;
-
-        Set<RoleName> roles = Optional.ofNullable(external.roles())
-                .orElse(Collections.emptySet())
-                .stream()
-                .map(RoleName::valueOf)
-                .collect(Collectors.toUnmodifiableSet());
-
-        UserStatus externalStatus = parseExternalStatus(external.status());
-        AuthUserStatus authStatus = mapToAuthUserStatus(externalStatus);
-        boolean enabled = authStatus == AuthUserStatus.ACTIVE;
-
-        return new UserSnapshot(
-                external.id(),
-                external.username(),
-                external.fullName(),
-                external.passwordHash(),
-                external.email(),
-                roles,
-                authStatus,
-                enabled);
+    // Fallback methods
+    @SuppressWarnings("unused")
+    private Optional<UserSnapshot> fallbackFindByEmail(String email, Throwable t) {
+        log.error("Circuit breaker fallback for findByEmail: {}", email, t);
+        return Optional.empty();
     }
 
-    private UserStatus parseExternalStatus(String status) {
-        if (status == null)
-            return UserStatus.INACTIVE;
-        try {
-            return UserStatus.valueOf(status);
-        } catch (IllegalArgumentException e) {
-            log.warn("Unknown UserStatus value: {}", status);
-            return UserStatus.INACTIVE;
-        }
+    @SuppressWarnings("unused")
+    private Optional<UserSnapshot> fallbackFindByUsername(String username, Throwable t) {
+        log.error("Circuit breaker fallback for findByUsername: {}", username, t);
+        return Optional.empty();
     }
 
-    /**
-     * Maps external UserStatus (from user_service) to internal AuthUserStatus
-     * (auth_service).
-     * This decouples the bounded contexts.
-     */
-    private AuthUserStatus mapToAuthUserStatus(UserStatus externalStatus) {
-        return switch (externalStatus) {
-            case ACTIVE -> AuthUserStatus.ACTIVE;
-            case INACTIVE -> AuthUserStatus.INACTIVE;
-            case SUSPENDED -> AuthUserStatus.SUSPENDED;
-        };
+    @SuppressWarnings("unused")
+    private boolean fallbackExistsByUsername(String username, Throwable t) {
+        log.error("Circuit breaker fallback for existsByUsername: {}", username, t);
+        return false;
+    }
+
+    @SuppressWarnings("unused")
+    private boolean fallbackExistsByEmail(String email, Throwable t) {
+        log.error("Circuit breaker fallback for existsByEmail: {}", email, t);
+        return false;
+    }
+
+    @SuppressWarnings("unused")
+    private UserSnapshot fallbackCreateUser(String username, String fullName, String rawPassword,
+            String email, java.util.Set<com.renewsim.backend.shared.domain.vo.RoleName> roles, Throwable t) {
+        log.error("Circuit breaker fallback for createUser: {}", username, t);
+        throw new IllegalStateException("User service temporarily unavailable");
+    }
+
+    @SuppressWarnings("unused")
+    private void fallbackActivateUser(Long userId, Throwable t) {
+        log.error("Circuit breaker fallback for activateUser: {}", userId, t);
+        throw new IllegalStateException("User service temporarily unavailable");
+    }
+
+    @SuppressWarnings("unused")
+    private Optional<UserSnapshot> fallbackFindById(Long userId, Throwable t) {
+        log.error("Circuit breaker fallback for findById: {}", userId, t);
+        return Optional.empty();
     }
 }

@@ -33,11 +33,22 @@ public class LoginRateLimitingFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         if (!"POST".equalsIgnoreCase(request.getMethod())) return true;
         String uri = request.getRequestURI();
-        if (uri == null || !uri.startsWith(props.getLoginPath())) return true;
+        if (uri == null) return true;
 
-        String ct = request.getContentType();
-        if (ct == null) return true;
-        return !MediaType.parseMediaType(ct).isCompatibleWith(MediaType.APPLICATION_JSON);
+        // Apply to both login and refresh endpoints
+        boolean isLoginPath = uri.startsWith(props.getLoginPath());
+        boolean isRefreshPath = uri.startsWith(props.getRefreshPath());
+
+        if (!isLoginPath && !isRefreshPath) return true;
+
+        // Login requires JSON, refresh doesn't (uses cookies)
+        if (isLoginPath) {
+            String ct = request.getContentType();
+            if (ct == null) return true;
+            return !MediaType.parseMediaType(ct).isCompatibleWith(MediaType.APPLICATION_JSON);
+        }
+        // Apply rate limiting to refresh regardless of Content-Type
+        return false;
     }
 
     @Override

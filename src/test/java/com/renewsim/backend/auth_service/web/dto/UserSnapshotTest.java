@@ -1,8 +1,8 @@
 package com.renewsim.backend.auth_service.web.dto;
 
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
+import com.renewsim.backend.auth_service.domain.model.AuthUserStatus;
 import com.renewsim.backend.shared.domain.vo.RoleName;
-import com.renewsim.backend.user_service.domain.model.UserStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +31,7 @@ class UserSnapshotTest {
         assertThat(user.passwordHash()).isEqualTo(HASH);
         assertThat(user.email()).isEqualTo(EMAIL);
         assertThat(user.roles()).isEqualTo(ROLES);
-        assertThat(user.status()).isEqualTo(UserStatus.ACTIVE);
+        assertThat(user.status()).isEqualTo(AuthUserStatus.ACTIVE);
         assertThat(user.enabled()).isTrue();
     }
 
@@ -46,7 +46,7 @@ class UserSnapshotTest {
         assertThat(user.passwordHash()).isEqualTo(HASH);
         assertThat(user.email()).isEqualTo(EMAIL);
         assertThat(user.roles()).isEqualTo(ROLES);
-        assertThat(user.status()).isEqualTo(UserStatus.INACTIVE);
+        assertThat(user.status()).isEqualTo(AuthUserStatus.INACTIVE);
         assertThat(user.enabled()).isFalse();
     }
 }

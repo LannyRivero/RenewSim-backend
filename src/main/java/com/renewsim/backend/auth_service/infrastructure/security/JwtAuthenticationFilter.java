@@ -69,27 +69,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // Check blacklist before validating signature
-            Optional<String> jti = tokenProvider.extractJti(token);
-            if (jti.isPresent() && tokenBlacklistPort.isBlacklisted(jti.get())) {
-                log.warn("Rejected blacklisted token jti={}", jti.get());
-                respondUnauthorized(response);
-                return;
-            }
-
             final Optional<AuthenticatedUser> validated = tokenProvider.validate(token);
             if (validated.isPresent()) {
+                Optional<String> jti = tokenProvider.extractJti(token);
+                if (jti.isPresent() && tokenBlacklistPort.isBlacklisted(jti.get())) {
+                    log.warn("Rejected blacklisted token jti={}", jti.get());
+                    respondUnauthorized(response);
+                    return;
+                }
                 setAuthentication(validated.get(), request);
             } else {
                 log.warn("JWT validation failed: token is invalid, expired, or has incorrect claims.");
-                respondUnauthorized(response);
-                return;
             }
 
         } catch (Exception e) {
             log.warn("JWT parsing/validation error: {}", e.getMessage());
-            respondUnauthorized(response);
-            return;
         }
 
         chain.doFilter(request, response);

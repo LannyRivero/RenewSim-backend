@@ -206,6 +206,7 @@ public class UserController {
 
         // ----------------------------------------------------
         // PUT /users/{id}/activate → Activate user account
+        // SECURITY: Only callable by auth_service with SERVICE_AUTH role
         // ----------------------------------------------------
         @PutMapping("/{id}/activate")
         public ResponseEntity<OperationResponse<Void>> activate(@PathVariable Long id) {

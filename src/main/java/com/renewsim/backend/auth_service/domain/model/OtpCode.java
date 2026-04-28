@@ -1,12 +1,15 @@
 package com.renewsim.backend.auth_service.domain.model;
 
 import java.time.LocalDateTime;
+import java.time.Clock;
 import java.util.Objects;
 
 /**
  * OTP code entity.
  * Represents a one-time password issued for a specific purpose (LOGIN, etc.).
  * Pure domain object — no framework dependencies.
+ * 
+ * This class is IMMUTABLE. All state-changing operations return new instances.
  */
 public class OtpCode {
 
@@ -22,7 +25,7 @@ public class OtpCode {
     private final Purpose purpose;
     private final LocalDateTime issuedAt;
     private final LocalDateTime expiresAt;
-    private boolean used;
+    private final boolean used; // CAMBIO: ahora es final
 
     private OtpCode(
             Long id,
@@ -49,7 +52,11 @@ public class OtpCode {
      * TTL is 5 minutes from issuedAt.
      */
     public static OtpCode issue(Long userId, String codeHash, Purpose purpose) {
-        LocalDateTime now = LocalDateTime.now();
+        return issue(userId, codeHash, purpose, Clock.systemDefaultZone());
+    }
+
+    public static OtpCode issue(Long userId, String codeHash, Purpose purpose, Clock clock) {
+        LocalDateTime now = LocalDateTime.now(clock);
         return new OtpCode(null, userId, codeHash, purpose, now, now.plusMinutes(5), false);
     }
 
@@ -69,24 +76,37 @@ public class OtpCode {
 
     /**
      * Returns true if the OTP has passed its expiration time.
+     * 
+     * @param clock Clock to determine current time
      */
-    public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiresAt);
+    public boolean isExpired(Clock clock) {
+        return LocalDateTime.now(clock).isAfter(expiresAt);
     }
 
     /**
      * Returns true if the OTP can still be used: not consumed and not expired.
+     * 
+     * @param clock Clock to determine current time
      */
-    public boolean isValid() {
-        return !used && !isExpired();
+    public boolean isValid(Clock clock) {
+        return !used && !isExpired(clock);
     }
 
     /**
-     * Marks this OTP as consumed.
-     * Idempotent: calling twice has no additional effect.
+     * Returns a new OtpCode with used=true.
+     * The original instance remains unchanged (immutability).
+     *
+     * @return a new OtpCode instance with used=true
      */
-    public void markUsed() {
-        this.used = true;
+    public OtpCode markUsed() {
+        return new OtpCode(
+                this.id,
+                this.userId,
+                this.codeHash,
+                this.purpose,
+                this.issuedAt,
+                this.expiresAt,
+                true);
     }
 
     // --- Getters ---

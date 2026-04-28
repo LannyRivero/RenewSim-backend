@@ -1,12 +1,15 @@
 package com.renewsim.backend.auth_service.domain.model;
 
 import java.time.LocalDateTime;
+import java.time.Clock;
 import java.util.Objects;
 
 /**
  * Activation token entity.
  * Represents a single-use token issued to verify a user's email address.
  * Pure domain object — no framework dependencies.
+ * 
+ * This class is IMMUTABLE. All state-changing operations return new instances.
  */
 public class ActivationToken {
 
@@ -15,7 +18,7 @@ public class ActivationToken {
     private final String tokenHash;
     private final LocalDateTime issuedAt;
     private final LocalDateTime expiresAt;
-    private boolean used;
+    private final boolean used;  
 
     private ActivationToken(
             Long id,
@@ -40,7 +43,11 @@ public class ActivationToken {
      * TTL is 24 hours from issuedAt.
      */
     public static ActivationToken issue(Long userId, String tokenHash) {
-        LocalDateTime now = LocalDateTime.now();
+        return issue(userId, tokenHash, Clock.systemDefaultZone());
+    }
+
+    public static ActivationToken issue(Long userId, String tokenHash, Clock clock) {
+        LocalDateTime now = LocalDateTime.now(clock);
         return new ActivationToken(null, userId, tokenHash, now, now.plusHours(24), false);
     }
 
@@ -59,24 +66,36 @@ public class ActivationToken {
 
     /**
      * Returns true if the token has passed its expiration time.
+     * 
+     * @param clock Clock to determine current time
      */
-    public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiresAt);
+    public boolean isExpired(Clock clock) {
+        return LocalDateTime.now(clock).isAfter(expiresAt);
     }
 
     /**
      * Returns true if the token can still be used: not consumed and not expired.
+     * 
+     * @param clock Clock to determine current time
      */
-    public boolean isValid() {
-        return !used && !isExpired();
+    public boolean isValid(Clock clock) {
+        return !used && !isExpired(clock);
     }
 
     /**
-     * Marks this token as consumed.
-     * Idempotent: calling twice has no additional effect.
+     * Returns a new ActivationToken with used=true.
+     * The original instance remains unchanged (immutability).
+     *
+     * @return a new ActivationToken instance with used=true
      */
-    public void markUsed() {
-        this.used = true;
+    public ActivationToken markUsed() {
+        return new ActivationToken(
+            this.id,
+            this.userId,
+            this.tokenHash,
+            this.issuedAt,
+            this.expiresAt,
+            true);
     }
 
     // --- Getters ---

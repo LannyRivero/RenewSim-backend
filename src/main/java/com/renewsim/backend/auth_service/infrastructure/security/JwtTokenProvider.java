@@ -1,6 +1,5 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.infrastructure.config.SecurityJwtProperties;
@@ -24,12 +23,13 @@ public final class JwtTokenProvider implements TokenProvider {
     private final SecurityJwtProperties props;
     private final Clock clock;
     private final Key key;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final JwtClaimsExtractor claimsExtractor;
 
-    JwtTokenProvider(SecurityJwtProperties props, Clock clock) {
+    JwtTokenProvider(SecurityJwtProperties props, Clock clock, JwtClaimsExtractor claimsExtractor) {
         this.props = Objects.requireNonNull(props, "SecurityJwtProperties is required");
-        this.clock = (clock != null) ? clock : Clock.systemUTC();
+        this.clock = Objects.requireNonNull(clock, "clock is required");
         this.key = resolveKey(props);
+        this.claimsExtractor = Objects.requireNonNull(claimsExtractor, "claimsExtractor is required");
     }
 
     @Override
@@ -112,39 +112,12 @@ public final class JwtTokenProvider implements TokenProvider {
 
     @Override
     public Optional<String> extractJti(String token) {
-        if (token == null || token.isBlank()) return Optional.empty();
-        try {
-            Map<?, ?> payload = parsePayloadUnsafe(token);
-            Object jti = payload.get("jti");
-            return jti != null ? Optional.of(jti.toString()) : Optional.empty();
-        } catch (Exception ex) {
-            return Optional.empty();
-        }
+        return Optional.ofNullable(claimsExtractor.extractJti(token));
     }
 
     @Override
     public Optional<Long> extractExpirationEpochSeconds(String token) {
-        if (token == null || token.isBlank()) return Optional.empty();
-        try {
-            Map<?, ?> payload = parsePayloadUnsafe(token);
-            Object exp = payload.get("exp");
-            if (exp == null) return Optional.empty();
-            return Optional.of(((Number) exp).longValue());
-        } catch (Exception ex) {
-            return Optional.empty();
-        }
-    }
-
-    /**
-     * Decodes the JWT payload without signature or time validation.
-     * Used only for claim extraction (JTI, expiration) — NOT for authentication.
-     */
-    private Map<?, ?> parsePayloadUnsafe(String token) throws Exception {
-        String[] parts = token.split("\\.");
-        if (parts.length < 2) throw new IllegalArgumentException("Invalid JWT structure");
-        byte[] payloadBytes = Base64.getUrlDecoder().decode(parts[1]);
-        String payload = new String(payloadBytes, StandardCharsets.UTF_8);
-        return objectMapper.readValue(payload, Map.class);
+        return Optional.ofNullable(claimsExtractor.extractExpiration(token));
     }
 
     public String generateServiceToken(String serviceName, Set<String> scopes) {
@@ -172,24 +145,23 @@ public final class JwtTokenProvider implements TokenProvider {
     }
 
     private static Key resolveKey(SecurityJwtProperties props) {
-        if (props.hasSecretBase64()) {
-            byte[] decoded = Base64.getDecoder().decode(props.secretBase64());
+        String envSecret = props.effectiveSecret();
+        String envSecretBase64 = props.effectiveSecretBase64();
+
+        if (envSecretBase64 != null && !envSecretBase64.isBlank()) {
+            byte[] decoded = Base64.getDecoder().decode(envSecretBase64);
             if (decoded.length < 64) {
                 throw new IllegalStateException("Decoded Base64 JWT secret too short (<64 bytes required for HS512).");
             }
             return Keys.hmacShaKeyFor(decoded);
         }
-        if (props.hasPlainSecret()) {
-            String secret = props.secret();
-            if (secret == null) {
-                throw new IllegalStateException("JWT secret is null");
-            }
-            byte[] raw = secret.getBytes(StandardCharsets.UTF_8);
+        if (envSecret != null && !envSecret.isBlank()) {
+            byte[] raw = envSecret.getBytes(StandardCharsets.UTF_8);
             if (raw.length < 64) {
                 throw new IllegalStateException("Plain JWT secret too short (<64 bytes required for HS512).");
             }
             return Keys.hmacShaKeyFor(raw);
         }
-        throw new IllegalStateException("No JWT secret configured (secretBase64 or secret required).");
+        throw new IllegalStateException("No JWT secret configured (JWT_SECRET or JWT_SECRET_BASE64 env var required).");
     }
 }

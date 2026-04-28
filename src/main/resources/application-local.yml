@@ -74,6 +74,7 @@ security:
     audience: renewsim-app-local
     secret-base64: ${JWT_SECRET_BASE64:zAVmvhHflK1UXkKFMhSyE0SFycA5KDgv9rsjn/oHPDIhCS/40msmI7BVMY7kiwH13ewupe6GWShM75XnYimtaQ==}
     expiration-seconds: 3600
+    service-expiration-seconds: 300
     not-before-skew-seconds: 0
     allowed-clock-skew-seconds: 60
 
@@ -83,7 +84,8 @@ security:
     max-attempts: 5
     window: 60s
     retry-after: 60s
-    login-path: /api/v1/auth/login
+    login-path: /api/v1/auth/login/step1
+    refresh-path: /api/v1/auth/refresh
 
 # =============================
 # CORS (permisivo en local)

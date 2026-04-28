@@ -43,6 +43,12 @@ public class OtpCodePersistenceAdapter implements OtpCodeRepositoryPort {
         repo.invalidateAllByUserIdAndPurpose(userId, purpose, Instant.now());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long countFailedAttempts(Long userId, OtpCode.Purpose purpose) {
+        return repo.countFailedAttempts(userId, purpose, Instant.now());
+    }
+
     private OtpCodeEntity toEntity(OtpCode domain) {
         OtpCodeEntity entity = new OtpCodeEntity();
         entity.setId(domain.getId());

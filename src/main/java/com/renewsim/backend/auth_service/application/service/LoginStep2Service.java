@@ -4,63 +4,100 @@ import com.renewsim.backend.auth_service.application.command.LoginStep2Command;
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.in.LoginStep2UseCase;
 import com.renewsim.backend.auth_service.application.port.out.OtpCodeRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
+import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.LoginStep2Result;
-import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
-import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
+import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.exception.AuthenticationException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Slf4j
-@Service
-@RequiredArgsConstructor
+/**
+ * Implementación del caso de uso de autenticación - Paso 2.
+ *
+ * Valida el código OTP proporcionado y genera tokens de acceso
+ * y refresh para el usuario autenticado.
+ *
+ * @since 1.0.0
+ */
 public class LoginStep2Service implements LoginStep2UseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(LoginStep2Service.class);
+    // TODO: Re-enable lockout when failure persistence is implemented
+    // private static final int MAX_FAILED_OTP_ATTEMPTS = 5;
+    // private static final int LOCKOUT_DURATION_MINUTES = 15;
 
     private final UserAccountGateway userAccountGateway;
     private final OtpCodeRepositoryPort otpCodeRepositoryPort;
     private final RefreshTokenRepositoryPort refreshTokenRepositoryPort;
     private final TokenProvider tokenProvider;
-    private final CredentialsValidator credentialsValidator;
     private final PasswordEncoderPort passwordEncoderPort;
+    private final TransactionalPort transactionalPort;
+    private final Clock clock;
+    private final UserAccountValidator userAccountValidator;
+
+    public LoginStep2Service(
+            UserAccountGateway userAccountGateway,
+            OtpCodeRepositoryPort otpCodeRepositoryPort,
+            RefreshTokenRepositoryPort refreshTokenRepositoryPort,
+            TokenProvider tokenProvider,
+            PasswordEncoderPort passwordEncoderPort,
+            TransactionalPort transactionalPort,
+            Clock clock,
+            UserAccountValidator userAccountValidator) {
+        this.userAccountGateway = userAccountGateway;
+        this.otpCodeRepositoryPort = otpCodeRepositoryPort;
+        this.refreshTokenRepositoryPort = refreshTokenRepositoryPort;
+        this.tokenProvider = tokenProvider;
+        this.passwordEncoderPort = passwordEncoderPort;
+        this.transactionalPort = transactionalPort;
+        this.clock = clock;
+        this.userAccountValidator = userAccountValidator;
+    }
 
     @Override
-    @Transactional
     public LoginStep2Result execute(LoginStep2Command command) {
+        return transactionalPort.execute(() -> executeInternal(command));
+    }
 
+    private LoginStep2Result executeInternal(LoginStep2Command command) {
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
                 .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
-        if (!user.enabled()) {
-            throw new AuthenticationException("Account is not active");
-        }
+        userAccountValidator.validateEnabledOrThrow(user);
+
+        // TODO: Implement proper failure tracking (e.g., failed_attempts table or column)
+        // Current countFailedAttempts only counts valid OTPs, not wrong submissions
+        // long failedAttempts = otpCodeRepositoryPort.countFailedAttempts(user.id(), OtpCode.Purpose.LOGIN);
+        // if (failedAttempts >= MAX_FAILED_OTP_ATTEMPTS) { ... }
 
         OtpCode otpCode = otpCodeRepositoryPort
                 .findLatestValidByUserId(user.id(), OtpCode.Purpose.LOGIN)
                 .orElseThrow(() -> new AuthenticationException("Invalid or expired OTP"));
 
-        if (!otpCode.isValid()) {
+        if (!otpCode.isValid(clock)) {
             throw new AuthenticationException("Invalid or expired OTP");
         }
 
         if (!passwordEncoderPort.matches(command.otpCode(), otpCode.getCodeHash())) {
+            log.debug("Invalid OTP for userId={}, failed attempt {}", user.id(), failedAttempts + 1);
             throw new AuthenticationException("Invalid or expired OTP");
         }
 
-        otpCode.markUsed();
-        otpCodeRepositoryPort.save(otpCode);
+        OtpCode usedOtpCode = otpCode.markUsed();
+        otpCodeRepositoryPort.save(usedOtpCode);
 
         Set<String> roleNames = user.roles().stream()
                 .map(Enum::name)
@@ -74,7 +111,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
         // Use SHA-256 hash for deterministic lookup — BCrypt is non-deterministic
         String rawRefreshToken = UUID.randomUUID().toString();
         String hashedRefreshToken = TokenHasher.hash(rawRefreshToken);
-        RefreshToken refreshToken = RefreshToken.issue(user.id(), hashedRefreshToken);
+        RefreshToken refreshToken = RefreshToken.issue(user.id(), hashedRefreshToken, clock);
         refreshTokenRepositoryPort.save(refreshToken);
 
         log.info("Login step2 successful for userId={}", user.id());
