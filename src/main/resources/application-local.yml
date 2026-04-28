@@ -112,10 +112,19 @@ cors:
   max-age-seconds: 3600
 
 # =============================
-# ACTUATOR (completo en local)
-# =============================
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "health,info,flyway,metrics"
+  # ACTUATOR (completo en local)
+  # =============================
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: "health,info,flyway,metrics"
+
+  # =============================
+  # BREVO EMAIL (local)
+  # =============================
+  email:
+    brevo:
+      api-key: ${BREVO_API_KEY:}
+      sender-email: ${BREVO_SENDER_EMAIL:notifications@renewsim.com}
+      sender-name: ${BREVO_SENDER_NAME:RenewSim}
