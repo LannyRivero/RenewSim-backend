@@ -14,6 +14,11 @@ import com.renewsim.backend.shared.exception.RoleNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.List;
 
@@ -21,20 +26,21 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class RoleServiceImplTest {
 
+    @Mock
     private RoleRepositoryPort roleRepositoryPort;
-    private RoleValidator roleValidator;
-    private RoleApplicationService roleService;
+    @Mock
     private RoleDomainService roleDomainService;
+    @Mock
     private RoleDtoMapper roleDtoMapper;
+
+    private RoleApplicationService roleService;
 
     @BeforeEach
     void setUp() {
-        roleRepositoryPort = mock(RoleRepositoryPort.class);
-        roleDomainService = mock(RoleDomainService.class);
-        roleDtoMapper = mock(RoleDtoMapper.class);
-
         roleService = new RoleApplicationService(roleRepositoryPort, roleDomainService, roleDtoMapper);
     }
 
@@ -44,8 +50,7 @@ class RoleServiceImplTest {
         CreateRoleCommand command = new CreateRoleCommand("ADMIN");
         Role role = new Role(RoleName.ADMIN);
 
-        // validator no lanza excepción
-        doNothing().when(roleValidator).validateRoleDoesNotExist(RoleName.ADMIN);
+        doNothing().when(roleDomainService).ensureRoleDoesNotExist(RoleName.ADMIN);
         when(roleRepositoryPort.save(any())).thenReturn(role);
         when(roleDtoMapper.toDTO(any(Role.class)))
                 .thenReturn(new RoleDTO(1L, "ADMIN"));
@@ -54,15 +59,15 @@ class RoleServiceImplTest {
 
         assertThat(result.roleName()).isEqualTo("ADMIN");
         assertThat(result.message()).contains("Role created successfully");
-        verify(roleValidator).validateRoleDoesNotExist(RoleName.ADMIN);
+        verify(roleDomainService).ensureRoleDoesNotExist(RoleName.ADMIN);
         verify(roleRepositoryPort).save(any());
     }
 
     @Test
-    @DisplayName("createRole should throw when role already exists (validator)")
+    @DisplayName("createRole should throw when role already exists (domain service)")
     void createRole_conflict() {
         doThrow(new RoleAlreadyExistsException("Role already exists: ADMIN"))
-                .when(roleValidator).validateRoleDoesNotExist(RoleName.ADMIN);
+                .when(roleDomainService).ensureRoleDoesNotExist(RoleName.ADMIN);
 
         CreateRoleCommand command = new CreateRoleCommand("ADMIN");
 
@@ -70,31 +75,34 @@ class RoleServiceImplTest {
                 .isInstanceOf(RoleAlreadyExistsException.class)
                 .hasMessageContaining("Role already exists");
 
-        verify(roleValidator).validateRoleDoesNotExist(RoleName.ADMIN);
+        verify(roleDomainService).ensureRoleDoesNotExist(RoleName.ADMIN);
         verify(roleRepositoryPort, never()).save(any());
     }
 
     @Test
     @DisplayName("delete should remove role when exists")
     void delete_success() {
-        doNothing().when(roleValidator).validateRoleExists(1L);
+        Role role = new Role(RoleName.ADMIN);
+        doNothing().when(roleDomainService).ensureNotRemovingLastAdmin(RoleName.ADMIN);
+        when(roleDomainService.ensureRoleExists(1L)).thenReturn(role);
 
         roleService.delete(1L);
 
-        verify(roleValidator).validateRoleExists(1L);
+        verify(roleDomainService).ensureRoleExists(1L);
+        verify(roleDomainService).ensureNotRemovingLastAdmin(RoleName.ADMIN);
         verify(roleRepositoryPort).deleteById(1L);
     }
 
     @Test
-    @DisplayName("delete should throw when role not found (validator)")
+    @DisplayName("delete should throw when role not found (domain service)")
     void delete_notFound() {
         doThrow(new RoleNotFoundException("Role with id=99 not found"))
-                .when(roleValidator).validateRoleExists(99L);
+                .when(roleDomainService).ensureRoleExists(99L);
 
         assertThatThrownBy(() -> roleService.delete(99L))
                 .isInstanceOf(RoleNotFoundException.class);
 
-        verify(roleValidator).validateRoleExists(99L);
+        verify(roleDomainService).ensureRoleExists(99L);
         verify(roleRepositoryPort, never()).deleteById(any());
     }
 

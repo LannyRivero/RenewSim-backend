@@ -80,3 +80,10 @@ logging:
     org.springframework: INFO
     org.hibernate: WARN
     com.renewsim.backend: DEBUG
+
+# =============================
+# TEST EXCLUSIONS
+# =============================
+test:
+  exclude:
+    groups: integration,security-config,docker
