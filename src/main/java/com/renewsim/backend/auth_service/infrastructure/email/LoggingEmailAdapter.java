@@ -38,7 +38,7 @@ public class LoggingEmailAdapter implements EmailPort {
 
         log.warn("""
                 {}
-                [EMAIL STUB — local/test only]  sendOtp
+                [EMAIL STUB — test only]  sendOtp
                 To            : {}
                 OTP           : {}
                 Expires in    : {} seconds
@@ -55,11 +55,47 @@ public class LoggingEmailAdapter implements EmailPort {
 
         log.warn("""
                 {}
-                [EMAIL STUB — local/test only]  sendActivationEmail
+                [EMAIL STUB — test only]  sendActivationEmail
                 To            : {}
                 Activation URL: {}
                 {}""",
                 SEP, toEmail, url, SEP);
+    }
+
+    @Override
+    public void sendVerificationEmail(String toEmail, String username, String verificationToken) {
+        validateNotBlank(toEmail, "toEmail");
+        validateNotBlank(username, "username");
+        validateNotBlank(verificationToken, "verificationToken");
+
+        String url = "http://localhost:3000/verify-email?token=" + verificationToken;
+
+        log.warn("""
+                {}
+                [EMAIL STUB — test only]  sendVerificationEmail
+                To            : {}
+                Username      : {}
+                Verification  : {}
+                {}""",
+                SEP, toEmail, username, url, SEP);
+    }
+
+    @Override
+    public void sendPasswordResetEmail(String toEmail, String username, String resetToken) {
+        validateNotBlank(toEmail, "toEmail");
+        validateNotBlank(username, "username");
+        validateNotBlank(resetToken, "resetToken");
+
+        String url = "http://localhost:3000/reset-password?token=" + resetToken;
+
+        log.warn("""
+                {}
+                [EMAIL STUB — test only]  sendPasswordResetEmail
+                To            : {}
+                Username      : {}
+                Reset URL     : {}
+                {}""",
+                SEP, toEmail, username, url, SEP);
     }
 
     private static void validateNotBlank(String value, String field) {
