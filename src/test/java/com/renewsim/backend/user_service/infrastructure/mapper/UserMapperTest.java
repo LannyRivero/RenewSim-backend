@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
@@ -48,14 +49,16 @@ class UserMapperTest {
     void testMapUserToUserResponse() {
         User user = User.reconstitute(
                 1L,
-                "alice@mail.com",
+                "john@example.com",
                 VALID_HASH,
-                "Alice",
+                "John",
                 null,
                 UserStatus.ACTIVE,
-                Set.of(RoleName.USER, RoleName.ADMIN),
-                java.time.LocalDateTime.now(),
-                java.time.LocalDateTime.now());
+                Set.of(RoleName.USER),
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                true,
+                LocalDateTime.now());
 
         UserResponse dto = mapper.toResponse(user);
 

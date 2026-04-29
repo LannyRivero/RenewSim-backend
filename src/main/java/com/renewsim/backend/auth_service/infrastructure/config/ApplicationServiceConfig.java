@@ -6,6 +6,7 @@ import com.renewsim.backend.auth_service.application.service.*;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
 import com.renewsim.backend.auth_service.infrastructure.security.OtpRateLimiter;
+import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,9 +47,10 @@ public class ApplicationServiceConfig {
                 userAccountValidator);
     }
 
-@Bean
+    @Bean
     public LoginStep2UseCase loginStep2UseCase(
             UserAccountGateway userAccountGateway,
+            UserRepositoryPort userRepositoryPort,
             OtpCodeRepositoryPort otpCodeRepositoryPort,
             CredentialsValidator credentialsValidator,
             PasswordEncoderPort passwordEncoder,
@@ -60,6 +62,7 @@ public class ApplicationServiceConfig {
             OtpRateLimiter otpRateLimiter) {
         return new LoginStep2Service(
                 userAccountGateway,
+                userRepositoryPort,
                 otpCodeRepositoryPort,
                 refreshTokenRepositoryPort,
                 tokenProvider,
@@ -68,7 +71,6 @@ public class ApplicationServiceConfig {
                 timeProvider.getClock(),
                 userAccountValidator,
                 otpRateLimiter
-
         );
     }
 
@@ -100,7 +102,6 @@ public class ApplicationServiceConfig {
                 userAccountGateway,
                 transactionalPort,
                 timeProvider.getClock()
-
         );
     }
 
@@ -119,7 +120,6 @@ public class ApplicationServiceConfig {
                 transactionalPort,
                 timeProvider.getClock(),
                 userAccountValidator
-
         );
     }
 
@@ -165,18 +165,22 @@ public class ApplicationServiceConfig {
     public RegisterUserUseCase registerUserUseCase(
             UserAccountGateway userAccountGateway,
             ActivationTokenRepositoryPort activationTokenRepositoryPort,
+            EmailVerificationTokenRepository emailVerificationTokenRepository,
             EmailPort emailPort,
             TransactionalPort transactionalPort,
             PasswordEncoderPort passwordEncoderPort,
             OtpGenerator otpGenerator,
-            TimeProvider timeProvider) {
+            TimeProvider timeProvider,
+            @Value("${app.email.verification.expiration-hours:48}") int verificationExpirationHours) {
         return new RegisterUserService(
                 userAccountGateway,
                 activationTokenRepositoryPort,
+                emailVerificationTokenRepository,
                 emailPort,
                 transactionalPort,
                 passwordEncoderPort,
                 otpGenerator,
-                timeProvider.getClock());
+                timeProvider.getClock(),
+                verificationExpirationHours);
     }
 }

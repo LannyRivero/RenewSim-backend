@@ -49,4 +49,18 @@ public class SmtpEmailAdapter implements EmailPort {
         throw new UnsupportedOperationException(
                 "SmtpEmailAdapter is not implemented yet. See D2-01-smtp in the backlog.");
     }
+
+    @Override
+    public void sendVerificationEmail(String toEmail, String username, String verificationToken) {
+        log.error("SmtpEmailAdapter.sendVerificationEmail() not implemented. Email NOT sent to={}", toEmail);
+        throw new UnsupportedOperationException(
+                "SmtpEmailAdapter is not implemented yet. See D2-01-smtp in the backlog.");
+    }
+
+    @Override
+    public void sendPasswordResetEmail(String toEmail, String username, String resetToken) {
+        log.error("SmtpEmailAdapter.sendPasswordResetEmail() not implemented. Email NOT sent to={}", toEmail);
+        throw new UnsupportedOperationException(
+                "SmtpEmailAdapter is not implemented yet. See D2-01-smtp in the backlog.");
+    }
 }

@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -123,8 +123,8 @@ class HttpUserAccountGatewayTest {
                 assertThat(result.enabled()).isFalse();
 
                 verify(userServiceClient).createUser(argThat(req -> req.email().equals("john@example.com") &&
-                                req.fullName().equals("John Doe") &&
-                                req.rawPassword().equals("secret")));
+                req.fullName().equals("John Doe") &&
+                req.password().equals("secret")));
         }
 
         @Test

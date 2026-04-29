@@ -45,7 +45,9 @@ class ActivateUserServiceTest {
                 UserStatus.INACTIVE,
                 Set.of(RoleName.USER),
                 LocalDateTime.now().minusDays(1),
-                null
+                null,
+                false,  // emailVerified
+                null    // emailVerifiedAt
         );
 
         when(userRepositoryPort.findById(1L)).thenReturn(Optional.of(user));
@@ -77,7 +79,9 @@ class ActivateUserServiceTest {
                 UserStatus.ACTIVE,
                 Set.of(RoleName.USER),
                 LocalDateTime.now().minusDays(2),
-                LocalDateTime.now().minusDays(1)
+                LocalDateTime.now().minusDays(1),
+                true,   // emailVerified
+                LocalDateTime.now().minusDays(1)  // emailVerifiedAt
         );
 
         when(userRepositoryPort.findById(1L)).thenReturn(Optional.of(user));
@@ -98,7 +102,9 @@ class ActivateUserServiceTest {
                 UserStatus.SUSPENDED,
                 Set.of(RoleName.USER),
                 LocalDateTime.now().minusDays(5),
-                null
+                null,
+                false,  // emailVerified
+                null    // emailVerifiedAt
         );
 
         when(userRepositoryPort.findById(1L)).thenReturn(Optional.of(user));

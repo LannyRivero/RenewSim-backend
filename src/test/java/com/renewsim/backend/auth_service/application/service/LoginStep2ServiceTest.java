@@ -12,6 +12,8 @@ import com.renewsim.backend.auth_service.infrastructure.security.OtpRateLimiter;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
+import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +43,8 @@ class LoginStep2ServiceTest {
         @Mock
         private UserAccountGateway userAccountGateway;
         @Mock
+        private UserRepositoryPort userRepositoryPort; // NUEVO
+        @Mock
         private OtpCodeRepositoryPort otpCodeRepositoryPort;
         @Mock
         private RefreshTokenRepositoryPort refreshTokenRepositoryPort;
@@ -65,9 +69,10 @@ class LoginStep2ServiceTest {
                                 Instant.parse("2026-04-24T10:00:00Z"),
                                 ZoneId.of("UTC"));
 
-                // Constructor con 9 parámetros (incluye OtpRateLimiter)
+                // Constructor con 10 parámetros (agregado UserRepositoryPort)
                 service = new LoginStep2Service(
                                 userAccountGateway,
+                                userRepositoryPort,
                                 otpCodeRepositoryPort,
                                 refreshTokenRepositoryPort,
                                 tokenProvider,
@@ -86,6 +91,27 @@ class LoginStep2ServiceTest {
 
                 // Default: OTP rate limiter permite
                 when(otpRateLimiter.tryAcquire(anyString())).thenReturn(true);
+
+                // NUEVO: Mock UserRepositoryPort - usar lenient para evitar
+                // UnfinishedStubbingException
+                lenient().when(userRepositoryPort.findById(anyLong()))
+                                .thenAnswer(inv -> Optional.of(createVerifiedUser(inv.getArgument(0))));
+        }
+
+        // NUEVO: Helper para crear usuario verificado con BCrypt hash válido
+        private com.renewsim.backend.user_service.domain.model.User createVerifiedUser(Long userId) {
+                return com.renewsim.backend.user_service.domain.model.User.reconstitute(
+                                userId,
+                                "john@example.com",
+                                "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy", // BCrypt hash válido
+                                "John Doe",
+                                "+1234567890",
+                                com.renewsim.backend.user_service.domain.model.UserStatus.ACTIVE,
+                                Set.of(com.renewsim.backend.shared.domain.vo.RoleName.USER),
+                                java.time.LocalDateTime.now(),
+                                java.time.LocalDateTime.now(),
+                                true, // emailVerified = true
+                                java.time.LocalDateTime.now());
         }
 
         @Test
