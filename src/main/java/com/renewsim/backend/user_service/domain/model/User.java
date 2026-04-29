@@ -24,8 +24,13 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime activatedAt;
 
+    // Email verification fields
+    private boolean emailVerified;
+    private LocalDateTime emailVerifiedAt;
+
     private User(Long id, String email, String passwordHash, String fullName, String phone,
-            UserStatus status, Set<RoleName> roles, LocalDateTime createdAt, LocalDateTime activatedAt) {
+            UserStatus status, Set<RoleName> roles, LocalDateTime createdAt, LocalDateTime activatedAt,
+            boolean emailVerified, LocalDateTime emailVerifiedAt) {
         this.id = id;
         this.email = requireValidEmail(email);
         this.passwordHash = requireValidPasswordHash(passwordHash);
@@ -35,19 +40,24 @@ public class User {
         this.roles = new HashSet<>(Objects.requireNonNull(roles, "Roles cannot be null"));
         this.createdAt = Objects.requireNonNull(createdAt, "CreatedAt cannot be null");
         this.activatedAt = activatedAt;
+        this.emailVerified = emailVerified;
+        this.emailVerifiedAt = emailVerifiedAt;
     }
 
     public static User create(String email, String passwordHash, String fullName,
             String phone, Set<RoleName> roles) {
         return new User(null, email, passwordHash, fullName, phone,
-                UserStatus.INACTIVE, roles, LocalDateTime.now(), null);
+                UserStatus.INACTIVE, roles, LocalDateTime.now(), null,
+                false, null);
     }
 
     public static User reconstitute(Long id, String email, String passwordHash, String fullName,
             String phone, UserStatus status, Set<RoleName> roles,
-            LocalDateTime createdAt, LocalDateTime activatedAt) {
+            LocalDateTime createdAt, LocalDateTime activatedAt,
+            boolean emailVerified, LocalDateTime emailVerifiedAt) {
         return new User(id, email, passwordHash, fullName, phone,
-                status, roles, createdAt, activatedAt);
+                status, roles, createdAt, activatedAt,
+                emailVerified, emailVerifiedAt);
     }
 
     public void activate() {
@@ -69,6 +79,28 @@ public class User {
             throw new IllegalStateException("Only ACTIVE users can be suspended");
         }
         this.status = UserStatus.SUSPENDED;
+    }
+
+    /**
+     * Verifies the user's email address.
+     * Sets emailVerified to true and records the verification timestamp.
+     */
+    public void verifyEmail() {
+        if (this.emailVerified) {
+            return; // Already verified, idempotent
+        }
+        this.emailVerified = true;
+        this.emailVerifiedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Checks if the user can log in.
+     * Login requires email verification.
+     * 
+     * @return true if email is verified
+     */
+    public boolean canLogin() {
+        return this.emailVerified;
     }
 
     public boolean hasRole(RoleName roleName) {
@@ -151,6 +183,14 @@ public class User {
         return activatedAt;
     }
 
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public LocalDateTime getEmailVerifiedAt() {
+        return emailVerifiedAt;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -168,6 +208,7 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{id=" + id + ", email='" + email + "', status=" + status + "}";
+        return "User{id=" + id + ", email='" + email + "', status=" + status +
+                ", emailVerified=" + emailVerified + "}";
     }
 }
