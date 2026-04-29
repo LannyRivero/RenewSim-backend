@@ -8,6 +8,7 @@ import com.renewsim.backend.auth_service.application.validator.UserAccountValida
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
+import com.renewsim.backend.auth_service.infrastructure.security.OtpRateLimiter;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.testutil.mothers.UserSnapshotMother;
@@ -51,6 +52,8 @@ class LoginStep2ServiceTest {
         private TransactionalPort transactionalPort;
         @Mock
         private UserAccountValidator userAccountValidator;
+        @Mock
+        private OtpRateLimiter otpRateLimiter;
 
         private LoginStep2Service service;
         private Clock clock;
@@ -62,7 +65,7 @@ class LoginStep2ServiceTest {
                                 Instant.parse("2026-04-24T10:00:00Z"),
                                 ZoneId.of("UTC"));
 
-                // Constructor con 8 parámetros (SIN CredentialsValidator)
+                // Constructor con 9 parámetros (incluye OtpRateLimiter)
                 service = new LoginStep2Service(
                                 userAccountGateway,
                                 otpCodeRepositoryPort,
@@ -71,7 +74,8 @@ class LoginStep2ServiceTest {
                                 passwordEncoderPort,
                                 transactionalPort,
                                 clock,
-                                userAccountValidator);
+                                userAccountValidator,
+                                otpRateLimiter);
 
                 // Configurar TransactionalPort SIEMPRE
                 when(transactionalPort.execute(any())).thenAnswer(inv -> inv.getArgument(0, Supplier.class).get());
@@ -79,6 +83,9 @@ class LoginStep2ServiceTest {
                 // Default: no failed attempts
                 when(otpCodeRepositoryPort.countFailedAttempts(any(), any()))
                                 .thenReturn(0L);
+
+                // Default: OTP rate limiter permite
+                when(otpRateLimiter.tryAcquire(anyString())).thenReturn(true);
         }
 
         @Test
@@ -140,7 +147,7 @@ class LoginStep2ServiceTest {
                 assertThatThrownBy(() -> service.execute(
                                 new LoginStep2Command("unknown@example.com", "123456")))
                                 .isInstanceOf(AuthenticationException.class)
-                                .hasMessageContaining("Invalid credentials");
+                                .hasMessageContaining("Invalid or expired OTP");
 
                 // Verify no side effects
                 verifyNoInteractions(otpCodeRepositoryPort);

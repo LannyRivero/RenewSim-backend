@@ -92,8 +92,8 @@ class ActivationTokenTest {
     @DisplayName("isValid() returns false when used")
     void isValid_used_returnsFalse() {
         ActivationToken token = ActivationToken.issue(USER_ID, HASH, FIXED_CLOCK);
-        token.markUsed();
-        assertThat(token.isValid(FIXED_CLOCK)).isFalse();
+        ActivationToken used = token.markUsed();
+        assertThat(used.isValid(FIXED_CLOCK)).isFalse();
     }
 
     @Test
@@ -117,17 +117,16 @@ class ActivationTokenTest {
     @DisplayName("markUsed() sets used to true")
     void markUsed_setsUsed() {
         ActivationToken token = ActivationToken.issue(USER_ID, HASH, FIXED_CLOCK);
-        token.markUsed();
-        assertThat(token.isUsed()).isTrue();
+        ActivationToken used = token.markUsed();
+        assertThat(used.isUsed()).isTrue();
     }
 
     @Test
     @DisplayName("markUsed() is idempotent")
     void markUsed_idempotent() {
         ActivationToken token = ActivationToken.issue(USER_ID, HASH, FIXED_CLOCK);
-        token.markUsed();
-        token.markUsed();
-        assertThat(token.isUsed()).isTrue();
+        ActivationToken used = token.markUsed().markUsed();
+        assertThat(used.isUsed()).isTrue();
     }
 
     // --- reconstitute() ---

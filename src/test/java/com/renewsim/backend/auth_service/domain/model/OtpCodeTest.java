@@ -96,8 +96,8 @@ class OtpCodeTest {
     @DisplayName("isValid() returns false when used")
     void isValid_used_returnsFalse() {
         OtpCode otp = OtpCode.issue(USER_ID, HASH, OtpCode.Purpose.LOGIN, FIXED_CLOCK);
-        otp.markUsed();
-        assertThat(otp.isValid(FIXED_CLOCK)).isFalse();
+        OtpCode used = otp.markUsed();
+        assertThat(used.isValid(FIXED_CLOCK)).isFalse();
     }
 
     @Test
@@ -117,17 +117,16 @@ class OtpCodeTest {
     @DisplayName("markUsed() sets used to true")
     void markUsed_setsUsed() {
         OtpCode otp = OtpCode.issue(USER_ID, HASH, OtpCode.Purpose.LOGIN, FIXED_CLOCK);
-        otp.markUsed();
-        assertThat(otp.isUsed()).isTrue();
+        OtpCode used = otp.markUsed();
+        assertThat(used.isUsed()).isTrue();
     }
 
     @Test
     @DisplayName("markUsed() is idempotent")
     void markUsed_idempotent() {
         OtpCode otp = OtpCode.issue(USER_ID, HASH, OtpCode.Purpose.LOGIN, FIXED_CLOCK);
-        otp.markUsed();
-        otp.markUsed();
-        assertThat(otp.isUsed()).isTrue();
+        OtpCode used = otp.markUsed().markUsed();
+        assertThat(used.isUsed()).isTrue();
     }
 
     @Test

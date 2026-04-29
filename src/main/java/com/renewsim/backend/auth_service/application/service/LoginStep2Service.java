@@ -15,7 +15,9 @@ import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
+import com.renewsim.backend.auth_service.infrastructure.security.OtpRateLimiter;
 import com.renewsim.backend.shared.exception.AuthenticationException;
+import com.renewsim.backend.shared.exception.RateLimitExceededException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +37,8 @@ import java.util.stream.Collectors;
 public class LoginStep2Service implements LoginStep2UseCase {
 
     private static final Logger log = LoggerFactory.getLogger(LoginStep2Service.class);
-    // TODO: Re-enable lockout when failure persistence is implemented
-    // private static final int MAX_FAILED_OTP_ATTEMPTS = 5;
-    // private static final int LOCKOUT_DURATION_MINUTES = 15;
+    private static final int MAX_OTP_ATTEMPTS = 3;
+    private static final int OTP_LOCKOUT_WINDOW_SECONDS = 900; // 15 minutes
 
     private final UserAccountGateway userAccountGateway;
     private final OtpCodeRepositoryPort otpCodeRepositoryPort;
@@ -47,6 +48,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
     private final TransactionalPort transactionalPort;
     private final Clock clock;
     private final UserAccountValidator userAccountValidator;
+    private final OtpRateLimiter otpRateLimiter;
 
     public LoginStep2Service(
             UserAccountGateway userAccountGateway,
@@ -56,7 +58,8 @@ public class LoginStep2Service implements LoginStep2UseCase {
             PasswordEncoderPort passwordEncoderPort,
             TransactionalPort transactionalPort,
             Clock clock,
-            UserAccountValidator userAccountValidator) {
+            UserAccountValidator userAccountValidator,
+            OtpRateLimiter otpRateLimiter) {
         this.userAccountGateway = userAccountGateway;
         this.otpCodeRepositoryPort = otpCodeRepositoryPort;
         this.refreshTokenRepositoryPort = refreshTokenRepositoryPort;
@@ -65,6 +68,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
         this.transactionalPort = transactionalPort;
         this.clock = clock;
         this.userAccountValidator = userAccountValidator;
+        this.otpRateLimiter = otpRateLimiter;
     }
 
     @Override
@@ -73,17 +77,18 @@ public class LoginStep2Service implements LoginStep2UseCase {
     }
 
     private LoginStep2Result executeInternal(LoginStep2Command command) {
+        if (!otpRateLimiter.tryAcquire(command.email())) {
+            int retryAfter = otpRateLimiter.secondsUntilReset(command.email());
+            log.warn("OTP rate limit exceeded for email={}", command.email());
+            throw new RateLimitExceededException(
+                    "Too many OTP attempts. Please try again later.",
+                    retryAfter);
+        }
+
         UserSnapshot user = userAccountGateway.findByEmail(command.email())
                 .orElseThrow(() -> new AuthenticationException("Invalid or expired OTP"));
 
         userAccountValidator.validateEnabledOrThrow(user);
-
-        // TODO: Implement proper failure tracking (e.g., failed_attempts table or
-        // column)
-        // Current countFailedAttempts only counts valid OTPs, not wrong submissions
-        // long failedAttempts = otpCodeRepositoryPort.countFailedAttempts(user.id(),
-        // OtpCode.Purpose.LOGIN);
-        // if (failedAttempts >= MAX_FAILED_OTP_ATTEMPTS) { ... }
 
         OtpCode otpCode = otpCodeRepositoryPort
                 .findLatestValidByUserId(user.id(), OtpCode.Purpose.LOGIN)

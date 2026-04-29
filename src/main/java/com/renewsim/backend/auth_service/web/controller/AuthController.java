@@ -36,6 +36,27 @@ public class AuthController {
         private final ResendOtpUseCase resendOtpUseCase;
         private final LogoutUseCase logoutUseCase;
         private final RefreshTokenUseCase refreshTokenUseCase;
+        private final RegisterUserUseCase registerUserUseCase;
+
+        // ----------------------------------------------------
+        // POST /auth/register → Create new user account
+        // ----------------------------------------------------
+        @PostMapping(value = "/register", consumes = "application/json")
+        @Operation(summary = "Register new user", description = "Creates a new user account and sends activation email.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "201", description = "User registered successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RegisterResponseDTO.class))),
+                        @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
+                        @ApiResponse(responseCode = "409", description = "Email already registered", content = @Content)
+        })
+        public ResponseEntity<OperationResponse<RegisterResponseDTO>> register(
+                        @Valid @RequestBody RegisterRequestDTO request) {
+                var result = registerUserUseCase.execute(
+                                new RegisterCommand(request.fullName(), request.password(), request.email()));
+                var response = new RegisterResponseDTO(
+                                result.id(), result.email(), result.fullName(), result.status(), result.message());
+                return ResponseEntity.status(201)
+                                .body(ApiResponseFactory.created(response, "User registered successfully"));
+        }
 
         // ----------------------------------------------------
         // POST /auth/login/step1 → Validate credentials, send OTP

@@ -7,6 +7,6 @@ package com.renewsim.backend.auth_service.application.dto;
 public record InternalUserCreateRequest(
         String username,
         String email,
-        String rawPassword,
+        String password,
         String fullName) {
 }

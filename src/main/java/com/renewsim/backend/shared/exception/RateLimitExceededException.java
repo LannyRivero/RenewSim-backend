@@ -11,11 +11,24 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
 public class RateLimitExceededException extends RuntimeException {
 
+    private final Integer retryAfterSeconds;
+
     public RateLimitExceededException(String message) {
         super(message);
+        this.retryAfterSeconds = null;
     }
 
     public RateLimitExceededException(String message, Throwable cause) {
         super(message, cause);
+        this.retryAfterSeconds = null;
+    }
+
+    public RateLimitExceededException(String message, int retryAfterSeconds) {
+        super(message);
+        this.retryAfterSeconds = retryAfterSeconds;
+    }
+
+    public Integer getRetryAfterSeconds() {
+        return retryAfterSeconds;
     }
 }
