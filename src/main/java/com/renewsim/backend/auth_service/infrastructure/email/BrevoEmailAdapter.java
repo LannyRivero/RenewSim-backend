@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Slf4j
 @Component
-@Profile({ "docker", "prod" })
+@Profile({ "local", "docker", "prod" })
 public class BrevoEmailAdapter implements EmailPort {
 
     private final RestTemplate restTemplate;
@@ -26,10 +26,16 @@ public class BrevoEmailAdapter implements EmailPort {
             @Value("${email.brevo.sender-name:}") String senderName) {
         
         if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException("BREVO_API_KEY is not configured");
+            log.warn("BREVO_API_KEY not configured - BrevoEmailAdapter disabled");
+            this.apiKey = null;
+            this.senderEmail = null;
+            this.senderName = null;
+            this.restTemplate = null;
+            return;
         }
         if (senderEmail == null || senderEmail.isBlank()) {
-            throw new IllegalStateException("BREVO_SENDER_EMAIL is not configured");
+            log.warn("BREVO_SENDER_EMAIL not configured - using default");
+            senderEmail = "notifications@renewsim.com";
         }
         
         this.apiKey = apiKey;
@@ -40,6 +46,10 @@ public class BrevoEmailAdapter implements EmailPort {
 
     @Override
     public void sendOtp(String toEmail, String rawOtp, int expiresInSeconds) {
+        if (apiKey == null) {
+            log.warn("Brevo not configured - skipping OTP email to={}", maskEmail(toEmail));
+            return;
+        }
         try {
             Map<String, Object> request = new HashMap<>();
             request.put("sender", Map.of("email", senderEmail, "name", senderName));
@@ -61,6 +71,10 @@ public class BrevoEmailAdapter implements EmailPort {
 
     @Override
     public void sendActivationEmail(String toEmail, String activationToken) {
+        if (apiKey == null) {
+            log.warn("Brevo not configured - skipping activation email to={}", maskEmail(toEmail));
+            return;
+        }
         try {
             String link = "https://renewsim.example.com/activate?token=" + activationToken;
             
