@@ -4,12 +4,10 @@ import com.renewsim.backend.auth_service.application.port.in.*;
 import com.renewsim.backend.auth_service.application.port.out.*;
 import com.renewsim.backend.auth_service.application.service.*;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
-import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
+import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
 
 /**
  * Configuración de beans para la capa de aplicación.
@@ -21,7 +19,6 @@ import com.renewsim.backend.auth_service.application.validator.UserAccountValida
  */
 @Configuration
 public class ApplicationServiceConfig {
- 
 
     @Bean
     public LogoutUseCase logoutUseCase(
@@ -38,20 +35,6 @@ public class ApplicationServiceConfig {
                 userAccountGateway,
                 transactionalPort,
                 timeProvider.getClock());
-    }
-
-    @Bean
-    public ActivateAccountUseCase activateAccountUseCase(
-            ActivationTokenRepositoryPort activationTokenRepositoryPort,
-            UserAccountGateway userAccountGateway,
-            TransactionalPort transactionalPort,
-            TimeProvider timeProvider) {
-        return new ActivateAccountService(
-                activationTokenRepositoryPort,
-                userAccountGateway,
-                transactionalPort,
-                timeProvider.getClock()
-        );
     }
 
     @Bean
@@ -92,21 +75,15 @@ public class ApplicationServiceConfig {
     @Bean
     public RegisterUserUseCase registerUserUseCase(
             UserAccountGateway userAccountGateway,
-            ActivationTokenRepositoryPort activationTokenRepositoryPort,
             EmailVerificationTokenRepository emailVerificationTokenRepository,
             EmailPort emailPort,
             TransactionalPort transactionalPort,
-            PasswordEncoderPort passwordEncoderPort,
-            TimeProvider timeProvider,
             @Value("${app.email.verification.expiration-hours:48}") int verificationExpirationHours) {
         return new RegisterUserService(
                 userAccountGateway,
-                activationTokenRepositoryPort,
                 emailVerificationTokenRepository,
                 emailPort,
                 transactionalPort,
-                passwordEncoderPort,
-                timeProvider.getClock(),
                 verificationExpirationHours);
     }
 }
