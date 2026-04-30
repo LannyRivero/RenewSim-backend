@@ -20,6 +20,8 @@ lib/
 
 # ⚡ Ignorar archivos de logs y debugging
 *.log
+*.log.gz
+logs/
 *.tmp
 hs_err_pid*
 replay_pid*
