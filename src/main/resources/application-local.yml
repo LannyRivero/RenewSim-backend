@@ -1,6 +1,5 @@
 # =============================
 # PERFIL LOCAL - Desarrollo en máquina local
-# Requirement: 19.1 - datasource localhost:3306, logging DEBUG, Flyway enabled
 # =============================
 spring:
   datasource:
@@ -18,7 +17,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: none  # Flyway maneja el schema
+      ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     show-sql: true
@@ -27,9 +26,6 @@ spring:
       hibernate:
         format_sql: true
 
-  # =============================
-  # FLYWAY (enabled en local)
-  # =============================
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -44,7 +40,7 @@ spring:
 
   sql:
     init:
-      mode: never  # Flyway maneja las migraciones
+      mode: never
 
 # =============================
 # SERVER
@@ -54,7 +50,7 @@ server:
   forward-headers-strategy: framework
 
 # =============================
-# LOGGING (DEBUG en local)
+# LOGGING
 # =============================
 logging:
   level:
@@ -66,18 +62,17 @@ logging:
     org.flywaydb: DEBUG
 
 # =============================
-# JWT (dev keys)
+# JWT CONFIG
 # =============================
 security:
   jwt:
     issuer: renewsim-auth-local
     audience: renewsim-app-local
-    secret-base64: ${JWT_SECRET_BASE64:zAVmvhHflK1UXkKFMhSyE0SFycA5KDgv9rsjn/oHPDIhCS/40msmI7BVMY7kiwH13ewupe6GWShM75XnYimtaQ==}
+    secret-base64: kWlPmDQojxCrr3SNIAKVrFEk80KAH7gYJp+H6QeB4mxsQYitsTnUqCawyVQRXnMVyZ/ej6/0YhA1v+c94kMt4A==
     expiration-seconds: 3600
     service-expiration-seconds: 300
     not-before-skew-seconds: 0
     allowed-clock-skew-seconds: 60
-
   rate-limiting:
     enabled: true
     strategy: IP_USER
@@ -88,7 +83,26 @@ security:
     refresh-path: /api/v1/auth/refresh
 
 # =============================
-# CORS (permisivo en local)
+# APP CONFIG
+# =============================
+app:
+  frontend:
+    url: http://localhost:3000
+  email:
+    verification:
+      expiration-hours: 48
+
+# =============================
+# EMAIL BREVO
+# =============================
+email:
+  brevo:
+    api-key: ${BREVO_API_KEY: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}
+    sender-email: noreply@renewsim.com
+    sender-name: RenewSim
+
+# =============================
+# CORS
 # =============================
 cors:
   enabled: true
@@ -112,19 +126,10 @@ cors:
   max-age-seconds: 3600
 
 # =============================
-  # ACTUATOR (completo en local)
-  # =============================
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: "health,info,flyway,metrics"
-
-  # =============================
-  # BREVO EMAIL (local)
-  # =============================
-  email:
-    brevo:
-      api-key: ${BREVO_API_KEY:}
-      sender-email: ${BREVO_SENDER_EMAIL:notifications@renewsim.com}
-      sender-name: ${BREVO_SENDER_NAME:RenewSim}
+# ACTUATOR
+# =============================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,flyway,metrics"

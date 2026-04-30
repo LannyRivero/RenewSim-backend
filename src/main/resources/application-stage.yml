@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+app:
+  security:
+    jwt:
+      secret: ${APP_SECURITY_JWT_SECRET}
+      issuer: ${APP_SECURITY_JWT_ISSUER}
+      access-expiration-minutes: ${APP_SECURITY_JWT_ACCESS_EXPIRATION_MINUTES}
+      refresh-expiration-minutes: ${APP_SECURITY_JWT_REFRESH_EXPIRATION_MINUTES}
+    rate-limiting:                        
+      max-attempts: 5                     
+      window-seconds: 300                 
+      lockout-duration-seconds: 900       
+  frontend:
+    url: ${APP_FRONTEND_URL}
+  email:
+    verification:
+      expiration-hours: ${APP_EMAIL_VERIFICATION_EXPIRATION_HOURS}
+
+email:
+  brevo:
+    api-key: ${EMAIL_BREVO_API_KEY}
+    sender-email: ${EMAIL_BREVO_SENDER_EMAIL}
+    sender-name: ${EMAIL_BREVO_SENDER_NAME}
+
+logging:
+  level:
+    root: INFO
+    com.renewsim: INFO
