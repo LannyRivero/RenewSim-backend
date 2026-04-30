@@ -30,8 +30,6 @@ import java.time.Duration;
 @Tag(name = "Authentication", description = "Endpoints for authentication and registration of users.")
 public class AuthController {
 
-        private final LoginStep1UseCase loginStep1UseCase;
-        private final LoginStep2UseCase loginStep2UseCase;
         private final ActivateAccountUseCase activateAccountUseCase;
         private final ResendOtpUseCase resendOtpUseCase;
         private final LogoutUseCase logoutUseCase;
@@ -58,48 +56,9 @@ public class AuthController {
                                 .body(ApiResponseFactory.created(response, "User registered successfully"));
         }
 
-        // ----------------------------------------------------
-        // POST /auth/login/step1 → Validate credentials, send OTP
-        // ----------------------------------------------------
-        @PostMapping(value = "/login/step1", consumes = "application/json")
-        @Operation(summary = "2FA login step 1", description = "Validates credentials and sends OTP. Response is always generic.")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "OTP sent (or silently ignored)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginStep1Result.class))),
-                        @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
-                        @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content)
-        })
-        public ResponseEntity<OperationResponse<LoginStep1Result>> loginStep1(
-                        @Valid @RequestBody LoginStep1RequestDTO request) {
-                LoginStep1Result result = loginStep1UseCase.execute(
-                                new LoginStep1Command(request.email(), request.password()));
-                return ResponseEntity.ok(ApiResponseFactory.ok(result, result.message()));
-        }
+        
 
-        // ----------------------------------------------------
-        // POST /auth/login/step2 → Validate OTP, issue JWT + refresh cookie
-        // ----------------------------------------------------
-        @PostMapping(value = "/login/step2", consumes = "application/json")
-        @Operation(summary = "2FA login step 2", description = "Validates OTP and issues JWT. Refresh token set as HttpOnly cookie.")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Authentication successful", content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginStep2Result.class))),
-                        @ApiResponse(responseCode = "401", description = "Invalid or expired OTP", content = @Content),
-                        @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
-                        @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content)
-        })
-        public ResponseEntity<OperationResponse<LoginStep2Result>> loginStep2(
-                        @Valid @RequestBody LoginStep2RequestDTO request,
-                        HttpServletResponse response) {
-                LoginStep2Result result = loginStep2UseCase.execute(
-                                new LoginStep2Command(request.email(), request.otpCode()));
-
-                addRefreshTokenCookie(response, result.rawRefreshToken());
-
-                LoginStep2Result safeResult = new LoginStep2Result(
-                                result.accessToken(), result.tokenType(), result.expiresIn(),
-                                result.username(), result.roles(), null);
-
-                return ResponseEntity.ok(ApiResponseFactory.ok(safeResult, "Authentication successful"));
-        }
+        
 
         // ----------------------------------------------------
         // POST /auth/activate → Activate account via token
