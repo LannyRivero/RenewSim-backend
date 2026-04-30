@@ -4,6 +4,9 @@ import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,17 +22,20 @@ public class BrevoEmailAdapter implements EmailPort {
     private final String apiKey;
     private final String senderEmail;
     private final String senderName;
+    private final String frontendUrl;
 
     public BrevoEmailAdapter(
             @Value("${email.brevo.api-key:}") String apiKey,
             @Value("${email.brevo.sender-email:}") String senderEmail,
-            @Value("${email.brevo.sender-name:}") String senderName) {
+            @Value("${email.brevo.sender-name:}") String senderName,
+            @Value("${app.frontend.url:http://localhost:3000}") String frontendUrl) {
         
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("BREVO_API_KEY not configured - BrevoEmailAdapter disabled");
             this.apiKey = null;
             this.senderEmail = null;
             this.senderName = null;
+            this.frontendUrl = null;
             this.restTemplate = null;
             return;
         }
@@ -41,6 +47,7 @@ public class BrevoEmailAdapter implements EmailPort {
         this.apiKey = apiKey;
         this.senderEmail = senderEmail;
         this.senderName = senderName != null ? senderName : "RenewSim";
+        this.frontendUrl = frontendUrl;
         this.restTemplate = new RestTemplate();
     }
 
@@ -51,20 +58,16 @@ public class BrevoEmailAdapter implements EmailPort {
             return;
         }
         try {
-            Map<String, Object> request = new HashMap<>();
-            request.put("sender", Map.of("email", senderEmail, "name", senderName));
-            request.put("to", new Object[] { Map.of("email", toEmail) });
-            request.put("subject", "Your RenewSim OTP Code");
-            request.put("htmlContent", buildOtpHtml(rawOtp, expiresInSeconds));
+            Map<String, Object> payload = buildEmailPayload(
+                toEmail,
+                "Your RenewSim OTP Code",
+                buildOtpHtml(rawOtp, expiresInSeconds)
+            );
 
-            restTemplate.postForEntity(
-                    "https://api.brevo.com/v3/smtp/email",
-                    request,
-                    String.class);
-
+            sendEmailViaBrevo(payload);
             log.info("OTP email sent to={}", maskEmail(toEmail));
         } catch (Exception e) {
-            log.error("Failed to send OTP: {}", e.getMessage());
+            log.error("Failed to send OTP to={}: {}", maskEmail(toEmail), e.getMessage());
             throw new RuntimeException("Failed to send OTP email", e);
         }
     }
@@ -76,24 +79,95 @@ public class BrevoEmailAdapter implements EmailPort {
             return;
         }
         try {
-            String link = "https://renewsim.example.com/activate?token=" + activationToken;
+            String link = frontendUrl + "/activate?token=" + activationToken;
             
-            Map<String, Object> request = new HashMap<>();
-            request.put("sender", Map.of("email", senderEmail, "name", senderName));
-            request.put("to", new Object[] { Map.of("email", toEmail) });
-            request.put("subject", "Activate your RenewSim account");
-            request.put("htmlContent", buildActivationHtml(link));
+            Map<String, Object> payload = buildEmailPayload(
+                toEmail,
+                "Activate your RenewSim account",
+                buildActivationHtml(link)
+            );
 
-            restTemplate.postForEntity(
-                    "https://api.brevo.com/v3/smtp/email",
-                    request,
-                    String.class);
-
+            sendEmailViaBrevo(payload);
             log.info("Activation email sent to={}", maskEmail(toEmail));
         } catch (Exception e) {
-            log.error("Failed to send activation: {}", e.getMessage());
+            log.error("Failed to send activation to={}: {}", maskEmail(toEmail), e.getMessage());
             throw new RuntimeException("Failed to send activation email", e);
         }
+    }
+
+    @Override
+    public void sendVerificationEmail(String toEmail, String username, String verificationToken) {
+        if (apiKey == null) {
+            log.warn("Brevo not configured - skipping verification email to={}", maskEmail(toEmail));
+            return;
+        }
+        try {
+            String link = frontendUrl + "/verify-email?token=" + verificationToken;
+            
+            Map<String, Object> payload = buildEmailPayload(
+                toEmail,
+                "Verify your RenewSim email address",
+                buildVerificationHtml(username, link)
+            );
+
+            sendEmailViaBrevo(payload);
+            log.info("Verification email sent to={}", maskEmail(toEmail));
+        } catch (Exception e) {
+            log.error("Failed to send verification to={}: {}", maskEmail(toEmail), e.getMessage());
+            throw new RuntimeException("Failed to send verification email", e);
+        }
+    }
+
+    @Override
+    public void sendPasswordResetEmail(String toEmail, String username, String resetToken) {
+        if (apiKey == null) {
+            log.warn("Brevo not configured - skipping password reset email to={}", maskEmail(toEmail));
+            return;
+        }
+        try {
+            String link = frontendUrl + "/reset-password?token=" + resetToken;
+            
+            Map<String, Object> payload = buildEmailPayload(
+                toEmail,
+                "Reset your RenewSim password",
+                buildPasswordResetHtml(username, link)
+            );
+
+            sendEmailViaBrevo(payload);
+            log.info("Password reset email sent to={}", maskEmail(toEmail));
+        } catch (Exception e) {
+            log.error("Failed to send password reset to={}: {}", maskEmail(toEmail), e.getMessage());
+            throw new RuntimeException("Failed to send password reset email", e);
+        }
+    }
+
+    /**
+     * Centralized method to send email via Brevo API.
+     */
+    private void sendEmailViaBrevo(Map<String, Object> payload) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("api-key", apiKey);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
+        restTemplate.postForEntity(
+            "https://api.brevo.com/v3/smtp/email",
+            request,
+            String.class
+        );
+    }
+
+    /**
+     * Build standard email payload structure.
+     */
+    private Map<String, Object> buildEmailPayload(String toEmail, String subject, String htmlContent) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("sender", Map.of("email", senderEmail, "name", senderName));
+        payload.put("to", new Object[] { Map.of("email", toEmail) });
+        payload.put("subject", subject);
+        payload.put("htmlContent", htmlContent);
+        return payload;
     }
 
     private String buildOtpHtml(String otp, int secs) {
@@ -119,6 +193,33 @@ public class BrevoEmailAdapter implements EmailPort {
             <p style="color:#666;margin-top:20px;">Or copy and paste this link:<br><span style="color:#1976D2;">%s</span></p>
             <p style="color:#999;font-size:12px;">If you didn't create an account, please ignore this email.</p>
             </div></body></html>""", link, link);
+    }
+
+    private String buildVerificationHtml(String username, String link) {
+        return String.format("""
+            <!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="font-family:Arial,sans-serif;padding:20px;">
+            <div style="max-width:600px;margin:0 auto;">
+            <h2 style="color:#2E7D32;">Welcome to RenewSim, %s!</h2>
+            <p>Thank you for registering. Please verify your email address to activate your account:</p>
+            <a href="%s" style="display:inline-block;background:#2E7D32;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;margin:20px 0;">Verify Email</a>
+            <p style="color:#666;margin-top:20px;">Or copy and paste this link:<br><span style="color:#1976D2;">%s</span></p>
+            <p style="color:#666;font-size:14px;">This link expires in 48 hours.</p>
+            <p style="color:#999;font-size:12px;">If you didn't create this account, please ignore this email.</p>
+            </div></body></html>""", username, link, link);
+    }
+
+    private String buildPasswordResetHtml(String username, String link) {
+        return String.format("""
+            <!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="font-family:Arial,sans-serif;padding:20px;">
+            <div style="max-width:600px;margin:0 auto;">
+            <h2 style="color:#2E7D32;">Password Reset Request</h2>
+            <p>Hi %s,</p>
+            <p>We received a request to reset your password. Click the button below to proceed:</p>
+            <a href="%s" style="display:inline-block;background:#2E7D32;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;margin:20px 0;">Reset Password</a>
+            <p style="color:#666;margin-top:20px;">Or copy and paste this link:<br><span style="color:#1976D2;">%s</span></p>
+            <p style="color:#666;font-size:14px;">This link expires in 1 hour.</p>
+            <p style="color:#999;font-size:12px;">If you didn't request this, please ignore this email.</p>
+            </div></body></html>""", username, link, link);
     }
 
     private String maskEmail(String email) {

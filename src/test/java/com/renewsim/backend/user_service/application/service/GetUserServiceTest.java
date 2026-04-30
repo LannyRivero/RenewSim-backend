@@ -45,14 +45,17 @@ class GetUserServiceTest {
     void setup() {
         sampleUser = User.reconstitute(
                 1L,
-                "alice@mail.com",
+                "john@example.com",
                 VALID_HASH,
-                "Alice",
+                "John",
                 null,
                 UserStatus.ACTIVE,
                 Set.of(RoleName.USER),
                 LocalDateTime.now(),
+                LocalDateTime.now(),
+                true,
                 LocalDateTime.now());
+    
 
         sampleResponse = new UserResponse(
         1L, "alice", "alice@mail.com",

@@ -40,9 +40,20 @@ class ChangeMyPasswordServiceTest {
     private static final String NEW_HASH = new BCryptPasswordEncoder(12).encode("newPass123");
 
     private User buildUser(Long id) {
-        return User.reconstitute(id, "john@example.com", CURRENT_HASH, "John", null,
-                UserStatus.ACTIVE, Set.of(RoleName.USER), LocalDateTime.now(), LocalDateTime.now());
-    }
+    return User.reconstitute(
+        id, 
+        "john@example.com", 
+        CURRENT_HASH, 
+        "John", 
+        null,
+        UserStatus.ACTIVE, 
+        Set.of(RoleName.USER), 
+        LocalDateTime.now(), 
+        LocalDateTime.now(),
+        true, 
+        LocalDateTime.now()  
+    );
+}
 
     @Test
     @DisplayName("valid current password -> changes password and revokes refresh tokens")

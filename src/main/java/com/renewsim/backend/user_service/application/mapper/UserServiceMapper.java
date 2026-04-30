@@ -33,7 +33,9 @@ public interface UserServiceMapper {
                 entity.getCreatedAt() != null
                         ? toLocalDateTime(entity.getCreatedAt())
                         : LocalDateTime.now(),
-                toLocalDateTime(entity.getActivatedAt()));
+                toLocalDateTime(entity.getActivatedAt()),
+                entity.isEmailVerified(),
+                toLocalDateTime(entity.getEmailVerifiedAt()));
     }
 
     default UserEntity toEntity(User domain) {
@@ -47,6 +49,8 @@ public interface UserServiceMapper {
         entity.setPhone(domain.getPhone());
         entity.setStatus(UserStatus.valueOf(domain.getStatus().name()));
         entity.setActivatedAt(toInstant(domain.getActivatedAt()));
+        entity.setEmailVerified(domain.isEmailVerified());
+        entity.setEmailVerifiedAt(toInstant(domain.getEmailVerifiedAt()));
         return entity;
     }
 

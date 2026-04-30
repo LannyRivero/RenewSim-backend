@@ -42,4 +42,34 @@ public interface EmailPort {
      * @param activationToken the raw activation token — never null or blank
      */
     void sendActivationEmail(String toEmail, String activationToken);
+
+    /**
+     * Sends an email verification link to the given recipient.
+     *
+     * <p>
+     * The {@code verificationToken} is the raw token that must be embedded
+     * in the verification URL. The adapter must never log this token.
+     *
+     * <p>
+     * This email is sent during user registration to verify email ownership
+     * before allowing login.
+     *
+     * @param toEmail           recipient email address — never null or blank
+     * @param username          user's display name for personalization — never null or blank
+     * @param verificationToken the raw verification token — never null or blank
+     */
+    void sendVerificationEmail(String toEmail, String username, String verificationToken);
+
+    /**
+     * Sends a password reset link to the given recipient.
+     *
+     * <p>
+     * The {@code resetToken} is the raw token that must be embedded in the
+     * password reset URL. The adapter must never log this token.
+     *
+     * @param toEmail    recipient email address — never null or blank
+     * @param username   user's display name for personalization — never null or blank
+     * @param resetToken the raw password reset token — never null or blank
+     */
+    void sendPasswordResetEmail(String toEmail, String username, String resetToken);
 }

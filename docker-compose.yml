@@ -42,6 +42,10 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_PROFILES_ACTIVE: docker
+      
+      JWT_SECRET_BASE64: "${JWT_SECRET_BASE64}"
+      SECURITY_JWT_ISSUER: "renewsim-auth-docker"
+      SECURITY_JWT_AUDIENCE: "renewsim-app-docker"
     depends_on:
       mysql:
         condition: service_healthy

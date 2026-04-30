@@ -16,6 +16,8 @@ import com.renewsim.backend.auth_service.domain.model.OtpCode;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.auth_service.infrastructure.security.OtpRateLimiter;
+import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
+import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.shared.exception.RateLimitExceededException;
 import org.slf4j.Logger;
@@ -32,6 +34,9 @@ import java.util.stream.Collectors;
  * Valida el código OTP proporcionado y genera tokens de acceso
  * y refresh para el usuario autenticado.
  *
+ * BUSINESS RULE: Email verification is required before login.
+ * Users with unverified emails are blocked at this stage.
+ *
  * @since 1.0.0
  */
 public class LoginStep2Service implements LoginStep2UseCase {
@@ -41,6 +46,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
     private static final int OTP_LOCKOUT_WINDOW_SECONDS = 900; // 15 minutes
 
     private final UserAccountGateway userAccountGateway;
+    private final UserRepositoryPort userRepositoryPort;
     private final OtpCodeRepositoryPort otpCodeRepositoryPort;
     private final RefreshTokenRepositoryPort refreshTokenRepositoryPort;
     private final TokenProvider tokenProvider;
@@ -52,6 +58,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
 
     public LoginStep2Service(
             UserAccountGateway userAccountGateway,
+            UserRepositoryPort userRepositoryPort,
             OtpCodeRepositoryPort otpCodeRepositoryPort,
             RefreshTokenRepositoryPort refreshTokenRepositoryPort,
             TokenProvider tokenProvider,
@@ -61,6 +68,7 @@ public class LoginStep2Service implements LoginStep2UseCase {
             UserAccountValidator userAccountValidator,
             OtpRateLimiter otpRateLimiter) {
         this.userAccountGateway = userAccountGateway;
+        this.userRepositoryPort = userRepositoryPort;
         this.otpCodeRepositoryPort = otpCodeRepositoryPort;
         this.refreshTokenRepositoryPort = refreshTokenRepositoryPort;
         this.tokenProvider = tokenProvider;
@@ -89,6 +97,16 @@ public class LoginStep2Service implements LoginStep2UseCase {
                 .orElseThrow(() -> new AuthenticationException("Invalid or expired OTP"));
 
         userAccountValidator.validateEnabledOrThrow(user);
+
+        // CRITICAL: Validate email is verified before allowing login
+        User domainUser = userRepositoryPort.findById(user.id())
+                .orElseThrow(() -> new AuthenticationException("User not found"));
+
+        if (!domainUser.canLogin()) {
+            log.warn("Login blocked for unverified email userId={}", user.id());
+            throw new EmailNotVerifiedException(
+                    "Email not verified. Please check your inbox for the verification link.");
+        }
 
         OtpCode otpCode = otpCodeRepositoryPort
                 .findLatestValidByUserId(user.id(), OtpCode.Purpose.LOGIN)
@@ -130,5 +148,14 @@ public class LoginStep2Service implements LoginStep2UseCase {
                 user.email(),
                 roleNames,
                 rawRefreshToken);
+    }
+
+    /**
+     * Exception thrown when user attempts to log in without verifying email.
+     */
+    public static class EmailNotVerifiedException extends AuthenticationException {
+        public EmailNotVerifiedException(String message) {
+            super(message);
+        }
     }
 }

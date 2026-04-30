@@ -36,8 +36,18 @@ class UpdateMyProfileServiceTest {
     private static final String HASH = new BCryptPasswordEncoder(12).encode("pass");
 
     private User buildUser(Long id) {
-        return User.reconstitute(id, "john@example.com", HASH, "John", null,
-                UserStatus.ACTIVE, Set.of(RoleName.USER), LocalDateTime.now(), LocalDateTime.now());
+        return User.reconstitute(
+                id,
+                "john@example.com",
+                HASH,
+                "John",
+                null,
+                UserStatus.ACTIVE,
+                Set.of(RoleName.USER),
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                true,
+                LocalDateTime.now());
     }
 
     private UserResponse buildResponse(Long id, String fullName, String phone) {

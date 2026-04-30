@@ -41,9 +41,18 @@ class ListUsersServiceTest {
     private static final String VALID_HASH = new BCryptPasswordEncoder(12).encode("pass");
 
     private User buildUser(Long id, String email) {
-        return User.reconstitute(id, email, VALID_HASH, "Name", null,
-                UserStatus.ACTIVE, Set.of(RoleName.USER),
-                LocalDateTime.now(), LocalDateTime.now());
+        return User.reconstitute(
+                id,
+                "john@example.com",
+                VALID_HASH,
+                "John",
+                null,
+                UserStatus.ACTIVE,
+                Set.of(RoleName.USER),
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                true,
+                LocalDateTime.now());
     }
 
     private UserResponse buildResponse(Long id, String username, String email) {

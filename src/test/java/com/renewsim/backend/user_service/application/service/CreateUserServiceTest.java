@@ -49,8 +49,18 @@ class CreateUserServiceTest {
     }
 
     private User buildUser(Long id, String email) {
-        return User.reconstitute(id, email, VALID_HASH, "Alice", null,
-                UserStatus.ACTIVE, Set.of(RoleName.USER), LocalDateTime.now(), LocalDateTime.now());
+        return User.reconstitute(
+                id,
+                email,
+                VALID_HASH,
+                "John",
+                null,
+                UserStatus.ACTIVE,
+                Set.of(RoleName.USER),
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                true,
+                LocalDateTime.now());
     }
 
     private UserResponse buildResponse(Long id, String email) {
