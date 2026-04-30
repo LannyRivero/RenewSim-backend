@@ -31,7 +31,6 @@ import java.time.Duration;
 public class AuthController {
 
         private final ActivateAccountUseCase activateAccountUseCase;
-        private final ResendOtpUseCase resendOtpUseCase;
         private final LogoutUseCase logoutUseCase;
         private final RefreshTokenUseCase refreshTokenUseCase;
         private final RegisterUserUseCase registerUserUseCase;

@@ -4,8 +4,6 @@ import com.renewsim.backend.auth_service.application.port.in.*;
 import com.renewsim.backend.auth_service.application.port.out.*;
 import com.renewsim.backend.auth_service.application.service.*;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
-import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
-import com.renewsim.backend.auth_service.infrastructure.security.OtpRateLimiter;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,56 +21,7 @@ import com.renewsim.backend.auth_service.application.validator.UserAccountValida
  */
 @Configuration
 public class ApplicationServiceConfig {
-
-    @Bean
-    public LoginStep1UseCase loginStep1UseCase(
-            UserAccountGateway userAccountGateway,
-            OtpCodeRepositoryPort otpCodeRepositoryPort,
-            OtpGenerator otpGenerator,
-            CredentialsValidator credentialsValidator,
-            PasswordEncoderPort passwordEncoder,
-            EmailPort emailPort,
-            TransactionalPort transactionalPort,
-            TimeProvider timeProvider,
-            UserAccountValidator userAccountValidator) {
-        return new LoginStep1Service(
-                userAccountGateway,
-                otpCodeRepositoryPort,
-                otpGenerator,
-                credentialsValidator,
-                passwordEncoder,
-                emailPort,
-                transactionalPort,
-                timeProvider.getClock(),
-                userAccountValidator);
-    }
-
-    @Bean
-    public LoginStep2UseCase loginStep2UseCase(
-            UserAccountGateway userAccountGateway,
-            UserRepositoryPort userRepositoryPort,
-            OtpCodeRepositoryPort otpCodeRepositoryPort,
-            CredentialsValidator credentialsValidator,
-            PasswordEncoderPort passwordEncoder,
-            TokenProvider tokenProvider,
-            RefreshTokenRepositoryPort refreshTokenRepositoryPort,
-            TransactionalPort transactionalPort,
-            TimeProvider timeProvider,
-            UserAccountValidator userAccountValidator,
-            OtpRateLimiter otpRateLimiter) {
-        return new LoginStep2Service(
-                userAccountGateway,
-                userRepositoryPort,
-                otpCodeRepositoryPort,
-                refreshTokenRepositoryPort,
-                tokenProvider,
-                passwordEncoder,
-                transactionalPort,
-                timeProvider.getClock(),
-                userAccountValidator,
-                otpRateLimiter
-        );
-    }
+ 
 
     @Bean
     public LogoutUseCase logoutUseCase(
@@ -124,27 +73,6 @@ public class ApplicationServiceConfig {
     }
 
     @Bean
-    public ResendOtpUseCase resendOtpUseCase(
-            UserAccountGateway userAccountGateway,
-            OtpCodeRepositoryPort otpCodeRepositoryPort,
-            OtpGenerator otpGenerator,
-            PasswordEncoderPort passwordEncoder,
-            EmailPort emailPort,
-            TransactionalPort transactionalPort,
-            TimeProvider timeProvider,
-            UserAccountValidator userAccountValidator) {
-        return new ResendOtpService(
-                userAccountGateway,
-                otpCodeRepositoryPort,
-                otpGenerator,
-                passwordEncoder,
-                emailPort,
-                transactionalPort,
-                timeProvider.getClock(),
-                userAccountValidator);
-    }
-
-    @Bean
     public TokenTimeService tokenTimeService(
             @Value("${jwt.access-token.expiration}") long accessTokenExpiration,
             @Value("${jwt.refresh-token.expiration}") long refreshTokenExpiration) {
@@ -169,7 +97,6 @@ public class ApplicationServiceConfig {
             EmailPort emailPort,
             TransactionalPort transactionalPort,
             PasswordEncoderPort passwordEncoderPort,
-            OtpGenerator otpGenerator,
             TimeProvider timeProvider,
             @Value("${app.email.verification.expiration-hours:48}") int verificationExpirationHours) {
         return new RegisterUserService(
@@ -179,7 +106,6 @@ public class ApplicationServiceConfig {
                 emailPort,
                 transactionalPort,
                 passwordEncoderPort,
-                otpGenerator,
                 timeProvider.getClock(),
                 verificationExpirationHours);
     }

@@ -2,17 +2,13 @@ package com.renewsim.backend.auth_service.application.service;
 
 import com.renewsim.backend.auth_service.application.command.RegisterCommand;
 import com.renewsim.backend.auth_service.application.port.in.RegisterUserUseCase;
-import com.renewsim.backend.auth_service.application.port.out.ActivationTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.EmailVerificationTokenRepository;
-import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
 import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.RegisterResult;
-import com.renewsim.backend.auth_service.domain.model.ActivationToken;
 import com.renewsim.backend.auth_service.domain.model.AuthUserStatus;
 import com.renewsim.backend.auth_service.domain.model.EmailVerificationToken;
-import com.renewsim.backend.auth_service.domain.service.OtpGenerator;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.ConflictException;
 import org.slf4j.Logger;
@@ -20,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.security.SecureRandom;
-import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Set;
@@ -31,34 +26,22 @@ public class RegisterUserService implements RegisterUserUseCase {
     private static final Set<RoleName> DEFAULT_ROLES = Set.of(RoleName.USER);
 
     private final UserAccountGateway userAccountGateway;
-    private final ActivationTokenRepositoryPort activationTokenRepositoryPort;
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final EmailPort emailPort;
     private final TransactionalPort transactionalPort;
-    private final PasswordEncoderPort passwordEncoderPort;
-    private final OtpGenerator otpGenerator;
-    private final Clock clock;
     private final SecureRandom secureRandom;
     private final int verificationExpirationHours;
 
     public RegisterUserService(
             UserAccountGateway userAccountGateway,
-            ActivationTokenRepositoryPort activationTokenRepositoryPort,
             EmailVerificationTokenRepository emailVerificationTokenRepository,
             EmailPort emailPort,
             TransactionalPort transactionalPort,
-            PasswordEncoderPort passwordEncoderPort,
-            OtpGenerator otpGenerator,
-            Clock clock,
             @Value("${app.email.verification.expiration-hours:48}") int verificationExpirationHours) {
         this.userAccountGateway = userAccountGateway;
-        this.activationTokenRepositoryPort = activationTokenRepositoryPort;
         this.emailVerificationTokenRepository = emailVerificationTokenRepository;
         this.emailPort = emailPort;
         this.transactionalPort = transactionalPort;
-        this.passwordEncoderPort = passwordEncoderPort;
-        this.otpGenerator = otpGenerator;
-        this.clock = clock;
         this.secureRandom = new SecureRandom();
         this.verificationExpirationHours = verificationExpirationHours;
     }
@@ -74,8 +57,6 @@ public class RegisterUserService implements RegisterUserUseCase {
             throw new ConflictException("Email already registered");
         }
 
-        String rawActivationToken = otpGenerator.generate();
-        String activationTokenHash = passwordEncoderPort.encode(rawActivationToken);
         String username = extractUsernameFromEmail(command.email());
 
         var userSnapshot = userAccountGateway.createUser(
@@ -86,15 +67,7 @@ public class RegisterUserService implements RegisterUserUseCase {
                 DEFAULT_ROLES
         );
 
-        // Legacy activation token (mantener por compatibilidad)
-        ActivationToken activationToken = ActivationToken.issue(
-                userSnapshot.id(),
-                activationTokenHash,
-                clock
-        );
-        activationTokenRepositoryPort.save(activationToken);
-
-        // NEW: Email verification token
+        // Generate email verification token
         String verificationToken = generateSecureToken();
         LocalDateTime expiresAt = LocalDateTime.now().plusHours(verificationExpirationHours);
         
@@ -105,11 +78,10 @@ public class RegisterUserService implements RegisterUserUseCase {
         );
         emailVerificationTokenRepository.save(emailVerificationToken);
 
-        // Send both emails (transitorio - eventualmente solo verification)
-        emailPort.sendActivationEmail(command.email(), rawActivationToken);
+        // Send verification email
         emailPort.sendVerificationEmail(command.email(), command.fullName(), verificationToken);
 
-        log.info("User registered with activation and verification tokens userId={}", userSnapshot.id());
+        log.info("User registered successfully. Verification email sent. userId={}", userSnapshot.id());
 
         return new RegisterResult(
                 userSnapshot.id(),
