@@ -1,4 +1,4 @@
--- V10: Add email verification infrastructure
+-- V12: Add email verification infrastructure
 -- Author: Lanny
 -- Date: 2026-04-29
 -- Description: Creates email_verification_tokens table and adds email_verified flag to users
