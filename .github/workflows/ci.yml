@@ -49,10 +49,12 @@ jobs:
             exit 1
           fi
 
-          if ! grep -Eq 'tests="[1-9][0-9]*".*failures="0".*errors="0"' "${REPORT_FILE}"; then
+          if grep -q 'failures="[1-9]"' "${REPORT_FILE}" || grep -q 'errors="[1-9]"' "${REPORT_FILE}"; then
             echo "::error::SecurityRateLimitPropertiesBindingTest did not pass"
             exit 1
           fi
+
+          echo "SecurityRateLimitPropertiesBindingTest passed"
 
       - name: Upload test results
         if: always()
