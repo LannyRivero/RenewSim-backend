@@ -29,4 +29,25 @@ public class UserAccountValidator {
             throw new AuthenticationException("Account is not active");
         }
     }
+
+    /**
+     * Verifica si el email del usuario está verificado.
+     * @param user el usuario a validar
+     * @return true si el email está verificado, false en caso contrario
+     */
+    public boolean isEmailVerified(UserSnapshot user) {
+        return user != null && user.enabled();
+    }
+
+    /**
+     * Valida que el email esté verificado, lanzando excepción si no lo está.
+     * CRÍTICO: El login debe rechazar usuarios sin email verificado.
+     * @param user el usuario a validar
+     * @throws AuthenticationException si el email no está verificado
+     */
+    public void validateEmailVerifiedOrThrow(UserSnapshot user) {
+        if (!isEmailVerified(user)) {
+            throw new AuthenticationException("Email not verified");
+        }
+    }
 }

@@ -65,4 +65,16 @@ public class CredentialsValidator {
                     ErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS));
         }
     }
+
+    /**
+     * Valida las credenciales contra un usuario.
+     * Combina búsqueda de usuario y validación de password.
+     *
+     * @param username     username o email
+     * @param rawPassword contraseña en texto plano
+     * @param userSnapshot usuario con hash de password
+     */
+    public void validateCredentialsOrThrow(String username, String rawPassword, com.renewsim.backend.auth_service.application.dto.UserSnapshot userSnapshot) {
+        validatePassword(rawPassword, userSnapshot.passwordHash());
+    }
 }

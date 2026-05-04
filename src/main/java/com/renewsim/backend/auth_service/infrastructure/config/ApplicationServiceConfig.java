@@ -51,8 +51,7 @@ public class ApplicationServiceConfig {
                 tokenProvider,
                 transactionalPort,
                 timeProvider.getClock(),
-                userAccountValidator
-        );
+                userAccountValidator);
     }
 
     @Bean
@@ -85,5 +84,24 @@ public class ApplicationServiceConfig {
                 emailPort,
                 transactionalPort,
                 verificationExpirationHours);
+    }
+
+    @Bean
+    public LoginUseCase loginUseCase(
+            UserAccountGateway userAccountGateway,
+            CredentialsValidator credentialsValidator,
+            TokenProvider tokenProvider,
+            RefreshTokenRepositoryPort refreshTokenRepository,
+            TransactionalPort transactionalPort,
+            TokenTimeService tokenTimeService,
+            TimeProvider timeProvider) {
+        return new LoginService(
+                userAccountGateway,
+                credentialsValidator,
+                tokenProvider,
+                refreshTokenRepository,
+                transactionalPort,
+                tokenTimeService,
+                timeProvider.getClock());
     }
 }
