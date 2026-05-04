@@ -1,17 +1,17 @@
 package com.renewsim.backend.auth_service.config;
 
-import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
+import com.renewsim.backend.auth_service.application.port.in.LoginUseCase;
+import com.renewsim.backend.auth_service.application.port.in.LogoutUseCase;
+import com.renewsim.backend.auth_service.application.port.in.RefreshTokenUseCase;
+import com.renewsim.backend.auth_service.application.port.in.RegisterUserUseCase;
 import com.renewsim.backend.auth_service.infrastructure.config.SecurityConfig;
 import com.renewsim.backend.auth_service.infrastructure.security.AuthNoCacheFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.JwtAuthenticationFilter;
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimitingFilter;
 import com.renewsim.backend.auth_service.web.controller.AuthController;
-import com.renewsim.backend.auth_service.application.result.AuthResult;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -22,18 +22,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.Instant;
-import java.util.Set;
-
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.not;
-import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = AuthController.class)
-@Import({ SecurityConfig.class, AuthNoCacheFilter.class })
+@Import({ SecurityConfig.class, AuthNoCacheFilter.class, TestSecurityConfig.class })
 @TestPropertySource(properties = {
                 "cors.allowed-origins=http://localhost:3000",
                 "cors.allow-credentials=true",
@@ -43,7 +39,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 "security.rate-limiting.enabled=false",
                 "server.forward-headers-strategy=framework"
 })
-
 @ActiveProfiles("test")
 class SecurityConfigTest {
 
@@ -51,24 +46,23 @@ class SecurityConfigTest {
         private MockMvc mvc;
 
         @MockBean
-        private AuthUseCase authUseCase;
+        private LogoutUseCase logoutUseCase;
+        @MockBean
+        private RefreshTokenUseCase refreshTokenUseCase;
+        @MockBean
+        private RegisterUserUseCase registerUserUseCase;
+        @MockBean
+        private LoginUseCase loginUseCase;
         @MockBean
         private JwtAuthenticationFilter jwtAuthenticationFilter;
         @MockBean
         private LoginRateLimitingFilter loginRateLimitingFilter;
 
-        @BeforeEach
-        void setUp() {
-                Mockito.when(authUseCase.login(any())).thenReturn(
-                                new AuthResult("mock-token", "Bearer", Instant.now().plusSeconds(3600),
-                                                "john", Set.of("USER"), Set.of("read")));
-        }
-
         @Test
         @DisplayName("Public auth endpoints and login with no-store")
         void authEndpoints_public_and_noStore_on_login() throws Exception {
                 String body = """
-                                    {"username":"john","password":"secret"}
+                                {"email":"john@test.com","password":"secret"}
                                 """;
 
                 mvc.perform(post("/api/v1/auth/login")
@@ -99,5 +93,4 @@ class SecurityConfigTest {
                                 .header("X-Forwarded-Proto", "https"))
                                 .andExpect(header().string("Strict-Transport-Security", containsString("max-age")));
         }
-        
 }
