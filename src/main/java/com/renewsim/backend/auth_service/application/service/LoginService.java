@@ -35,7 +35,7 @@ import static com.renewsim.backend.auth_service.domain.error.AuthErrorCode.AUTH_
  * 4. Check email is verified (enabled flag)
  * 5. Check account is active
  * 6. Generate JWT access token
- * 7. Generate refresh token
+ * 7. Generate refresh token with configured TTL
  * 8. Store refresh token
  */
 public class LoginService implements LoginUseCase {
@@ -103,24 +103,24 @@ public class LoginService implements LoginUseCase {
                 AuthenticatedUser authenticatedUser = AuthenticatedUser.of(
                                 user.username(),
                                 roleNames,
-                                Set.of() // scopes vacíos por ahora
-                );
+                                Set.of());
 
                 String accessToken = tokenProvider.generate(authenticatedUser);
 
-                // 7. Generate refresh token (usando el mismo provider con scopes diferentes)
+                // 7. Generate refresh token with configured TTL
                 AuthenticatedUser refreshUser = AuthenticatedUser.of(
                                 user.username(),
                                 roleNames,
-                                Set.of("refresh") // scope especial para refresh tokens
-                );
-                String refreshToken = tokenProvider.generate(refreshUser, tokenProvider.refreshExpiresInSeconds());
+                                Set.of("refresh"));
+                long refreshTtl = tokenProvider.refreshExpiresInSeconds();
+                String refreshToken = tokenProvider.generate(refreshUser, refreshTtl);
 
                 // 8. Store refresh token
                 RefreshToken refreshTokenEntity = RefreshToken.issue(
                                 user.id(),
                                 refreshToken,
-                                clock);
+                                clock,
+                                refreshTtl);
                 refreshTokenRepository.save(refreshTokenEntity);
 
                 log.info("User logged in successfully userId={} email={}",

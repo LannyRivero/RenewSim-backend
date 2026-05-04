@@ -40,16 +40,24 @@ public class RefreshToken {
     }
 
     /**
-     * Factory method for issuing a new refresh token.
-     * TTL is 7 days from issuedAt.
+     * Factory method for issuing a new refresh token with explicit TTL.
+     *
+     * @param userId            owner of the token
+     * @param tokenHash         raw JWT string (or hash)
+     * @param clock             clock for deterministic time
+     * @param expirationSeconds TTL in seconds
      */
-    public static RefreshToken issue(Long userId, String tokenHash) {
-        return issue(userId, tokenHash, Clock.systemDefaultZone());
+    public static RefreshToken issue(Long userId, String tokenHash, Clock clock, long expirationSeconds) {
+        LocalDateTime now = LocalDateTime.now(clock);
+        return new RefreshToken(null, userId, tokenHash, now, now.plusSeconds(expirationSeconds), false, null);
     }
 
+    /**
+     * Factory method for issuing a new refresh token with default TTL of 7 days.
+     * Delegates to {@link #issue(Long, String, Clock, long)}.
+     */
     public static RefreshToken issue(Long userId, String tokenHash, Clock clock) {
-        LocalDateTime now = LocalDateTime.now(clock);
-        return new RefreshToken(null, userId, tokenHash, now, now.plusDays(7), false, null);
+        return issue(userId, tokenHash, clock, 7 * 24 * 3600L);
     }
 
     /**
@@ -68,7 +76,7 @@ public class RefreshToken {
 
     /**
      * Returns true if the token is still within its validity window.
-     * 
+     *
      * @param clock Clock to determine current time
      */
     public boolean isValid(Clock clock) {
@@ -76,21 +84,20 @@ public class RefreshToken {
     }
 
     /**
-     * Factory method that returns a new RefreshToken with revoked=true.
+     * Returns a new RefreshToken with revoked=true.
      * The original token remains unchanged (immutability).
      *
      * @param clock Clock to determine current time
-     * @return a new RefreshToken instance with revoked=true
      */
     public RefreshToken revoked(Clock clock) {
         return new RefreshToken(
-            this.id,
-            this.userId,
-            this.tokenHash,
-            this.issuedAt,
-            this.expiresAt,
-            true,
-            LocalDateTime.now(clock));
+                this.id,
+                this.userId,
+                this.tokenHash,
+                this.issuedAt,
+                this.expiresAt,
+                true,
+                LocalDateTime.now(clock));
     }
 
     // --- Getters ---

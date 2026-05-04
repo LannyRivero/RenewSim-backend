@@ -38,26 +38,32 @@ import static org.mockito.Mockito.*;
 @DisplayName("LoginService")
 class LoginServiceTest {
 
-    @Mock private UserAccountGateway userAccountGateway;
-    @Mock private CredentialsValidator credentialsValidator;
-    @Mock private TokenProvider tokenProvider;
-    @Mock private RefreshTokenRepositoryPort refreshTokenRepository;
-    @Mock private TransactionalPort transactionalPort;
-    @Mock private TokenTimeService tokenTimeService;
+    @Mock
+    private UserAccountGateway userAccountGateway;
+    @Mock
+    private CredentialsValidator credentialsValidator;
+    @Mock
+    private TokenProvider tokenProvider;
+    @Mock
+    private RefreshTokenRepositoryPort refreshTokenRepository;
+    @Mock
+    private TransactionalPort transactionalPort;
+    @Mock
+    private TokenTimeService tokenTimeService;
 
     private static final Instant FIXED_INSTANT = Instant.parse("2024-06-01T10:00:00Z");
     private final Clock clock = Clock.fixed(FIXED_INSTANT, ZoneOffset.UTC);
 
     private LoginService loginService;
 
-    private static final Long   USER_ID       = 1L;
-    private static final String EMAIL         = "user@renewsim.com";
-    private static final String PASSWORD      = "SecurePass123!";
+    private static final Long USER_ID = 1L;
+    private static final String EMAIL = "user@renewsim.com";
+    private static final String PASSWORD = "SecurePass123!";
     private static final String PASSWORD_HASH = "$2a$10$hashedvalue";
-    private static final String USERNAME      = "testuser";
-    private static final String ACCESS_TOKEN  = "access.jwt.token";
+    private static final String USERNAME = "testuser";
+    private static final String ACCESS_TOKEN = "access.jwt.token";
     private static final String REFRESH_TOKEN = "refresh.jwt.token";
-    private static final long   EXPIRES_IN    = 3600L;
+    private static final long EXPIRES_IN = 3600L;
 
     private static final Set<RoleName> ROLES = Set.of(RoleName.USER);
 
@@ -74,6 +80,9 @@ class LoginServiceTest {
 
         lenient().when(transactionalPort.execute(any()))
                 .thenAnswer(inv -> inv.<java.util.function.Supplier<?>>getArgument(0).get());
+
+        // TTL del refresh token — evita expiresAt == issuedAt con default 0L
+        lenient().when(tokenProvider.refreshExpiresInSeconds()).thenReturn(604800L);
     }
 
     @Nested
