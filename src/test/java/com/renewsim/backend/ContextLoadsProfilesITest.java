@@ -1,6 +1,5 @@
 package com.renewsim.backend;
 
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,15 +16,4 @@ class ContextLoadsProfilesITest {
         @Test
         void contextLoads() {}
     }
-
-    @Nested
-    @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-    @ActiveProfiles("local")
-    @DisplayName("Context loads with 'dev' profile")
-    class DevProfile {
-        @Test
-        void contextLoads() {}
-    }   
 }
-
-

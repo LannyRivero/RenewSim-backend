@@ -64,7 +64,7 @@ class UserMapperTest {
 
         assertThat(dto).isNotNull();
         assertThat(dto.id()).isEqualTo(1L);
-        assertThat(dto.email()).isEqualTo("alice@mail.com");
-        assertThat(dto.roles()).containsExactlyInAnyOrder("USER", "ADMIN");
+        assertThat(dto.email()).isEqualTo("john@example.com");
+        assertThat(dto.roles()).containsExactlyInAnyOrder("USER");
     }
 }

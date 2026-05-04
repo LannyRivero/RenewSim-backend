@@ -36,21 +36,18 @@ class HttpUserAccountGatewayTest {
         void setUp() {
                 gateway = new HttpUserAccountGateway(userServiceClient, userSnapshotMapper);
 
-                // NO configurar stub global — cada test configura según necesidad
         }
 
         @Test
         @DisplayName("findByUsername() -> mapea ExternalUserSnapshot a UserSnapshot correctamente")
         void findByUsername_mapsSnapshotCorrectly() {
-                // Given
                 var external = new ExternalUserSnapshot(
                                 1L, "john", "John Doe", "$hash", "john@example.com",
-                                Set.of("USER"), "ACTIVE");
+                                Set.of("USER"), "ACTIVE", Boolean.TRUE);
 
                 when(userServiceClient.getCredentials("john", null))
                                 .thenReturn(OperationResponse.ok(external, "Found"));
 
-                // Mock del mapper para este test específico
                 when(userSnapshotMapper.toSnapshot(external)).thenReturn(
                                 UserSnapshot.active(
                                                 external.id(),
@@ -60,10 +57,8 @@ class HttpUserAccountGatewayTest {
                                                 external.email(),
                                                 Set.of(RoleName.USER)));
 
-                // When
                 Optional<UserSnapshot> opt = gateway.findByUsername("john");
 
-                // Then
                 assertThat(opt).isPresent();
                 UserSnapshot snap = opt.get();
                 assertThat(snap.username()).isEqualTo("john");
@@ -78,14 +73,11 @@ class HttpUserAccountGatewayTest {
         @Test
         @DisplayName("findByUsername() -> devuelve empty cuando la respuesta es null")
         void findByUsername_nullResponse_returnsEmpty() {
-                // Given
                 when(userServiceClient.getCredentials("missing", null)).thenReturn(null);
                 when(userSnapshotMapper.toSnapshot(null)).thenReturn(null);
 
-                // When
                 Optional<UserSnapshot> opt = gateway.findByUsername("missing");
 
-                // Then
                 assertThat(opt).isEmpty();
                 verify(userServiceClient).getCredentials("missing", null);
         }
@@ -93,15 +85,13 @@ class HttpUserAccountGatewayTest {
         @Test
         @DisplayName("createUser() -> delega en UserServiceClient y mapea la respuesta")
         void createUser_delegatesAndMapsResponse() {
-                // Given
                 var externalCreated = new ExternalUserSnapshot(
                                 1L, "john.doe", "John Doe", "$2a$10$hashed",
-                                "john@example.com", Set.of("USER"), "INACTIVE");
+                                "john@example.com", Set.of("USER"), "INACTIVE", Boolean.FALSE);
 
                 when(userServiceClient.createUser(any()))
                                 .thenReturn(OperationResponse.ok(externalCreated, "Created"));
 
-                // Mock del mapper respetando el status INACTIVE del external
                 when(userSnapshotMapper.toSnapshot(externalCreated)).thenReturn(
                                 UserSnapshot.disabled(
                                                 externalCreated.id(),
@@ -111,11 +101,9 @@ class HttpUserAccountGatewayTest {
                                                 externalCreated.email(),
                                                 Set.of(RoleName.USER)));
 
-                // When
                 UserSnapshot result = gateway.createUser(
                                 "john.doe", "John Doe", "secret", "john@example.com", Set.of(RoleName.USER));
 
-                // Then
                 assertThat(result.fullName()).isEqualTo("John Doe");
                 assertThat(result.email()).isEqualTo("john@example.com");
                 assertThat(result.roles()).containsExactly(RoleName.USER);
@@ -123,35 +111,29 @@ class HttpUserAccountGatewayTest {
                 assertThat(result.enabled()).isFalse();
 
                 verify(userServiceClient).createUser(argThat(req -> req.email().equals("john@example.com") &&
-                req.fullName().equals("John Doe") &&
-                req.password().equals("secret")));
+                                req.fullName().equals("John Doe") &&
+                                req.password().equals("secret")));
         }
 
         @Test
         @DisplayName("existsByEmail() -> devuelve true cuando el servicio confirma existencia")
         void existsByEmail_returnsTrue_whenUserExists() {
-                // Given
                 when(userServiceClient.existsByUsernameOrEmail(null, "john@example.com"))
                                 .thenReturn(OperationResponse.ok(true, "exists"));
 
-                // When / Then
                 assertThat(gateway.existsByEmail("john@example.com")).isTrue();
 
-                // No se usa el mapper en este test
                 verifyNoInteractions(userSnapshotMapper);
         }
 
         @Test
         @DisplayName("existsByEmail() -> devuelve false cuando el servicio retorna false")
         void existsByEmail_returnsFalse_whenUserNotExists() {
-                // Given
                 when(userServiceClient.existsByUsernameOrEmail(null, "new@example.com"))
                                 .thenReturn(OperationResponse.ok(false, "not found"));
 
-                // When / Then
                 assertThat(gateway.existsByEmail("new@example.com")).isFalse();
 
-                // No se usa el mapper en este test
                 verifyNoInteractions(userSnapshotMapper);
         }
 }

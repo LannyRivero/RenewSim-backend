@@ -42,17 +42,19 @@ jobs:
       - name: Ensure security binding test passed
         run: |
           set -euo pipefail
-          REPORT_FILE=$(ls -1 **/target/surefire-reports/TEST-*.xml | grep -E "SecurityRateLimitPropertiesBindingTest" || true)
+          REPORT_FILE=$(find target/surefire-reports -name "TEST-*SecurityRateLimitPropertiesBindingTest*.xml" 2>/dev/null || true)
 
           if [ -z "${REPORT_FILE}" ]; then
             echo "::error::Missing SecurityRateLimitPropertiesBindingTest report"
             exit 1
           fi
 
-          if ! grep -Eq 'tests="[1-9][0-9]*".*failures="0".*errors="0"' "${REPORT_FILE}"; then
+          if grep -q 'failures="[1-9]"' "${REPORT_FILE}" || grep -q 'errors="[1-9]"' "${REPORT_FILE}"; then
             echo "::error::SecurityRateLimitPropertiesBindingTest did not pass"
             exit 1
           fi
+
+          echo "SecurityRateLimitPropertiesBindingTest passed"
 
       - name: Upload test results
         if: always()

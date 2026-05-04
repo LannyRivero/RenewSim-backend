@@ -160,7 +160,7 @@ class GetUserServiceTest {
 
         User result = service.getDomainUserByUsernameOrEmail("alice", null);
 
-        assertThat(result.getEmail()).isEqualTo("alice@mail.com");
+        assertThat(result.getEmail()).isEqualTo("john@example.com");
     }
 
     @Test

@@ -38,6 +38,8 @@ class DtoSmokeTest {
                 "john@example.com",
                 "securePass",
                 Set.of(RoleName.USER, RoleName.ADMIN),
+                "ACTIVE",
+                Boolean.TRUE,
                 true);
 
         assertThat(dto.id()).isEqualTo(1L);
@@ -45,6 +47,8 @@ class DtoSmokeTest {
         assertThat(dto.email()).isEqualTo("john@example.com");
         assertThat(dto.passwordHash()).isEqualTo("securePass");
         assertThat(dto.roles()).contains(RoleName.USER, RoleName.ADMIN);
+        assertThat(dto.status()).isEqualTo("ACTIVE");
+        assertThat(dto.emailVerified()).isTrue();
         assertThat(dto.enabled()).isTrue();
     }
 

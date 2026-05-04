@@ -7,10 +7,14 @@ import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 public interface TokenProvider {
     String generate(AuthenticatedUser user);
 
+    String generate(AuthenticatedUser user, long expirationSeconds);
+
     Optional<AuthenticatedUser> validate(String token);
 
     long expiresInSeconds();
-
+    
+    long refreshExpiresInSeconds();
+    
     Optional<String> extractJti(String token);
 
     Optional<Long> extractExpirationEpochSeconds(String token);
