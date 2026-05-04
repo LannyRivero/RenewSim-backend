@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component;
  * No-op email adapter for local development and automated tests.
  *
  * <p>
- * Active on profiles {@code local} and {@code test}. Instead of sending
- * real emails it writes a clearly-marked log line at WARN level so developers
- * can copy OTPs and activation links directly from the console.
+ * Active on profile {@code test}. Instead of sending real emails it writes
+ * a clearly-marked log line at WARN level so developers can copy verification
+ * and reset links directly from the console.
  *
  * <p>
  * <strong>Security rule:</strong> this adapter intentionally prints
- * sensitive data (raw OTPs, activation tokens) to the console. It MUST
+ * sensitive data (verification tokens, reset tokens) to the console. It MUST
  * NEVER be activated on {@code docker} or {@code prod} profiles — enforced
  * by the {@code @Profile} annotation.
  *
@@ -30,37 +30,6 @@ import org.springframework.stereotype.Component;
 public class LoggingEmailAdapter implements EmailPort {
 
     private static final String SEP = "=".repeat(60);
-
-    @Override
-    public void sendOtp(String toEmail, String rawOtp, int expiresInSeconds) {
-        validateNotBlank(toEmail, "toEmail");
-        validateNotBlank(rawOtp, "rawOtp");
-
-        log.warn("""
-                {}
-                [EMAIL STUB — test only]  sendOtp
-                To            : {}
-                OTP           : {}
-                Expires in    : {} seconds
-                {}""",
-                SEP, toEmail, rawOtp, expiresInSeconds, SEP);
-    }
-
-    @Override
-    public void sendActivationEmail(String toEmail, String activationToken) {
-        validateNotBlank(toEmail, "toEmail");
-        validateNotBlank(activationToken, "activationToken");
-
-        String url = "http://localhost:8080/api/v1/auth/activate?token=" + activationToken;
-
-        log.warn("""
-                {}
-                [EMAIL STUB — test only]  sendActivationEmail
-                To            : {}
-                Activation URL: {}
-                {}""",
-                SEP, toEmail, url, SEP);
-    }
 
     @Override
     public void sendVerificationEmail(String toEmail, String username, String verificationToken) {

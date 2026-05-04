@@ -13,4 +13,5 @@ public record ExternalUserSnapshot(
         @Schema(description = "Hashed password of the user") @JsonProperty("passwordHash") String passwordHash,
         @Schema(description = "Email address of the user") String email,
         @Schema(description = "Roles assigned to the user") Set<String> roles,
-        String status) {}
+        String status,
+        @Schema(description = "Whether the email has been verified") Boolean emailVerified) {}

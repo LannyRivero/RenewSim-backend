@@ -7,8 +7,10 @@ import jakarta.validation.constraints.NotNull;
 
 public record UserCredentialsDTO(
         @NotNull Long id,
-        @NotBlank(message = "Username is mandatory") String username,
-        @NotBlank(message = "Email is mandatory") String email,
-        @NotBlank(message = "Password is mandatory") String passwordHash,
+        @NotBlank String username,
+        @NotBlank String email,
+        @NotBlank String passwordHash,
         Set<RoleName> roles,
-        boolean enabled) {}
+        String status,          
+        Boolean emailVerified,  
+        boolean enabled) {}     

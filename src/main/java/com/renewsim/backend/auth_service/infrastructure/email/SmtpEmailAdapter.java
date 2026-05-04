@@ -28,27 +28,13 @@ import org.springframework.stereotype.Component;
  * </ol>
  *
  * <p>
- * <strong>Security rule:</strong> never log raw OTPs or activation tokens —
+ * <strong>Security rule:</strong> never log raw verification or reset tokens —
  * log only the recipient address and a masked reference.
  */
 @Slf4j
 @Component
 @Profile({ "docker", "prod" })
 public class SmtpEmailAdapter implements EmailPort {
-
-    @Override
-    public void sendOtp(String toEmail, String rawOtp, int expiresInSeconds) {
-        log.error("SmtpEmailAdapter.sendOtp() not implemented. Email NOT sent to={}", toEmail);
-        throw new UnsupportedOperationException(
-                "SmtpEmailAdapter is not implemented yet. See D2-01-smtp in the backlog.");
-    }
-
-    @Override
-    public void sendActivationEmail(String toEmail, String activationToken) {
-        log.error("SmtpEmailAdapter.sendActivationEmail() not implemented. Email NOT sent to={}", toEmail);
-        throw new UnsupportedOperationException(
-                "SmtpEmailAdapter is not implemented yet. See D2-01-smtp in the backlog.");
-    }
 
     @Override
     public void sendVerificationEmail(String toEmail, String username, String verificationToken) {

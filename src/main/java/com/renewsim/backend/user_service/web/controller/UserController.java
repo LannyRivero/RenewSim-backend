@@ -101,15 +101,20 @@ public class UserController {
         // ----------------------------------------------------
         // GET /users/{id}/snapshot → Internal snapshot by ID
         // ----------------------------------------------------
-        @Operation(summary = "Get user snapshot by ID", description = "Requires role SERVICE_AUTH (internal use)", security = @SecurityRequirement(name = "bearerAuth"))
         @GetMapping("/{id}/snapshot")
         @PreAuthorize("hasRole('SERVICE_AUTH')")
         public ResponseEntity<OperationResponse<UserCredentialsDTO>> getSnapshot(@PathVariable Long id) {
                 var user = getUserUseCase.getDomainUserById(id);
                 var credentials = new UserCredentialsDTO(
-                                user.getId(), user.getEmail(), user.getEmail(),
-                                user.getPasswordHash(), user.getRoles(),
-                                user.getStatus().name().equals("ACTIVE"));
+                                user.getId(),
+                                user.getEmail(), 
+                                user.getEmail(),
+                                user.getPasswordHash(),
+                                user.getRoles(),
+                                user.getStatus().name(), 
+                                user.isEmailVerified(), 
+                                user.getStatus().name().equals("ACTIVE") && user.isEmailVerified()
+                );
                 return ResponseEntity.ok(ApiResponseFactory.ok(credentials, "Snapshot retrieved successfully"));
         }
 
@@ -148,7 +153,6 @@ public class UserController {
         // ----------------------------------------------------
         // GET /users/internal/credentials → Internal microservice access
         // ----------------------------------------------------
-        @Operation(summary = "Get internal credentials", description = "Requires role SERVICE_AUTH (internal use between microservices)", security = @SecurityRequirement(name = "bearerAuth"))
         @GetMapping("/internal/credentials")
         @PreAuthorize("hasRole('SERVICE_AUTH')")
         public ResponseEntity<OperationResponse<UserCredentialsDTO>> getCredentials(
@@ -156,9 +160,15 @@ public class UserController {
                         @RequestParam(required = false) String email) {
                 var user = getUserUseCase.getDomainUserByUsernameOrEmail(username, email);
                 var credentials = new UserCredentialsDTO(
-                                user.getId(), user.getEmail(), user.getEmail(),
-                                user.getPasswordHash(), user.getRoles(),
-                                user.getStatus().name().equals("ACTIVE"));
+                                user.getId(),
+                                user.getEmail(), 
+                                user.getEmail(),
+                                user.getPasswordHash(),
+                                user.getRoles(),
+                                user.getStatus().name(), 
+                                user.isEmailVerified(),
+                                user.getStatus().name().equals("ACTIVE") && user.isEmailVerified() 
+                );
                 return ResponseEntity.ok(ApiResponseFactory.ok(credentials, "Credentials retrieved successfully"));
         }
 

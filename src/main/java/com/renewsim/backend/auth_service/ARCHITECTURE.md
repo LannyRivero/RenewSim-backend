@@ -11,9 +11,11 @@
 ## Context
 
 The auth_service is a **technical authentication service** responsible for:
-- 2FA via OTP codes (`OtpCode`)
+- Email verification (`EmailVerificationToken`)
 - JWT refresh token rotation (`RefreshToken`)
-- Account activation (`ActivationToken`)
+- Login/logout flows
+
+These entities have independent lifecycles and do not share complex invariants that would require an Aggregate Root to enforce consistency.
 
 These entities have independent lifecycles and do not share complex invariants that would require an Aggregate Root to enforce consistency.
 
@@ -24,17 +26,17 @@ These entities have independent lifecycles and do not share complex invariants t
 We will **NOT** introduce an explicit Aggregate Root (e.g., `AuthSession`) for the following reasons:
 
 ### 1. Technical Service Nature
-auth_service is a **technical/infrastructure service**, not a domain-rich business service. Its entities are technical artifacts (tokens, codes) rather than business concepts with complex invariants.
+auth_service is a **technical/infrastructure service**, not a domain-rich business service. Its entities are technical artifacts (tokens) rather than business concepts with complex invariants.
 
 ### 2. Independent Entities
-- `OtpCode`: Short-lived (5 min), used only during login step 2
+- `EmailVerificationToken`: Short-lived (48h), used during registration
 - `RefreshToken`: Long-lived (7 days), used for JWT rotation
-- `ActivationToken`: Used only once during account registration
+- N/A (no 2FA - email verification only)
 
 These entities do not form a natural cluster with shared invariants.
 
 ### 3. Use Cases as Orchestrators
-The application layer use cases (`LoginStep1Service`, `LoginStep2Service`, etc.) correctly orchestrate interactions between these entities and external ports. This is the appropriate place for coordination logic in a technical service.
+The application layer use cases (`RegisterUserService`, `VerifyEmailUseCase`, `RefreshTokenService`, etc.) correctly orchestrate interactions between these entities and external ports. This is the appropriate place for coordination logic in a technical service.
 
 ### 4. KISS Principle
 Forcing an artificial Aggregate Root (e.g., `AuthSession`) would:
@@ -47,9 +49,8 @@ Forcing an artificial Aggregate Root (e.g., `AuthSession`) would:
 ## Current Design (Accepted)
 
 ### Domain Layer
-- `OtpCode` - Independent entity for 2FA codes
+- `EmailVerificationToken` - Independent entity for email verification
 - `RefreshToken` - Independent entity for refresh tokens
-- `ActivationToken` - Independent entity for account activation
 
 ### Application Layer
 - Use cases orchestrate entity interactions
@@ -82,8 +83,8 @@ Forcing an artificial Aggregate Root (e.g., `AuthSession`) would:
 ### Alternative: `AuthSession` as Aggregate Root
 **Rejected because**:
 - Artificial grouping of unrelated entities
-- `ActivationToken` doesn't belong to a "session"
-- OTP and RefreshToken have completely different lifecycles
+- No 2FA in current design (email verification only)
+- RefreshToken has different lifecycle than verification token
 - Would add complexity without business justification
 
 ---
