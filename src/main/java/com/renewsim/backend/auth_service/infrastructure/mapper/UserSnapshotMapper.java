@@ -4,6 +4,7 @@ import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.domain.model.AuthUserStatus;
 import com.renewsim.backend.auth_service.infrastructure.client.ExternalUserSnapshot;
 import com.renewsim.backend.shared.domain.vo.RoleName;
+
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -34,9 +35,14 @@ public class UserSnapshotMapper {
                     case "ACTIVE" -> AuthUserStatus.ACTIVE;
                     case "SUSPENDED" -> AuthUserStatus.SUSPENDED;
                     default -> AuthUserStatus.INACTIVE;
-                  };
-        boolean enabled = authStatus == AuthUserStatus.ACTIVE;
+                };
 
+        // User is enabled if status is ACTIVE
+        // If emailVerified field is present, it must also be true
+        // If emailVerified field is absent (null), we assume email is verified for
+        // ACTIVE users
+        boolean enabled = authStatus == AuthUserStatus.ACTIVE
+                && (external.emailVerified() == null || Boolean.TRUE.equals(external.emailVerified()));
         return new UserSnapshot(
                 external.id(),
                 external.username(),
