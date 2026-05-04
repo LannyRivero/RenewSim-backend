@@ -36,6 +36,7 @@ security:
     service-expiration-seconds: 300
     not-before-skew-seconds: 0
     allowed-clock-skew-seconds: 60
+    refresh-expiration-seconds: 604800
 
   # =============================
   # RATE LIMITING (Brute-force guard)

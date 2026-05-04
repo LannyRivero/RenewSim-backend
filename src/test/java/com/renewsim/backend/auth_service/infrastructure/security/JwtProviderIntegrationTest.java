@@ -30,7 +30,8 @@ class JwtProviderIntegrationTest {
                     3600L,
                     0L,
                     0L,
-                    3600L
+                    3600L,
+                    604800L
             );
         }
 

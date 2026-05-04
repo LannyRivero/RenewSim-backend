@@ -114,7 +114,7 @@ public class LoginService implements LoginUseCase {
                                 roleNames,
                                 Set.of("refresh") // scope especial para refresh tokens
                 );
-                String refreshToken = tokenProvider.generate(refreshUser);
+                String refreshToken = tokenProvider.generate(refreshUser, tokenProvider.refreshExpiresInSeconds());
 
                 // 8. Store refresh token
                 RefreshToken refreshTokenEntity = RefreshToken.issue(

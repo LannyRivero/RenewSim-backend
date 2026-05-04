@@ -39,7 +39,9 @@ public record SecurityJwtProperties(
         @Nullable Long allowedClockSkewSeconds,
 
         // exp: service token duration in seconds
-        @Min(60) long serviceExpirationSeconds
+        @Min(60) long serviceExpirationSeconds,
+        
+        @Min(60) long refreshExpirationSeconds
 
 ) {
 

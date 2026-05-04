@@ -33,7 +33,8 @@ class JwtTokenProviderTest {
             Long expirationSeconds,
             Long nbfSkewSeconds,
             Long clockSkewSeconds,
-            Long serviceExpirationSeconds) {
+            Long serviceExpirationSeconds,
+            Long refreshExpirationSeconds) {
         return new SecurityJwtProperties(
                 issuer,
                 audience,
@@ -44,7 +45,8 @@ class JwtTokenProviderTest {
                 expirationSeconds,
                 nbfSkewSeconds,
                 clockSkewSeconds,
-                serviceExpirationSeconds);
+                serviceExpirationSeconds,
+                refreshExpirationSeconds);
     }
 
     private static JwtParser parserWith(String base64Key, Clock clock, String reqIss, String reqAud, Long skew) {
@@ -69,7 +71,7 @@ class JwtTokenProviderTest {
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
         Clock clock = Clock.fixed(base, ZoneOffset.UTC);
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L, 604800L);
         var provider = createProvider(p, clock);
 
         var user = new AuthenticatedUser("john", Set.of("USER"), Set.of("read"));
@@ -99,11 +101,11 @@ class JwtTokenProviderTest {
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
         Clock clock = Clock.fixed(base, ZoneOffset.UTC);
 
-        var goodProps = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var goodProps = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L, 604800L);
         var signer = createProvider(goodProps, clock);
         String token = signer.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));
 
-        var badProps = props("WRONG", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var badProps = props("WRONG", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L, 604800L);
         var validator = createProvider(badProps, clock);
 
         assertThat(validator.validate(token)).isEmpty();
@@ -116,11 +118,11 @@ class JwtTokenProviderTest {
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
         Clock clock = Clock.fixed(base, ZoneOffset.UTC);
 
-        var goodProps = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var goodProps = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L, 604800L);
         var signer = createProvider(goodProps, clock);
         String token = signer.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));
 
-        var badProps = props("renewsim-auth", "WRONG", base64Key, 3600L, 0L, 60L, 3600L);
+        var badProps = props("renewsim-auth", "WRONG", base64Key, 3600L, 0L, 60L, 3600L, 604800L);
         var validator = createProvider(badProps, clock);
 
         assertThat(validator.validate(token)).isEmpty();
@@ -133,7 +135,7 @@ class JwtTokenProviderTest {
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
         Clock clock = Clock.fixed(base, ZoneOffset.UTC);
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 60L, 0L, 3600L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 60L, 0L, 3600L, 604800L);
         var provider = createProvider(p, clock);
 
         String token = provider.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));
@@ -150,7 +152,7 @@ class JwtTokenProviderTest {
         long expSeconds = 30;
         long skewSeconds = 20;
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, expSeconds, 0L, skewSeconds, 3600L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, expSeconds, 0L, skewSeconds, 3600L, 604800L);
 
         JwtTokenProvider signer = createProvider(p, Clock.fixed(base, ZoneOffset.UTC));
         String token = signer.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("read")));
@@ -169,7 +171,7 @@ class JwtTokenProviderTest {
         long expSeconds = 30;
         long skewSeconds = 20;
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, expSeconds, 0L, skewSeconds, 3600L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, expSeconds, 0L, skewSeconds, 3600L, 604800L);
 
         JwtTokenProvider signer = createProvider(p, Clock.fixed(base, ZoneOffset.UTC));
         String token = signer.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("read")));
@@ -187,7 +189,7 @@ class JwtTokenProviderTest {
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
         Clock clock = Clock.fixed(base, ZoneOffset.UTC);
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, 60L, 0L, 0L, 60L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 60L, 0L, 0L, 60L, 604800L);
         JwtTokenProvider validator = createProvider(p, clock);
 
         Key attackerSigningKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(attackerKey));
@@ -211,7 +213,7 @@ class JwtTokenProviderTest {
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
         Clock clock = Clock.fixed(base, ZoneOffset.UTC);
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, 60L, 0L, 0L, 60L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 60L, 0L, 0L, 60L, 604800L);
         JwtTokenProvider validator = createProvider(p, clock);
 
         Key hs384Key = Keys.secretKeyFor(SignatureAlgorithm.HS384);
@@ -241,7 +243,9 @@ class JwtTokenProviderTest {
                 3600L,
                 0L,
                 0L,
-                3600L);
+                3600L,
+                604800L
+            );
         Clock clock = Clock.fixed(Instant.parse("2025-01-01T10:00:00Z"), ZoneOffset.UTC);
 
         assertThatThrownBy(() -> createProvider(p, clock))
@@ -255,7 +259,7 @@ class JwtTokenProviderTest {
         String base64Key = randomBase64Key();
         Clock clock = Clock.fixed(Instant.parse("2025-01-01T10:00:00Z"), ZoneOffset.UTC);
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, 1234L, 0L, 0L, 3600L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 1234L, 0L, 0L, 3600L, 604800L);
         JwtTokenProvider provider = createProvider(p, clock);
 
         assertThat(provider.expiresInSeconds()).isEqualTo(1234L);
@@ -267,7 +271,7 @@ class JwtTokenProviderTest {
         String base64Key = randomBase64Key();
         Clock clock = Clock.fixed(Instant.parse("2025-01-01T10:00:00Z"), ZoneOffset.UTC);
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L, 604800L);
         JwtTokenProvider provider = createProvider(p, clock);
 
         String token = provider.generate(new AuthenticatedUser("only-subject", null, null));
@@ -286,7 +290,7 @@ class JwtTokenProviderTest {
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
         Clock clock = Clock.fixed(base, ZoneOffset.UTC);
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L, 604800L);
         var provider = createProvider(p, clock);
 
         String token = provider.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));
@@ -310,7 +314,8 @@ class JwtTokenProviderTest {
                 3600L,
                 0L,
                 0L,
-                3600L);
+                3600L,
+                604800L);
         Clock clock = Clock.fixed(Instant.parse("2025-01-01T10:00:00Z"), ZoneOffset.UTC);
 
         assertThatThrownBy(() -> createProvider(p, clock))
@@ -334,7 +339,7 @@ class JwtTokenProviderTest {
         String base64Key = randomBase64Key();
         Clock clock = Clock.fixed(Instant.parse("2025-01-01T10:00:00Z"), ZoneOffset.UTC);
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L, 604800L);
         var provider = createProvider(p, clock);
 
         String token = provider.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));
@@ -350,7 +355,7 @@ class JwtTokenProviderTest {
         String base64Key = randomBase64Key();
         Clock clock = Clock.fixed(Instant.parse("2025-01-01T10:00:00Z"), ZoneOffset.UTC);
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L, 604800L);
         var provider = createProvider(p, clock);
 
         assertThat(provider.extractJti("")).isEmpty();
@@ -364,7 +369,7 @@ class JwtTokenProviderTest {
         Instant base = Instant.parse("2025-01-01T10:00:00Z");
         Clock clock = Clock.fixed(base, ZoneOffset.UTC);
 
-        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L);
+        var p = props("renewsim-auth", "renewsim-app", base64Key, 3600L, 0L, 60L, 3600L, 604800L);
         var provider = createProvider(p, clock);
 
         String token = provider.generate(new AuthenticatedUser("john", Set.of("USER"), Set.of("USER")));

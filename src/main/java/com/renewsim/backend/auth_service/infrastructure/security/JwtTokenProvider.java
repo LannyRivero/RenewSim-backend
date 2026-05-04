@@ -34,14 +34,18 @@ public final class JwtTokenProvider implements TokenProvider {
 
     @Override
     public String generate(AuthenticatedUser user) {
+        return generate(user, props.expirationSeconds());
+    }
+
+    @Override
+    public String generate(AuthenticatedUser user, long expirationSeconds) {
         Objects.requireNonNull(user, "user must not be null");
 
         Instant now = Instant.now(clock);
         long nbfSkew = props.nbfSkewOrZero();
-        long expSecs = props.expirationSeconds();
 
         Instant nbf = now.plusSeconds(nbfSkew);
-        Instant exp = now.plusSeconds(expSecs);
+        Instant exp = now.plusSeconds(expirationSeconds);
 
         Map<String, Object> claims = new HashMap<>(4);
         if (user.roles() != null && !user.roles().isEmpty()) {
@@ -50,7 +54,6 @@ public final class JwtTokenProvider implements TokenProvider {
                     .collect(Collectors.toSet());
             claims.put("roles", normalizedRoles);
         }
-
         if (user.scopes() != null && !user.scopes().isEmpty()) {
             claims.put("scopes", Set.copyOf(user.scopes()));
         }
@@ -66,6 +69,11 @@ public final class JwtTokenProvider implements TokenProvider {
                 .addClaims(claims)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
+    }
+
+    @Override
+    public long refreshExpiresInSeconds() {
+        return props.refreshExpirationSeconds();
     }
 
     @Override
