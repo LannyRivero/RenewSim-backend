@@ -54,3 +54,8 @@ Thumbs.db
 # 🚀 EXCEPCIÓN para workflows de GitHub
 !.github/workflows/*.yml
 !docker-compose.yml
+
+# AI tooling - local only
+.cursor/
+.cursor.zip
+.opencode/
