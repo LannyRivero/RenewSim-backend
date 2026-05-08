@@ -211,4 +211,14 @@ public class User {
         return "User{id=" + id + ", email='" + email + "', status=" + status +
                 ", emailVerified=" + emailVerified + "}";
     }
+
+    /**
+     * Activates the account and marks email as verified atomically.
+     * Used in local profile where email verification is bypassed.
+     */
+    public void activateWithEmailVerified() {
+        this.emailVerified = true;
+        this.emailVerifiedAt = LocalDateTime.now();
+        activate();
+    }
 }

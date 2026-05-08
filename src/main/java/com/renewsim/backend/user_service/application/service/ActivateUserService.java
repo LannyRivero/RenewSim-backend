@@ -21,9 +21,8 @@ public class ActivateUserService implements ActivateUserUseCase {
     public void activate(Long userId) {
         User user = userRepositoryPort.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-
-        user.activate();
-
+        user.activateWithEmailVerified();
         userRepositoryPort.save(user);
     }
+
 }

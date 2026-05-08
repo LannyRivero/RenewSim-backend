@@ -8,6 +8,7 @@ import com.renewsim.backend.auth_service.application.validator.UserAccountValida
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 /**
  * Configuración de beans para la capa de aplicación.
@@ -77,12 +78,14 @@ public class ApplicationServiceConfig {
             EmailVerificationTokenRepository emailVerificationTokenRepository,
             EmailPort emailPort,
             TransactionalPort transactionalPort,
+            Environment environment,
             @Value("${app.email.verification.expiration-hours:48}") int verificationExpirationHours) {
         return new RegisterUserService(
                 userAccountGateway,
                 emailVerificationTokenRepository,
                 emailPort,
                 transactionalPort,
+                environment,
                 verificationExpirationHours);
     }
 

@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@Profile({ "test" })
+@Profile({ "test", "local" })
 public class LoggingEmailAdapter implements EmailPort {
 
     private static final String SEP = "=".repeat(60);

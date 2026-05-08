@@ -44,6 +44,7 @@ public interface UserServiceMapper {
         UserEntity entity = new UserEntity();
         entity.setId(domain.getId());
         entity.setEmail(domain.getEmail());
+        entity.setUsername(extractUsername(domain.getEmail()));
         entity.setPasswordHash(domain.getPasswordHash());
         entity.setFullName(domain.getFullName());
         entity.setPhone(domain.getPhone());
@@ -102,5 +103,12 @@ public interface UserServiceMapper {
 
     default Instant toInstant(LocalDateTime localDateTime) {
         return localDateTime == null ? null : localDateTime.toInstant(ZoneOffset.UTC);
+    }
+
+    default String extractUsername(String email) {
+        if (email == null)
+            return null;
+        int at = email.indexOf('@');
+        return at > 0 ? email.substring(0, at) : email;
     }
 }

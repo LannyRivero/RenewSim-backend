@@ -14,9 +14,11 @@ import com.renewsim.backend.shared.exception.ConflictException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Set;
 
@@ -29,6 +31,7 @@ public class RegisterUserService implements RegisterUserUseCase {
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final EmailPort emailPort;
     private final TransactionalPort transactionalPort;
+    private final Environment environment;
     private final SecureRandom secureRandom;
     private final int verificationExpirationHours;
 
@@ -37,11 +40,13 @@ public class RegisterUserService implements RegisterUserUseCase {
             EmailVerificationTokenRepository emailVerificationTokenRepository,
             EmailPort emailPort,
             TransactionalPort transactionalPort,
+            Environment environment,
             @Value("${app.email.verification.expiration-hours:48}") int verificationExpirationHours) {
         this.userAccountGateway = userAccountGateway;
         this.emailVerificationTokenRepository = emailVerificationTokenRepository;
         this.emailPort = emailPort;
         this.transactionalPort = transactionalPort;
+        this.environment = environment;
         this.secureRandom = new SecureRandom();
         this.verificationExpirationHours = verificationExpirationHours;
     }
@@ -64,21 +69,31 @@ public class RegisterUserService implements RegisterUserUseCase {
                 command.fullName(),
                 command.password(),
                 command.email(),
-                DEFAULT_ROLES
-        );
+                DEFAULT_ROLES);
 
-        // Generate email verification token
+        // In local profile: auto-activate so developers can log in immediately
+        // without email verification. Never active on docker or prod.
+        if (isLocalProfile()) {
+            userAccountGateway.activateUser(userSnapshot.id());
+            log.info("Local profile: user auto-activated userId={}", userSnapshot.id());
+            return new RegisterResult(
+                    userSnapshot.id(),
+                    userSnapshot.email(),
+                    userSnapshot.fullName(),
+                    AuthUserStatus.ACTIVE,
+                    "Registration successful. You can log in immediately (local profile).");
+        }
+
+        // Production/docker path: require email verification
         String verificationToken = generateSecureToken();
         LocalDateTime expiresAt = LocalDateTime.now().plusHours(verificationExpirationHours);
-        
+
         EmailVerificationToken emailVerificationToken = new EmailVerificationToken(
                 userSnapshot.id(),
                 verificationToken,
-                expiresAt
-        );
+                expiresAt);
         emailVerificationTokenRepository.save(emailVerificationToken);
 
-        // Send verification email
         emailPort.sendVerificationEmail(command.email(), command.fullName(), verificationToken);
 
         log.info("User registered successfully. Verification email sent. userId={}", userSnapshot.id());
@@ -88,8 +103,11 @@ public class RegisterUserService implements RegisterUserUseCase {
                 userSnapshot.email(),
                 userSnapshot.fullName(),
                 AuthUserStatus.INACTIVE,
-                "Registration successful. Please check your email to verify your account."
-        );
+                "Registration successful. Please check your email to verify your account.");
+    }
+
+    private boolean isLocalProfile() {
+        return Arrays.asList(environment.getActiveProfiles()).contains("local");
     }
 
     private String generateSecureToken() {
@@ -104,7 +122,8 @@ public class RegisterUserService implements RegisterUserUseCase {
     }
 
     private String maskEmail(String email) {
-        if (email == null || !email.contains("@")) return "***";
+        if (email == null || !email.contains("@"))
+            return "***";
         int at = email.indexOf("@");
         return at <= 2 ? "***" + email.substring(at) : email.substring(0, 2) + "***" + email.substring(at);
     }

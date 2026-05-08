@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Slf4j
 @Component
-@Profile({ "local", "docker", "prod" })
+@Profile({ "docker", "prod" })
 public class BrevoEmailAdapter implements EmailPort {
 
     private final RestTemplate restTemplate;
