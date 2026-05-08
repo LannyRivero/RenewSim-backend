@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.infrastructure.adapter.in.web;
+package com.renewsim.backend.simulation_service.web.controller;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.simulation_service.application.command.*;
@@ -6,7 +6,7 @@ import com.renewsim.backend.simulation_service.application.port.in.*;
 import com.renewsim.backend.simulation_service.application.result.*;
 import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
 import com.renewsim.backend.simulation_service.domain.model.vo.EnergyType;
-import com.renewsim.backend.simulation_service.dto.SimulationRequestDTO;
+import com.renewsim.backend.simulation_service.web.dto.SimulationRequestDTO;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -90,8 +90,9 @@ public class SimulationController {
 
                 AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
 boolean isAdmin = hasAdminRole(auth);
-SimulationQueryResultDTO existing = getUseCase.getSimulationById(
+SimulationDetailResultDTO existing = getUseCase.getSimulationById(
     new GetSimulationByIdCommand(id, user.username(), isAdmin)
+
 );
                 if (!isOwner(auth, existing) && !hasAdminRole(auth)) {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -228,7 +229,7 @@ SimulationQueryResultDTO existing = getUseCase.getSimulationById(
         /**
          * Verifica si el usuario autenticado es el propietario de la simulación.
          */
-        private boolean isOwner(Authentication auth, SimulationQueryResultDTO result) {
+        private boolean isOwner(Authentication auth, SimulationDetailResultDTO result) {
                 AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
                 return result.createdBy().equalsIgnoreCase(user.username());
         }

@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.domain.util;
 
 import java.util.List;
-import com.renewsim.backend.simulation_service.dto.NormalizationStatsDTO;
+import com.renewsim.backend.simulation_service.web.dto.NormalizationStatsDTO;
 
 /**
  * Utility class for calculating technology scores based on CO2 reduction,

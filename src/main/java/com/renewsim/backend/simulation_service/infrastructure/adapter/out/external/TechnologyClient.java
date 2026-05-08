@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.external;
 
-import com.renewsim.backend.simulation_service.dto.TechnologyResponseDTO;
+import com.renewsim.backend.simulation_service.web.dto.TechnologyResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

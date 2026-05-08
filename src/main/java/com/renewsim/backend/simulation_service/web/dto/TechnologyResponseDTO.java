@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.dto;
+package com.renewsim.backend.simulation_service.web.dto;
 
 public record TechnologyResponseDTO(
         Long id,
