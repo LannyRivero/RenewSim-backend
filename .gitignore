@@ -54,3 +54,5 @@ Thumbs.db
 # 🚀 EXCEPCIÓN para workflows de GitHub
 !.github/workflows/*.yml
 !docker-compose.yml
+
+.opencode/
