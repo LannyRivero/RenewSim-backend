@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.application.port.out;
 
-import com.renewsim.backend.simulation_service.dto.TechnologyResponseDTO;
+import com.renewsim.backend.simulation_service.web.dto.TechnologyResponseDTO;
 import java.util.List;
 
 /**

@@ -8,7 +8,7 @@ import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.vo.CO2Reduction;
 import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
 import com.renewsim.backend.simulation_service.domain.model.vo.EnergyOutput;
-import com.renewsim.backend.simulation_service.dto.SimulationRecommendationResultDTO;
+import com.renewsim.backend.simulation_service.web.dto.SimulationRecommendationResultDTO;
 import com.renewsim.backend.technology_service.application.service.TechnologyRecommenderService;
 
 import lombok.RequiredArgsConstructor;

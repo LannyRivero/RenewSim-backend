@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.external;
 
 import com.renewsim.backend.simulation_service.application.port.out.TechnologyClientPort;
-import com.renewsim.backend.simulation_service.dto.TechnologyResponseDTO;
+import com.renewsim.backend.simulation_service.web.dto.TechnologyResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

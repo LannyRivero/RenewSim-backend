@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.dto;
+package com.renewsim.backend.simulation_service.web.dto;
 
 import jakarta.validation.constraints.PositiveOrZero;
 
@@ -7,4 +7,3 @@ public record ClimateDataDTO(
     @PositiveOrZero double wind,
     @PositiveOrZero double hydrology
 ) {}
-
