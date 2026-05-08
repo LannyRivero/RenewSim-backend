@@ -55,4 +55,7 @@ Thumbs.db
 !.github/workflows/*.yml
 !docker-compose.yml
 
+# AI tooling - local only
+.cursor/
+.cursor.zip
 .opencode/

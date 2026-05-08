@@ -4,6 +4,7 @@ import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
 
 import com.github.benmanes.caffeine.cache.Cache;
+import com.renewsim.backend.config.TestSecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.context.annotation.Import;
 
 import com.renewsim.backend.role_service.domain.model.Role;
 import com.renewsim.backend.shared.domain.vo.RoleName;
@@ -20,6 +22,7 @@ import com.renewsim.backend.role_service.infrastructure.persistence.repo.RoleJpa
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
 class RolePersistenceAdapterCacheTest {
 
     @SpyBean

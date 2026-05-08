@@ -1,11 +1,13 @@
 package com.renewsim.backend.auth_service.infrastructure.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.renewsim.backend.config.TestSecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -24,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
     "security.rate-limiting.retry-after=5s",
     "security.rate-limiting.login-path=/api/v1/auth/login"
 })
+@Import(TestSecurityConfig.class)
 class LoginRateLimiterScopeIT {
 
     @Autowired MockMvc mockMvc;

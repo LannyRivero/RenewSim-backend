@@ -2,10 +2,12 @@ package com.renewsim.backend.role_service.infrastructure.gateway;
 
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.renewsim.backend.config.TestSecurityConfig;
 import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
@@ -13,6 +15,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest
+@Import(TestSecurityConfig.class)
 class HttpUserServiceGatewayIT {
 
     private static WireMockServer wireMockServer;

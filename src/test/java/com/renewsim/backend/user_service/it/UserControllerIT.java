@@ -1,9 +1,11 @@
 package com.renewsim.backend.user_service.it;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.renewsim.backend.config.TestSecurityConfig;
 import com.renewsim.backend.user_service.web.dto.UserCreateRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Import;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
 class UserControllerIT {
 
     @Autowired
