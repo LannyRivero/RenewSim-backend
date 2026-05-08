@@ -1,4 +1,4 @@
-package com.renewsim.backend.user_service.infrastructure.web.security;
+package com.renewsim.backend.user_service.infrastructure.security;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
