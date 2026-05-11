@@ -1,10 +1,10 @@
 package com.renewsim.backend.auth_service.application.service;
 
+import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import com.renewsim.backend.auth_service.application.port.out.EmailVerificationTokenRepository;
+import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.domain.model.EmailVerificationToken;
-import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
-import com.renewsim.backend.user_service.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,11 +17,11 @@ import java.util.Base64;
 
 /**
  * Use case for resending email verification link.
- * 
+ *
  * Business rules:
  * - User must exist
- * - User must not already be verified
- * - Generates new token (invalidates previous)
+ * - User must not already be verified (enabled)
+ * - Generates new token
  * - Sends verification email
  */
 @Slf4j
@@ -29,7 +29,7 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class ResendVerificationEmailUseCase {
 
-    private final UserRepositoryPort userRepository;
+    private final UserAccountGateway userAccountGateway;
     private final EmailVerificationTokenRepository tokenRepository;
     private final EmailPort emailPort;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -41,31 +41,24 @@ public class ResendVerificationEmailUseCase {
     public void execute(String email) {
         log.debug("Resending verification email to={}", maskEmail(email));
 
-        // Find user by email
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResendVerificationException("User not found"));
+        UserSnapshot user = userAccountGateway.findByEmail(email)
+                .orElseThrow(() -> new ResendVerificationException("User not found"));
 
-        // Check if already verified
-        if (user.isEmailVerified()) {
+        if (user.enabled()) {
             throw new ResendVerificationException("Email already verified");
         }
 
-        // Generate new token
         String token = generateSecureToken();
         LocalDateTime expiresAt = LocalDateTime.now().plusHours(expirationHours);
 
         EmailVerificationToken verificationToken = new EmailVerificationToken(
-            user.getId(),
-            token,
-            expiresAt
-        );
+                user.id(), token, expiresAt);
 
         tokenRepository.save(verificationToken);
 
-        // Send email
-        emailPort.sendVerificationEmail(user.getEmail(), user.getFullName(), token);
+        emailPort.sendVerificationEmail(user.email(), user.fullName(), token);
 
-        log.info("Verification email resent to user={}", user.getId());
+        log.info("Verification email resent to userId={}", user.id());
     }
 
     private String generateSecureToken() {
@@ -75,14 +68,12 @@ public class ResendVerificationEmailUseCase {
     }
 
     private String maskEmail(String email) {
-        if (email == null || !email.contains("@")) return "***";
+        if (email == null || !email.contains("@"))
+            return "***";
         int at = email.indexOf("@");
         return at <= 2 ? "***" + email.substring(at) : email.substring(0, 2) + "***" + email.substring(at);
     }
 
-    /**
-     * Exception thrown when resend verification fails.
-     */
     public static class ResendVerificationException extends RuntimeException {
         public ResendVerificationException(String message) {
             super(message);
