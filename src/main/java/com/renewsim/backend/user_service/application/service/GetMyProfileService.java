@@ -25,4 +25,11 @@ public class GetMyProfileService implements GetMyProfileUseCase {
                 .map(mapper::toResponse)
                 .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
     }
+
+    @Override
+    public UserResponse getMyProfileByEmail(String email) {
+        return userRepositoryPort.findByEmail(email)
+                .map(mapper::toResponse)
+                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+    }
 }

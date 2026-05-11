@@ -62,6 +62,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
+                        .requestMatchers("/api/v1/auth/email-verification/**").permitAll()
                         // User service internal endpoints
                         .requestMatchers("/api/v1/users/exists").permitAll()
                         .requestMatchers("/api/v1/users/by-username").permitAll()

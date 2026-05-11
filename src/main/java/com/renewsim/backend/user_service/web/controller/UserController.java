@@ -53,8 +53,7 @@ public class UserController {
         @GetMapping("/me")
         public ResponseEntity<OperationResponse<UserResponse>> getMe(
                         @AuthenticationPrincipal AuthenticatedUser principal) {
-                var user = getUserUseCase.getDomainUserByUsernameOrEmail(null, principal.username());
-                var response = getMyProfileUseCase.getMyProfile(user.getId());
+                var response = getMyProfileUseCase.getMyProfileByEmail(principal.username());
                 return ResponseEntity.ok(ApiResponseFactory.ok(response, "Profile retrieved successfully"));
         }
 
@@ -107,14 +106,13 @@ public class UserController {
                 var user = getUserUseCase.getDomainUserById(id);
                 var credentials = new UserCredentialsDTO(
                                 user.getId(),
-                                user.getEmail(), 
+                                user.getEmail(),
                                 user.getEmail(),
                                 user.getPasswordHash(),
                                 user.getRoles(),
-                                user.getStatus().name(), 
-                                user.isEmailVerified(), 
-                                user.getStatus().name().equals("ACTIVE") && user.isEmailVerified()
-                );
+                                user.getStatus().name(),
+                                user.isEmailVerified(),
+                                user.getStatus().name().equals("ACTIVE") && user.isEmailVerified());
                 return ResponseEntity.ok(ApiResponseFactory.ok(credentials, "Snapshot retrieved successfully"));
         }
 
@@ -161,14 +159,13 @@ public class UserController {
                 var user = getUserUseCase.getDomainUserByUsernameOrEmail(username, email);
                 var credentials = new UserCredentialsDTO(
                                 user.getId(),
-                                user.getEmail(), 
+                                user.getEmail(),
                                 user.getEmail(),
                                 user.getPasswordHash(),
                                 user.getRoles(),
-                                user.getStatus().name(), 
+                                user.getStatus().name(),
                                 user.isEmailVerified(),
-                                user.getStatus().name().equals("ACTIVE") && user.isEmailVerified() 
-                );
+                                user.getStatus().name().equals("ACTIVE") && user.isEmailVerified());
                 return ResponseEntity.ok(ApiResponseFactory.ok(credentials, "Credentials retrieved successfully"));
         }
 
