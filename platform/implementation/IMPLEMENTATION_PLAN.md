@@ -122,7 +122,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - `UserController` con `@PostMapping("/register")` → HTTP 201
     - _Requirements: 1.1, 1.3, 1.4_
 
-  - [ ] 2.6 Implementar `ActivationToken` domain entity + `POST /api/v1/users/activate`
+  - [x] 2.6 Implementar `ActivationToken` domain entity + `POST /api/v1/users/activate`
     - `ActivationToken` entity: id, userId, tokenHash, expiresAt (24h), used
     - Método `isExpired()`, `isValid()`
     - `ActivateAccountUseCase`: buscar token por hash, validar no expirado y no usado, marcar usado, cambiar User a ACTIVE
@@ -154,7 +154,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Respuesta genérica 200 sin revelar si email existe
     - _Requirements: 2.1, 2.2_
 
-  - [ ] 2.11 Implementar `JwtTokenProvider` con JTI, HS512, access 1h + refresh 7d
+  - [x] 2.11 Implementar `JwtTokenProvider` con JTI, HS512, access 1h + refresh 7d
     - `JwtTokenProvider` en `auth_service/infrastructure/security/`
     - `generateAccessToken(Long userId, String email, List<String> roles)` → JWT con claims: sub, jti (UUID), roles, iat, exp (1h)
     - `generateRefreshToken(Long userId)` → JWT firmado HS512 exp 7d
@@ -163,7 +163,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - `@PostConstruct` validar secreto ≥ 32 chars
     - _Requirements: 2.4, 2.13, 18.2_
 
-  - [ ] 2.12 Implementar `RefreshToken` domain entity
+  - [x] 2.12 Implementar `RefreshToken` domain entity
     - `RefreshToken` entity: id, userId, tokenHash, expiresAt (7d), revoked
     - `isValid()`: `!revoked && LocalDateTime.now().isBefore(expiresAt)`
     - `RefreshTokenRepository` port + JPA adapter
@@ -182,33 +182,33 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Generar y enviar nuevo OTP
     - _Requirements: 2.7, 2.8_
 
-  - [ ] 2.15 Implementar `POST /api/v1/auth/refresh` (rota refresh token)
+  - [x] 2.15 Implementar `POST /api/v1/auth/refresh` (rota refresh token)
     - Leer refresh token de cookie HttpOnly
     - Validar hash en BD, verificar `isValid()`
     - Revocar token anterior, generar nuevo par access+refresh
     - _Requirements: 2.9, 2.10_
 
-  - [ ] 2.16 Implementar `POST /api/v1/auth/logout` (blacklist JTI + revoca refresh)
+  - [x] 2.16 Implementar `POST /api/v1/auth/logout` (blacklist JTI + revoca refresh)
     - Extraer JTI del access token del header Authorization
     - Insertar JTI en `token_blacklist` con `expires_at` = expiración natural del token
     - Revocar refresh token del usuario (marcar `revoked=true`)
     - _Requirements: 2.11_
 
-  - [ ] 2.17 Implementar `JwtAuthenticationFilter` (OncePerRequestFilter + blacklist check)
+  - [x] 2.17 Implementar `JwtAuthenticationFilter` (OncePerRequestFilter + blacklist check)
     - Extraer Bearer token del header Authorization
     - Validar firma y expiración con `JwtTokenProvider`
     - Verificar JTI no está en blacklist (consulta BD con caché Caffeine)
     - Poblar `SecurityContextHolder` con `UsernamePasswordAuthenticationToken`
     - _Requirements: 18.1, 18.2_
 
-  - [ ] 2.18 Implementar `SecurityConfig` (Spring Security 6, CORS, headers de seguridad)
+  - [x] 2.18 Implementar `SecurityConfig` (Spring Security 6, CORS, headers de seguridad)
     - `SessionCreationPolicy.STATELESS`, CSRF disabled
     - `authorizeHttpRequests`: endpoints públicos (login/step1, step2, resend-otp, refresh, register, activate, /shared/**, /actuator/health), ADMIN-only (POST/PUT/DELETE /technologies, POST /roles, /users/{id}/roles/**), resto authenticated
     - CORS: orígenes permitidos desde properties, allowCredentials=true
     - Headers: HSTS, X-Content-Type-Options, X-Frame-Options DENY
     - _Requirements: 18.1, 18.3, 18.5_
 
-  - [ ] 2.19 Implementar `LoginRateLimiter` con Caffeine (5 intentos → bloqueo 15 min)
+  - [ x] 2.19 Implementar `LoginRateLimiter` con Caffeine (5 intentos → bloqueo 15 min)
     - `Cache<String, Integer>` con `expireAfterWrite(15, MINUTES)`
     - `recordFailedAttempt(String email)`: incrementar contador, lanzar `RateLimitExceededException` si ≥ 5
     - `resetAttempts(String email)`: invalidar entrada en cache tras login exitoso
