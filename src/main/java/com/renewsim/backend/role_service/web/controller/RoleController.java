@@ -11,6 +11,8 @@ import com.renewsim.backend.role_service.web.dto.RoleCreateRequestDTO;
 import com.renewsim.backend.role_service.web.dto.RoleDTO;
 import com.renewsim.backend.shared.dto.ApiResponseFactory;
 import com.renewsim.backend.shared.dto.OperationResponse;
+import com.renewsim.backend.shared.exception.ResourceNotFoundException;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -44,14 +46,11 @@ public class RoleController {
     // --------------------------
     @PostMapping
     @PreAuthorize("hasAuthority('SCOPE_roles:write') or hasRole('ADMIN')")
-    @Operation(summary = "Create a new role", description = "Requires role ADMIN or scope roles:write", 
-        security = @SecurityRequirement(name = "bearerAuth"),
-        responses = {
-            @ApiResponse(responseCode = "201", description = "Role created successfully", 
-                         content = @Content(schema = @Schema(implementation = RoleCreationResultDTO.class))),
+    @Operation(summary = "Create a new role", description = "Requires role ADMIN or scope roles:write", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "201", description = "Role created successfully", content = @Content(schema = @Schema(implementation = RoleCreationResultDTO.class))),
             @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
             @ApiResponse(responseCode = "409", description = "Role already exists", content = @Content)
-        })
+    })
     public ResponseEntity<OperationResponse<RoleCreationResultDTO>> createRole(
             @Valid @RequestBody RoleCreateRequestDTO request) {
 
@@ -68,14 +67,11 @@ public class RoleController {
     // --------------------------
     @PostMapping("/manage")
     @PreAuthorize("hasAuthority('SCOPE_roles:write') or hasRole('ADMIN')")
-    @Operation(summary = "Batch manage user roles", description = "Assign and revoke multiple roles in a single request",
-        security = @SecurityRequirement(name = "bearerAuth"),
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Roles updated successfully",
-                         content = @Content(schema = @Schema(implementation = ManageUserRolesResultDTO.class))),
+    @Operation(summary = "Batch manage user roles", description = "Assign and revoke multiple roles in a single request", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "200", description = "Roles updated successfully", content = @Content(schema = @Schema(implementation = ManageUserRolesResultDTO.class))),
             @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
             @ApiResponse(responseCode = "404", description = "User or role not found", content = @Content)
-        })
+    })
     public ResponseEntity<OperationResponse<ManageUserRolesResultDTO>> manageRoles(
             @Valid @RequestBody ManageUserRolesRequestDTO request) {
 
@@ -94,8 +90,7 @@ public class RoleController {
     // --------------------------
     @GetMapping
     @PreAuthorize("hasAuthority('SCOPE_roles:read') or hasAnyRole('ADMIN','USER')")
-    @Operation(summary = "List all roles", description = "Requires ADMIN, USER, or scope roles:read",
-        security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "List all roles", description = "Requires ADMIN, USER, or scope roles:read", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<OperationResponse<List<RoleDTO>>> getAllRoles() {
         var result = getRolesUseCase.getAll();
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Roles retrieved successfully"));
@@ -106,8 +101,7 @@ public class RoleController {
     // --------------------------
     @GetMapping("/exists/{name}")
     @PreAuthorize("hasAuthority('SCOPE_roles:read') or hasAnyRole('ADMIN','SERVICE_AUTH')")
-    @Operation(summary = "Check if role exists", description = "Requires ADMIN, SERVICE_AUTH, or scope roles:read",
-        security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Check if role exists", description = "Requires ADMIN, SERVICE_AUTH, or scope roles:read", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<OperationResponse<Boolean>> existsRole(
             @PathVariable @NotBlank String name) {
         boolean exists;
@@ -124,23 +118,18 @@ public class RoleController {
     // --------------------------
     // GET /roles/by-name/{name}
     // --------------------------
+
     @GetMapping("/by-name/{name}")
     @PreAuthorize("hasAuthority('SCOPE_roles:read') or hasAnyRole('ADMIN','SERVICE_AUTH')")
-    @Operation(summary = "Get role by name", description = "Requires ADMIN, SERVICE_AUTH, or scope roles:read",
-        security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Get role by name", description = "Requires ADMIN, SERVICE_AUTH, or scope roles:read", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<OperationResponse<RoleDTO>> getRoleByName(
             @PathVariable @NotBlank String name) {
 
-        var role = getRolesUseCase.getAll().stream()
+        return getRolesUseCase.getAll().stream()
                 .filter(r -> r.name().equalsIgnoreCase(name))
                 .findFirst()
-                .orElse(null);
-
-        if (role == null) {
-            return ResponseEntity.ok(ApiResponseFactory.ok(null, "Role not found"));
-        }
-
-        return ResponseEntity.ok(ApiResponseFactory.ok(role, "Role retrieved successfully"));
+                .map(role -> ResponseEntity.ok(ApiResponseFactory.ok(role, "Role retrieved successfully")))
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + name));
     }
 
     // --------------------------
@@ -148,8 +137,7 @@ public class RoleController {
     // --------------------------
     @PutMapping("/{roleId}/assign/{userId}")
     @PreAuthorize("hasAuthority('SCOPE_roles:write') or hasRole('ADMIN')")
-    @Operation(summary = "Assign role to user", description = "Requires ADMIN or scope roles:write",
-        security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Assign role to user", description = "Requires ADMIN or scope roles:write", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<OperationResponse<RoleAssignmentResultDTO>> assignRoleToUser(
             @PathVariable @NotNull Long roleId,
             @PathVariable @NotNull Long userId) {
@@ -164,11 +152,9 @@ public class RoleController {
     // --------------------------
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_roles:delete') or hasRole('ADMIN')")
-    @Operation(summary = "Delete a role", description = "Requires ADMIN or scope roles:delete",
-        security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Delete a role", description = "Requires ADMIN or scope roles:delete", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<OperationResponse<Void>> deleteRole(@PathVariable @NotNull Long id) {
         deleteRoleUseCase.delete(id);
         return ResponseEntity.ok(ApiResponseFactory.noContent("Role deleted successfully"));
     }
 }
-
