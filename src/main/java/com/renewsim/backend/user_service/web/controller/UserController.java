@@ -33,6 +33,7 @@ public class UserController {
         private final UpdateMyProfileUseCase updateMyProfileUseCase;
         private final ChangeMyPasswordUseCase changeMyPasswordUseCase;
         private final ActivateUserUseCase activateUserUseCase;
+        private final DeleteUserUseCase deleteUserUseCase;
 
         // ----------------------------------------------------
         // POST /users → Create
@@ -220,5 +221,16 @@ public class UserController {
         public ResponseEntity<OperationResponse<Void>> activate(@PathVariable Long id) {
                 activateUserUseCase.activate(id);
                 return ResponseEntity.ok(ApiResponseFactory.noContent("User activated successfully"));
+        }
+
+        // ----------------------------------------------------
+        // DELETE /users/{id} → Delete user (ADMIN only)
+        // ----------------------------------------------------
+        @Operation(summary = "Delete user", description = "Requires role ADMIN", security = @SecurityRequirement(name = "bearerAuth"))
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<OperationResponse<Void>> delete(@PathVariable Long id) {
+                deleteUserUseCase.deleteUser(id);
+                return ResponseEntity.ok(ApiResponseFactory.noContent("User deleted successfully"));
         }
 }
