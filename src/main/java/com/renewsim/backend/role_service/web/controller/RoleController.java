@@ -55,7 +55,7 @@ public class RoleController {
     public ResponseEntity<OperationResponse<RoleCreationResultDTO>> createRole(
             @Valid @RequestBody RoleCreateRequestDTO request) {
 
-        var command = new CreateRoleCommand(request.name());
+        var command = new CreateRoleCommand(request.name(), request.description());
         var result = createRoleUseCase.createRole(command);
 
         return ResponseEntity
@@ -90,8 +90,8 @@ public class RoleController {
     // GET /roles
     // --------------------------
     @GetMapping
-    @PreAuthorize("hasAuthority('SCOPE_roles:read') or hasAnyRole('ADMIN','USER')")
-    @Operation(summary = "List all roles", description = "Requires ADMIN, USER, or scope roles:read", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "List all roles", description = "Requires ADMIN role", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<OperationResponse<List<RoleDTO>>> getAllRoles() {
         var result = getRolesUseCase.getAll();
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Roles retrieved successfully"));

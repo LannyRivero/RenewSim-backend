@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -29,6 +30,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class RoleServiceImplTest {
+
+    private static final LocalDateTime CREATED_AT = LocalDateTime.parse("2026-01-01T00:00:00");
 
     @Mock
     private RoleRepositoryPort roleRepositoryPort;
@@ -53,7 +56,7 @@ class RoleServiceImplTest {
         doNothing().when(roleDomainService).ensureRoleDoesNotExist(RoleName.ADMIN);
         when(roleRepositoryPort.save(any())).thenReturn(role);
         when(roleDtoMapper.toDTO(any(Role.class)))
-                .thenReturn(new RoleDTO(1L, "ADMIN"));
+                .thenReturn(new RoleDTO(1L, "ADMIN", "Administrator role", CREATED_AT));
 
         RoleCreationResultDTO result = roleService.createRole(command);
 
@@ -110,7 +113,7 @@ class RoleServiceImplTest {
     @DisplayName("getAll should return roles list")
     void getAll_success() {
         when(roleRepositoryPort.findAll()).thenReturn(List.of(new Role(RoleName.ADMIN)));
-        when(roleDtoMapper.toDTO(any(Role.class))).thenReturn(new RoleDTO(1L, "ADMIN"));
+        when(roleDtoMapper.toDTO(any(Role.class))).thenReturn(new RoleDTO(1L, "ADMIN", "Administrator role", CREATED_AT));
 
         var result = roleService.getAll();
 

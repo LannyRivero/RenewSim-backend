@@ -1,26 +1,47 @@
 package com.renewsim.backend.role_service.domain.model;
 
-import java.util.Objects;
+import com.renewsim.backend.role_service.domain.exception.InvalidRoleNameException;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 
-import com.renewsim.backend.role_service.domain.exception.InvalidRoleNameException;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
-public record Role(RoleName name) {
+public record Role(
+        Long id,
+        RoleName name,
+        String description,
+        LocalDateTime createdAt) {
 
     public Role {
         if (name == null) {
             throw new InvalidRoleNameException("RoleName cannot be null");
         }
+        description = normalizeDescription(description);
+        createdAt = Objects.requireNonNull(createdAt, "CreatedAt cannot be null");
+    }
 
+    public Role(RoleName name) {
+        this(null, name, null, LocalDateTime.now());
+    }
+
+    public Role(RoleName name, String description) {
+        this(null, name, description, LocalDateTime.now());
+    }
+
+    private static String normalizeDescription(String description) {
+        if (description == null) {
+            return null;
+        }
+        String trimmed = description.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (!(o instanceof Role))
+        if (!(o instanceof Role role))
             return false;
-        Role role = (Role) o;
         return name == role.name;
     }
 
@@ -31,6 +52,6 @@ public record Role(RoleName name) {
 
     @Override
     public String toString() {
-        return "Role{name=" + name + '}';
+        return "Role{id=" + id + ", name=" + name + ", description='" + description + "', createdAt=" + createdAt + '}';
     }
 }

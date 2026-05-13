@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.renewsim.backend.role_service.web.dto.RoleDTO;
 import com.renewsim.backend.shared.common.application.port.in.GetAllUseCase;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -37,8 +38,8 @@ class GetRolesUseCaseContractTest {
     @DisplayName("should allow mocking and invocation of getAll method")
     void shouldAllowMockingAndInvocationOfGetAll() {
         GetRolesUseCase useCase = () -> List.of(
-                new RoleDTO(1L, "ADMIN"),
-                new RoleDTO(2L, "USER")
+                new RoleDTO(1L, "ADMIN", "Administrator role", LocalDateTime.now()),
+                new RoleDTO(2L, "USER", "Standard role", LocalDateTime.now())
         );
 
         List<RoleDTO> roles = useCase.getAll();

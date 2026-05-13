@@ -23,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -96,9 +97,9 @@ class RoleControllerTest {
             mockMvc.perform(post("/api/v1/roles")
                             .header(HttpHeaders.AUTHORIZATION, bearer(ADMIN_TOKEN))
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new RoleCreateRequestDTO("ADMIN"))))
+                            .content(objectMapper.writeValueAsString(new RoleCreateRequestDTO("ADMIN", "Administrator role"))))
                     .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.data.name").value("ADMIN"));
+                    .andExpect(jsonPath("$.data.roleName").value("ADMIN"));
         }
 
         @Test
@@ -139,14 +140,22 @@ class RoleControllerTest {
     class GetRoles {
 
         @Test
-        @DisplayName("should return roles list for USER")
+        @DisplayName("should return roles list for ADMIN")
         void getAllRoles_success() throws Exception {
-            when(getRolesUseCase.getAll()).thenReturn(List.of(new RoleDTO(1L, "USER")));
+            when(getRolesUseCase.getAll()).thenReturn(List.of(new RoleDTO(1L, "USER", "Standard role", LocalDateTime.now())));
 
             mockMvc.perform(get("/api/v1/roles")
-                            .header(HttpHeaders.AUTHORIZATION, bearer(USER_TOKEN)))
+                            .header(HttpHeaders.AUTHORIZATION, bearer(ADMIN_TOKEN)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data[0].name").value("USER"));
+        }
+
+        @Test
+        @DisplayName("should return 403 for USER role")
+        void getAllRoles_forbidden() throws Exception {
+            mockMvc.perform(get("/api/v1/roles")
+                            .header(HttpHeaders.AUTHORIZATION, bearer(USER_TOKEN)))
+                    .andExpect(status().isForbidden());
         }
 
         @Test

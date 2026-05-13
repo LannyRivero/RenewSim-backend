@@ -45,7 +45,7 @@ public class RoleApplicationService implements
         RoleName roleName = RolePolicy.normalizeRoleName(command.name());
         roleDomainService.ensureRoleDoesNotExist(roleName);
 
-        Role role = roleDomainService.createRole(command.name());
+        Role role = roleDomainService.createRole(command.name(), command.description());
         Role saved = roleRepositoryPort.save(role);
 
         return new RoleCreationResultDTO(saved.name().name(), "Role created successfully");

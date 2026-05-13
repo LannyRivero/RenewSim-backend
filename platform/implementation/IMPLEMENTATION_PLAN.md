@@ -220,7 +220,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - `PUT /me/password`: verificar currentPassword con BCrypt, hashear newPassword, revocar todos los refresh tokens del usuario
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 2.21 Implementar `Role` aggregate + `RoleRepository` + `GET /api/v1/roles` + `POST /api/v1/roles`
+  - [x ] 2.21 Implementar `Role` aggregate + `RoleRepository` + `GET /api/v1/roles` + `POST /api/v1/roles`
     - `Role` entity: id, name, description, createdAt
     - `RoleRepository` port + JPA adapter
     - `GET /api/v1/roles` → lista de roles (solo ADMIN)
