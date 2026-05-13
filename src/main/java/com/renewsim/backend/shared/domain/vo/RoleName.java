@@ -2,6 +2,7 @@ package com.renewsim.backend.shared.domain.vo;
 
 public enum RoleName {
     USER("User"),
+    ANALYST("Analyst"),
     ADMIN("Administrator"),
     SERVICE_AUTH("Service Auth");
 
@@ -17,7 +18,7 @@ public enum RoleName {
 
     /**
      * Returns the authority name following Spring Security convention.
-     * Example: ROLE_USER, ROLE_ADMIN, ROLE_SERVICE_AUTH
+     * Example: ROLE_USER, ROLE_ANALYST, ROLE_ADMIN, ROLE_SERVICE_AUTH
      */
     public String asAuthority() {
         return "ROLE_" + this.name();

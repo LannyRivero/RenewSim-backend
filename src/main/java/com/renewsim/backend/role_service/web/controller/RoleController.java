@@ -37,6 +37,7 @@ public class RoleController {
 
     private final CreateRoleUseCase createRoleUseCase;
     private final GetRolesUseCase getRolesUseCase;
+    private final ExistsRoleUseCase existsRoleUseCase;
     private final AssignRoleUseCase assignRoleUseCase;
     private final DeleteRoleUseCase deleteRoleUseCase;
     private final ManageUserRolesUseCase manageUserRolesUseCase;
@@ -106,9 +107,7 @@ public class RoleController {
             @PathVariable @NotBlank String name) {
         boolean exists;
         try {
-            RoleName roleName = RoleName.valueOf(name.toUpperCase());
-            exists = getRolesUseCase.getAll().stream()
-                    .anyMatch(r -> r.name().equalsIgnoreCase(roleName.name()));
+            exists = existsRoleUseCase.existsByName(RoleName.valueOf(name.toUpperCase()));
         } catch (IllegalArgumentException e) {
             exists = false;
         }

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.renewsim.backend.role_service.application.command.CreateRoleCommand;
 import com.renewsim.backend.role_service.application.port.in.CreateRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.DeleteRoleUseCase;
+import com.renewsim.backend.role_service.application.port.in.ExistsRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.GetRolesUseCase;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
 import com.renewsim.backend.role_service.application.result.RoleCreationResultDTO;
@@ -24,6 +25,7 @@ import com.renewsim.backend.role_service.application.mapper.RoleDtoMapper;
 public class RoleApplicationService implements
         CreateRoleUseCase,
         GetRolesUseCase,
+        ExistsRoleUseCase,
         DeleteRoleUseCase {
 
     private final RoleRepositoryPort roleRepositoryPort;
@@ -55,6 +57,11 @@ public class RoleApplicationService implements
                 .stream()
                 .map(roleDtoMapper::toDTO)
                 .toList();
+    }
+
+    @Override
+    public boolean existsByName(RoleName roleName) {
+        return roleRepositoryPort.findByName(roleName).isPresent();
     }
 
     @Override

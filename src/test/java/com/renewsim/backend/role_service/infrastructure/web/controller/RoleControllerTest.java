@@ -1,8 +1,8 @@
 package com.renewsim.backend.role_service.infrastructure.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
+import com.renewsim.backend.auth_service.infrastructure.security.JwtTokenProvider;
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimitingFilter;
 import com.renewsim.backend.config.TestSecurityConfig;
 import com.renewsim.backend.role_service.application.port.in.*;
@@ -42,10 +42,11 @@ class RoleControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
-    @MockBean private TokenProvider tokenProvider;
+    @MockBean private JwtTokenProvider jwtTokenProvider;
     @MockBean private LoginRateLimitingFilter loginRateLimitingFilter;
     @MockBean private CreateRoleUseCase createRoleUseCase;
     @MockBean private GetRolesUseCase getRolesUseCase;
+    @MockBean private ExistsRoleUseCase existsRoleUseCase;
     @MockBean private AssignRoleUseCase assignRoleUseCase;
     @MockBean private DeleteRoleUseCase deleteRoleUseCase;
     @MockBean private ManageUserRolesUseCase manageUserRolesUseCase;
@@ -65,12 +66,12 @@ class RoleControllerTest {
         }).when(loginRateLimitingFilter).doFilter(any(), any(), any());
 
         // ADMIN token
-        when(tokenProvider.validate(ADMIN_TOKEN))
+        when(jwtTokenProvider.validate(ADMIN_TOKEN))
                 .thenReturn(Optional.of(new AuthenticatedUser(
                         "admin@renewsim.com", Set.of("ADMIN"), Set.of())));
 
         // USER token
-        when(tokenProvider.validate(USER_TOKEN))
+        when(jwtTokenProvider.validate(USER_TOKEN))
                 .thenReturn(Optional.of(new AuthenticatedUser(
                         "user@renewsim.com", Set.of("USER"), Set.of())));
     }
@@ -166,7 +167,7 @@ class RoleControllerTest {
         @Test
         @DisplayName("should return true when role exists")
         void existsRole_true() throws Exception {
-            when(getRolesUseCase.getAll()).thenReturn(List.of(new RoleDTO(1L, "ADMIN")));
+            when(existsRoleUseCase.existsByName(any())).thenReturn(true);
 
             mockMvc.perform(get("/api/v1/roles/exists/ADMIN")
                             .header(HttpHeaders.AUTHORIZATION, bearer(ADMIN_TOKEN)))
@@ -177,7 +178,7 @@ class RoleControllerTest {
         @Test
         @DisplayName("should return false when role does not exist")
         void existsRole_false() throws Exception {
-            when(getRolesUseCase.getAll()).thenReturn(List.of());
+            when(existsRoleUseCase.existsByName(any())).thenReturn(false);
 
             mockMvc.perform(get("/api/v1/roles/exists/UNKNOWN")
                             .header(HttpHeaders.AUTHORIZATION, bearer(ADMIN_TOKEN)))

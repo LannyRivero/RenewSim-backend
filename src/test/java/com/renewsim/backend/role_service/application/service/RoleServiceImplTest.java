@@ -119,4 +119,26 @@ class RoleServiceImplTest {
 
         verify(roleRepositoryPort).findAll();
     }
+
+    @Test
+    @DisplayName("existsByName should return true when the role is present")
+    void existsByName_present() {
+        when(roleRepositoryPort.findByName(RoleName.USER)).thenReturn(java.util.Optional.of(new Role(RoleName.USER)));
+
+        boolean result = roleService.existsByName(RoleName.USER);
+
+        assertThat(result).isTrue();
+        verify(roleRepositoryPort).findByName(RoleName.USER);
+    }
+
+    @Test
+    @DisplayName("existsByName should return false when the role is missing")
+    void existsByName_missing() {
+        when(roleRepositoryPort.findByName(RoleName.USER)).thenReturn(java.util.Optional.empty());
+
+        boolean result = roleService.existsByName(RoleName.USER);
+
+        assertThat(result).isFalse();
+        verify(roleRepositoryPort).findByName(RoleName.USER);
+    }
 }

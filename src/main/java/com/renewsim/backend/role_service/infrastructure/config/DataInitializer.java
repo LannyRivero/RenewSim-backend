@@ -20,6 +20,7 @@ public class DataInitializer {
     @PostConstruct
     public void init() {
         createRoleIfNotExists(RoleName.ADMIN);
+        createRoleIfNotExists(RoleName.ANALYST);
         createRoleIfNotExists(RoleName.USER);
     }
 

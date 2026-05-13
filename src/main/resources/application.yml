@@ -62,6 +62,12 @@ auth:
       - compare:simulations
       - export:simulations
       - delete:simulations
+    ANALYST:
+      - read:simulations
+      - write:simulations
+      - compare:simulations
+      - export:simulations
+      - delete:simulations
     ADMIN:
       - read:simulations
       - write:simulations

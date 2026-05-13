@@ -18,9 +18,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.not;
@@ -44,6 +48,9 @@ class SecurityConfigTest {
 
         @Autowired
         private MockMvc mvc;
+
+        @Autowired
+        private RoleHierarchy roleHierarchy;
 
         @MockBean
         private LogoutUseCase logoutUseCase;
@@ -92,5 +99,17 @@ class SecurityConfigTest {
                 mvc.perform(get("/error").secure(true)
                                 .header("X-Forwarded-Proto", "https"))
                                 .andExpect(header().string("Strict-Transport-Security", containsString("max-age")));
+        }
+
+        @Test
+        @DisplayName("Role hierarchy should place ANALYST between ADMIN and USER")
+        void roleHierarchy_supportsAnalyst() {
+                var reachable = roleHierarchy.getReachableGrantedAuthorities(
+                                List.of(new SimpleGrantedAuthority("ROLE_ANALYST")));
+
+                org.assertj.core.api.Assertions.assertThat(reachable)
+                                .extracting(a -> a.getAuthority())
+                                .contains("ROLE_ANALYST", "ROLE_USER")
+                                .doesNotContain("ROLE_ADMIN");
         }
 }
