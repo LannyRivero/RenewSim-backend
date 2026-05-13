@@ -214,7 +214,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - `resetAttempts(String email)`: invalidar entrada en cache tras login exitoso
     - _Requirements: 2.3_
 
-  - [ ] 2.20 Implementar `GET /api/v1/users/me` + `PUT /api/v1/users/me` + `PUT /api/v1/users/me/password`
+  - [ x] 2.20 Implementar `GET /api/v1/users/me` + `PUT /api/v1/users/me` + `PUT /api/v1/users/me/password`
     - `GET /me`: retornar `UserProfileDTO` (id, email, fullName, phone, roles, status, createdAt)
     - `PUT /me`: actualizar fullName y phone, retornar perfil actualizado; HTTP 409 si email ya existe
     - `PUT /me/password`: verificar currentPassword con BCrypt, hashear newPassword, revocar todos los refresh tokens del usuario
