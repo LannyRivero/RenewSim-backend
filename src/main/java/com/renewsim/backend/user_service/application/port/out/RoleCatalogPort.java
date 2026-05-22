@@ -7,6 +7,7 @@ import com.renewsim.backend.user_service.web.dto.RoleSnapshot;
 
 public interface RoleCatalogPort {
     boolean existsByName(RoleName roleName);
-   Optional<RoleSnapshot> findByName(String name);
+    Optional<RoleSnapshot> findById(Long id);
+    Optional<RoleSnapshot> findByName(String name);
 }
 

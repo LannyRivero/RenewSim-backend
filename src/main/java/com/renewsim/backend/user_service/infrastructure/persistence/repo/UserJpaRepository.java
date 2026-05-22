@@ -1,6 +1,7 @@
 package com.renewsim.backend.user_service.infrastructure.persistence.repo;
 
 import com.renewsim.backend.user_service.infrastructure.persistence.entity.UserEntity;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,6 +22,9 @@ public interface UserJpaRepository extends JpaRepository<UserEntity, Long> {
   Optional<UserEntity> findByUsernameIgnoreCase(String username);
 
   Optional<UserEntity> findByEmailIgnoreCase(String email);
+
+  @Query("SELECT COUNT(DISTINCT u.id) FROM UserEntity u JOIN u.roles r WHERE r.name = :roleName")
+  long countByRole(@Param("roleName") RoleName roleName);
 
   interface UserSummary {
     Long getId();

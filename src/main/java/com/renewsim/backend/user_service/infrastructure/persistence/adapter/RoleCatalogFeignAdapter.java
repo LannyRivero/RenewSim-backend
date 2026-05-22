@@ -11,6 +11,7 @@ import com.renewsim.backend.user_service.application.port.out.RoleCatalogPort;
 import com.renewsim.backend.user_service.web.dto.RoleSnapshot;
 import com.renewsim.backend.user_service.infrastructure.client.RoleServiceClient;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -26,6 +27,20 @@ public class RoleCatalogFeignAdapter implements RoleCatalogPort {
         return Optional.ofNullable(response)
                 .map(OperationResponse::data)
                 .orElse(false);
+    }
+
+    @Override
+    public Optional<RoleSnapshot> findById(Long id) {
+        OperationResponse<RoleDTO> response;
+        try {
+            response = roleServiceClient.findById(id);
+        } catch (FeignException.NotFound e) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(response)
+                .map(OperationResponse::data)
+                .map(dto -> new RoleSnapshot(dto.id(), dto.name()));
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.renewsim.backend.user_service.infrastructure.persistence.adapter;
 
 import com.renewsim.backend.role_service.infrastructure.persistence.entity.RoleEntity;
 import com.renewsim.backend.role_service.infrastructure.persistence.repo.RoleJpaRepository;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.UserAlreadyExistsException;
 import com.renewsim.backend.shared.exception.UserNotFoundException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
@@ -60,6 +61,11 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
     @Override
     public boolean existsByEmail(String email) {
         return repo.existsByEmailIgnoreCase(email);
+    }
+
+    @Override
+    public long countByRole(RoleName roleName) {
+        return repo.countByRole(roleName);
     }
 
     @Override

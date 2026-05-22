@@ -37,6 +37,7 @@ public class RoleController {
 
     private final CreateRoleUseCase createRoleUseCase;
     private final GetRolesUseCase getRolesUseCase;
+    private final GetRoleByIdUseCase getRoleByIdUseCase;
     private final ExistsRoleUseCase existsRoleUseCase;
     private final AssignRoleUseCase assignRoleUseCase;
     private final DeleteRoleUseCase deleteRoleUseCase;
@@ -95,6 +96,14 @@ public class RoleController {
     public ResponseEntity<OperationResponse<List<RoleDTO>>> getAllRoles() {
         var result = getRolesUseCase.getAll();
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Roles retrieved successfully"));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('SCOPE_roles:read') or hasAnyRole('ADMIN','SERVICE_AUTH')")
+    @Operation(summary = "Get role by ID", description = "Requires ADMIN, SERVICE_AUTH, or scope roles:read", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<OperationResponse<RoleDTO>> getRoleById(@PathVariable @NotNull Long id) {
+        var result = getRoleByIdUseCase.getById(id);
+        return ResponseEntity.ok(ApiResponseFactory.ok(result, "Role retrieved successfully"));
     }
 
     // --------------------------

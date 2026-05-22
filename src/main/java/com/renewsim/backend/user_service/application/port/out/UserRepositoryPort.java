@@ -3,6 +3,7 @@ package com.renewsim.backend.user_service.application.port.out;
 import java.util.List;
 import java.util.Optional;
 
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.user_service.domain.model.User;
 import com.renewsim.backend.user_service.web.dto.UserFilterRequest;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,8 @@ public interface UserRepositoryPort {
     boolean existsById(Long id);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
+
+    long countByRole(RoleName roleName);
 
     List<User> findAll();
 

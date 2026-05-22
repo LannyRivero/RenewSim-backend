@@ -9,6 +9,7 @@ import com.renewsim.backend.role_service.application.command.CreateRoleCommand;
 import com.renewsim.backend.role_service.application.port.in.CreateRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.DeleteRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.ExistsRoleUseCase;
+import com.renewsim.backend.role_service.application.port.in.GetRoleByIdUseCase;
 import com.renewsim.backend.role_service.application.port.in.GetRolesUseCase;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
 import com.renewsim.backend.role_service.application.result.RoleCreationResultDTO;
@@ -25,6 +26,7 @@ import com.renewsim.backend.role_service.application.mapper.RoleDtoMapper;
 public class RoleApplicationService implements
         CreateRoleUseCase,
         GetRolesUseCase,
+        GetRoleByIdUseCase,
         ExistsRoleUseCase,
         DeleteRoleUseCase {
 
@@ -57,6 +59,12 @@ public class RoleApplicationService implements
                 .stream()
                 .map(roleDtoMapper::toDTO)
                 .toList();
+    }
+
+    @Override
+    public RoleDTO getById(Long roleId) {
+        Role role = roleDomainService.ensureRoleExists(roleId);
+        return roleDtoMapper.toDTO(role);
     }
 
     @Override

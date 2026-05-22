@@ -29,6 +29,8 @@ public class UserController {
         private final GetUserUseCase getUserUseCase;
         private final ListUsersUseCase listUsersUseCase;
         private final UpdateUserRolesUseCase updateUserRolesUseCase;
+        private final AssignUserRoleUseCase assignUserRoleUseCase;
+        private final RemoveUserRoleUseCase removeUserRoleUseCase;
         private final GetMyProfileUseCase getMyProfileUseCase;
         private final UpdateMyProfileUseCase updateMyProfileUseCase;
         private final ChangeMyPasswordUseCase changeMyPasswordUseCase;
@@ -210,6 +212,32 @@ public class UserController {
                         @Valid @RequestBody UpdateUserRolesRequestDTO request) {
                 updateUserRolesUseCase.updateUserRoles(id, request);
                 return ResponseEntity.ok(ApiResponseFactory.noContent("User roles updated successfully"));
+        }
+
+        // ----------------------------------------------------
+        // POST /users/{userId}/roles/{roleId} → Assign single role
+        // ----------------------------------------------------
+        @Operation(summary = "Assign role to user", description = "Requires role ADMIN", security = @SecurityRequirement(name = "bearerAuth"))
+        @PostMapping("/{userId}/roles/{roleId}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<OperationResponse<Void>> assignUserRole(
+                        @PathVariable Long userId,
+                        @PathVariable Long roleId) {
+                assignUserRoleUseCase.assignRole(userId, roleId);
+                return ResponseEntity.ok(ApiResponseFactory.noContent("Role assigned successfully"));
+        }
+
+        // ----------------------------------------------------
+        // DELETE /users/{userId}/roles/{roleId} → Remove single role
+        // ----------------------------------------------------
+        @Operation(summary = "Remove role from user", description = "Requires role ADMIN", security = @SecurityRequirement(name = "bearerAuth"))
+        @DeleteMapping("/{userId}/roles/{roleId}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<OperationResponse<Void>> removeUserRole(
+                        @PathVariable Long userId,
+                        @PathVariable Long roleId) {
+                removeUserRoleUseCase.removeRole(userId, roleId);
+                return ResponseEntity.ok(ApiResponseFactory.noContent("Role removed successfully"));
         }
 
         // ----------------------------------------------------

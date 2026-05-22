@@ -10,6 +10,9 @@ import com.renewsim.backend.shared.dto.OperationResponse;
 @FeignClient(name = "role-service", contextId = "userRoleClient", url = "${role-service.url}", configuration = FeignRoleConfig.class)
 public interface RoleServiceClient {
 
+    @GetMapping("/api/v1/roles/{id}")
+    OperationResponse<RoleDTO> findById(@PathVariable("id") Long id);
+
     @GetMapping("/api/v1/roles/exists/{name}")
     OperationResponse<Boolean> existsRole(@PathVariable("name") String name);
 

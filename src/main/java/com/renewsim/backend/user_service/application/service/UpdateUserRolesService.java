@@ -6,6 +6,7 @@ import com.renewsim.backend.user_service.application.port.in.UpdateUserRolesUseC
 import com.renewsim.backend.user_service.application.port.out.RoleCatalogPort;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
 import com.renewsim.backend.user_service.domain.model.User;
+import com.renewsim.backend.user_service.domain.service.UserPolicy;
 import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,12 +32,18 @@ public class UpdateUserRolesService implements UpdateUserRolesUseCase {
         Set<RoleName> newRoles = request.roles().stream()
                 .map(name -> {
                     RoleName roleName = RoleName.valueOf(name.toUpperCase());
+                    UserPolicy.ensureRoleAssignableToUser(roleName);
                     if (!roleCatalogPort.existsByName(roleName)) {
                         throw new IllegalArgumentException("Role not found: " + name);
                     }
                     return roleName;
                 })
                 .collect(Collectors.toSet());
+
+        UserPolicy.ensureAtLeastOneAdminRemaining(
+                user.getRoles(),
+                newRoles,
+                userRepositoryPort.countByRole(RoleName.ADMIN));
 
         new HashSet<>(user.getRoles()).forEach(user::removeRole);
         newRoles.forEach(user::addRole);

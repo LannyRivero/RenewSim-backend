@@ -47,6 +47,7 @@ class RoleControllerTest {
     @MockBean private LoginRateLimitingFilter loginRateLimitingFilter;
     @MockBean private CreateRoleUseCase createRoleUseCase;
     @MockBean private GetRolesUseCase getRolesUseCase;
+    @MockBean private GetRoleByIdUseCase getRoleByIdUseCase;
     @MockBean private ExistsRoleUseCase existsRoleUseCase;
     @MockBean private AssignRoleUseCase assignRoleUseCase;
     @MockBean private DeleteRoleUseCase deleteRoleUseCase;
@@ -163,6 +164,37 @@ class RoleControllerTest {
         void getAllRoles_unauthorized() throws Exception {
             mockMvc.perform(get("/api/v1/roles"))
                     .andExpect(status().isUnauthorized());
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // GET /roles/{id}
+    // ─────────────────────────────────────────────
+    @Nested
+    @DisplayName("GET /api/v1/roles/{id}")
+    class GetRoleById {
+
+        @Test
+        @DisplayName("should return role for SERVICE_AUTH")
+        void getRoleById_success() throws Exception {
+            when(jwtTokenProvider.validate("service-token"))
+                    .thenReturn(Optional.of(new AuthenticatedUser(
+                            "user-service", Set.of("SERVICE_AUTH"), Set.of())));
+            when(getRoleByIdUseCase.getById(1L))
+                    .thenReturn(new RoleDTO(1L, "ADMIN", "Administrator role", LocalDateTime.now()));
+
+            mockMvc.perform(get("/api/v1/roles/1")
+                            .header(HttpHeaders.AUTHORIZATION, bearer("service-token")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.name").value("ADMIN"));
+        }
+
+        @Test
+        @DisplayName("should return 403 for USER role")
+        void getRoleById_forbidden() throws Exception {
+            mockMvc.perform(get("/api/v1/roles/1")
+                            .header(HttpHeaders.AUTHORIZATION, bearer(USER_TOKEN)))
+                    .andExpect(status().isForbidden());
         }
     }
 
