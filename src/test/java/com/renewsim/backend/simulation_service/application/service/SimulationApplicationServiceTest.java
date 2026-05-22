@@ -47,6 +47,70 @@ class SimulationApplicationServiceTest {
     private TechnologyRecommenderService recommender;
 
     @Test
+    @DisplayName("createSimulation fetches climate from provider when command climate is null")
+    void createSimulationFetchesClimateFromProviderWhenCommandClimateIsNull() {
+        SimulationApplicationService service = new SimulationApplicationService(
+                repository,
+                validator,
+                calculator,
+                climateProvider,
+                recommender);
+
+        CreateSimulationCommand command = new CreateSimulationCommand(
+                "Mendoza",
+                EnergyType.SOLAR,
+                100,
+                10000,
+                null,
+                List.of(),
+                "alice");
+
+        ClimateData providedByPort = new ClimateData(12, 6, 2);
+        doNothing().when(validator).validateProjectSize(100);
+        doNothing().when(validator).validateBudget(10000);
+        when(climateProvider.fetchClimateData("Mendoza")).thenReturn(providedByPort);
+        when(calculator.calculateEnergyOutput(any(Simulation.class))).thenReturn(new EnergyOutput(120000));
+        when(calculator.calculateCo2Reduction(any(EnergyOutput.class))).thenReturn(new CO2Reduction(84));
+
+        Simulation afterCreateSave = new Simulation(
+                99L,
+                "Mendoza",
+                EnergyType.SOLAR,
+                new ProjectSize(100),
+                new Budget(10000),
+                new EnergyOutput(120000),
+                new CO2Reduction(84),
+                providedByPort,
+                List.of(),
+                "alice",
+                LocalDateTime.parse("2026-05-22T09:00:00"));
+
+        Simulation afterRecommendationSave = new Simulation(
+                99L,
+                "Mendoza",
+                EnergyType.SOLAR,
+                new ProjectSize(100),
+                new Budget(10000),
+                new EnergyOutput(120000),
+                new CO2Reduction(84),
+                providedByPort,
+                List.of(1L),
+                "alice",
+                LocalDateTime.parse("2026-05-22T09:00:00"));
+
+        when(repository.save(any(Simulation.class))).thenReturn(afterCreateSave, afterRecommendationSave);
+        when(recommender.recommendFor(afterCreateSave)).thenReturn(List.of(1L));
+
+        service.createSimulation(command);
+
+        verify(climateProvider).fetchClimateData("Mendoza");
+
+        ArgumentCaptor<Simulation> saveCaptor = ArgumentCaptor.forClass(Simulation.class);
+        verify(repository, times(2)).save(saveCaptor.capture());
+        assertThat(saveCaptor.getAllValues().get(0).climateData()).isEqualTo(providedByPort);
+    }
+
+    @Test
     @DisplayName("RED->GREEN: createSimulation assigns recommendations when command has no technologies")
     void createSimulationAssignsRecommendationsWhenCommandHasNoTechnologies() {
         SimulationApplicationService service = new SimulationApplicationService(
@@ -152,6 +216,7 @@ class SimulationApplicationServiceTest {
 
         verify(repository, times(2)).save(any(Simulation.class));
         verify(recommender, never()).recommendFor(any(Simulation.class));
+        verify(climateProvider, never()).fetchClimateData(any(String.class));
 
         ArgumentCaptor<Simulation> saveCaptor = ArgumentCaptor.forClass(Simulation.class);
         verify(repository, times(2)).save(saveCaptor.capture());

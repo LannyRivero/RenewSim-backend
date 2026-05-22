@@ -4,7 +4,9 @@ import com.renewsim.backend.simulation_service.application.port.out.ClimateDataP
 import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.slf4j.Logger;
@@ -18,8 +20,9 @@ import java.util.Map;
  *  Implements ClimateDataProviderPort.
  * Optional component, can be disabled if frontend provides the data.
  */
-//@Component
-@Profile("weather-enabled") 
+@Component
+@Profile("weather-enabled")
+@ConditionalOnProperty(prefix = "simulation.climate", name = "provider", havingValue = "openweathermap")
 @RequiredArgsConstructor
 public class OpenWeatherMapAdapter implements ClimateDataProviderPort {
 
