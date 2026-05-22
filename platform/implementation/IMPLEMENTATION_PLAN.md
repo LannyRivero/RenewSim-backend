@@ -705,39 +705,39 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
 ## Fase 8: Frontend Complete
 
 - [ ] 8. Fase 8: Frontend Complete
-  - [ ] 8.1 Inicializar proyecto Vite + React 18 + TypeScript (strict mode) con path aliases
+  - [x ] 8.1 Inicializar proyecto Vite + React 18 + TypeScript (strict mode) con path aliases
     - `npm create vite@latest frontend -- --template react-ts`
     - Configurar `tsconfig.json`: `"strict": true`, `"baseUrl": "src"`, paths `@/*` → `src/*`
     - Configurar `vite.config.ts` con `resolve.alias` para `@/`
     - Estructura de carpetas: `src/{pages,components,hooks,stores,services,types}`
     - _Requirements: (frontend stack)_
 
-  - [ ] 8.2 Configurar Tailwind CSS + shadcn/ui + Radix UI
+  - [x ] 8.2 Configurar Tailwind CSS + shadcn/ui + Radix UI
     - `npm install -D tailwindcss postcss autoprefixer` + `npx tailwindcss init -p`
     - `npx shadcn-ui@latest init` con tema neutral, CSS variables
     - Instalar componentes shadcn: Button, Input, Card, Table, Dialog, Badge, Skeleton, Select
     - _Requirements: (frontend stack)_
 
-  - [ ] 8.3 Configurar TanStack Query v5 (QueryClient, DevTools) + Zustand
+  - [x] 8.3 Configurar TanStack Query v5 (QueryClient, DevTools) + Zustand
     - `npm install @tanstack/react-query @tanstack/react-query-devtools zustand`
     - `QueryClient` con `defaultOptions`: staleTime 5 min, retry 2
     - `QueryClientProvider` + `ReactQueryDevtools` en `main.tsx`
     - _Requirements: (frontend stack)_
 
-  - [ ] 8.4 Implementar `authStore` (Zustand): accessToken en memoria, clearAuth
+  - [x] 8.4 Implementar `authStore` (Zustand): accessToken en memoria, clearAuth
     - `src/stores/authStore.ts`
     - State: `accessToken: string | null`, `user: UserProfile | null`, `isAuthenticated: boolean`
     - Actions: `setTokens(accessToken, user)`, `clearAuth()`
     - Access token NUNCA en localStorage (solo en memoria Zustand)
     - _Requirements: 18.4 (seguridad XSS)_
 
-  - [ ] 8.5 Implementar `uiStore` (Zustand): locale, isChatOpen
+  - [ x] 8.5 Implementar `uiStore` (Zustand): locale, isChatOpen
     - `src/stores/uiStore.ts`
     - State: `locale: 'es' | 'en'`, `isChatOpen: boolean`
     - Actions: `setLocale(locale)`, `toggleChat()`
     - _Requirements: (i18n, chat widget)_
 
-  - [ ] 8.6 Implementar `httpClient` (Axios): interceptores JWT + refresh automático con cola de requests
+  - [x] 8.6 Implementar `httpClient` (Axios): interceptores JWT + refresh automático con cola de requests
     - `src/services/httpClient.ts`
     - Request interceptor: inyectar `Authorization: Bearer {accessToken}` desde authStore
     - Response interceptor: 401 → llamar `/auth/refresh` (cookie HttpOnly) → reintentar request original
