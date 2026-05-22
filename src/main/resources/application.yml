@@ -148,6 +148,10 @@ app:
   clock:
     zone: UTC
 
+simulation:
+  climate:
+    provider: dummy
+
 # =============================
 # SERVICE URLS (base - override en perfiles)
 # =============================
