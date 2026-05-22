@@ -30,18 +30,33 @@ public interface SimulationMapper {
             return null;
         }
 
+        String resolvedLocation = firstNonBlank(entity.getLocation(), entity.getLocationName());
+        double resolvedProjectSize = firstPositive(
+                entity.getProjectSize(),
+                entity.getCapacityKw(),
+                1.0);
+        double resolvedBudget = firstPositive(
+                entity.getBudget(),
+                entity.getInitialInvestment(),
+                entity.getTotalCost(),
+                1.0);
+        double resolvedEstimatedEnergy = firstNonNull(entity.getEstimatedEnergy(), entity.getEnergyGenerated(), 0.0);
+        String resolvedCreatedBy = firstNonBlank(entity.getCreatedBy(), "system");
+        java.util.List<Long> resolvedTechnologyIds = entity.getTechnologyIds() != null
+                ? entity.getTechnologyIds()
+                : new java.util.ArrayList<>();
+
         return new Simulation(
                 entity.getId(),
-                entity.getLocation(),
+                resolvedLocation,
                 parseEnergyType(entity.getEnergyType()),
-                new ProjectSize(entity.getProjectSize()),
-                new Budget(entity.getBudget()),
-                // 👉 usamos energyGenerated como fuente real
-                new EnergyOutput(entity.getEstimatedEnergy()),
+                new ProjectSize(resolvedProjectSize),
+                new Budget(resolvedBudget),
+                new EnergyOutput(resolvedEstimatedEnergy),
                 new CO2Reduction(entity.getCo2Reduction()),
                 new ClimateData(0, 0, 0),
-                entity.getTechnologyIds(),
-                entity.getCreatedBy(),
+                resolvedTechnologyIds,
+                resolvedCreatedBy,
                 entity.getCreatedAt());
     }
 
@@ -72,6 +87,49 @@ public interface SimulationMapper {
         } catch (IllegalArgumentException ex) {
             throw new IllegalStateException("Unknown energy type: " + energyTypeRaw, ex);
         }
+    }
+
+    default String firstNonBlank(String primary, String fallback) {
+        if (primary != null && !primary.isBlank()) {
+            return primary;
+        }
+        if (fallback != null && !fallback.isBlank()) {
+            return fallback;
+        }
+        return "unknown";
+    }
+
+    default double firstPositive(Double primary, Double fallback, double defaultValue) {
+        if (primary != null && primary > 0) {
+            return primary;
+        }
+        if (fallback != null && fallback > 0) {
+            return fallback;
+        }
+        return defaultValue;
+    }
+
+    default double firstPositive(Double primary, Double fallbackOne, Double fallbackTwo, double defaultValue) {
+        if (primary != null && primary > 0) {
+            return primary;
+        }
+        if (fallbackOne != null && fallbackOne > 0) {
+            return fallbackOne;
+        }
+        if (fallbackTwo != null && fallbackTwo > 0) {
+            return fallbackTwo;
+        }
+        return defaultValue;
+    }
+
+    default double firstNonNull(Double primary, Double fallback, double defaultValue) {
+        if (primary != null) {
+            return primary;
+        }
+        if (fallback != null) {
+            return fallback;
+        }
+        return defaultValue;
     }
 
     List<Simulation> toDomainList(List<SimulationEntity> entities);

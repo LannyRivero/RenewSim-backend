@@ -22,23 +22,41 @@ public class SimulationEntity {
 
     private String location;
 
+    @Column(name = "location_name", insertable = false, updatable = false)
+    private String locationName;
+
     @Column(name = "energy_type", nullable = false)
     private String energyType;
 
     @Column(name = "project_size", nullable = false)
-    private double projectSize;
+    private Double projectSize;
+
+    @Column(name = "capacity_kw", insertable = false, updatable = false)
+    private Double capacityKw;
 
     @Column(nullable = false)
-    private double budget;
+    private Double budget;
+
+    @Column(name = "initial_investment", insertable = false, updatable = false)
+    private Double initialInvestment;
+
+    @Column(name = "total_cost", insertable = false, updatable = false)
+    private Double totalCost;
 
     @Column(name = "estimated_energy", nullable = false)
-    private double estimatedEnergy;
+    private Double estimatedEnergy;
+
+    @Column(name = "energy_generated", insertable = false, updatable = false)
+    private Double energyGenerated;
 
     @Column(name = "co2_reduction", nullable = false)
-    private double co2Reduction;
+    private Double co2Reduction;
 
     @Column(name = "created_by", nullable = false)
     private String createdBy;
+
+    @Column(name = "user_id", insertable = false, updatable = false)
+    private Long userId;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
