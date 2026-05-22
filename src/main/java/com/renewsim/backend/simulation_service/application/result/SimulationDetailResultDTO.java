@@ -1,6 +1,7 @@
 package com.renewsim.backend.simulation_service.application.result;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record SimulationDetailResultDTO(
     Long id,
@@ -12,7 +13,8 @@ public record SimulationDetailResultDTO(
     double estimatedSavings,
     Double returnOnInvestment,
     LocalDateTime timestamp,
-    String createdBy
+    String createdBy,
+    List<Long> technologyIds
 ) {}
 
 

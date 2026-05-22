@@ -18,6 +18,8 @@ import com.renewsim.backend.simulation_service.domain.model.vo.CO2Reduction;
 import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
 import com.renewsim.backend.simulation_service.domain.model.vo.EnergyOutput;
 import com.renewsim.backend.simulation_service.domain.model.vo.ProjectSize;
+import com.renewsim.backend.simulation_service.web.dto.SimulationRecommendationResultDTO;
+import com.renewsim.backend.technology_service.application.service.TechnologyRecommenderService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,6 +38,7 @@ public class SimulationApplicationService implements
         private final SimulationValidator validator;
         private final SimulationCalculator calculator;
         private final ClimateDataProviderPort climateProvider;
+        private final TechnologyRecommenderService recommender;
 
         // --------------------------------------------------
         // CREATE
@@ -66,6 +69,15 @@ public class SimulationApplicationService implements
                 Simulation completed = base.withCalculatedResults(energyOutput, co2Reduction);
                 Simulation saved = repository.save(completed);
 
+                List<Long> desiredTechnologies = (command.technologyIds() != null && !command.technologyIds().isEmpty())
+                                ? command.technologyIds()
+                                : recommender.recommendFor(saved);
+
+                if (desiredTechnologies != null && !desiredTechnologies.isEmpty()) {
+                        Simulation withTechnologies = saved.assignTechnologies(desiredTechnologies);
+                        saved = repository.save(withTechnologies);
+                }
+
                 return new SimulationCreationResultDTO(
                                 saved.id(),
                                 saved.location(),
@@ -73,6 +85,20 @@ public class SimulationApplicationService implements
                                 saved.projectSize().value(),
                                 saved.budget().value(),
                                 saved.createdAt());
+        }
+
+        @Override
+        public SimulationRecommendationResultDTO createSimulationWithRecommendation(CreateSimulationCommand command) {
+
+                SimulationCreationResultDTO created = createSimulation(command);
+
+                Simulation saved = repository.findById(created.id())
+                                .orElseThrow(() -> new SimulationNotFoundException(created.id()));
+
+                return new SimulationRecommendationResultDTO(
+                                saved.id(),
+                                saved.energyType().name(),
+                                saved.technologyIds());
         }
 
         // --------------------------------------------------
@@ -169,7 +195,8 @@ public class SimulationApplicationService implements
                                 savings,
                                 roiYears,
                                 simulation.createdAt(),
-                                simulation.createdBy()
+                                simulation.createdBy(),
+                                simulation.technologyIds()
 
                 );
         }

@@ -3,7 +3,9 @@ package com.renewsim.backend.simulation_service.web.controller;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.simulation_service.application.port.in.GetSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.command.GetSimulationByIdCommand;
+import com.renewsim.backend.simulation_service.application.port.out.TechnologyClientPort;
 import com.renewsim.backend.simulation_service.application.result.SimulationDetailResultDTO;
+import com.renewsim.backend.simulation_service.web.dto.TechnologyResponseDTO;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +20,7 @@ import java.util.List;
 public class SimulationTechnologyController {
 
     private final GetSimulationUseCase getSimulationUseCase;
+    private final TechnologyClientPort technologyClientPort;
 
     /**
      * Devuelve las tecnologías asociadas a una simulación específica
@@ -25,7 +28,7 @@ public class SimulationTechnologyController {
      */
     @PreAuthorize("hasAuthority('SCOPE_read:simulations')")
     @GetMapping("/{id}/technologies")
-    public List<String> getTechnologiesBySimulationId(@PathVariable Long id, Authentication auth) {
+    public List<TechnologyResponseDTO> getTechnologiesBySimulationId(@PathVariable Long id, Authentication auth) {
         AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
@@ -34,6 +37,8 @@ public class SimulationTechnologyController {
             new GetSimulationByIdCommand(id, user.username(), isAdmin)
         );
 
-        return List.of(); // technologyIds not available in SimulationDetailResultDTO
+        return simulation.technologyIds().stream()
+                .map(technologyClientPort::getTechnologyById)
+                .toList();
     }
 }
