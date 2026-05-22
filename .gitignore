@@ -59,3 +59,5 @@ Thumbs.db
 .cursor/
 .cursor.zip
 .opencode/
+.atl/
+.claude/
