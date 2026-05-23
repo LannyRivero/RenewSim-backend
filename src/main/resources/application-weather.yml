@@ -31,3 +31,7 @@ weather:
   units: metric   # 'metric' (°C), 'imperial' (°F)
   refresh-interval: 3600  # segundos entre recalculados (si se programan)
 
+simulation:
+  climate:
+    provider: openweathermap
+
