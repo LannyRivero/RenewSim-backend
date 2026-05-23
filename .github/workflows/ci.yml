@@ -18,12 +18,28 @@ jobs:
     name: Backend Tests with Testcontainers
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
 
     env:
       SPRING_PROFILES_ACTIVE: test
       JWT_SECRET: TzEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYwMTIzNDU2Nzg5YWJjZGVm
       TESTCONTAINERS_RYUK_DISABLED: true
       TESTCONTAINERS_CHECKS_DISABLE: true
+      TEST_DB_ADMIN_URL: jdbc:mysql://127.0.0.1:3306/mysql
+      TEST_DB_HOSTPORT: 127.0.0.1:3306
+      TEST_DB_USER: root
+      TEST_DB_PASS: root
 
     steps:
       - name: Checkout code
@@ -36,8 +52,68 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Run tests with coverage
-        run: mvn clean verify jacoco:report --batch-mode --no-transfer-progress
+        run: |
+          set -euo pipefail
+          mvn clean verify jacoco:report \
+            -Dtest.db.admin.url="$TEST_DB_ADMIN_URL" \
+            -Dtest.db.hostport="$TEST_DB_HOSTPORT" \
+            -Dtest.db.user="$TEST_DB_USER" \
+            -Dtest.db.pass="$TEST_DB_PASS" \
+            --batch-mode --no-transfer-progress
+
+      - name: Ensure simulation migration IT passed
+        run: |
+          set -euo pipefail
+          REPORT_FILE=$(find target/failsafe-reports -name "TEST-*SimulationSchemaMigrationIT*.xml" 2>/dev/null | head -n 1 || true)
+
+          if [ -z "${REPORT_FILE}" ]; then
+            echo "::error::Missing SimulationSchemaMigrationIT report"
+            exit 1
+          fi
+
+          if grep -q 'failures="[1-9]"' "${REPORT_FILE}" || grep -q 'errors="[1-9]"' "${REPORT_FILE}"; then
+            echo "::error::SimulationSchemaMigrationIT did not pass"
+            exit 1
+          fi
+
+          echo "SimulationSchemaMigrationIT passed"
+
+      - name: Build changed-files input for simulation coverage extractor
+        run: |
+          set -euo pipefail
+          mkdir -p target/verify
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+          fi
+
+          if [ -z "${BASE_SHA}" ] || [ "${BASE_SHA}" = "0000000000000000000000000000000000000000" ]; then
+            git ls-files > target/verify/changed-files.txt
+          else
+            git diff --name-only "${BASE_SHA}" "${GITHUB_SHA}" > target/verify/changed-files.txt
+          fi
+
+      - name: Extract simulation changed-file coverage artifact
+        run: |
+          set -euo pipefail
+          node scripts/verify/extract-simulation-changed-coverage.mjs \
+            --jacoco target/site/jacoco/jacoco.xml \
+            --changed-files target/verify/changed-files.txt \
+            --output target/verify/simulation-changed-file-coverage.json
+
+      - name: Enforce safety-net baseline completeness gate
+        run: |
+          set -euo pipefail
+          node scripts/verify/check-safety-net-baseline.mjs \
+            --apply-progress sdd/harden-simulation-verification-observability/apply-progress.md
 
       - name: Ensure security binding test passed
         run: |
@@ -71,3 +147,10 @@ jobs:
         with:
           name: coverage-report
           path: target/site/jacoco/
+
+      - name: Upload verify artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-artifacts
+          path: target/verify/
