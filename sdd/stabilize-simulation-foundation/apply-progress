@@ -1,0 +1,58 @@
+## Implementation Progress
+
+**Change**: stabilize-simulation-foundation  
+**Mode**: Strict TDD (capability-flagged)  
+**Batch**: Work Unit 1 + Work Unit 2 + Work Unit 3 (cumulative state)
+
+### Completed (cumulative)
+- [x] **WU1-T1** Align simulation persistence contract baseline (entity/schema/mapper consistency) with conservative hardening approach.
+- [x] **WU1-T2** Add migration for baseline schema alignment and many-to-many technology table.
+- [x] **WU1-T3** Add mapper coverage for baseline + legacy transitional reads.
+- [x] **WU2-T1** Unify lifecycle create/recommendation path under `SimulationApplicationService` and make orchestrator delegate to authoritative lifecycle path.
+- [x] **WU2-T2** Complete `GET /api/v1/simulation/{id}/technologies` contract with real technology payload retrieval (no `List.of()` placeholder).
+- [x] **WU2-T3** Wire DTO/port/service changes required for technologies contract while preserving ownership/admin access checks.
+- [x] **WU3-T1** Harden climate provider profile/config wiring so provider selection is explicit and deterministic (no ambiguous simultaneous climate provider beans).
+- [x] **WU3-T2** Expand simulation/climate coverage for provider wiring behavior and climate fallback behavior used by simulation creation.
+
+### Verification
+- Command: `./mvnw.cmd "-Dtest=SimulationApplicationServiceTest,ClimateProviderWiringTest" test`
+- Result: PASS (7 tests, 0 failures, 0 errors)
+
+### TDD Cycle Evidence
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| WU2-T1 | `src/test/java/com/renewsim/backend/simulation_service/application/service/SimulationApplicationServiceTest.java` | Unit | ✅ `SimulationMapperTest` baseline green | ✅ Written first | ✅ Passed | ✅ 2 behavior paths (recommended vs explicit IDs) | ✅ Minimal cleanup |
+| WU2-T2 | `src/test/java/com/renewsim/backend/simulation_service/web/controller/SimulationTechnologyControllerTest.java` | Unit | N/A (new test file) | ✅ Written first | ✅ Passed | ✅ 2 cases (payload + admin context) | ➖ None needed |
+| WU2-T3 | `src/test/java/com/renewsim/backend/simulation_service/application/service/SimulationApplicationServiceTest.java` | Unit | ✅ Same baseline as above | ✅ Written first | ✅ Passed | ✅ detail DTO technologies assertion | ➖ None needed |
+| WU3-T1 | `src/test/java/com/renewsim/backend/simulation_service/infrastructure/config/ClimateProviderWiringTest.java` | Unit (ContextRunner) | ⚠ Baseline not captured pre-change in this slice | ✅ Written first | ✅ Passed | ✅ 3 profile/config paths (local default, weather+openweathermap, weather+dummy) | ➖ None needed |
+| WU3-T2 | `src/test/java/com/renewsim/backend/simulation_service/application/service/SimulationApplicationServiceTest.java` | Unit | ⚠ Baseline not captured pre-change in this slice | ✅ Written first | ✅ Passed | ✅ provider-used path + explicit-climate path | ➖ None needed |
+
+### Files changed (cumulative for this branch)
+- `src/main/resources/db/migration/V15__align_simulations_contract.sql`
+- `src/main/java/com/renewsim/backend/simulation_service/infrastructure/persistence/entity/SimulationEntity.java`
+- `src/main/java/com/renewsim/backend/simulation_service/infrastructure/mapper/SimulationMapper.java`
+- `src/test/java/com/renewsim/backend/simulation_service/infrastructure/mapper/SimulationMapperTest.java`
+- `src/main/java/com/renewsim/backend/simulation_service/application/port/in/CreateSimulationUseCase.java`
+- `src/main/java/com/renewsim/backend/simulation_service/application/result/SimulationDetailResultDTO.java`
+- `src/main/java/com/renewsim/backend/simulation_service/application/service/SimulationApplicationService.java`
+- `src/main/java/com/renewsim/backend/simulation_service/application/service/SimulationOrchestratorService.java`
+- `src/main/java/com/renewsim/backend/simulation_service/web/controller/SimulationTechnologyController.java`
+- `src/test/java/com/renewsim/backend/simulation_service/application/service/SimulationApplicationServiceTest.java`
+- `src/test/java/com/renewsim/backend/simulation_service/web/controller/SimulationTechnologyControllerTest.java`
+- `src/main/java/com/renewsim/backend/simulation_service/infrastructure/adapter/out/dummy/DummyClimateDataAdapter.java`
+- `src/main/java/com/renewsim/backend/simulation_service/infrastructure/adapter/out/external/OpenWeatherMapAdapter.java`
+- `src/main/resources/application.yml`
+- `src/main/resources/application-weather.yml`
+- `src/test/java/com/renewsim/backend/simulation_service/infrastructure/config/ClimateProviderWiringTest.java`
+
+### Deviations / Notes
+- `SimulationOrchestratorService` remains unchanged in this slice (no lifecycle/contracts rework beyond compile-safe touchups).
+- Strict TDD evidence includes an explicit note: pre-change safety-net baseline for modified files was not captured in this slice.
+
+### Remaining
+- [ ] None.
+
+### Workload / PR Boundary
+- Mode: stacked PR slice
+- Strategy: stacked-to-dev
+- Boundary for this batch: climate provider wiring hardening + focused simulation behavior coverage tied to climate sourcing. Excludes lifecycle/contracts redesign and unrelated simulation refactors.
