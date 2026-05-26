@@ -36,6 +36,7 @@ jobs:
       JWT_SECRET: TzEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYwMTIzNDU2Nzg5YWJjZGVm
       TESTCONTAINERS_RYUK_DISABLED: true
       TESTCONTAINERS_CHECKS_DISABLE: true
+      MIGRATION_IT_FAIL_FAST_ON_FALLBACK: "false"
       TEST_DB_ADMIN_URL: jdbc:mysql://127.0.0.1:3306/mysql
       TEST_DB_HOSTPORT: 127.0.0.1:3306
       TEST_DB_USER: root
@@ -44,6 +45,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -60,11 +63,24 @@ jobs:
       - name: Run tests with coverage
         run: |
           set -euo pipefail
-          mvn clean verify jacoco:report \
+          mvn clean test jacoco:report \
             -Dtest.db.admin.url="$TEST_DB_ADMIN_URL" \
             -Dtest.db.hostport="$TEST_DB_HOSTPORT" \
             -Dtest.db.user="$TEST_DB_USER" \
             -Dtest.db.pass="$TEST_DB_PASS" \
+            -Dmigration.it.fail-fast-on-fallback="$MIGRATION_IT_FAIL_FAST_ON_FALLBACK" \
+            --batch-mode --no-transfer-progress
+
+      - name: Run scoped migration integration tests
+        run: |
+          set -euo pipefail
+          mvn failsafe:integration-test failsafe:verify \
+            -Dit.test=SimulationSchemaMigrationIT \
+            -Dtest.db.admin.url="$TEST_DB_ADMIN_URL" \
+            -Dtest.db.hostport="$TEST_DB_HOSTPORT" \
+            -Dtest.db.user="$TEST_DB_USER" \
+            -Dtest.db.pass="$TEST_DB_PASS" \
+            -Dmigration.it.fail-fast-on-fallback="$MIGRATION_IT_FAIL_FAST_ON_FALLBACK" \
             --batch-mode --no-transfer-progress
 
       - name: Ensure simulation migration IT passed
@@ -83,6 +99,45 @@ jobs:
           fi
 
           echo "SimulationSchemaMigrationIT passed"
+
+      - name: Read migration IT mode evidence
+        run: |
+          set -euo pipefail
+          EVIDENCE_FILE="target/verify/migration-it-mode-evidence.json"
+
+          if [ ! -f "${EVIDENCE_FILE}" ]; then
+            echo "::error::Missing migration IT mode evidence at ${EVIDENCE_FILE}"
+            exit 1
+          fi
+
+          MODE=$(python3 -c "import json;print(json.load(open('${EVIDENCE_FILE}', encoding='utf-8')).get('mode',''))")
+          FALLBACK_REASON=$(python3 -c "import json;print(json.load(open('${EVIDENCE_FILE}', encoding='utf-8')).get('fallbackReason',''))")
+          ISOLATION_ID=$(python3 -c "import json;print(json.load(open('${EVIDENCE_FILE}', encoding='utf-8')).get('isolationId',''))")
+
+          if [ -z "${MODE}" ]; then
+            echo "::error::Migration IT mode evidence is missing required field: mode"
+            exit 1
+          fi
+
+          echo "Migration IT mode evidence: mode=${MODE}, fallbackReason=${FALLBACK_REASON}, isolationId=${ISOLATION_ID}"
+          echo "migration_it_mode=${MODE}" >> "$GITHUB_OUTPUT"
+          echo "migration_it_fallback_reason=${FALLBACK_REASON}" >> "$GITHUB_OUTPUT"
+          echo "migration_it_isolation_id=${ISOLATION_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Enforce migration IT fail-fast fallback policy
+        run: |
+          set -euo pipefail
+          EVIDENCE_FILE="target/verify/migration-it-mode-evidence.json"
+
+          MODE=$(python3 -c "import json;print(json.load(open('${EVIDENCE_FILE}', encoding='utf-8')).get('mode',''))")
+          FALLBACK_REASON=$(python3 -c "import json;print(json.load(open('${EVIDENCE_FILE}', encoding='utf-8')).get('fallbackReason',''))")
+
+          if [ "${MIGRATION_IT_FAIL_FAST_ON_FALLBACK}" = "true" ] && [ "${MODE}" = "JDBC_FALLBACK" ]; then
+            echo "::error title=E_MIGRATION_IT_FALLBACK_POLICY::Fail-fast policy violated (mode=${MODE}, reason=${FALLBACK_REASON})"
+            exit 1
+          fi
+
+          echo "Migration IT fail-fast policy check passed (configured=${MIGRATION_IT_FAIL_FAST_ON_FALLBACK}, mode=${MODE})"
 
       - name: Build changed-files input for simulation coverage extractor
         run: |
