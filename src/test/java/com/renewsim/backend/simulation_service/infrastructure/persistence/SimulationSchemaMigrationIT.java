@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assumptions;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,6 +18,7 @@ class SimulationSchemaMigrationIT {
 
     private final MigrationItModeSelector modeSelector = new MigrationItModeSelector();
     private static final String FALLBACK_POLICY_ERROR = "E_MIGRATION_IT_FALLBACK_POLICY";
+    private static final AtomicBoolean EVIDENCE_WRITTEN = new AtomicBoolean(false);
 
     private Flyway buildFlyway(String jdbcUrl, String user, String pass) {
         return Flyway.configure()
@@ -57,7 +59,7 @@ class SimulationSchemaMigrationIT {
     }
 
     private String containerJdbcUrl() {
-        return System.getProperty("test.db.url", "jdbc:mysql://localhost:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true");
+        return System.getProperty("test.db.url", "").trim();
     }
 
     private boolean failFastOnFallbackEnabled() {
@@ -67,7 +69,7 @@ class SimulationSchemaMigrationIT {
     @Test
     @DisplayName("Flyway migrate should prepare simulation schema readiness on isolated DB lifecycle")
     void shouldApplyMigrationChainAndExposeSimulationSchemaReadiness() throws Exception {
-        MigrationExecutionContext context = openContext("shouldApplyMigrationChainAndExposeSimulationSchemaReadiness");
+        MigrationExecutionContext context = openContext("shouldApplyMigrationChainAndExposeSimulationSchemaReadiness", true);
         try {
             Flyway flyway = buildFlyway(context.jdbcUrl(), mysqlUser(), mysqlPass());
             flyway.clean();
@@ -85,7 +87,7 @@ class SimulationSchemaMigrationIT {
     @Test
     @DisplayName("Flyway migrate should be reproducible across isolated clean lifecycles")
     void shouldRemainDeterministicAcrossRepeatedIsolatedRuns() throws Exception {
-        MigrationExecutionContext context = openContext("shouldRemainDeterministicAcrossRepeatedIsolatedRuns");
+        MigrationExecutionContext context = openContext("shouldRemainDeterministicAcrossRepeatedIsolatedRuns", true);
         try {
             Flyway flyway = buildFlyway(context.jdbcUrl(), mysqlUser(), mysqlPass());
 
@@ -109,7 +111,7 @@ class SimulationSchemaMigrationIT {
     @DisplayName("Container mode should validate the same schema and Flyway contract when available")
     void shouldValidateSharedContractForContainerModeWhenAvailable() throws Exception {
         withPreferredMode("container", () -> {
-            MigrationExecutionContext context = openContext("shouldValidateSharedContractForContainerModeWhenAvailable");
+            MigrationExecutionContext context = openContext("shouldValidateSharedContractForContainerModeWhenAvailable", false);
             try {
                 Assumptions.assumeTrue(
                         context.mode() == MigrationItMode.CONTAINER,
@@ -132,7 +134,7 @@ class SimulationSchemaMigrationIT {
     @DisplayName("Fallback mode should validate the same schema and Flyway contract")
     void shouldValidateSharedContractForFallbackMode() throws Exception {
         withPreferredMode("jdbc-fallback", () -> {
-            MigrationExecutionContext context = openContext("shouldValidateSharedContractForFallbackMode");
+            MigrationExecutionContext context = openContext("shouldValidateSharedContractForFallbackMode", false);
             try {
                 assertThat(context.mode()).isEqualTo(MigrationItMode.JDBC_FALLBACK);
 
@@ -152,7 +154,7 @@ class SimulationSchemaMigrationIT {
     @Test
     @DisplayName("Flyway migrate should fail when migration chain includes broken script")
     void shouldFailWhenMigrationChainIsBroken() throws Exception {
-        MigrationExecutionContext context = openContext("shouldFailWhenMigrationChainIsBroken");
+        MigrationExecutionContext context = openContext("shouldFailWhenMigrationChainIsBroken", true);
         try {
             Flyway flyway = buildFlywayWithBrokenMigration(context.jdbcUrl(), mysqlUser(), mysqlPass());
             flyway.clean();
@@ -165,15 +167,24 @@ class SimulationSchemaMigrationIT {
         }
     }
 
-    private MigrationExecutionContext openContext(String testName) throws Exception {
+    private MigrationExecutionContext openContext(String testName, boolean publishEvidence) throws Exception {
         MigrationItModeSelector.Selection selection = modeSelector.select();
         if (selection.mode() == MigrationItMode.CONTAINER) {
-            MigrationExecutionContext context = MigrationExecutionContext.container(
-                    containerJdbcUrl(),
-                    selection.reasonCode(),
-                    selection.probeDetail());
-            emitModeEvidence(context);
-            return context;
+            String jdbcUrl = containerJdbcUrl();
+            if (!jdbcUrl.isBlank()) {
+                MigrationExecutionContext context = MigrationExecutionContext.container(
+                        jdbcUrl,
+                        selection.reasonCode(),
+                        selection.probeDetail());
+                if (publishEvidence) {
+                    emitModeEvidence(context);
+                }
+                return context;
+            }
+            selection = new MigrationItModeSelector.Selection(
+                    MigrationItMode.JDBC_FALLBACK,
+                    "container_url_missing",
+                    "test.db.url not configured");
         }
 
         FallbackDatabaseLifecycle lifecycle = new FallbackDatabaseLifecycle(
@@ -189,7 +200,9 @@ class SimulationSchemaMigrationIT {
                 selection.reasonCode(),
                 selection.probeDetail(),
                 lifecycle);
-        emitModeEvidence(context);
+        if (publishEvidence) {
+            emitModeEvidence(context);
+        }
         enforceFallbackPolicy(context);
         return context;
     }
@@ -202,7 +215,9 @@ class SimulationSchemaMigrationIT {
     }
 
     private void emitModeEvidence(MigrationExecutionContext context) {
-        MigrationItEvidence.write(context.mode(), context.reasonCode(), context.databaseId());
+        if (EVIDENCE_WRITTEN.compareAndSet(false, true)) {
+            MigrationItEvidence.write(context.mode(), context.reasonCode(), context.databaseId());
+        }
         System.out.printf(
                 "migration-it-mode: mode=%s, reason=%s, isolation-id=%s%n",
                 context.mode().name(),
