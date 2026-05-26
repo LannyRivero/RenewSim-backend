@@ -61,7 +61,19 @@ jobs:
       - name: Run tests with coverage
         run: |
           set -euo pipefail
-          mvn clean verify jacoco:report \
+          mvn clean test jacoco:report \
+            -Dtest.db.admin.url="$TEST_DB_ADMIN_URL" \
+            -Dtest.db.hostport="$TEST_DB_HOSTPORT" \
+            -Dtest.db.user="$TEST_DB_USER" \
+            -Dtest.db.pass="$TEST_DB_PASS" \
+            -Dmigration.it.fail-fast-on-fallback="$MIGRATION_IT_FAIL_FAST_ON_FALLBACK" \
+            --batch-mode --no-transfer-progress
+
+      - name: Run scoped migration integration tests
+        run: |
+          set -euo pipefail
+          mvn failsafe:integration-test failsafe:verify \
+            -Dit.test=SimulationSchemaMigrationIT \
             -Dtest.db.admin.url="$TEST_DB_ADMIN_URL" \
             -Dtest.db.hostport="$TEST_DB_HOSTPORT" \
             -Dtest.db.user="$TEST_DB_USER" \
