@@ -5,18 +5,18 @@ import org.flywaydb.core.api.FlywayException;
 import org.flywaydb.core.api.output.MigrateResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assumptions;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SimulationSchemaMigrationIT {
+
+    private final MigrationItModeSelector modeSelector = new MigrationItModeSelector();
+    private static final String FALLBACK_POLICY_ERROR = "E_MIGRATION_IT_FALLBACK_POLICY";
 
     private Flyway buildFlyway(String jdbcUrl, String user, String pass) {
         return Flyway.configure()
@@ -56,53 +56,38 @@ class SimulationSchemaMigrationIT {
         return System.getProperty("test.db.pass", "root");
     }
 
-    private String createIsolatedDatabase() throws Exception {
-        String dbName = "renewsim_migration_it_" + UUID.randomUUID().toString().replace("-", "");
-        try (Connection connection = DriverManager.getConnection(mysqlAdminUrl(), mysqlUser(), mysqlPass());
-             Statement statement = connection.createStatement()) {
-            statement.execute("CREATE DATABASE `" + dbName + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-        }
-        return dbName;
+    private String containerJdbcUrl() {
+        return System.getProperty("test.db.url", "jdbc:mysql://localhost:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true");
     }
 
-    private void dropIsolatedDatabase(String dbName) throws Exception {
-        try (Connection connection = DriverManager.getConnection(mysqlAdminUrl(), mysqlUser(), mysqlPass());
-             Statement statement = connection.createStatement()) {
-            statement.execute("DROP DATABASE IF EXISTS `" + dbName + "`");
-        }
-    }
-
-    private String isolatedJdbcUrl(String dbName) {
-        return "jdbc:mysql://" + mysqlHostPort() + "/" + dbName + "?useSSL=false&allowPublicKeyRetrieval=true";
+    private boolean failFastOnFallbackEnabled() {
+        return Boolean.parseBoolean(System.getProperty("migration.it.fail-fast-on-fallback", "false"));
     }
 
     @Test
     @DisplayName("Flyway migrate should prepare simulation schema readiness on isolated DB lifecycle")
     void shouldApplyMigrationChainAndExposeSimulationSchemaReadiness() throws Exception {
-        String dbName = createIsolatedDatabase();
-        String jdbcUrl = isolatedJdbcUrl(dbName);
+        MigrationExecutionContext context = openContext("shouldApplyMigrationChainAndExposeSimulationSchemaReadiness");
         try {
-            Flyway flyway = buildFlyway(jdbcUrl, mysqlUser(), mysqlPass());
+            Flyway flyway = buildFlyway(context.jdbcUrl(), mysqlUser(), mysqlPass());
             flyway.clean();
 
             MigrateResult result = flyway.migrate();
             assertThat(result.success).isTrue();
             assertThat(result.migrationsExecuted).isGreaterThan(0);
 
-            assertSchemaReadiness(jdbcUrl, mysqlUser(), mysqlPass());
-            assertFlywayVersionApplied(jdbcUrl, mysqlUser(), mysqlPass(), "15");
+            assertMigrationContract(context.jdbcUrl());
         } finally {
-            dropIsolatedDatabase(dbName);
+            emitCleanupOutcome(context.close());
         }
     }
 
     @Test
     @DisplayName("Flyway migrate should be reproducible across isolated clean lifecycles")
     void shouldRemainDeterministicAcrossRepeatedIsolatedRuns() throws Exception {
-        String dbName = createIsolatedDatabase();
-        String jdbcUrl = isolatedJdbcUrl(dbName);
+        MigrationExecutionContext context = openContext("shouldRemainDeterministicAcrossRepeatedIsolatedRuns");
         try {
-            Flyway flyway = buildFlyway(jdbcUrl, mysqlUser(), mysqlPass());
+            Flyway flyway = buildFlyway(context.jdbcUrl(), mysqlUser(), mysqlPass());
 
             flyway.clean();
             MigrateResult firstRun = flyway.migrate();
@@ -114,100 +99,181 @@ class SimulationSchemaMigrationIT {
             assertThat(secondRun.success).isTrue();
             assertThat(secondRun.migrationsExecuted).isEqualTo(firstRunExecuted);
 
-            assertSchemaReadiness(jdbcUrl, mysqlUser(), mysqlPass());
+            assertMigrationContract(context.jdbcUrl());
         } finally {
-            dropIsolatedDatabase(dbName);
+            emitCleanupOutcome(context.close());
         }
+    }
+
+    @Test
+    @DisplayName("Container mode should validate the same schema and Flyway contract when available")
+    void shouldValidateSharedContractForContainerModeWhenAvailable() throws Exception {
+        withPreferredMode("container", () -> {
+            MigrationExecutionContext context = openContext("shouldValidateSharedContractForContainerModeWhenAvailable");
+            try {
+                Assumptions.assumeTrue(
+                        context.mode() == MigrationItMode.CONTAINER,
+                        "Container runtime unavailable in this environment; parity fallback test still covers shared assertions.");
+
+                Flyway flyway = buildFlyway(context.jdbcUrl(), mysqlUser(), mysqlPass());
+                flyway.clean();
+                MigrateResult result = flyway.migrate();
+
+                assertThat(result.success).isTrue();
+                assertMigrationContract(context.jdbcUrl());
+            } finally {
+                emitCleanupOutcome(context.close());
+            }
+            return null;
+        });
+    }
+
+    @Test
+    @DisplayName("Fallback mode should validate the same schema and Flyway contract")
+    void shouldValidateSharedContractForFallbackMode() throws Exception {
+        withPreferredMode("jdbc-fallback", () -> {
+            MigrationExecutionContext context = openContext("shouldValidateSharedContractForFallbackMode");
+            try {
+                assertThat(context.mode()).isEqualTo(MigrationItMode.JDBC_FALLBACK);
+
+                Flyway flyway = buildFlyway(context.jdbcUrl(), mysqlUser(), mysqlPass());
+                flyway.clean();
+                MigrateResult result = flyway.migrate();
+
+                assertThat(result.success).isTrue();
+                assertMigrationContract(context.jdbcUrl());
+            } finally {
+                emitCleanupOutcome(context.close());
+            }
+            return null;
+        });
     }
 
     @Test
     @DisplayName("Flyway migrate should fail when migration chain includes broken script")
     void shouldFailWhenMigrationChainIsBroken() throws Exception {
-        String dbName = createIsolatedDatabase();
-        String jdbcUrl = isolatedJdbcUrl(dbName);
+        MigrationExecutionContext context = openContext("shouldFailWhenMigrationChainIsBroken");
         try {
-            Flyway flyway = buildFlywayWithBrokenMigration(jdbcUrl, mysqlUser(), mysqlPass());
+            Flyway flyway = buildFlywayWithBrokenMigration(context.jdbcUrl(), mysqlUser(), mysqlPass());
             flyway.clean();
 
             assertThatThrownBy(flyway::migrate)
                     .isInstanceOf(FlywayException.class)
                     .hasMessageContaining("V999");
         } finally {
-            dropIsolatedDatabase(dbName);
+            emitCleanupOutcome(context.close());
         }
     }
 
-    private void assertSchemaReadiness(String jdbcUrl, String user, String pass) throws Exception {
-        try (Connection connection = openConnection(jdbcUrl, user, pass)) {
-            assertThat(countMatchingColumns(connection)).isEqualTo(6);
-            assertThat(tableExists(connection, "simulation_technologies")).isTrue();
-            assertThat(hasSimulationTechnologiesToSimulationsForeignKey(connection)).isTrue();
+    private MigrationExecutionContext openContext(String testName) throws Exception {
+        MigrationItModeSelector.Selection selection = modeSelector.select();
+        if (selection.mode() == MigrationItMode.CONTAINER) {
+            MigrationExecutionContext context = MigrationExecutionContext.container(
+                    containerJdbcUrl(),
+                    selection.reasonCode(),
+                    selection.probeDetail());
+            emitModeEvidence(context);
+            return context;
+        }
+
+        FallbackDatabaseLifecycle lifecycle = new FallbackDatabaseLifecycle(
+                mysqlAdminUrl(),
+                mysqlHostPort(),
+                mysqlUser(),
+                mysqlPass());
+        String databaseId = lifecycle.createIsolatedDatabaseId(testName);
+        String jdbcUrl = lifecycle.provisionDatabase(databaseId);
+        MigrationExecutionContext context = MigrationExecutionContext.fallback(
+                jdbcUrl,
+                databaseId,
+                selection.reasonCode(),
+                selection.probeDetail(),
+                lifecycle);
+        emitModeEvidence(context);
+        enforceFallbackPolicy(context);
+        return context;
+    }
+
+    private void enforceFallbackPolicy(MigrationExecutionContext context) {
+        if (failFastOnFallbackEnabled() && context.mode() == MigrationItMode.JDBC_FALLBACK) {
+            throw new IllegalStateException(
+                    FALLBACK_POLICY_ERROR + ": fallback mode selected, reason=" + context.reasonCode());
         }
     }
 
-    private int countMatchingColumns(Connection connection) throws Exception {
-        try (PreparedStatement statement = connection.prepareStatement(
-                """
-                SELECT COUNT(*)
-                FROM information_schema.columns
-                WHERE table_schema = DATABASE()
-                  AND table_name = 'simulations'
-                  AND column_name IN ('location', 'energy_type', 'project_size', 'budget', 'estimated_energy', 'created_by')
-                """)) {
-            try (ResultSet rs = statement.executeQuery()) {
-                assertThat(rs.next()).isTrue();
-                return rs.getInt(1);
+    private void emitModeEvidence(MigrationExecutionContext context) {
+        MigrationItEvidence.write(context.mode(), context.reasonCode(), context.databaseId());
+        System.out.printf(
+                "migration-it-mode: mode=%s, reason=%s, isolation-id=%s%n",
+                context.mode().name(),
+                context.reasonCode(),
+                context.databaseId());
+    }
+
+    private void emitCleanupOutcome(FallbackDatabaseLifecycle.CleanupStatus cleanupStatus) {
+        System.out.printf(
+                "migration-it-cleanup: attempted=%s, success=%s, database=%s, detail=%s%n",
+                cleanupStatus.attempted(),
+                cleanupStatus.success(),
+                cleanupStatus.databaseId(),
+                cleanupStatus.detail());
+    }
+
+    private void assertMigrationContract(String jdbcUrl) throws Exception {
+        try (Connection connection = openConnection(jdbcUrl, mysqlUser(), mysqlPass())) {
+            SimulationMigrationAssertions.assertSchemaReadiness(connection);
+            SimulationMigrationAssertions.assertFlywayVersionApplied(
+                    connection,
+                    SimulationMigrationAssertions.EXPECTED_FLYWAY_VERSION);
+        }
+    }
+
+    private <T> T withPreferredMode(String preferredMode, ThrowingSupplier<T> action) throws Exception {
+        String previous = System.getProperty(MigrationItModeSelector.PROP_PREFERRED_MODE);
+        try {
+            System.setProperty(MigrationItModeSelector.PROP_PREFERRED_MODE, preferredMode);
+            return action.get();
+        } finally {
+            if (previous == null) {
+                System.clearProperty(MigrationItModeSelector.PROP_PREFERRED_MODE);
+            } else {
+                System.setProperty(MigrationItModeSelector.PROP_PREFERRED_MODE, previous);
             }
         }
     }
 
-    private boolean tableExists(Connection connection, String tableName) throws Exception {
-        try (PreparedStatement statement = connection.prepareStatement(
-                """
-                SELECT COUNT(*)
-                FROM information_schema.tables
-                WHERE table_schema = DATABASE()
-                  AND table_name = ?
-                """)) {
-            statement.setString(1, tableName);
-            try (ResultSet rs = statement.executeQuery()) {
-                assertThat(rs.next()).isTrue();
-                return rs.getInt(1) == 1;
+    @FunctionalInterface
+    private interface ThrowingSupplier<T> {
+        T get() throws Exception;
+    }
+
+    private record MigrationExecutionContext(
+            MigrationItMode mode,
+            String jdbcUrl,
+            String databaseId,
+            String reasonCode,
+            String probeDetail,
+            FallbackDatabaseLifecycle lifecycle) {
+
+        static MigrationExecutionContext container(String jdbcUrl, String reasonCode, String probeDetail) {
+            return new MigrationExecutionContext(MigrationItMode.CONTAINER, jdbcUrl, "n/a", reasonCode, probeDetail, null);
+        }
+
+        static MigrationExecutionContext fallback(
+                String jdbcUrl,
+                String databaseId,
+                String reasonCode,
+                String probeDetail,
+                FallbackDatabaseLifecycle lifecycle) {
+            return new MigrationExecutionContext(MigrationItMode.JDBC_FALLBACK, jdbcUrl, databaseId, reasonCode, probeDetail, lifecycle);
+        }
+
+        FallbackDatabaseLifecycle.CleanupStatus close() {
+            if (mode != MigrationItMode.JDBC_FALLBACK || lifecycle == null) {
+                return FallbackDatabaseLifecycle.CleanupStatus.skipped("not_applicable");
             }
+            return lifecycle.attemptCleanup(databaseId);
         }
     }
 
-    private boolean hasSimulationTechnologiesToSimulationsForeignKey(Connection connection) throws Exception {
-        try (PreparedStatement statement = connection.prepareStatement(
-                """
-                SELECT COUNT(*)
-                FROM information_schema.referential_constraints
-                WHERE constraint_schema = DATABASE()
-                  AND table_name = 'simulation_technologies'
-                  AND referenced_table_name = 'simulations'
-                """)) {
-            try (ResultSet rs = statement.executeQuery()) {
-                assertThat(rs.next()).isTrue();
-                return rs.getInt(1) == 1;
-            }
-        }
-    }
-
-    private void assertFlywayVersionApplied(String jdbcUrl, String user, String pass, String expectedVersion)
-            throws Exception {
-        try (Connection connection = openConnection(jdbcUrl, user, pass);
-             PreparedStatement statement = connection.prepareStatement(
-                     """
-                     SELECT COUNT(*)
-                     FROM flyway_schema_history
-                     WHERE version = ?
-                       AND success = 1
-                     """)) {
-            statement.setString(1, expectedVersion);
-            try (ResultSet rs = statement.executeQuery()) {
-                assertThat(rs.next()).isTrue();
-                assertThat(rs.getInt(1)).isEqualTo(1);
-            }
-        }
-    }
 }
