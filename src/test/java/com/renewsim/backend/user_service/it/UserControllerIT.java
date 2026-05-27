@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -102,10 +103,21 @@ class UserControllerIT {
     @DisplayName("should return 200 OK when user is found")
     @WithMockUser(roles = "ADMIN")
     void testGetUserByIdReturns200() throws Exception {
-        createAlice(); 
-        mockMvc.perform(get("/api/v1/users/{id}", 1L))
+        UserCreateRequest request = new UserCreateRequest("lookup", "lookup@mail.com", "StrongPass1", null, null);
+        MvcResult createResult = mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long userId = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .path("data")
+                .path("id")
+                .asLong();
+
+        mockMvc.perform(get("/api/v1/users/{id}", userId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.username").value("bob@mail.com"));
+                .andExpect(jsonPath("$.data.username").value("lookup@mail.com"));
     }
 
     @Test
