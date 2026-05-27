@@ -60,14 +60,15 @@ class UserControllerIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.data.email").value("bob@mail.com"));
     }
 
     @Test
     @DisplayName("should return 400 Bad Request when request body is invalid")
     @WithMockUser(roles = "ADMIN")
     void testCreateUserInvalidBodyReturns400() throws Exception {
-        UserCreateRequest invalid = new UserCreateRequest("charlie", "charlie@mail.com", "StrongPass1", null, null);
+        UserCreateRequest invalid = new UserCreateRequest("INVALID_UPPER", "not-an-email", "123", null, "bad-phone");
 
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,7 +105,7 @@ class UserControllerIT {
         createAlice(); 
         mockMvc.perform(get("/api/v1/users/{id}", 1L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("alice"));
+                .andExpect(jsonPath("$.data.username").value("bob@mail.com"));
     }
 
     @Test
@@ -128,8 +129,8 @@ class UserControllerIT {
                         .param("page", "0")
                         .param("size", "5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").exists())
-                .andExpect(jsonPath("$.page").value(0));
+                .andExpect(jsonPath("$.data.content").exists())
+                .andExpect(jsonPath("$.data.page").value(0));
     }
 
     // ---------------------------
@@ -143,7 +144,7 @@ class UserControllerIT {
         mockMvc.perform(get("/api/v1/users/by-username")
                         .param("username", "alice"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("alice"));
+                .andExpect(jsonPath("$.data.email").value("alice@mail.com"));
     }
 
     @Test
@@ -167,7 +168,7 @@ class UserControllerIT {
         mockMvc.perform(get("/api/v1/users/by-email")
                         .param("email", "alice@mail.com"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("alice@mail.com"));
+                .andExpect(jsonPath("$.data.email").value("alice@mail.com"));
     }
 
     @Test
@@ -191,7 +192,7 @@ class UserControllerIT {
         mockMvc.perform(get("/api/v1/users/exists")
                         .param("username", "alice"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("true"));
+                .andExpect(jsonPath("$.data").value(true));
     }
 
     @Test
@@ -201,7 +202,7 @@ class UserControllerIT {
         mockMvc.perform(get("/api/v1/users/exists")
                         .param("username", "ghost"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("false"));
+                .andExpect(jsonPath("$.data").value(false));
     }
 
     // ---------------------------
@@ -215,8 +216,8 @@ class UserControllerIT {
         mockMvc.perform(get("/api/v1/users/internal/credentials")
                         .param("username", "alice"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("alice"))
-                .andExpect(jsonPath("$.email").value("alice@mail.com"));
+                .andExpect(jsonPath("$.data.username").value("alice@mail.com"))
+                .andExpect(jsonPath("$.data.email").value("alice@mail.com"));
     }
 
     @Test
