@@ -1,7 +1,9 @@
 package com.renewsim.backend.role_service.infrastructure.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 
 import com.renewsim.backend.shared.dto.OperationResponse;
@@ -15,5 +17,13 @@ public interface UserServiceClient {
     @PutMapping("/api/v1/users/{id}/roles")
     OperationResponse<Void> updateUserRoles(@PathVariable("id") Long userId,
                          @RequestBody UpdateUserRolesRequestDTO request);
+
+    @PostMapping("/api/v1/users/{userId}/roles/{roleId}")
+    OperationResponse<Void> assignRole(@PathVariable("userId") Long userId,
+            @PathVariable("roleId") Long roleId);
+
+    @DeleteMapping("/api/v1/users/{userId}/roles/{roleId}")
+    OperationResponse<Void> removeRole(@PathVariable("userId") Long userId,
+            @PathVariable("roleId") Long roleId);
 }
 

@@ -25,6 +25,20 @@ public class HttpUserServiceGateway implements UserServiceGateway {
         userServiceClient.updateUserRoles(userId, request);
     }
 
+    @Override
+    @CircuitBreaker(name = "userService", fallbackMethod = "fallbackAssignRole")
+    @Retry(name = "userService")
+    public void assignRole(Long userId, Long roleId) {
+        userServiceClient.assignRole(userId, roleId);
+    }
+
+    @Override
+    @CircuitBreaker(name = "userService", fallbackMethod = "fallbackRemoveRole")
+    @Retry(name = "userService")
+    public void removeRole(Long userId, Long roleId) {
+        userServiceClient.removeRole(userId, roleId);
+    }
+
     /**
      * Fallback silencioso: no lanza excepción, solo loguea.
      */
@@ -32,5 +46,17 @@ public class HttpUserServiceGateway implements UserServiceGateway {
     private void fallbackUpdateUserRoles(Long userId, UpdateUserRolesRequestDTO request, Throwable ex) {
         log.warn("Fallback triggered: Unable to update roles for userId={} -> reason={}", userId, ex.getMessage());
         // no lanzamos excepción → fallback "suave"
+    }
+
+    @SuppressWarnings("unused")
+    private void fallbackAssignRole(Long userId, Long roleId, Throwable ex) {
+        log.warn("Fallback triggered: Unable to assign roleId={} for userId={} -> reason={}", roleId, userId,
+                ex.getMessage());
+    }
+
+    @SuppressWarnings("unused")
+    private void fallbackRemoveRole(Long userId, Long roleId, Throwable ex) {
+        log.warn("Fallback triggered: Unable to remove roleId={} for userId={} -> reason={}", roleId, userId,
+                ex.getMessage());
     }
 }
