@@ -15,6 +15,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.UUID;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -30,22 +32,27 @@ class UserControllerIT {
     @Autowired
     private ObjectMapper objectMapper;
 
-    /**
-     * Helper para crear un usuario "alice" con rol ADMIN.
-     */
-    private void createAlice() throws Exception {
-    UserCreateRequest request = new UserCreateRequest("alice", "alice@mail.com", "StrongPass1", null, null);
-    mockMvc.perform(post("/api/v1/users")
-                    .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN"))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
-            .andExpect(result -> {
-                int status = result.getResponse().getStatus();
-                if (status != 201 && status != 409) {
-                    throw new AssertionError("Expected 201 or 409, got " + status);
-                }
-            });
-}
+    private record CreatedUser(long id, String username, String email) {}
+
+    private CreatedUser createUser(String usernamePrefix) throws Exception {
+        String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        String username = usernamePrefix + "_" + suffix;
+        String email = username + "@mail.com";
+        UserCreateRequest request = new UserCreateRequest(username, email, "StrongPass1", null, null);
+
+        MvcResult createResult = mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long userId = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .path("data")
+                .path("id")
+                .asLong();
+
+        return new CreatedUser(userId, username, email);
+    }
 
 
     // ---------------------------
@@ -103,21 +110,11 @@ class UserControllerIT {
     @DisplayName("should return 200 OK when user is found")
     @WithMockUser(roles = "ADMIN")
     void testGetUserByIdReturns200() throws Exception {
-        UserCreateRequest request = new UserCreateRequest("lookup", "lookup@mail.com", "StrongPass1", null, null);
-        MvcResult createResult = mockMvc.perform(post("/api/v1/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andReturn();
+        CreatedUser user = createUser("lookup");
 
-        long userId = objectMapper.readTree(createResult.getResponse().getContentAsString())
-                .path("data")
-                .path("id")
-                .asLong();
-
-        mockMvc.perform(get("/api/v1/users/{id}", userId))
+        mockMvc.perform(get("/api/v1/users/{id}", user.id()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.username").value("lookup@mail.com"));
+                .andExpect(jsonPath("$.data.username").value(user.email()));
     }
 
     @Test
@@ -136,7 +133,7 @@ class UserControllerIT {
     @DisplayName("should return paginated list of users")
     @WithMockUser(roles = "ADMIN")
     void testListUsersReturns200() throws Exception {
-        createAlice();
+        createUser("list");
         mockMvc.perform(get("/api/v1/users")
                         .param("page", "0")
                         .param("size", "5"))
@@ -152,11 +149,11 @@ class UserControllerIT {
     @DisplayName("should return 200 OK when user found by username")
     @WithMockUser(roles = "ADMIN")
     void testGetUserByUsernameReturns200() throws Exception {
-        createAlice();
+        CreatedUser user = createUser("byusername");
         mockMvc.perform(get("/api/v1/users/by-username")
-                        .param("username", "alice"))
+                        .param("username", user.username()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.email").value("alice@mail.com"));
+                .andExpect(jsonPath("$.data.email").value(user.email()));
     }
 
     @Test
@@ -176,11 +173,11 @@ class UserControllerIT {
     @DisplayName("should return 200 OK when user found by email")
     @WithMockUser(roles = "ADMIN")
     void testGetUserByEmailReturns200() throws Exception {
-        createAlice();
+        CreatedUser user = createUser("byemail");
         mockMvc.perform(get("/api/v1/users/by-email")
-                        .param("email", "alice@mail.com"))
+                        .param("email", user.email()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.email").value("alice@mail.com"));
+                .andExpect(jsonPath("$.data.email").value(user.email()));
     }
 
     @Test
@@ -200,9 +197,9 @@ class UserControllerIT {
     @DisplayName("should return true if user exists")
     @WithMockUser(roles = "ADMIN")
     void testExistsUserReturnsTrue() throws Exception {
-        createAlice();
+        CreatedUser user = createUser("exists");
         mockMvc.perform(get("/api/v1/users/exists")
-                        .param("username", "alice"))
+                        .param("username", user.username()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").value(true));
     }
@@ -224,21 +221,21 @@ class UserControllerIT {
     @DisplayName("should return credentials when role SERVICE_AUTH")
     @WithMockUser(roles = "SERVICE_AUTH")
     void testGetCredentialsReturns200() throws Exception {
-        createAlice();
+        CreatedUser user = createUser("credentials");
         mockMvc.perform(get("/api/v1/users/internal/credentials")
-                        .param("username", "alice"))
+                        .param("username", user.username()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.username").value("alice@mail.com"))
-                .andExpect(jsonPath("$.data.email").value("alice@mail.com"));
+                .andExpect(jsonPath("$.data.username").value(user.email()))
+                .andExpect(jsonPath("$.data.email").value(user.email()));
     }
 
     @Test
     @DisplayName("should return 403 Forbidden when role is not SERVICE_AUTH")
     @WithMockUser(roles = "USER")
     void testGetCredentialsForbidden() throws Exception {
-        createAlice();
+        CreatedUser user = createUser("credentialsforbidden");
         mockMvc.perform(get("/api/v1/users/internal/credentials")
-                        .param("username", "alice"))
+                        .param("username", user.username()))
                 .andExpect(status().isForbidden());
     }
 }
