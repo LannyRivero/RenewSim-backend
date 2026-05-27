@@ -23,7 +23,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest(showSql = true)
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EntityScan(basePackages = "com.renewsim.backend.user_service.infraestructure.persistence.entity")
 @EnableJpaRepositories(basePackages = "com.renewsim.backend.user_service.infraestructure.persistence.repo")
