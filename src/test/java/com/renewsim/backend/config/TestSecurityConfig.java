@@ -1,6 +1,9 @@
 package com.renewsim.backend.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.renewsim.backend.auth_service.infrastructure.config.SecurityRateLimitProperties;
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimiter;
+import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimitingFilter;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -28,9 +31,17 @@ public class TestSecurityConfig {
      * Provides a mock LoginRateLimiter bean for tests.
      * Uses @Primary to ensure this bean is selected over any other candidates.
      */
-    @Bean
+    @Bean(name = "testLoginRateLimiter")
     @Primary
     public LoginRateLimiter loginRateLimiter() {
         return mock(LoginRateLimiter.class);
+    }
+
+    @Bean
+    @Primary
+    public LoginRateLimitingFilter loginRateLimitingFilter(ObjectMapper objectMapper) {
+        SecurityRateLimitProperties props = new SecurityRateLimitProperties();
+        props.setEnabled(false);
+        return new LoginRateLimitingFilter(new LoginRateLimiter(60, 1000), objectMapper, props);
     }
 }
