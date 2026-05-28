@@ -8,7 +8,7 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
+import com.renewsim.backend.role_service.application.dto.UserRolesUpdateRequest;
 
 /**
  * Contract test to ensure UserServiceGateway defines the correct method signature
@@ -19,7 +19,7 @@ class UserServiceGatewayContractTest {
     @Test
     @DisplayName("should define updateUserRoles method with correct signature")
     void shouldDefineUpdateUserRolesMethodWithCorrectSignature() throws NoSuchMethodException {
-        var method = UserServiceGateway.class.getMethod("updateUserRoles", Long.class, UpdateUserRolesRequestDTO.class);
+        var method = UserServiceGateway.class.getMethod("updateUserRoles", Long.class, UserRolesUpdateRequest.class);
 
         assertThat(method).isNotNull();
         assertThat(method.getReturnType()).isEqualTo(void.class);
@@ -28,20 +28,33 @@ class UserServiceGatewayContractTest {
     @Test
     @DisplayName("should allow mocking and invocation of updateUserRoles with single roles list")
     void shouldAllowMockingAndInvocationOfUpdateUserRoles() {
-        // Arrange — mock implementation using the real DTO structure
-        UserServiceGateway gateway = (userId, request) -> {
-            assertThat(userId).isPositive();
-            assertThat(request).isNotNull();
-            assertThat(request.roles()).isNotEmpty();
-            System.out.printf("Updating user %d with roles: %s%n", userId, request.roles());
+        UserServiceGateway gateway = new UserServiceGateway() {
+            @Override
+            public void updateUserRoles(Long userId, UserRolesUpdateRequest request) {
+                assertThat(userId).isPositive();
+                assertThat(request).isNotNull();
+                assertThat(request.roles()).isNotEmpty();
+            }
+
+            @Override
+            public void assignRole(Long userId, Long roleId) {
+                assertThat(userId).isPositive();
+                assertThat(roleId).isPositive();
+            }
+
+            @Override
+            public void removeRole(Long userId, Long roleId) {
+                assertThat(userId).isPositive();
+                assertThat(roleId).isPositive();
+            }
         };
 
-        // Act
-        UpdateUserRolesRequestDTO dto = new UpdateUserRolesRequestDTO(List.of("ADMIN", "USER"));
+        UserRolesUpdateRequest dto = new UserRolesUpdateRequest(List.of("ADMIN", "USER"));
 
         gateway.updateUserRoles(42L, dto);
+        gateway.assignRole(42L, 1L);
+        gateway.removeRole(42L, 1L);
 
-        // Assert — if no exception, the contract is respected
         assertThat(dto.roles()).containsExactly("ADMIN", "USER");
     }
 }

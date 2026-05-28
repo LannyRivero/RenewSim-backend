@@ -1,9 +1,9 @@
 package com.renewsim.backend.role_service.application.port.out;
 
-import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
+import com.renewsim.backend.role_service.application.dto.UserRolesUpdateRequest;
 
 public interface UserServiceGateway {
-    void updateUserRoles(Long userId, UpdateUserRolesRequestDTO request);
+    void updateUserRoles(Long userId, UserRolesUpdateRequest request);
 
     void assignRole(Long userId, Long roleId);
 

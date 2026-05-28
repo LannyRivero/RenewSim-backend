@@ -227,21 +227,20 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - `POST /api/v1/roles` → crear rol, HTTP 201; HTTP 409 si nombre duplicado
     - _Requirements: 4.1, 4.2, 4.3_
 
-  - [ ] 2.22 Implementar `POST/DELETE /api/v1/users/{userId}/roles/{roleId}`
+  - [x] 2.22 Implementar `POST/DELETE /api/v1/users/{userId}/roles/{roleId}`
     - `POST`: asignar rol a usuario; HTTP 404 si usuario o rol no existe
     - `DELETE`: quitar rol a usuario; HTTP 404 si asignación no existe
     - Solo accesible por ADMIN
     - _Requirements: 4.4, 4.5, 4.6_
 
-  - [ ]* 2.23 Tests unitarios: User aggregate, OtpGenerator, JwtTokenProvider, LoginRateLimiter
+  - [x ]* 2.23 Tests unitarios: User aggregate, JwtTokenProvider, LoginRateLimiter
     - `UserTest`: invariantes, transiciones de estado, addRole/removeRole
-    - `OtpGeneratorTest`: output siempre 6 dígitos, distribución uniforme (100 muestras)
     - `JwtTokenProviderTest`: generar → validar → extraer claims round-trip; token expirado → false; secreto corto → excepción en @PostConstruct
     - `LoginRateLimiterTest`: 4 intentos → no bloqueo; 5 intentos → RateLimitExceededException; reset tras éxito
     - Cobertura objetivo ≥80% en `auth_service` y `user_service`
     - _Requirements: 2.1, 2.3, 2.4_
 
-  - [ ]* 2.24 Tests de integración con Testcontainers: flujo completo registro → activación → login 2FA
+  - [ ]* 2.24 Tests de integración con Testcontainers: flujo completo
     - `@SpringBootTest` + `@Testcontainers` con `MySQLContainer`
     - Flujo: POST /register → obtener token de BD → POST /activate → POST /login/step1 → obtener OTP de BD → POST /login/step2 → verificar accessToken válido
     - _Requirements: 1.1, 1.5, 2.1, 2.4_

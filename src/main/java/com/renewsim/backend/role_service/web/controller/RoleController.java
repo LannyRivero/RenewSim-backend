@@ -3,6 +3,7 @@ package com.renewsim.backend.role_service.web.controller;
 import com.renewsim.backend.role_service.application.command.AssignRoleCommand;
 import com.renewsim.backend.role_service.application.command.CreateRoleCommand;
 import com.renewsim.backend.role_service.application.command.ManageUserRolesCommand;
+import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.role_service.application.port.in.*;
 import com.renewsim.backend.role_service.application.result.*;
 import com.renewsim.backend.shared.domain.vo.RoleName;
@@ -25,6 +26,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -75,10 +77,13 @@ public class RoleController {
             @ApiResponse(responseCode = "404", description = "User or role not found", content = @Content)
     })
     public ResponseEntity<OperationResponse<ManageUserRolesResultDTO>> manageRoles(
+            @AuthenticationPrincipal AuthenticatedUser principal,
             @Valid @RequestBody ManageUserRolesRequestDTO request) {
 
+        Long requesterId = principal == null ? null : Integer.toUnsignedLong(principal.username().hashCode());
+
         var command = new ManageUserRolesCommand(
-                request.requesterId(),
+                requesterId,
                 request.targetUserId(),
                 request.rolesToAssign(),
                 request.rolesToRevoke());

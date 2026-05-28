@@ -2,8 +2,10 @@ package com.renewsim.backend.role_service.infrastructure.gateway;
 
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import com.renewsim.backend.role_service.application.dto.UserRolesUpdateRequest;
+import com.renewsim.backend.role_service.application.port.out.UserServiceGateway;
 import com.renewsim.backend.config.TestSecurityConfig;
-import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,15 +15,19 @@ import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest
+@SpringBootTest(properties = "user-service.url=http://localhost:9561")
 @Import(TestSecurityConfig.class)
 class HttpUserServiceGatewayIT {
 
     private static WireMockServer wireMockServer;
 
     @Autowired
-    private HttpUserServiceGateway gateway;
+    private UserServiceGateway gateway;
+
+    @Autowired
+    private CircuitBreakerRegistry circuitBreakerRegistry;
 
     @BeforeAll
     static void setupServer() {
@@ -35,12 +41,18 @@ class HttpUserServiceGatewayIT {
         wireMockServer.stop();
     }
 
+    @BeforeEach
+    void resetState() {
+        wireMockServer.resetAll();
+        circuitBreakerRegistry.circuitBreaker("userService").reset();
+    }
+
     @Test
     void shouldUpdateUserRolesSuccessfully() {
-        stubFor(put(urlEqualTo("/users/1/roles"))
+        stubFor(put(urlEqualTo("/api/v1/users/1/roles"))
                 .willReturn(aResponse().withStatus(200)));
 
-        UpdateUserRolesRequestDTO request = new UpdateUserRolesRequestDTO(List.of("ADMIN"));
+        UserRolesUpdateRequest request = new UserRolesUpdateRequest(List.of("ADMIN"));
 
         assertThatCode(() -> gateway.updateUserRoles(1L, request))
                 .doesNotThrowAnyException();
@@ -48,24 +60,23 @@ class HttpUserServiceGatewayIT {
 
     @Test
     void shouldTriggerFallbackOn500Error() {
-        stubFor(put(urlEqualTo("/users/1/roles"))
+        stubFor(put(urlEqualTo("/api/v1/users/1/roles"))
                 .willReturn(aResponse().withStatus(500)));
 
-        UpdateUserRolesRequestDTO request = new UpdateUserRolesRequestDTO(List.of("ADMIN"));
+        UserRolesUpdateRequest request = new UserRolesUpdateRequest(List.of("ADMIN"));
 
-        // como el fallback es silencioso, no lanza excepción
-        assertThatCode(() -> gateway.updateUserRoles(1L, request))
-                .doesNotThrowAnyException();
+        assertThatThrownBy(() -> gateway.updateUserRoles(1L, request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Unable to update user roles");
     }
 
     @Test
     void shouldTriggerFallbackOnTimeout() {
-        stubFor(put(urlEqualTo("/users/1/roles"))
+        stubFor(put(urlEqualTo("/api/v1/users/1/roles"))
                 .willReturn(aResponse().withFixedDelay(3000))); // simula timeout
 
-        UpdateUserRolesRequestDTO request = new UpdateUserRolesRequestDTO(List.of("ADMIN"));
+        UserRolesUpdateRequest request = new UserRolesUpdateRequest(List.of("ADMIN"));
 
-        // el fallback se activa, pero no rompe el flujo
         assertThatCode(() -> gateway.updateUserRoles(1L, request))
                 .doesNotThrowAnyException();
     }

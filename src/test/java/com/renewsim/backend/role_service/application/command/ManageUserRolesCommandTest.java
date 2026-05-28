@@ -2,6 +2,7 @@ package com.renewsim.backend.role_service.application.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -135,14 +136,14 @@ class ManageUserRolesCommandTest {
         ManageUserRolesCommand command = new ManageUserRolesCommand(
                 1L,
                 2L,
-                List.of(1L, null, 3L),
+                Arrays.asList(1L, null, 3L),
                 List.of(4L));
 
         Set<ConstraintViolation<ManageUserRolesCommand>> violations = validator.validate(command);
 
         assertThat(violations)
                 .extracting(ConstraintViolation::getMessage)
-                .contains("must not be null");
+                .anyMatch(message -> message.contains("must not be null") || message.contains("no debe ser nulo"));
     }
 
     @Test
@@ -158,7 +159,7 @@ class ManageUserRolesCommandTest {
 
         assertThat(violations)
                 .extracting(ConstraintViolation::getMessage)
-                .contains("must be positive");
+                .anyMatch(message -> message.contains("positive") || message.contains("mayor que 0"));
     }
 
     @Test
@@ -168,13 +169,17 @@ class ManageUserRolesCommandTest {
                 1L,
                 2L,
                 List.of(3L),
-                List.of(null, -2L));
+                Arrays.asList(null, -2L));
 
         Set<ConstraintViolation<ManageUserRolesCommand>> violations = validator.validate(command);
 
         assertThat(violations)
                 .extracting(ConstraintViolation::getMessage)
-                .contains("must not be null", "must be positive");
+                .anyMatch(message -> message.contains("must not be null") || message.contains("no debe ser nulo"));
+
+        assertThat(violations)
+                .extracting(v -> v.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName())
+                .contains("NotNull", "Positive");
     }
 
     @Test

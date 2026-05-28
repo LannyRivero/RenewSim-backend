@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 
+import com.renewsim.backend.role_service.infrastructure.client.dto.UpdateUserRolesHttpRequest;
 import com.renewsim.backend.shared.dto.OperationResponse;
-import com.renewsim.backend.user_service.web.dto.UpdateUserRolesRequestDTO;
 import com.renewsim.backend.user_service.infrastructure.client.FeignRoleConfig;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 public interface UserServiceClient {
     @PutMapping("/api/v1/users/{id}/roles")
     OperationResponse<Void> updateUserRoles(@PathVariable("id") Long userId,
-                         @RequestBody UpdateUserRolesRequestDTO request);
+                         @RequestBody UpdateUserRolesHttpRequest request);
 
     @PostMapping("/api/v1/users/{userId}/roles/{roleId}")
     OperationResponse<Void> assignRole(@PathVariable("userId") Long userId,
