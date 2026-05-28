@@ -41,7 +41,7 @@ public class HttpUserServiceGateway implements UserServiceGateway {
     }
 
     /**
-     * Fallback silencioso: no lanza excepción, solo loguea.
+     * Fail-fast fallback: logs and propagates an exception.
      */
     @SuppressWarnings("unused")
     private void fallbackUpdateUserRoles(Long userId, UserRolesUpdateRequest request, Throwable ex) {

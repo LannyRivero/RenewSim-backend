@@ -40,6 +40,7 @@ public class RoleController {
     private final CreateRoleUseCase createRoleUseCase;
     private final GetRolesUseCase getRolesUseCase;
     private final GetRoleByIdUseCase getRoleByIdUseCase;
+    private final GetRoleByNameUseCase getRoleByNameUseCase;
     private final ExistsRoleUseCase existsRoleUseCase;
     private final AssignRoleUseCase assignRoleUseCase;
     private final DeleteRoleUseCase deleteRoleUseCase;
@@ -80,7 +81,7 @@ public class RoleController {
             @AuthenticationPrincipal AuthenticatedUser principal,
             @Valid @RequestBody ManageUserRolesRequestDTO request) {
 
-        Long requesterId = principal == null ? null : Integer.toUnsignedLong(principal.username().hashCode());
+        Long requesterId = extractRequesterId(principal);
 
         var command = new ManageUserRolesCommand(
                 requesterId,
@@ -137,12 +138,12 @@ public class RoleController {
     @Operation(summary = "Get role by name", description = "Requires ADMIN, SERVICE_AUTH, or scope roles:read", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<OperationResponse<RoleDTO>> getRoleByName(
             @PathVariable @NotBlank String name) {
-
-        return getRolesUseCase.getAll().stream()
-                .filter(r -> r.name().equalsIgnoreCase(name))
-                .findFirst()
-                .map(role -> ResponseEntity.ok(ApiResponseFactory.ok(role, "Role retrieved successfully")))
-                .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + name));
+        try {
+            var role = getRoleByNameUseCase.getByName(name);
+            return ResponseEntity.ok(ApiResponseFactory.ok(role, "Role retrieved successfully"));
+        } catch (IllegalArgumentException ex) {
+            throw new ResourceNotFoundException("Role not found: " + name);
+        }
     }
 
     // --------------------------
@@ -169,5 +170,16 @@ public class RoleController {
     public ResponseEntity<OperationResponse<Void>> deleteRole(@PathVariable @NotNull Long id) {
         deleteRoleUseCase.delete(id);
         return ResponseEntity.ok(ApiResponseFactory.noContent("Role deleted successfully"));
+    }
+
+    private Long extractRequesterId(AuthenticatedUser principal) {
+        if (principal == null) {
+            return null;
+        }
+        try {
+            return Long.parseLong(principal.username());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }

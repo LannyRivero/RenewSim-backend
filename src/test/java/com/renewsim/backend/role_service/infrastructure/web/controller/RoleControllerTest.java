@@ -48,6 +48,7 @@ class RoleControllerTest {
     @MockBean private CreateRoleUseCase createRoleUseCase;
     @MockBean private GetRolesUseCase getRolesUseCase;
     @MockBean private GetRoleByIdUseCase getRoleByIdUseCase;
+    @MockBean private GetRoleByNameUseCase getRoleByNameUseCase;
     @MockBean private ExistsRoleUseCase existsRoleUseCase;
     @MockBean private AssignRoleUseCase assignRoleUseCase;
     @MockBean private DeleteRoleUseCase deleteRoleUseCase;

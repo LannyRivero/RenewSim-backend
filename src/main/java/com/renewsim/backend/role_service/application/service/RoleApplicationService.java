@@ -10,6 +10,7 @@ import com.renewsim.backend.role_service.application.port.in.CreateRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.DeleteRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.ExistsRoleUseCase;
 import com.renewsim.backend.role_service.application.port.in.GetRoleByIdUseCase;
+import com.renewsim.backend.role_service.application.port.in.GetRoleByNameUseCase;
 import com.renewsim.backend.role_service.application.port.in.GetRolesUseCase;
 import com.renewsim.backend.role_service.application.port.out.RoleRepositoryPort;
 import com.renewsim.backend.role_service.application.result.RoleCreationResultDTO;
@@ -27,6 +28,7 @@ public class RoleApplicationService implements
         CreateRoleUseCase,
         GetRolesUseCase,
         GetRoleByIdUseCase,
+        GetRoleByNameUseCase,
         ExistsRoleUseCase,
         DeleteRoleUseCase {
 
@@ -64,6 +66,15 @@ public class RoleApplicationService implements
     @Override
     public RoleDTO getById(Long roleId) {
         Role role = roleDomainService.ensureRoleExists(roleId);
+        return roleDtoMapper.toDTO(role);
+    }
+
+    @Override
+    public RoleDTO getByName(String roleName) {
+        RoleName normalizedRoleName = RolePolicy.normalizeRoleName(roleName);
+        Role role = roleRepositoryPort.findByName(normalizedRoleName)
+                .orElseThrow(() -> new com.renewsim.backend.shared.exception.ResourceNotFoundException(
+                        "Role not found: " + roleName));
         return roleDtoMapper.toDTO(role);
     }
 
