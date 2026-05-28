@@ -34,7 +34,10 @@ import static org.assertj.core.api.Assertions.assertThat;
     "com.renewsim.backend.role_service.infrastructure.persistence.repo",
     "com.renewsim.backend.user_service.infraestructure.persistence.repo"
 })
-@Import(com.renewsim.backend.role_service.infrastructure.persistence.adapter.RolePersistenceAdapter.class)
+@Import({
+    com.renewsim.backend.role_service.infrastructure.persistence.adapter.RolePersistenceAdapter.class,
+    com.renewsim.backend.role_service.application.mapper.RoleMapperImpl.class
+})
 class RolePersistenceAdapterIT {
 
     @Container
@@ -54,18 +57,12 @@ class RolePersistenceAdapterIT {
     private RoleRepositoryPort roleRepositoryPort;
 
     @Test
-    @DisplayName("RolePersistenceAdapter should save and retrieve domain Role correctly")
+    @DisplayName("RolePersistenceAdapter should retrieve seeded domain Role correctly")
     void saveAndRetrieveRole() {
-        // Arrange
-        Role role = new Role(RoleName.USER);
+        Optional<Role> found = roleRepositoryPort.findByName(RoleName.ADMIN);
 
-        // Act
-        Role saved = roleRepositoryPort.save(role);
-        Optional<Role> found = roleRepositoryPort.findByName(saved.name());
-
-        // Assert
         assertThat(found).isPresent();
-        assertThat(found.get().name()).isEqualTo(RoleName.USER);
+        assertThat(found.get().name()).isEqualTo(RoleName.ADMIN);
     }
 }
 

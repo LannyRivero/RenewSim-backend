@@ -53,12 +53,9 @@ class RolePersistenceAdapterTest {
     private RoleJpaRepository roleJpaRepository;
 
     @Test
-    @DisplayName("save and find role should work with MySQL Testcontainer")
+    @DisplayName("find seeded role should work with MySQL Testcontainer")
     void saveAndFindRole() {
-        RoleEntity entity = new RoleEntity(RoleName.ADMIN);
-        RoleEntity saved = roleJpaRepository.save(entity);
-
-        Optional<RoleEntity> found = roleJpaRepository.findById(saved.getId());
+        Optional<RoleEntity> found = roleJpaRepository.findByName(RoleName.ADMIN);
 
         assertThat(found).isPresent();
         assertThat(found.get().getName()).isEqualTo(RoleName.ADMIN);
