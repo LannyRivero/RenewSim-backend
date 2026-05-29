@@ -44,7 +44,7 @@ public interface TechnologyDtoMapper {
         return value != null ? value.value().doubleValue() : 0.0;
     }
 
-    default double map(EnergyProduction value) {
+    default double map(CapacityFactor value) {
         return value != null ? value.value() : 0.0;
     }
 
