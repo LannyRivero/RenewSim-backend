@@ -16,8 +16,9 @@ public record CreateTechnologyCommand(
         double environmentalImpact,
         @PositiveOrZero(message = "CO₂ reduction cannot be negative")
         double co2Reduction,
-        @Positive(message = "Energy production must be positive")
-        double energyProduction,
+        @Positive(message = "Capacity factor must be positive")
+        @DecimalMax(value = "100", message = "Capacity factor must be <= 100")
+        double capacityFactor,
         @NotBlank(message = "Energy type is required")
         String energyType
 ) {}
