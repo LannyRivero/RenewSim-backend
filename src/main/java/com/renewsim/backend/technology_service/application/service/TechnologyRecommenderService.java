@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.renewsim.backend.simulation_service.domain.model.Simulation;
-
 /**
  *  Servicio de recomendación de tecnologías.
  * 
@@ -21,17 +19,19 @@ import com.renewsim.backend.simulation_service.domain.model.Simulation;
 @Service
 public class TechnologyRecommenderService {
 
-    public List<Long> recommendFor(Simulation simulation) {
-        if (simulation == null || simulation.energyType() == null) {
+    public List<Long> recommendForEnergyType(String energyType) {
+        if (energyType == null || energyType.isBlank()) {
             return List.of();
         }
 
-        return switch (simulation.energyType()) {
-            case SOLAR -> List.of(1L); 
-            case WIND -> List.of(2L); 
-            case HYDRO -> List.of(3L); 
-            case GEOTHERMAL -> List.of(4L);
-            case BIOMASS -> List.of(5L);
+        String normalizedEnergyType = energyType.trim().toUpperCase();
+
+        return switch (normalizedEnergyType) {
+            case "SOLAR" -> List.of(1L);
+            case "WIND" -> List.of(2L);
+            case "HYDRO" -> List.of(3L);
+            case "GEOTHERMAL" -> List.of(4L);
+            case "BIOMASS" -> List.of(5L);
             default -> List.of();
         };
     }

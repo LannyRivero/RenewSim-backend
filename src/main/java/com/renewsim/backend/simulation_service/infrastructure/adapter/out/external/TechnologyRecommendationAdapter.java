@@ -16,6 +16,10 @@ public class TechnologyRecommendationAdapter implements TechnologyRecommendation
 
     @Override
     public List<Long> recommendFor(Simulation simulation) {
-        return technologyRecommenderService.recommendFor(simulation);
+        if (simulation == null || simulation.energyType() == null) {
+            return List.of();
+        }
+
+        return technologyRecommenderService.recommendForEnergyType(simulation.energyType().name());
     }
 }
