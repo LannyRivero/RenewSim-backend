@@ -54,7 +54,7 @@ public interface SimulationMapper {
                 new Budget(resolvedBudget),
                 new EnergyOutput(resolvedEstimatedEnergy),
                 new CO2Reduction(entity.getCo2Reduction()),
-                new ClimateData(0, 0, 0),
+                null,
                 resolvedTechnologyIds,
                 resolvedCreatedBy,
                 entity.getCreatedAt());

@@ -2,9 +2,12 @@ package com.renewsim.backend.simulation_service.application.service;
 
 import com.renewsim.backend.simulation_service.application.command.CreateSimulationCommand;
 import com.renewsim.backend.simulation_service.application.command.GetSimulationByIdCommand;
+import com.renewsim.backend.simulation_service.application.command.UpdateSimulationCommand;
 import com.renewsim.backend.simulation_service.application.port.out.ClimateDataProviderPort;
 import com.renewsim.backend.simulation_service.application.port.out.SimulationRepositoryPort;
+import com.renewsim.backend.simulation_service.application.port.out.TechnologyRecommendationPort;
 import com.renewsim.backend.simulation_service.application.result.SimulationDetailResultDTO;
+import com.renewsim.backend.simulation_service.application.result.SimulationUpdateResultDTO;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.vo.Budget;
 import com.renewsim.backend.simulation_service.domain.model.vo.CO2Reduction;
@@ -12,7 +15,6 @@ import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
 import com.renewsim.backend.simulation_service.domain.model.vo.EnergyOutput;
 import com.renewsim.backend.simulation_service.domain.model.vo.EnergyType;
 import com.renewsim.backend.simulation_service.domain.model.vo.ProjectSize;
-import com.renewsim.backend.technology_service.application.service.TechnologyRecommenderService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +46,7 @@ class SimulationApplicationServiceTest {
     @Mock
     private ClimateDataProviderPort climateProvider;
     @Mock
-    private TechnologyRecommenderService recommender;
+    private TechnologyRecommendationPort recommender;
 
     @Test
     @DisplayName("createSimulation fetches climate from provider when command climate is null")
@@ -253,5 +255,52 @@ class SimulationApplicationServiceTest {
         SimulationDetailResultDTO detail = service.getSimulationById(new GetSimulationByIdCommand(77L, "alice", false));
 
         assertThat(detail.technologyIds()).containsExactly(2L, 3L);
+    }
+
+    @Test
+    @DisplayName("updateSimulation fetches climate when command has null and existing has no persisted climate")
+    void updateSimulationFetchesClimateWhenCommandAndExistingClimateAreMissing() {
+        SimulationApplicationService service = new SimulationApplicationService(
+                repository,
+                validator,
+                calculator,
+                climateProvider,
+                recommender);
+
+        Simulation existing = new Simulation(
+                10L,
+                "Rosario",
+                EnergyType.SOLAR,
+                new ProjectSize(50),
+                new Budget(5000),
+                new EnergyOutput(50000),
+                new CO2Reduction(20),
+                null,
+                List.of(),
+                "alice",
+                LocalDateTime.parse("2026-05-22T12:00:00"));
+
+        when(repository.findById(10L)).thenReturn(Optional.of(existing));
+
+        ClimateData providedClimate = new ClimateData(10, 3, 1);
+        when(climateProvider.fetchClimateData("Rosario")).thenReturn(providedClimate);
+        when(calculator.calculateEnergyOutput(any(Simulation.class))).thenReturn(new EnergyOutput(60000));
+        when(calculator.calculateCo2Reduction(any(EnergyOutput.class))).thenReturn(new CO2Reduction(30));
+        when(repository.save(any(Simulation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UpdateSimulationCommand command = new UpdateSimulationCommand(
+                10L,
+                "Rosario",
+                EnergyType.SOLAR,
+                55,
+                5200,
+                null,
+                List.of(),
+                "alice");
+
+        SimulationUpdateResultDTO result = service.updateSimulation(command);
+
+        assertThat(result.id()).isEqualTo(10L);
+        verify(climateProvider).fetchClimateData("Rosario");
     }
 }

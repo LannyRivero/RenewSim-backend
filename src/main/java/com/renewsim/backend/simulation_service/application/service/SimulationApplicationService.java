@@ -18,8 +18,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.CO2Reduction;
 import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
 import com.renewsim.backend.simulation_service.domain.model.vo.EnergyOutput;
 import com.renewsim.backend.simulation_service.domain.model.vo.ProjectSize;
-import com.renewsim.backend.simulation_service.web.dto.SimulationRecommendationResultDTO;
-import com.renewsim.backend.technology_service.application.service.TechnologyRecommenderService;
+import com.renewsim.backend.simulation_service.application.result.SimulationRecommendationResultDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,7 +37,7 @@ public class SimulationApplicationService implements
         private final SimulationValidator validator;
         private final SimulationCalculator calculator;
         private final ClimateDataProviderPort climateProvider;
-        private final TechnologyRecommenderService recommender;
+        private final TechnologyRecommendationPort recommender;
 
         // --------------------------------------------------
         // CREATE
@@ -113,9 +112,7 @@ public class SimulationApplicationService implements
                 validator.validateProjectSize(command.projectSize());
                 validator.validateBudget(command.budget());
 
-                ClimateData climateData = command.climateData() != null
-                                ? command.climateData()
-                                : existing.climateData();
+                ClimateData climateData = resolveClimateDataForUpdate(command, existing);
 
                 // Se conserva identidad del aggregate
                 Simulation updated = new Simulation(
@@ -146,6 +143,29 @@ public class SimulationApplicationService implements
                                 energy.kwhPerYear(),
                                 co2.tonsPerYear(),
                                 LocalDateTime.now());
+        }
+
+        private ClimateData resolveClimateDataForUpdate(UpdateSimulationCommand command, Simulation existing) {
+                if (command.climateData() != null) {
+                        return command.climateData();
+                }
+
+                ClimateData existingClimate = existing.climateData();
+                if (hasMeaningfulClimateData(existingClimate)) {
+                        return existingClimate;
+                }
+
+                return climateProvider.fetchClimateData(command.location());
+        }
+
+        private boolean hasMeaningfulClimateData(ClimateData climateData) {
+                if (climateData == null) {
+                        return false;
+                }
+
+                return climateData.irradiance() > 0
+                                || climateData.wind() > 0
+                                || climateData.hydrology() > 0;
         }
 
         // --------------------------------------------------

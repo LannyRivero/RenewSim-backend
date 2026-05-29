@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.application.service;
 
 import com.renewsim.backend.simulation_service.application.command.CreateSimulationCommand;
-import com.renewsim.backend.simulation_service.web.dto.SimulationRecommendationResultDTO;
+import com.renewsim.backend.simulation_service.application.result.SimulationRecommendationResultDTO;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
