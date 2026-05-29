@@ -16,11 +16,11 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -43,16 +43,16 @@ class RoleControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
-    @MockBean private JwtTokenProvider jwtTokenProvider;
-    @MockBean private LoginRateLimitingFilter loginRateLimitingFilter;
-    @MockBean private CreateRoleUseCase createRoleUseCase;
-    @MockBean private GetRolesUseCase getRolesUseCase;
-    @MockBean private GetRoleByIdUseCase getRoleByIdUseCase;
-    @MockBean private GetRoleByNameUseCase getRoleByNameUseCase;
-    @MockBean private ExistsRoleUseCase existsRoleUseCase;
-    @MockBean private AssignRoleUseCase assignRoleUseCase;
-    @MockBean private DeleteRoleUseCase deleteRoleUseCase;
-    @MockBean private ManageUserRolesUseCase manageUserRolesUseCase;
+    @MockitoBean private JwtTokenProvider jwtTokenProvider;
+    @MockitoBean private LoginRateLimitingFilter loginRateLimitingFilter;
+    @MockitoBean private CreateRoleUseCase createRoleUseCase;
+    @MockitoBean private GetRolesUseCase getRolesUseCase;
+    @MockitoBean private GetRoleByIdUseCase getRoleByIdUseCase;
+    @MockitoBean private GetRoleByNameUseCase getRoleByNameUseCase;
+    @MockitoBean private ExistsRoleUseCase existsRoleUseCase;
+    @MockitoBean private AssignRoleUseCase assignRoleUseCase;
+    @MockitoBean private DeleteRoleUseCase deleteRoleUseCase;
+    @MockitoBean private ManageUserRolesUseCase manageUserRolesUseCase;
 
     private static final String ADMIN_TOKEN = "admin-token";
     private static final String USER_TOKEN = "user-token";

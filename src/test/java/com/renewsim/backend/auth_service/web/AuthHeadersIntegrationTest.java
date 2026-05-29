@@ -1,10 +1,11 @@
 package com.renewsim.backend.auth_service.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.auth_service.application.port.in.AuthUseCase;
-import com.renewsim.backend.auth_service.web.dto.AuthRequestDTO;
-import com.renewsim.backend.auth_service.application.result.AuthResult;
+import com.renewsim.backend.auth_service.application.port.in.LoginUseCase;
+import com.renewsim.backend.auth_service.application.result.LoginResult;
+import com.renewsim.backend.auth_service.web.dto.LoginRequestDTO;
 import com.renewsim.backend.config.TestSecurityConfig;
+import com.renewsim.backend.shared.exception.UnauthorizedException;
 import org.junit.jupiter.api.DisplayName;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -12,10 +13,10 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -32,18 +33,24 @@ class AuthHeadersIntegrationTest {
 
         @Autowired
         MockMvc mockMvc;
-        @MockBean
-        AuthUseCase authUseCase;
+        @MockitoBean
+        LoginUseCase loginUseCase;
         private final ObjectMapper om = new ObjectMapper();
 
         @Test
         @DisplayName("Auth /login returns security and no-cache headers on 200")
         void loginOk_hasSecurityAndNoCacheHeaders() throws Exception {
-                Mockito.when(authUseCase.login(any()))
-                                .thenReturn(new AuthResult("token-123", "Bearer", null,
-                                                "user@test.com", Set.of(), Set.of()));
+                Mockito.when(loginUseCase.execute(any()))
+                                .thenReturn(new LoginResult(
+                                                "token-123",
+                                                "refresh-123",
+                                                "Bearer",
+                                                3600,
+                                                1L,
+                                                "user@test.com",
+                                                Set.of("USER")));
 
-                AuthRequestDTO req = new AuthRequestDTO("user@test.com", "StrongPass123!");
+                LoginRequestDTO req = new LoginRequestDTO("user@test.com", "StrongPass123!");
 
                 mockMvc.perform(post("/api/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -63,11 +70,10 @@ class AuthHeadersIntegrationTest {
         @Test
         @DisplayName("Auth /login returns security and no-cache headers on 401")
         void loginUnauthorized_hasSecurityAndNoCacheHeaders() throws Exception {
-                Mockito.when(authUseCase.login(any()))
-                                .thenThrow(new org.springframework.security.authentication.BadCredentialsException(
-                                                "invalid"));
+                Mockito.when(loginUseCase.execute(any()))
+                                .thenThrow(new UnauthorizedException("AUTH_INVALID_CREDENTIALS: Invalid credentials"));
 
-                AuthRequestDTO req = new AuthRequestDTO("user@test.com", "WrongPass123!");
+                LoginRequestDTO req = new LoginRequestDTO("user@test.com", "WrongPass123!");
 
                 mockMvc.perform(post("/api/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)

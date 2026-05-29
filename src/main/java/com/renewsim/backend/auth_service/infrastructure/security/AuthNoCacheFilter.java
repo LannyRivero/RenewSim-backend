@@ -5,17 +5,16 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.lang.NonNull;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 public class AuthNoCacheFilter extends OncePerRequestFilter {
 
-    private final AntPathRequestMatcher matcher = new AntPathRequestMatcher("/api/v1/auth/**");
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-        return !matcher.matches(request);
+        String path = request.getRequestURI();
+        return !("/api/v1/auth".equals(path) || path.startsWith("/api/v1/auth/"));
     }
   
 

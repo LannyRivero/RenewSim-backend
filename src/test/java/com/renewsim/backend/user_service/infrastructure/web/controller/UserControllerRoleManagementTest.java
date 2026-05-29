@@ -1,6 +1,5 @@
 package com.renewsim.backend.user_service.infrastructure.web.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.infrastructure.security.JwtTokenProvider;
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimitingFilter;
@@ -28,10 +27,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
@@ -56,49 +55,46 @@ class UserControllerRoleManagementTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     private LoginRateLimitingFilter loginRateLimitingFilter;
 
-    @MockBean
+    @MockitoBean
     private CreateUserUseCase createUserUseCase;
 
-    @MockBean
+    @MockitoBean
     private ExistsUserUseCase existsUserUseCase;
 
-    @MockBean
+    @MockitoBean
     private GetUserUseCase getUserUseCase;
 
-    @MockBean
+    @MockitoBean
     private ListUsersUseCase listUsersUseCase;
 
-    @MockBean
+    @MockitoBean
     private UpdateUserRolesUseCase updateUserRolesUseCase;
 
-    @MockBean
+    @MockitoBean
     private AssignUserRoleUseCase assignUserRoleUseCase;
 
-    @MockBean
+    @MockitoBean
     private RemoveUserRoleUseCase removeUserRoleUseCase;
 
-    @MockBean
+    @MockitoBean
     private GetMyProfileUseCase getMyProfileUseCase;
 
-    @MockBean
+    @MockitoBean
     private UpdateMyProfileUseCase updateMyProfileUseCase;
 
-    @MockBean
+    @MockitoBean
     private ChangeMyPasswordUseCase changeMyPasswordUseCase;
 
-    @MockBean
+    @MockitoBean
     private ActivateUserUseCase activateUserUseCase;
 
-    @MockBean
+    @MockitoBean
     private DeleteUserUseCase deleteUserUseCase;
 
     private static final String ADMIN_TOKEN = "admin-token";

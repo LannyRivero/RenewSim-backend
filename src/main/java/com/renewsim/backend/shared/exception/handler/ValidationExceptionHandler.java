@@ -25,106 +25,101 @@ import java.util.Map;
 
 /**
  * Handles validation and bad request errors (HTTP 400).
- * Includes field-level validation errors, type mismatches, and malformed requests.
+ * Includes field-level validation errors, type mismatches, and malformed
+ * requests.
  */
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ValidationExceptionHandler extends BaseExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest req) {
-        Map<String, String> fieldErrors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(err ->
-                fieldErrors.put(err.getField(), err.getDefaultMessage())
-        );
-        return buildError(
-                HttpStatus.BAD_REQUEST,
-                "VALIDATION_ERROR",
-                "Validation error",
-                "Invalid request body",
-                req,
-                fieldErrors
-        );
-    }
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex,
+                        HttpServletRequest req) {
+                Map<String, String> fieldErrors = new HashMap<>();
+                ex.getBindingResult().getFieldErrors()
+                                .forEach(err -> fieldErrors.put(err.getField(), err.getDefaultMessage()));
+                return buildError(
+                                HttpStatus.BAD_REQUEST,
+                                "VALIDATION_ERROR",
+                                "Validation error",
+                                "Invalid request body",
+                                req,
+                                fieldErrors);
+        }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConstraint(ConstraintViolationException ex, HttpServletRequest req) {
-        Map<String, String> fieldErrors = new HashMap<>();
-        ex.getConstraintViolations().forEach(cv ->
-                fieldErrors.put(cv.getPropertyPath().toString(), cv.getMessage())
-        );
-        return buildError(
-                HttpStatus.BAD_REQUEST,
-                "VALIDATION_ERROR",
-                "Validation error",
-                "Invalid request parameter",
-                req,
-                fieldErrors
-        );
-    }
+        @ExceptionHandler(ConstraintViolationException.class)
+        public ResponseEntity<ErrorResponse> handleConstraint(ConstraintViolationException ex, HttpServletRequest req) {
+                Map<String, String> fieldErrors = new HashMap<>();
+                ex.getConstraintViolations()
+                                .forEach(cv -> fieldErrors.put(cv.getPropertyPath().toString(), cv.getMessage()));
+                return buildError(
+                                HttpStatus.BAD_REQUEST,
+                                "VALIDATION_ERROR",
+                                "Validation error",
+                                "Invalid request parameter",
+                                req,
+                                fieldErrors);
+        }
 
-    @ExceptionHandler(BindException.class)
-    public ResponseEntity<ErrorResponse> handleBind(BindException ex, HttpServletRequest req) {
-        Map<String, String> fieldErrors = new HashMap<>();
-        ex.getFieldErrors().forEach(err ->
-                fieldErrors.put(err.getField(), err.getDefaultMessage())
-        );
-        return buildError(
-                HttpStatus.BAD_REQUEST,
-                "VALIDATION_ERROR",
-                "Validation error",
-                "Invalid request parameter",
-                req,
-                fieldErrors
-        );
-    }
+        @ExceptionHandler(BindException.class)
+        public ResponseEntity<ErrorResponse> handleBind(BindException ex, HttpServletRequest req) {
+                Map<String, String> fieldErrors = new HashMap<>();
+                ex.getFieldErrors().forEach(err -> fieldErrors.put(err.getField(), err.getDefaultMessage()));
+                return buildError(
+                                HttpStatus.BAD_REQUEST,
+                                "VALIDATION_ERROR",
+                                "Validation error",
+                                "Invalid request parameter",
+                                req,
+                                fieldErrors);
+        }
 
-    @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<ErrorResponse> handleHandlerValidation(HandlerMethodValidationException ex, HttpServletRequest req) {
-        Map<String, String> fieldErrors = new HashMap<>();
-        ex.getAllValidationResults().forEach(result ->
-                result.getResolvableErrors().forEach(err ->
-                        fieldErrors.put(result.getMethodParameter().getParameterName(), err.getDefaultMessage()))
-        );
-        return buildError(
-                HttpStatus.BAD_REQUEST,
-                "VALIDATION_ERROR",
-                "Validation error",
-                "Invalid method argument",
-                req,
-                fieldErrors
-        );
-    }
+        @ExceptionHandler(HandlerMethodValidationException.class)
+        public ResponseEntity<ErrorResponse> handleHandlerValidation(HandlerMethodValidationException ex,
+                        HttpServletRequest req) {
+                Map<String, String> fieldErrors = new HashMap<>();
+                ex.getParameterValidationResults()
+                                .forEach(result -> result.getResolvableErrors()
+                                                .forEach(err -> fieldErrors.put(
+                                                                result.getMethodParameter().getParameterName(),
+                                                                err.getDefaultMessage())));
+                return buildError(
+                                HttpStatus.BAD_REQUEST,
+                                "VALIDATION_ERROR",
+                                "Validation error",
+                                "Invalid method argument",
+                                req,
+                                fieldErrors);
+        }
 
-    @ExceptionHandler({
-            MethodArgumentTypeMismatchException.class,
-            ConversionFailedException.class,
-            TypeMismatchException.class,
-            MissingPathVariableException.class,
-            NumberFormatException.class,
-            InvalidUserDataException.class,
-            BadRequestException.class
-    })
-    public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex, HttpServletRequest req) {
-        return buildError(
-                HttpStatus.BAD_REQUEST,
-                "BAD_REQUEST",
-                "Bad request",
-                ex.getMessage(),
-                req,
-                null
-        );
-    }
+        @ExceptionHandler({
+                        MethodArgumentTypeMismatchException.class,
+                        ConversionFailedException.class,
+                        TypeMismatchException.class,
+                        MissingPathVariableException.class,
+                        NumberFormatException.class,
+                        InvalidUserDataException.class,
+                        BadRequestException.class
+        })
+        public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex, HttpServletRequest req) {
+                return buildError(
+                                HttpStatus.BAD_REQUEST,
+                                "BAD_REQUEST",
+                                "Bad request",
+                                ex.getMessage(),
+                                req,
+                                null);
+        }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleMessageNotReadable(HttpMessageNotReadableException ex, HttpServletRequest req) {
-        return buildError(
-                HttpStatus.BAD_REQUEST,
-                "MALFORMED_REQUEST",
-                "Malformed request",
-                "Request body is not readable or malformed JSON",
-                req,
-                null
-        );
-    }
+        @ExceptionHandler(HttpMessageNotReadableException.class)
+        public ResponseEntity<ErrorResponse> handleMessageNotReadable(HttpMessageNotReadableException ex,
+                        HttpServletRequest req) {
+                return buildError(
+                                HttpStatus.BAD_REQUEST,
+                                "MALFORMED_REQUEST",
+                                "Malformed request",
+                                "Request body is not readable or malformed JSON",
+                                req,
+                                null);
+        }
 }
