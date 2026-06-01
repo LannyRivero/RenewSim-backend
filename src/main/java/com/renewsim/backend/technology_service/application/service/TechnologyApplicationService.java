@@ -44,6 +44,7 @@ public class TechnologyApplicationService implements
     }
 
     @Override
+    @CacheEvict(value = "technologies", allEntries = true)
     public void deleteTechnology(DeleteTechnologyCommand command) {
         commandService.handleDelete(command);
     }

@@ -41,7 +41,12 @@ public interface TechnologyMapper {
                 parseEnergyType(entity.getEnergyType()),
                 new Efficiency(entity.getEfficiency().doubleValue()),
                 new InstallationCost(entity.getUnitCost()),
+                entity.getLifespanYears(),
                 new MaintenanceCost(entity.getMaintenanceCost()),
+                entity.getDescription(),
+                Boolean.TRUE.equals(entity.getIsActive()),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt(),
                 new EnvironmentalImpact(entity.getCo2ReductionFactor().doubleValue()),
                 new Co2Reduction(entity.getCo2ReductionFactor()),
                 new CapacityFactor(entity.getCapacityFactor().doubleValue()));

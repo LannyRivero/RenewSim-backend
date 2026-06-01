@@ -22,6 +22,8 @@ public interface TechnologyRepositoryPort {
 
     Page<Technology> findByEnergyType(EnergyType energyType, Pageable pageable);
 
+    Page<Technology> findActiveByEnergyType(EnergyType energyType, Pageable pageable);
+
     Page<Technology> findAllActive(Pageable pageable);
 
     void deleteById(Long id);

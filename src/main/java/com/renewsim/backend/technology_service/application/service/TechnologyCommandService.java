@@ -93,7 +93,7 @@ public class TechnologyCommandService {
     public Page<TechnologyResponseDTO> handleGetAll(int page, int size, String energyType) {
         var pageable = PageRequest.of(page, size);
         if (energyType != null && !energyType.isBlank()) {
-            return repository.findByEnergyType(EnergyType.fromString(energyType), pageable)
+            return repository.findActiveByEnergyType(EnergyType.fromString(energyType), pageable)
                     .map(dtoMapper::toResponse);
         }
         return repository.findAllActive(pageable)

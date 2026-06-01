@@ -18,5 +18,7 @@ public interface JpaTechnologyRepository extends JpaRepository<TechnologyEntity,
 
     Page<TechnologyEntity> findByEnergyType(TechnologyEntity.EnergyType energyType, Pageable pageable);
 
+    Page<TechnologyEntity> findByEnergyTypeAndIsActiveTrue(TechnologyEntity.EnergyType energyType, Pageable pageable);
+
     Page<TechnologyEntity> findByIsActiveTrue(Pageable pageable);
 }
