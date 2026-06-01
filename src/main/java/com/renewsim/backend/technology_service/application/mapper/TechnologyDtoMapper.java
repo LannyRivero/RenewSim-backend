@@ -29,6 +29,8 @@ public interface TechnologyDtoMapper {
 
     TechnologyQueryResultDTO toQueryResult(Technology domain);
 
+    TechnologyResponseDTO toResponse(Technology domain);
+
     // ------------------------------------------------------------
     // VALUE OBJECT MAPPERS
     // ------------------------------------------------------------

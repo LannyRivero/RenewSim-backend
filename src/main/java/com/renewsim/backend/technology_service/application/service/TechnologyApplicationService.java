@@ -16,10 +16,9 @@ import com.renewsim.backend.technology_service.application.port.in.DeleteTechnol
 import com.renewsim.backend.technology_service.application.port.in.GetTechnologyUseCase;
 import com.renewsim.backend.technology_service.application.port.in.UpdateTechnologyUseCase;
 import com.renewsim.backend.technology_service.application.result.TechnologyCreationResultDTO;
-import com.renewsim.backend.technology_service.application.result.TechnologyQueryResultDTO;
+import com.renewsim.backend.technology_service.application.result.TechnologyResponseDTO;
 import com.renewsim.backend.technology_service.application.result.TechnologyUpdateResultDTO;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 @Service
 @RequiredArgsConstructor
@@ -52,15 +51,15 @@ public class TechnologyApplicationService implements
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "technologies", key = "'id:' + #command.id()")
-    public TechnologyQueryResultDTO getTechnologyById(GetTechnologyByIdCommand command) {
+    public TechnologyResponseDTO getTechnologyById(GetTechnologyByIdCommand command) {
         return commandService.handleGetById(command);
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "technologies", key = "'all'")
-    public List<TechnologyQueryResultDTO> getAllTechnologies() {
-        return commandService.handleGetAll();
+    @Cacheable(value = "technologies", key = "'list:' + #page + ':' + #size + ':' + (#energyType == null ? 'ALL' : #energyType)")
+    public Page<TechnologyResponseDTO> getTechnologies(int page, int size, String energyType) {
+        return commandService.handleGetAll(page, size, energyType);
     }
 }
 

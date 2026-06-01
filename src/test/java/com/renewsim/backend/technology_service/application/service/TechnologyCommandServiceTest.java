@@ -13,6 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -147,18 +149,19 @@ class TechnologyCommandServiceTest {
     @Test
     @DisplayName("Should get a technology by ID successfully")
     void shouldGetTechnologyById() {
-        TechnologyQueryResultDTO expectedDTO = new TechnologyQueryResultDTO(
-                1L, "Solar Panel", "SOLAR", 0.85, 1200, 100, 10, 250, 5000);
+        TechnologyResponseDTO expectedDTO = new TechnologyResponseDTO(
+                1L, "Solar Panel", "SOLAR", 0.85, 1200, 25, 100,
+                null, true, null, null, 10, 250, 18);
 
         when(validator.getExisting(1L)).thenReturn(domain);
-        when(dtoMapper.toQueryResult(domain)).thenReturn(expectedDTO);
+        when(dtoMapper.toResponse(domain)).thenReturn(expectedDTO);
 
         var result = service.handleGetById(getByIdCommand);
 
         assertNotNull(result);
         assertEquals("Solar Panel", result.name());
         verify(validator, times(1)).getExisting(1L);
-        verify(dtoMapper, times(1)).toQueryResult(domain);
+        verify(dtoMapper, times(1)).toResponse(domain);
     }
 
     // ============================================================
@@ -167,17 +170,18 @@ class TechnologyCommandServiceTest {
     @Test
     @DisplayName("Should get all technologies successfully")
     void shouldGetAllTechnologies() {
-        List<Technology> domains = List.of(domain);
-        List<TechnologyQueryResultDTO> dtos = List.of(
-                new TechnologyQueryResultDTO(1L, "Solar Panel", "SOLAR", 0.85, 1200, 100, 10, 250, 5000));
+        var page = new PageImpl<>(List.of(domain), PageRequest.of(0, 20), 1);
+        var dto = new TechnologyResponseDTO(
+                1L, "Solar Panel", "SOLAR", 0.85, 1200, 25, 100,
+                null, true, null, null, 10, 250, 18);
 
-        when(repository.findAll()).thenReturn(domains);
-        when(dtoMapper.toQueryResult(domain)).thenReturn(dtos.get(0));
+        when(repository.findAllActive(PageRequest.of(0, 20))).thenReturn(page);
+        when(dtoMapper.toResponse(domain)).thenReturn(dto);
 
-        var result = service.handleGetAll();
+        var result = service.handleGetAll(0, 20, null);
 
-        assertEquals(1, result.size());
-        verify(repository, times(1)).findAll();
-        verify(dtoMapper, times(1)).toQueryResult(domain);
+        assertEquals(1, result.getContent().size());
+        verify(repository, times(1)).findAllActive(PageRequest.of(0, 20));
+        verify(dtoMapper, times(1)).toResponse(domain);
     }
 }

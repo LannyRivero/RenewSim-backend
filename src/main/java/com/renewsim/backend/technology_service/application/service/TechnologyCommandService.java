@@ -1,6 +1,8 @@
 package com.renewsim.backend.technology_service.application.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +15,6 @@ import com.renewsim.backend.technology_service.application.mapper.TechnologyDtoM
 import com.renewsim.backend.technology_service.domain.factory.TechnologyFactory;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * Application Service for handling technology lifecycle operations.
@@ -83,16 +84,20 @@ public class TechnologyCommandService {
     // ============================================================
 
     @Transactional(readOnly = true)
-    public TechnologyQueryResultDTO handleGetById(GetTechnologyByIdCommand command) {
+    public TechnologyResponseDTO handleGetById(GetTechnologyByIdCommand command) {
         var tech = validator.getExisting(command.id());
-        return dtoMapper.toQueryResult(tech);
+        return dtoMapper.toResponse(tech);
     }
 
     @Transactional(readOnly = true)
-    public List<TechnologyQueryResultDTO> handleGetAll() {
-        return repository.findAll().stream()
-                .map(dtoMapper::toQueryResult)
-                .toList();
+    public Page<TechnologyResponseDTO> handleGetAll(int page, int size, String energyType) {
+        var pageable = PageRequest.of(page, size);
+        if (energyType != null && !energyType.isBlank()) {
+            return repository.findByEnergyType(EnergyType.fromString(energyType), pageable)
+                    .map(dtoMapper::toResponse);
+        }
+        return repository.findAllActive(pageable)
+                .map(dtoMapper::toResponse);
     }
 
    
