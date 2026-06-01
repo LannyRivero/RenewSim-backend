@@ -290,7 +290,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - `TechnologyRepositoryAdapter` implementando el port
     - _Requirements: 5.1, 5.2_
 
-  - [ ] 3.4 Implementar Caffeine cache `@Cacheable` con TTL 10 min + invalidación en write
+  - [x] 3.4 Implementar Caffeine cache `@Cacheable` con TTL 10 min + invalidación en write
     - `CacheConfig` bean con `CaffeineCacheManager`, cache `technologies` con `expireAfterWrite(10, MINUTES)`, maximumSize 500
     - `@Cacheable("technologies")` en `getTechnologies()` y `getTechnologyById()`
     - `@CacheEvict(value="technologies", allEntries=true)` en `createTechnology()` y `updateTechnology()`

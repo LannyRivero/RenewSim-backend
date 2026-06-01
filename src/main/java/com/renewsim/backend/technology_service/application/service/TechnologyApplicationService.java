@@ -2,6 +2,8 @@ package com.renewsim.backend.technology_service.application.service;
 
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,11 +33,13 @@ public class TechnologyApplicationService implements
     private final TechnologyCommandService commandService;
 
     @Override
+    @CacheEvict(value = "technologies", allEntries = true)
     public TechnologyCreationResultDTO createTechnology(CreateTechnologyCommand command) {
         return commandService.handleCreate(command);
     }
 
     @Override
+    @CacheEvict(value = "technologies", allEntries = true)
     public TechnologyUpdateResultDTO updateTechnology(UpdateTechnologyCommand command) {
         return commandService.handleUpdate(command);
     }
@@ -47,12 +51,14 @@ public class TechnologyApplicationService implements
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "technologies", key = "'id:' + #command.id()")
     public TechnologyQueryResultDTO getTechnologyById(GetTechnologyByIdCommand command) {
         return commandService.handleGetById(command);
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "technologies", key = "'all'")
     public List<TechnologyQueryResultDTO> getAllTechnologies() {
         return commandService.handleGetAll();
     }
