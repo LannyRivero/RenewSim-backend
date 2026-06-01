@@ -271,13 +271,13 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
 ## Fase 3: Technology & Scenario Service
 
 - [ ] 3. Fase 3: Technology & Scenario Service
-  - [ ] 3.1 Crear seeds Flyway V7–V8 (las tablas ya existen desde Fase 1)
+  - [x ] 3.1 Crear seeds Flyway V7–V8 (las tablas ya existen desde Fase 1)
     - `V7__seed_technologies.sql`: INSERT 3 tecnologías (Panel Solar Fotovoltaico efficiency=0.1850 baseCostPerKw=1200 lifespan=25, Turbina Eólica Terrestre efficiency=0.3500 baseCostPerKw=1500 lifespan=20, Microcentral Hidroeléctrica efficiency=0.8500 baseCostPerKw=2500 lifespan=40)
     - `V8__seed_scenarios.sql`: INSERT 3 escenarios predefinidos referenciando tecnologías de V7 con climate_profile JSON (ver Anexo B de requirements.md)
     - Verificar que `./mvnw flyway:info` muestra V7 y V8 como Pending antes de aplicar
     - _Requirements: 5.1, 8.1_
 
-  - [ ] 3.2 Implementar `Technology` aggregate (domain layer) con `EnergyType` enum
+  - [ x] 3.2 Implementar `Technology` aggregate (domain layer) con `EnergyType` enum
     - `EnergyType` enum: SOLAR, WIND, HYDRO, BIOMASS, GEOTHERMAL
     - `Technology` entity: id, name, energyType, efficiency (0–1), baseCostPerKw, lifespanYears, maintenanceCostPct, description, isActive, createdAt, updatedAt
     - Método `deactivate()` para soft delete
