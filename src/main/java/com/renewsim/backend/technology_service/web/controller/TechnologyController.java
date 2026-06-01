@@ -3,6 +3,7 @@ package com.renewsim.backend.technology_service.web.controller;
 import com.renewsim.backend.shared.dto.ApiResponseFactory;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.technology_service.application.command.*;
+import com.renewsim.backend.technology_service.application.dto.TechnologyEstimateDTO;
 import com.renewsim.backend.technology_service.application.port.in.*;
 import com.renewsim.backend.technology_service.application.result.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +35,26 @@ public class TechnologyController {
     private final UpdateTechnologyUseCase updateUseCase;
     private final DeleteTechnologyUseCase deleteUseCase;
     private final GetTechnologyUseCase getUseCase;
+    private final EstimateTechnologyUseCase estimateUseCase;
+
+    // ESTIMATE
+    @GetMapping("/estimate")
+    @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
+    @Operation(summary = "Estimate technology parameters", description = "Returns estimated capacity factor and annual energy production for a given energy type and optional installed capacity. Useful for pre-filling the creation form.", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Estimation computed successfully", content = @Content(schema = @Schema(implementation = TechnologyEstimateDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid energy type", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content)
+    })
+    public ResponseEntity<OperationResponse<TechnologyEstimateDTO>> estimate(
+            @Parameter(description = "Energy type (SOLAR, WIND, HYDRO, GEOTHERMAL, BIOMASS)", required = true)
+            @RequestParam String energyType,
+            @Parameter(description = "Installed capacity in kW (optional)", required = false)
+            @RequestParam(required = false) Double installedCapacityKw) {
+
+        var result = estimateUseCase.estimate(energyType, installedCapacityKw);
+        return ResponseEntity.ok(ApiResponseFactory.ok(result, "Technology estimation computed successfully"));
+    }
 
     // CREATE
     @PostMapping
