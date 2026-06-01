@@ -284,7 +284,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Sin anotaciones Spring
     - _Requirements: 5.1, 5.4_
 
-  - [ ] 3.3 Implementar `TechnologyRepository` port + JPA adapter
+  - [x] 3.3 Implementar `TechnologyRepository` port + JPA adapter
     - Port: `save(Technology)`, `findById(Long)`, `findAll(Pageable)`, `findByEnergyType(EnergyType, Pageable)`, `findAllActive(Pageable)`
     - `TechnologyEntity` con anotaciones JPA, `TechnologyMapper` MapStruct
     - `TechnologyRepositoryAdapter` implementando el port

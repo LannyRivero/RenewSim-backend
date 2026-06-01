@@ -4,6 +4,8 @@ import com.renewsim.backend.technology_service.infrastructure.persistence.entity
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +15,8 @@ public interface JpaTechnologyRepository extends JpaRepository<TechnologyEntity,
     boolean existsByName(String name);
     
     Optional<TechnologyEntity> findByName(String name);
+
+    Page<TechnologyEntity> findByEnergyType(TechnologyEntity.EnergyType energyType, Pageable pageable);
+
+    Page<TechnologyEntity> findByIsActiveTrue(Pageable pageable);
 }
