@@ -57,13 +57,13 @@ class TechnologyCommandServiceTest {
                 new MaintenanceCost(BigDecimal.valueOf(100)),
                 new EnvironmentalImpact(10.0),
                 new Co2Reduction(BigDecimal.valueOf(250)),
-                new EnergyProduction(5000));
+                new CapacityFactor(18.0));
 
         createCommand = new CreateTechnologyCommand(
-                "Solar Panel", 0.85, 1200, 100, 10, 250, 5000, "SOLAR");
+                "Solar Panel", 0.85, 1200, 100, 10, 250, 18.0, "SOLAR");
 
         updateCommand = new UpdateTechnologyCommand(
-                1L, "Solar Panel", 0.90, 1400, 120, 8, 300, 6000, "SOLAR");
+                1L, "Solar Panel", 0.90, 1400, 120, 8, 300, 35.0, "SOLAR");
 
         deleteCommand = new DeleteTechnologyCommand(1L);
         getByIdCommand = new GetTechnologyByIdCommand(1L);
@@ -106,7 +106,7 @@ class TechnologyCommandServiceTest {
                 new MaintenanceCost(BigDecimal.valueOf(100)),
                 new EnvironmentalImpact(10.0),
                 new Co2Reduction(BigDecimal.valueOf(250)),
-                new EnergyProduction(5000));
+                new CapacityFactor(18.0));
 
         TechnologyUpdateResultDTO expectedDTO = new TechnologyUpdateResultDTO(
                 1L, "Solar Panel", "SOLAR", 0.90, 1400, 120, 8, 300, 6000, true, "Updated successfully");

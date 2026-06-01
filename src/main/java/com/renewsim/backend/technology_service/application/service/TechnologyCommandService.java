@@ -47,7 +47,7 @@ public class TechnologyCommandService {
             command.maintenanceCost(),
             command.environmentalImpact(),
             command.co2Reduction(),
-            command.energyProduction(),
+            command.capacityFactor(),
             command.energyType()
         );
 
@@ -61,13 +61,13 @@ public class TechnologyCommandService {
         var updated = new Technology(
                 existing.getId(),
                 command.name(),
-                EnergyType.valueOf(command.energyType().toUpperCase()),
+                EnergyType.fromString(command.energyType()),
                 new Efficiency(command.efficiency()),
                 new InstallationCost(BigDecimal.valueOf(command.installationCost())),
                 new MaintenanceCost(BigDecimal.valueOf(command.maintenanceCost())),
                 new EnvironmentalImpact(command.environmentalImpact()),
                 new Co2Reduction(BigDecimal.valueOf(command.co2Reduction())),
-                new EnergyProduction(command.energyProduction()));
+                new CapacityFactor(command.capacityFactor()));
 
         repository.save(updated);
         return dtoMapper.toUpdateResult(updated);

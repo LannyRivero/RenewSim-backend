@@ -44,7 +44,7 @@ class TechnologyValidatorTest {
                 new MaintenanceCost(BigDecimal.valueOf(100)),
                 new EnvironmentalImpact(10.0),
                 new Co2Reduction(BigDecimal.valueOf(250)),
-                new EnergyProduction(5000));
+                new CapacityFactor(18.0));
     }
 
     // ============================================================

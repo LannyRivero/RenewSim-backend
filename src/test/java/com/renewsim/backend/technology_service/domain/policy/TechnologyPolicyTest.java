@@ -27,7 +27,7 @@ class TechnologyPolicyTest {
                 new MaintenanceCost(BigDecimal.valueOf(500)),
                 new EnvironmentalImpact(20.0),
                 new Co2Reduction(BigDecimal.valueOf(50.0)),
-                new EnergyProduction(2000.0)
+                new CapacityFactor(18.0)
         );
     }
 
@@ -50,7 +50,7 @@ class TechnologyPolicyTest {
                         new MaintenanceCost(BigDecimal.valueOf(400)),
                         new EnvironmentalImpact(10.0),
                         new Co2Reduction(BigDecimal.valueOf(25.0)),
-                        new EnergyProduction(2000.0)
+                        new CapacityFactor(18.0)
                 ));
         assertTrue(ex.getMessage().contains("Solar technologies cannot exceed"));
     }
@@ -68,9 +68,9 @@ class TechnologyPolicyTest {
                         new MaintenanceCost(BigDecimal.valueOf(500)),
                         new EnvironmentalImpact(15.0),
                         new Co2Reduction(BigDecimal.valueOf(40.0)),
-                        new EnergyProduction(3000.0)
+                        new CapacityFactor(35.0)
                 ));
-        assertTrue(ex.getMessage().contains("Eolic technologies cannot exceed"));
+        assertTrue(ex.getMessage().contains("Wind technologies cannot exceed"));
     }
 
     @Test
@@ -86,27 +86,9 @@ class TechnologyPolicyTest {
                         new MaintenanceCost(BigDecimal.valueOf(8000)),
                         new EnvironmentalImpact(80.0),
                         new Co2Reduction(BigDecimal.valueOf(90.0)),
-                        new EnergyProduction(4000.0)
+                        new CapacityFactor(52.0)
                 ));
         assertTrue(ex.getMessage().contains("High-cost technologies"));
-    }
-
-    @Test
-    @DisplayName("❌ Should reject low-production technologies with unrealistic CO₂ reduction")
-    void shouldRejectInconsistentCo2Reduction() {
-        InvalidTechnologyParameterException ex = assertThrows(
-                InvalidTechnologyParameterException.class,
-                () -> new Technology(
-                        "BioFlux",
-                        EnergyType.BIOMASS,
-                        new Efficiency(60.0),
-                        new InstallationCost(BigDecimal.valueOf(30000)),
-                        new MaintenanceCost(BigDecimal.valueOf(1000)),
-                        new EnvironmentalImpact(25.0),
-                        new Co2Reduction(BigDecimal.valueOf(200.0)),
-                        new EnergyProduction(50.0)
-                ));
-        assertTrue(ex.getMessage().contains("Low-production technologies"));
     }
 
     @Test
@@ -122,7 +104,7 @@ class TechnologyPolicyTest {
                         new MaintenanceCost(BigDecimal.valueOf(6000)),
                         new EnvironmentalImpact(15.0),
                         new Co2Reduction(BigDecimal.valueOf(10.0)),
-                        new EnergyProduction(1000.0)
+                        new CapacityFactor(22.0)
                 ));
         assertTrue(ex.getMessage().contains("Maintenance cost"));
     }
@@ -138,7 +120,7 @@ class TechnologyPolicyTest {
                 new MaintenanceCost(BigDecimal.valueOf(6000)),
                 new EnvironmentalImpact(30.0),
                 new Co2Reduction(BigDecimal.valueOf(100.0)),
-                new EnergyProduction(8000.0)
+                new CapacityFactor(65.0)
         ));
     }
 
@@ -153,7 +135,7 @@ class TechnologyPolicyTest {
                 new MaintenanceCost(BigDecimal.valueOf(1000)),
                 new EnvironmentalImpact(20.0),
                 new Co2Reduction(BigDecimal.valueOf(60.0)),
-                new EnergyProduction(3000.0)
+                new CapacityFactor(30.0)
         ));
     }
 }

@@ -5,6 +5,8 @@ package com.renewsim.backend.technology_service.domain.model.vo;
  */
 public enum EnergyType {
     SOLAR,
+    WIND,
+    @Deprecated
     EOLIC,
     HYDRO,
     GEOTHERMAL,
@@ -14,7 +16,7 @@ public enum EnergyType {
         if (value == null)
             throw new IllegalArgumentException("EnergyType cannot be null");
         return switch (value.trim().toUpperCase()) {
-            case "WIND" -> EOLIC; 
+            case "EOLIC" -> WIND;
             default -> EnergyType.valueOf(value.trim().toUpperCase());
         };
     }

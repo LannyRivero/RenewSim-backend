@@ -44,7 +44,7 @@ public interface TechnologyMapper {
                 new MaintenanceCost(entity.getMaintenanceCost()),
                 new EnvironmentalImpact(entity.getCo2ReductionFactor().doubleValue()),
                 new Co2Reduction(entity.getCo2ReductionFactor()),
-                new EnergyProduction(entity.getCapacityFactor().doubleValue()));
+                new CapacityFactor(entity.getCapacityFactor().doubleValue()));
     }
 
     // ============================================================
@@ -56,7 +56,7 @@ public interface TechnologyMapper {
     @Mapping(target = "unitCost", expression = "java(domain.getInstallationCost().value())")
     @Mapping(target = "maintenanceCost", expression = "java(domain.getMaintenanceCost().value())")
     @Mapping(target = "co2ReductionFactor", expression = "java(domain.getCo2Reduction().value())")
-    @Mapping(target = "capacityFactor", expression = "java(java.math.BigDecimal.valueOf(domain.getEnergyProduction().value()))")
+    @Mapping(target = "capacityFactor", expression = "java(java.math.BigDecimal.valueOf(domain.getCapacityFactor().value()))")
     @Mapping(target = "description", ignore = true)
     @Mapping(target = "lifespanYears", constant = "25")
     @Mapping(target = "minCapacityKw", constant = "0.00")
@@ -71,8 +71,7 @@ public interface TechnologyMapper {
     // ============================================================
 
     /**
-     * Convierte un tipo de energía de Entity a Domain,
-     * manejando diferencias de nomenclatura (WIND → EOLIC).
+     * Convierte un tipo de energía de Entity a Domain.
      */
     default EnergyType parseEnergyType(TechnologyEntity.EnergyType energyType) {
         if (energyType == null) {
@@ -83,7 +82,7 @@ public interface TechnologyMapper {
             case SOLAR:
                 return EnergyType.SOLAR;
             case WIND:
-                return EnergyType.EOLIC;
+                return EnergyType.WIND;
             case HYDRO:
                 return EnergyType.HYDRO;
             case GEOTHERMAL:
@@ -96,8 +95,7 @@ public interface TechnologyMapper {
     }
 
     /**
-     * Convierte un tipo de energía de Domain a Entity,
-     * manejando diferencias de nomenclatura (EOLIC → WIND).
+     * Convierte un tipo de energía de Domain a Entity.
      */
     default TechnologyEntity.EnergyType mapToEntityEnergyType(EnergyType domainType) {
         if (domainType == null) {
@@ -107,6 +105,8 @@ public interface TechnologyMapper {
         switch (domainType) {
             case SOLAR:
                 return TechnologyEntity.EnergyType.SOLAR;
+            case WIND:
+                return TechnologyEntity.EnergyType.WIND;
             case EOLIC:
                 return TechnologyEntity.EnergyType.WIND;
             case HYDRO:

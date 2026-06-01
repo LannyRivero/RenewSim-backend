@@ -28,7 +28,7 @@ class TechnologyFactoryTest {
                                 400.0,
                                 5.0,
                                 25.0,
-                                3000.0,
+                                18.0,
                                 "SOLAR");
 
                 assertNotNull(tech);
@@ -44,29 +44,29 @@ class TechnologyFactoryTest {
         @Test
         @DisplayName("Should reject invalid efficiency values (<0 or >100)")
         void shouldRejectInvalidEfficiency() {
-                assertThrows(InvalidTechnologyParameterException.class, () -> TechnologyFactory.create(
-                                "Bad Tech",
-                                120.0, 
-                                10000.0,
-                                500.0,
-                                5.0,
-                                25.0,
-                                2000.0,
-                                "SOLAR"));
+        assertThrows(InvalidTechnologyParameterException.class, () -> TechnologyFactory.create(
+                        "Bad Tech",
+                        120.0, 
+                        10000.0,
+                        500.0,
+                        5.0,
+                        25.0,
+                        18.0,
+                        "SOLAR"));
         }
 
         @Test
         @DisplayName("Should reject negative installation cost")
         void shouldRejectNegativeInstallationCost() {
-                assertThrows(InvalidTechnologyParameterException.class, () -> TechnologyFactory.create(
-                                "Faulty System",
-                                70.0,
-                                -5000.0, 
-                                200.0,
-                                10.0,
-                                15.0,
-                                1500.0,
-                                "EOLIC"));
+        assertThrows(InvalidTechnologyParameterException.class, () -> TechnologyFactory.create(
+                        "Faulty System",
+                        70.0,
+                        -5000.0, 
+                        200.0,
+                        10.0,
+                        15.0,
+                        35.0,
+                        "EOLIC"));
         }
 
         @Test
@@ -79,7 +79,7 @@ class TechnologyFactoryTest {
                                 300.0,
                                 10.0,
                                 25.0,
-                                2500.0,
+                                65.0,
                                 "HYDRO"));
         }
 
@@ -97,7 +97,7 @@ class TechnologyFactoryTest {
                                 400.0,
                                 10.0,
                                 25.0,
-                                3000.0,
+                                18.0,
                                 "SOLAR"));
         }
 
@@ -111,7 +111,7 @@ class TechnologyFactoryTest {
                                 6000.0, 
                                 15.0,
                                 25.0,
-                                3000.0,
+                                35.0,
                                 "GEOTHERMAL"));
         }
 
@@ -129,7 +129,7 @@ class TechnologyFactoryTest {
                                 6000.0,
                                 30.0, 
                                 100.0,
-                                8000.0,
+                                65.0,
                                 "HYDRO");
 
                 assertNotNull(tech);

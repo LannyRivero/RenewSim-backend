@@ -1,6 +1,7 @@
 package com.renewsim.backend.technology_service.domain.model;
 
 import java.util.Objects;
+import java.time.Instant;
 
 import com.renewsim.backend.technology_service.domain.exception.InvalidTechnologyParameterException;
 import com.renewsim.backend.technology_service.domain.model.vo.*;
@@ -17,52 +18,97 @@ public class Technology {
     private final String name;
     private final EnergyType energyType;
     private final Efficiency efficiency;
-    private final InstallationCost installationCost;
-    private final MaintenanceCost maintenanceCost;
+    private final InstallationCost baseCostPerKw;
+    private final Integer lifespanYears;
+    private final MaintenanceCost maintenanceCostPct;
+    private final String description;
+    private final boolean isActive;
+    private final Instant createdAt;
+    private final Instant updatedAt;
+
     private final EnvironmentalImpact environmentalImpact;
     private final Co2Reduction co2Reduction;
-    private final EnergyProduction energyProduction;
+    private final CapacityFactor capacityFactor;
 
     public Technology(
             Long id,
             String name,
             EnergyType energyType,
             Efficiency efficiency,
-            InstallationCost installationCost,
-            MaintenanceCost maintenanceCost,
+            InstallationCost baseCostPerKw,
+            Integer lifespanYears,
+            MaintenanceCost maintenanceCostPct,
+            String description,
+            boolean isActive,
+            Instant createdAt,
+            Instant updatedAt,
             EnvironmentalImpact environmentalImpact,
             Co2Reduction co2Reduction,
-            EnergyProduction energyProduction) {
+            CapacityFactor capacityFactor) {
 
         if (name == null || name.isBlank()) {
             throw new InvalidTechnologyParameterException("Technology name cannot be null or blank");
+        }
+        if (lifespanYears == null || lifespanYears <= 0) {
+            throw new InvalidTechnologyParameterException("Lifespan years must be greater than zero");
         }
 
         this.id = id;
         this.name = name.trim();
         this.energyType = Objects.requireNonNull(energyType);
         this.efficiency = Objects.requireNonNull(efficiency);
-        this.installationCost = Objects.requireNonNull(installationCost);
-        this.maintenanceCost = Objects.requireNonNull(maintenanceCost);
+        this.baseCostPerKw = Objects.requireNonNull(baseCostPerKw);
+        this.lifespanYears = lifespanYears;
+        this.maintenanceCostPct = Objects.requireNonNull(maintenanceCostPct);
+        this.description = description;
+        this.isActive = isActive;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.environmentalImpact = Objects.requireNonNull(environmentalImpact);
         this.co2Reduction = Objects.requireNonNull(co2Reduction);
-        this.energyProduction = Objects.requireNonNull(energyProduction);
+        this.capacityFactor = Objects.requireNonNull(capacityFactor);
 
-        // Business-level validation (e.g., combined constraints)
         TechnologyPolicy.validateCompatibility(this);
+    }
+
+    public Technology(
+            Long id,
+            String name,
+            EnergyType energyType,
+            Efficiency efficiency,
+            InstallationCost baseCostPerKw,
+            MaintenanceCost maintenanceCost,
+            EnvironmentalImpact environmentalImpact,
+            Co2Reduction co2Reduction,
+            CapacityFactor capacityFactor) {
+        this(
+                id,
+                name,
+                energyType,
+                efficiency,
+                baseCostPerKw,
+                25,
+                maintenanceCost,
+                null,
+                true,
+                null,
+                null,
+                environmentalImpact,
+                co2Reduction,
+                capacityFactor);
     }
 
     public Technology(
             String name,
             EnergyType energyType,
             Efficiency efficiency,
-            InstallationCost installationCost,
+            InstallationCost baseCostPerKw,
             MaintenanceCost maintenanceCost,
             EnvironmentalImpact environmentalImpact,
             Co2Reduction co2Reduction,
-            EnergyProduction energyProduction) {
-        this(null, name, energyType, efficiency, installationCost, maintenanceCost, environmentalImpact, co2Reduction,
-                energyProduction);
+            CapacityFactor capacityFactor) {
+        this(null, name, energyType, efficiency, baseCostPerKw, maintenanceCost, environmentalImpact, co2Reduction,
+                capacityFactor);
     }
 
     public Long getId() {
@@ -82,11 +128,39 @@ public class Technology {
     }
 
     public InstallationCost getInstallationCost() {
-        return installationCost;
+        return baseCostPerKw;
     }
 
     public MaintenanceCost getMaintenanceCost() {
-        return maintenanceCost;
+        return maintenanceCostPct;
+    }
+
+    public InstallationCost getBaseCostPerKw() {
+        return baseCostPerKw;
+    }
+
+    public Integer getLifespanYears() {
+        return lifespanYears;
+    }
+
+    public MaintenanceCost getMaintenanceCostPct() {
+        return maintenanceCostPct;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
     }
 
     public EnvironmentalImpact getEnvironmentalImpact() {
@@ -97,8 +171,26 @@ public class Technology {
         return co2Reduction;
     }
 
-    public EnergyProduction getEnergyProduction() {
-        return energyProduction;
+    public CapacityFactor getCapacityFactor() {
+        return capacityFactor;
+    }
+
+    public Technology deactivate() {
+        return new Technology(
+                this.id,
+                this.name,
+                this.energyType,
+                this.efficiency,
+                this.baseCostPerKw,
+                this.lifespanYears,
+                this.maintenanceCostPct,
+                this.description,
+                false,
+                this.createdAt,
+                Instant.now(),
+                this.environmentalImpact,
+                this.co2Reduction,
+                this.capacityFactor);
     }
 
     @Override
@@ -118,6 +210,6 @@ public class Technology {
     @Override
     public String toString() {
         return "Technology{name='%s', efficiency=%s, cost=%s}"
-                .formatted(name, efficiency.value(), installationCost.value());
+                .formatted(name, efficiency.value(), baseCostPerKw.value());
     }
 }
