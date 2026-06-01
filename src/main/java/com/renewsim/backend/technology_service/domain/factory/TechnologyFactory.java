@@ -27,18 +27,18 @@ public final class TechnologyFactory {
             double maintenanceCost,
             double environmentalImpact,
             double co2Reduction,
-            double energyProduction,
+            double capacityFactor,
             String energyType) {
         try {
             Technology technology = new Technology(
                     name,
-                    EnergyType.valueOf(energyType.toUpperCase()),
+                    EnergyType.fromString(energyType),
                     new Efficiency(efficiency),
                     new InstallationCost(BigDecimal.valueOf(installationCost)),
                     new MaintenanceCost(BigDecimal.valueOf(maintenanceCost)),
                     new EnvironmentalImpact(environmentalImpact),
                     new Co2Reduction(co2Reduction),
-                    new EnergyProduction(energyProduction));
+                    new CapacityFactor(capacityFactor));
 
             // Business-level validation (cross-field consistency)
             TechnologyPolicy.validateCompatibility(technology);

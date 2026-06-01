@@ -2,9 +2,13 @@ package com.renewsim.backend.technology_service.infrastructure.persistence.adapt
 
 import com.renewsim.backend.technology_service.application.port.out.TechnologyRepositoryPort;
 import com.renewsim.backend.technology_service.domain.model.Technology;
+import com.renewsim.backend.technology_service.domain.model.vo.EnergyType;
 import com.renewsim.backend.technology_service.infrastructure.mapper.TechnologyMapper;
+import com.renewsim.backend.technology_service.infrastructure.persistence.entity.TechnologyEntity;
 import com.renewsim.backend.technology_service.infrastructure.persistence.repository.JpaTechnologyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -39,6 +43,27 @@ public class TechnologyRepositoryAdapter implements TechnologyRepositoryPort {
     }
 
     @Override
+    public Page<Technology> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable).map(mapper::toDomain);
+    }
+
+    @Override
+    public Page<Technology> findByEnergyType(EnergyType energyType, Pageable pageable) {
+        return jpaRepository.findByEnergyType(toEntityEnergyType(energyType), pageable).map(mapper::toDomain);
+    }
+
+    @Override
+    public Page<Technology> findActiveByEnergyType(EnergyType energyType, Pageable pageable) {
+        return jpaRepository.findByEnergyTypeAndIsActiveTrue(toEntityEnergyType(energyType), pageable)
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public Page<Technology> findAllActive(Pageable pageable) {
+        return jpaRepository.findByIsActiveTrue(pageable).map(mapper::toDomain);
+    }
+
+    @Override
     public void deleteById(Long id) {
         jpaRepository.deleteById(id);
     }
@@ -46,6 +71,16 @@ public class TechnologyRepositoryAdapter implements TechnologyRepositoryPort {
     @Override
     public boolean existsByName(String name) {
         return jpaRepository.existsByName(name);
+    }
+
+    private TechnologyEntity.EnergyType toEntityEnergyType(EnergyType energyType) {
+        return switch (energyType) {
+            case SOLAR -> TechnologyEntity.EnergyType.SOLAR;
+            case WIND, EOLIC -> TechnologyEntity.EnergyType.WIND;
+            case HYDRO -> TechnologyEntity.EnergyType.HYDRO;
+            case GEOTHERMAL -> TechnologyEntity.EnergyType.GEOTHERMAL;
+            case BIOMASS -> TechnologyEntity.EnergyType.BIOMASS;
+        };
     }
 }
 

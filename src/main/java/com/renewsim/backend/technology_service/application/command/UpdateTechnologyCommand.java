@@ -11,7 +11,7 @@ public record UpdateTechnologyCommand(
         @Positive double maintenanceCost,
         @Min(0) @Max(100) double environmentalImpact,
         @PositiveOrZero double co2Reduction,
-        @Positive double energyProduction,
+        @Positive @DecimalMax("100") double capacityFactor,
         @NotBlank String energyType) {
     public static UpdateTechnologyCommand withId(Long id, UpdateTechnologyCommand base) {
         return new UpdateTechnologyCommand(
@@ -22,7 +22,7 @@ public record UpdateTechnologyCommand(
                 base.maintenanceCost(),
                 base.environmentalImpact(),
                 base.co2Reduction(),
-                base.energyProduction(),
+                base.capacityFactor(),
                 base.energyType());
     }
 }

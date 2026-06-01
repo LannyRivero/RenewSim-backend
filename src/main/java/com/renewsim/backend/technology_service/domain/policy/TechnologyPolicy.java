@@ -23,11 +23,9 @@ public final class TechnologyPolicy {
     // CONSTANTS (domain thresholds)
     // ------------------------------------------------------------------------
     private static final double MAX_SOLAR_EFFICIENCY = 95.0;
-    private static final double MAX_EOLIC_EFFICIENCY = 70.0;
+    private static final double MAX_WIND_EFFICIENCY = 70.0;
     private static final double MAX_ENV_IMPACT_FOR_HIGH_COST = 50.0;
     private static final double HIGH_COST_THRESHOLD = 1_000_000.0;
-    private static final double MAX_CO2_FOR_LOW_PRODUCTION = 100.0;
-    private static final double LOW_PRODUCTION_THRESHOLD = 100.0;
 
     /**
      * Validates cross-field compatibility rules for a given technology.
@@ -41,8 +39,6 @@ public final class TechnologyPolicy {
         BigDecimal installationCost = tech.getInstallationCost().value();
         BigDecimal maintenanceCost = tech.getMaintenanceCost().value();
         double environmentalImpact = tech.getEnvironmentalImpact().value();
-        double co2Reduction = tech.getCo2Reduction().value().doubleValue();
-        double production = tech.getEnergyProduction().value();
 
         // --------------------------------------------------------------------
         // 1️⃣ Efficiency limits per energy type
@@ -53,9 +49,10 @@ public final class TechnologyPolicy {
                 "% efficiency (current: " + efficiency + ")");
         }
 
-        if (tech.getEnergyType() == EnergyType.EOLIC && efficiency > MAX_EOLIC_EFFICIENCY) {
+        if ((tech.getEnergyType() == EnergyType.WIND || tech.getEnergyType() == EnergyType.EOLIC)
+                && efficiency > MAX_WIND_EFFICIENCY) {
             throw new InvalidTechnologyParameterException(
-                "Eolic technologies cannot exceed " + MAX_EOLIC_EFFICIENCY +
+                "Wind technologies cannot exceed " + MAX_WIND_EFFICIENCY +
                 "% efficiency (current: " + efficiency + ")");
         }
 
@@ -69,16 +66,7 @@ public final class TechnologyPolicy {
         }
 
         // --------------------------------------------------------------------
-        // 3️⃣ Low-production technologies cannot claim excessive CO₂ reduction
-        // --------------------------------------------------------------------
-        if (production < LOW_PRODUCTION_THRESHOLD && co2Reduction > MAX_CO2_FOR_LOW_PRODUCTION) {
-            throw new InvalidTechnologyParameterException(
-                "Low-production technologies (< " + LOW_PRODUCTION_THRESHOLD +
-                " MWh/year) cannot have CO₂ reduction above " + MAX_CO2_FOR_LOW_PRODUCTION + " tons/year");
-        }
-
-        // --------------------------------------------------------------------
-        // 4️⃣ Maintenance cost cannot exceed installation cost
+        // 3️⃣ Maintenance cost cannot exceed installation cost
         // --------------------------------------------------------------------
         if (maintenanceCost.compareTo(installationCost) > 0) {
             throw new InvalidTechnologyParameterException(

@@ -1,6 +1,8 @@
 package com.renewsim.backend.technology_service.application.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +15,6 @@ import com.renewsim.backend.technology_service.application.mapper.TechnologyDtoM
 import com.renewsim.backend.technology_service.domain.factory.TechnologyFactory;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * Application Service for handling technology lifecycle operations.
@@ -47,7 +48,7 @@ public class TechnologyCommandService {
             command.maintenanceCost(),
             command.environmentalImpact(),
             command.co2Reduction(),
-            command.energyProduction(),
+            command.capacityFactor(),
             command.energyType()
         );
 
@@ -61,13 +62,13 @@ public class TechnologyCommandService {
         var updated = new Technology(
                 existing.getId(),
                 command.name(),
-                EnergyType.valueOf(command.energyType().toUpperCase()),
+                EnergyType.fromString(command.energyType()),
                 new Efficiency(command.efficiency()),
                 new InstallationCost(BigDecimal.valueOf(command.installationCost())),
                 new MaintenanceCost(BigDecimal.valueOf(command.maintenanceCost())),
                 new EnvironmentalImpact(command.environmentalImpact()),
                 new Co2Reduction(BigDecimal.valueOf(command.co2Reduction())),
-                new EnergyProduction(command.energyProduction()));
+                new CapacityFactor(command.capacityFactor()));
 
         repository.save(updated);
         return dtoMapper.toUpdateResult(updated);
@@ -83,16 +84,20 @@ public class TechnologyCommandService {
     // ============================================================
 
     @Transactional(readOnly = true)
-    public TechnologyQueryResultDTO handleGetById(GetTechnologyByIdCommand command) {
+    public TechnologyResponseDTO handleGetById(GetTechnologyByIdCommand command) {
         var tech = validator.getExisting(command.id());
-        return dtoMapper.toQueryResult(tech);
+        return dtoMapper.toResponse(tech);
     }
 
     @Transactional(readOnly = true)
-    public List<TechnologyQueryResultDTO> handleGetAll() {
-        return repository.findAll().stream()
-                .map(dtoMapper::toQueryResult)
-                .toList();
+    public Page<TechnologyResponseDTO> handleGetAll(int page, int size, String energyType) {
+        var pageable = PageRequest.of(page, size);
+        if (energyType != null && !energyType.isBlank()) {
+            return repository.findActiveByEnergyType(EnergyType.fromString(energyType), pageable)
+                    .map(dtoMapper::toResponse);
+        }
+        return repository.findAllActive(pageable)
+                .map(dtoMapper::toResponse);
     }
 
    

@@ -1,13 +1,12 @@
 package com.renewsim.backend.technology_service.application.port.in;
 
-import java.util.List;
-
 import com.renewsim.backend.technology_service.application.command.GetTechnologyByIdCommand;
-import com.renewsim.backend.technology_service.application.result.TechnologyQueryResultDTO;
+import com.renewsim.backend.technology_service.application.result.TechnologyResponseDTO;
+import org.springframework.data.domain.Page;
 
 public interface GetTechnologyUseCase {
-    TechnologyQueryResultDTO getTechnologyById(GetTechnologyByIdCommand command);
-    
-    List<TechnologyQueryResultDTO> getAllTechnologies();
+    TechnologyResponseDTO getTechnologyById(GetTechnologyByIdCommand command);
+
+    Page<TechnologyResponseDTO> getTechnologies(int page, int size, String energyType);
 }
 

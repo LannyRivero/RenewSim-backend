@@ -28,23 +28,13 @@ public class TechnologyDataInitializer implements CommandLineRunner {
         if (repository.findAll().isEmpty()) {
             log.info("🧱 No technologies found. Loading initial dataset...");
 
-            // CRITICAL NOTE: The last parameter (energyProduction) is mapped DIRECTLY to capacity_factor in DB.
-            // Therefore, it MUST be a percentage (0-100%), NOT absolute MWh/year production.
-            // 
-            // This is a known semantic mismatch between:
-            // - Domain layer: uses "EnergyProduction" value object (naming suggests MWh/year)
-            // - Persistence layer: stores as "capacity_factor" (percentage 0-100%)
-            // - Mapper: performs direct conversion without transformation
-            //
-            // TODO (Tech Debt P2): Refactor to separate CapacityFactor from EnergyProduction value objects
+            // Capacity factor is a percentage (0-100%) representing how often
+            // the technology can generate at full capacity.
             //
             // Typical capacity factors for renewable technologies:
             // - Solar Panel: 15-25%
             // - Wind Turbine: 25-40%
             // - Hydro Generator: 40-90%
-            //
-            // CO₂ reduction values adjusted to satisfy TechnologyPolicy:
-            // - If energyProduction < 100, co2Reduction must be <= 100 (low-production constraint)
             List<Technology> defaultTechnologies = List.of(
                     TechnologyFactory.create("Solar Panel", 85.0, 1200, 100, 15, 85, 18.0, "SOLAR"),
                     TechnologyFactory.create("Wind Turbine", 70.0, 1500, 120, 10, 90, 35.0, "EOLIC"),

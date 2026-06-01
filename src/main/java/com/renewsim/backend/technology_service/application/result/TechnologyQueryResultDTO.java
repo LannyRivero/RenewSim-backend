@@ -9,6 +9,6 @@ public record TechnologyQueryResultDTO(
         double maintenanceCost,
         double environmentalImpact,
         double co2Reduction,
-        double energyProduction
+        double capacityFactor
 ) {}
 

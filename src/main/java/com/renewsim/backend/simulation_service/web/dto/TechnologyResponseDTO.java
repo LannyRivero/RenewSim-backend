@@ -7,5 +7,5 @@ public record TechnologyResponseDTO(
         double efficiency,
         double installationCost,
         double co2Reduction,
-        double energyProduction) {
+        double capacityFactor) {
 }

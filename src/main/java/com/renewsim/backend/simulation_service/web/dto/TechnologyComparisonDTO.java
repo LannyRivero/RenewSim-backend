@@ -13,6 +13,6 @@ public record TechnologyComparisonDTO(
     double efficiency,
     double installationCost,
     double co2Reduction,
-    double energyProduction,
+    double capacityFactor,
     double normalizedScore
 ) {}

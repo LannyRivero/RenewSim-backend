@@ -25,8 +25,8 @@ public final class TechnologyScoringUtil {
         double minCo2 = technologies.stream().mapToDouble(TechnologyData::co2Reduction).min().orElse(0);
         double maxCo2 = technologies.stream().mapToDouble(TechnologyData::co2Reduction).max().orElse(1);
 
-        double minEnergy = technologies.stream().mapToDouble(TechnologyData::energyProduction).min().orElse(0);
-        double maxEnergy = technologies.stream().mapToDouble(TechnologyData::energyProduction).max().orElse(1);
+        double minEnergy = technologies.stream().mapToDouble(TechnologyData::capacityFactor).min().orElse(0);
+        double maxEnergy = technologies.stream().mapToDouble(TechnologyData::capacityFactor).max().orElse(1);
 
         double minCost = technologies.stream().mapToDouble(TechnologyData::installationCost).min().orElse(0);
         double maxCost = technologies.stream().mapToDouble(TechnologyData::installationCost).max().orElse(1);
@@ -47,7 +47,7 @@ public final class TechnologyScoringUtil {
      */
     public static double calculateScoreDynamic(TechnologyData tech, NormalizationStatsDTO stats) {
         double normalizedCo2 = normalize(tech.co2Reduction(), stats.minCo2(), stats.maxCo2());
-        double normalizedEnergy = normalize(tech.energyProduction(), stats.minEnergy(), stats.maxEnergy());
+        double normalizedEnergy = normalize(tech.capacityFactor(), stats.minEnergy(), stats.maxEnergy());
         double normalizedCost = normalize(tech.installationCost(), stats.minCost(), stats.maxCost());
         double normalizedEff = normalize(tech.efficiency(), stats.minEfficiency(), stats.maxEfficiency());
 
@@ -71,7 +71,7 @@ public final class TechnologyScoringUtil {
      */
     public record TechnologyData(
         double co2Reduction,
-        double energyProduction,
+        double capacityFactor,
         double installationCost,
         double efficiency
     ) {}

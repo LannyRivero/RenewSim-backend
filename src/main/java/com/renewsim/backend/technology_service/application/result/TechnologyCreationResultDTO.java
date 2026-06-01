@@ -9,7 +9,7 @@ public record TechnologyCreationResultDTO(
         double maintenanceCost,
         double environmentalImpact,
         double co2Reduction,
-        double energyProduction,
+        double capacityFactor,
         boolean success,
         String message
 ) {}

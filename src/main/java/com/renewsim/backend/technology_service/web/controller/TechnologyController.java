@@ -3,6 +3,7 @@ package com.renewsim.backend.technology_service.web.controller;
 import com.renewsim.backend.shared.dto.ApiResponseFactory;
 import com.renewsim.backend.shared.dto.OperationResponse;
 import com.renewsim.backend.technology_service.application.command.*;
+import com.renewsim.backend.technology_service.application.dto.TechnologyEstimateDTO;
 import com.renewsim.backend.technology_service.application.port.in.*;
 import com.renewsim.backend.technology_service.application.result.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,8 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 @Slf4j
 @RestController
@@ -34,6 +34,26 @@ public class TechnologyController {
     private final UpdateTechnologyUseCase updateUseCase;
     private final DeleteTechnologyUseCase deleteUseCase;
     private final GetTechnologyUseCase getUseCase;
+    private final EstimateTechnologyUseCase estimateUseCase;
+
+    // ESTIMATE
+    @GetMapping("/estimate")
+    @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
+    @Operation(summary = "Estimate technology parameters", description = "Returns estimated capacity factor and annual energy production for a given energy type and optional installed capacity. Useful for pre-filling the creation form.", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Estimation computed successfully", content = @Content(schema = @Schema(implementation = TechnologyEstimateDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid energy type", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content)
+    })
+    public ResponseEntity<OperationResponse<TechnologyEstimateDTO>> estimate(
+            @Parameter(description = "Energy type (SOLAR, WIND, HYDRO, GEOTHERMAL, BIOMASS)", required = true)
+            @RequestParam String energyType,
+            @Parameter(description = "Installed capacity in kW (optional)", required = false)
+            @RequestParam(required = false) Double installedCapacityKw) {
+
+        var result = estimateUseCase.estimate(energyType, installedCapacityKw);
+        return ResponseEntity.ok(ApiResponseFactory.ok(result, "Technology estimation computed successfully"));
+    }
 
     // CREATE
     @PostMapping
@@ -59,11 +79,11 @@ public class TechnologyController {
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
     @Operation(summary = "Get technology by ID", description = "Retrieves detailed information about a specific renewable energy technology", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Technology found", content = @Content(schema = @Schema(implementation = TechnologyQueryResultDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Technology found", content = @Content(schema = @Schema(implementation = TechnologyResponseDTO.class))),
             @ApiResponse(responseCode = "404", description = "Technology not found", content = @Content),
             @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content)
     })
-    public ResponseEntity<OperationResponse<TechnologyQueryResultDTO>> getById(
+    public ResponseEntity<OperationResponse<TechnologyResponseDTO>> getById(
             @Parameter(description = "Technology unique identifier", required = true) @PathVariable Long id) {
         var result = getUseCase.getTechnologyById(new GetTechnologyByIdCommand(id));
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Technology retrieved successfully"));
@@ -74,11 +94,14 @@ public class TechnologyController {
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
     @Operation(summary = "List all technologies", description = "Retrieves all available renewable energy technologies with their technical specifications", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Technologies retrieved successfully", content = @Content(schema = @Schema(implementation = List.class))),
+            @ApiResponse(responseCode = "200", description = "Technologies retrieved successfully", content = @Content(schema = @Schema(implementation = Page.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - JWT token missing or invalid", content = @Content)
     })
-    public ResponseEntity<OperationResponse<List<TechnologyQueryResultDTO>>> getAll() {
-        var results = getUseCase.getAllTechnologies();
+    public ResponseEntity<OperationResponse<Page<TechnologyResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String energyType) {
+        var results = getUseCase.getTechnologies(page, size, energyType);
         return ResponseEntity.ok(ApiResponseFactory.ok(results, "All technologies retrieved"));
     }
 
