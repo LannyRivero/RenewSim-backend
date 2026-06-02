@@ -20,6 +20,8 @@ import com.renewsim.backend.technology_service.application.result.TechnologyResp
 import com.renewsim.backend.technology_service.application.result.TechnologyUpdateResultDTO;
 import org.springframework.data.domain.Page;
 
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -58,9 +60,31 @@ public class TechnologyApplicationService implements
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "technologies", key = "'list:' + #page + ':' + #size + ':' + (#energyType == null ? 'ALL' : #energyType)")
-    public Page<TechnologyResponseDTO> getTechnologies(int page, int size, String energyType) {
-        return commandService.handleGetAll(page, size, energyType);
+    @Cacheable(value = "technologies", key = "'list:' + #page + ':' + #size + ':' + #root.target.normalizeEnergyTypeKey(#energyType) + ':' + #root.target.normalizeSearchKey(#search) + ':' + #root.target.normalizeSortByKey(#sortBy) + ':' + #root.target.normalizeSortDirectionKey(#sortDirection)")
+    public Page<TechnologyResponseDTO> getTechnologies(int page, int size, String energyType, String search, String sortBy, String sortDirection) {
+        return commandService.handleGetAll(page, size, energyType, search, sortBy, sortDirection);
+    }
+
+    public String normalizeEnergyTypeKey(String energyType) {
+        return energyType == null || energyType.isBlank()
+                ? "ALL"
+                : energyType.trim().toUpperCase(Locale.ROOT);
+    }
+
+    public String normalizeSearchKey(String search) {
+        return search == null ? "" : search.trim().toLowerCase(Locale.ROOT);
+    }
+
+    public String normalizeSortByKey(String sortBy) {
+        return sortBy == null || sortBy.isBlank()
+                ? "name"
+                : sortBy.trim().toLowerCase(Locale.ROOT);
+    }
+
+    public String normalizeSortDirectionKey(String sortDirection) {
+        return sortDirection == null || sortDirection.isBlank()
+                ? "asc"
+                : sortDirection.trim().toLowerCase(Locale.ROOT);
     }
 }
 

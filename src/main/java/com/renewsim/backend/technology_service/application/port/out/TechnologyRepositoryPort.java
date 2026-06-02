@@ -26,6 +26,10 @@ public interface TechnologyRepositoryPort {
 
     Page<Technology> findAllActive(Pageable pageable);
 
+    Page<Technology> findAllActiveByNameContaining(String name, Pageable pageable);
+
+    Page<Technology> findActiveByEnergyTypeAndNameContaining(EnergyType energyType, String name, Pageable pageable);
+
     void deleteById(Long id);
 
     boolean existsByName(String name);

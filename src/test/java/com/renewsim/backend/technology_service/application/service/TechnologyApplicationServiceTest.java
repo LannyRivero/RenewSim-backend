@@ -131,12 +131,12 @@ class TechnologyApplicationServiceTest {
                         null, true, null, null, 8, 300, 30));
         var page = new PageImpl<>(dtoList, PageRequest.of(0, 20), dtoList.size());
 
-        when(commandService.handleGetAll(0, 20, "SOLAR")).thenReturn(page);
+        when(commandService.handleGetAll(0, 20, "SOLAR", "sol", "energyType", "asc")).thenReturn(page);
 
-        var result = applicationService.getTechnologies(0, 20, "SOLAR");
+        var result = applicationService.getTechnologies(0, 20, "SOLAR", "sol", "energyType", "asc");
 
         assertNotNull(result);
         assertEquals(2, result.getContent().size());
-        verify(commandService, times(1)).handleGetAll(0, 20, "SOLAR");
+        verify(commandService, times(1)).handleGetAll(0, 20, "SOLAR", "sol", "energyType", "asc");
     }
 }

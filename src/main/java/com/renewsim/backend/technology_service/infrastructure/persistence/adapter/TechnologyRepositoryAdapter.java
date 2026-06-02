@@ -64,6 +64,17 @@ public class TechnologyRepositoryAdapter implements TechnologyRepositoryPort {
     }
 
     @Override
+    public Page<Technology> findAllActiveByNameContaining(String name, Pageable pageable) {
+        return jpaRepository.findByIsActiveTrueAndNameContainingIgnoreCase(name, pageable).map(mapper::toDomain);
+    }
+
+    @Override
+    public Page<Technology> findActiveByEnergyTypeAndNameContaining(EnergyType energyType, String name, Pageable pageable) {
+        return jpaRepository.findByEnergyTypeAndIsActiveTrueAndNameContainingIgnoreCase(
+                toEntityEnergyType(energyType), name, pageable).map(mapper::toDomain);
+    }
+
+    @Override
     public void deleteById(Long id) {
         jpaRepository.deleteById(id);
     }
