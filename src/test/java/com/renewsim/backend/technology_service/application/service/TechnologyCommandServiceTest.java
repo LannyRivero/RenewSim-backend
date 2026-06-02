@@ -15,6 +15,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import com.renewsim.backend.shared.exception.BadRequestException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -170,18 +172,131 @@ class TechnologyCommandServiceTest {
     @Test
     @DisplayName("Should get all technologies successfully")
     void shouldGetAllTechnologies() {
-        var page = new PageImpl<>(List.of(domain), PageRequest.of(0, 20), 1);
+        var pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "name"));
+        var page = new PageImpl<>(List.of(domain), pageable, 1);
         var dto = new TechnologyResponseDTO(
                 1L, "Solar Panel", "SOLAR", 0.85, 1200, 25, 100,
                 null, true, null, null, 10, 250, 18);
 
-        when(repository.findAllActive(PageRequest.of(0, 20))).thenReturn(page);
+        when(repository.findAllActive(pageable)).thenReturn(page);
         when(dtoMapper.toResponse(domain)).thenReturn(dto);
 
-        var result = service.handleGetAll(0, 20, null);
+        var result = service.handleGetAll(0, 20, null, null, null, "asc");
 
         assertEquals(1, result.getContent().size());
-        verify(repository, times(1)).findAllActive(PageRequest.of(0, 20));
+        verify(repository, times(1)).findAllActive(pageable);
         verify(dtoMapper, times(1)).toResponse(domain);
+    }
+
+    @Test
+    @DisplayName("Should sort technologies by energy type")
+    void shouldSortTechnologiesByEnergyType() {
+        var pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "energyType"));
+        var page = new PageImpl<>(List.of(domain), pageable, 1);
+        var dto = new TechnologyResponseDTO(
+                1L, "Solar Panel", "SOLAR", 0.85, 1200, 25, 100,
+                null, true, null, null, 10, 250, 18);
+
+        when(repository.findAllActive(pageable)).thenReturn(page);
+        when(dtoMapper.toResponse(domain)).thenReturn(dto);
+
+        var result = service.handleGetAll(0, 20, null, null, "energyType", "desc");
+
+        assertEquals(1, result.getContent().size());
+        verify(repository, times(1)).findAllActive(pageable);
+    }
+
+    @Test
+    @DisplayName("Should sort technologies by CO2 reduction")
+    void shouldSortTechnologiesByCo2Reduction() {
+        var pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "co2ReductionFactor"));
+        var page = new PageImpl<>(List.of(domain), pageable, 1);
+        var dto = new TechnologyResponseDTO(
+                1L, "Solar Panel", "SOLAR", 0.85, 1200, 25, 100,
+                null, true, null, null, 10, 250, 18);
+
+        when(repository.findAllActive(pageable)).thenReturn(page);
+        when(dtoMapper.toResponse(domain)).thenReturn(dto);
+
+        var result = service.handleGetAll(0, 20, null, null, "co2Reduction", "asc");
+
+        assertEquals(1, result.getContent().size());
+        verify(repository, times(1)).findAllActive(pageable);
+    }
+
+    @Test
+    @DisplayName("Should search active technologies by name")
+    void shouldSearchActiveTechnologiesByName() {
+        var pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "name"));
+        var page = new PageImpl<>(List.of(domain), pageable, 1);
+        var dto = new TechnologyResponseDTO(
+                1L, "Solar Panel", "SOLAR", 0.85, 1200, 25, 100,
+                null, true, null, null, 10, 250, 18);
+
+        when(repository.findAllActiveByNameContaining("sol", pageable)).thenReturn(page);
+        when(dtoMapper.toResponse(domain)).thenReturn(dto);
+
+        var result = service.handleGetAll(0, 20, null, " sol ", null, "asc");
+
+        assertEquals(1, result.getContent().size());
+        verify(repository, times(1)).findAllActiveByNameContaining("sol", pageable);
+    }
+
+    @Test
+    @DisplayName("Should search active technologies by energy type and name")
+    void shouldSearchActiveTechnologiesByEnergyTypeAndName() {
+        var pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "name"));
+        var page = new PageImpl<>(List.of(domain), pageable, 1);
+        var dto = new TechnologyResponseDTO(
+                1L, "Solar Panel", "SOLAR", 0.85, 1200, 25, 100,
+                null, true, null, null, 10, 250, 18);
+
+        when(repository.findActiveByEnergyTypeAndNameContaining(EnergyType.SOLAR, "sol", pageable)).thenReturn(page);
+        when(dtoMapper.toResponse(domain)).thenReturn(dto);
+
+        var result = service.handleGetAll(0, 20, "SOLAR", "sol", null, "asc");
+
+        assertEquals(1, result.getContent().size());
+        verify(repository, times(1)).findActiveByEnergyTypeAndNameContaining(EnergyType.SOLAR, "sol", pageable);
+    }
+
+    @Test
+    @DisplayName("Should ignore short search terms")
+    void shouldIgnoreShortSearchTerms() {
+        var pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "name"));
+        var page = new PageImpl<>(List.of(domain), pageable, 1);
+        var dto = new TechnologyResponseDTO(
+                1L, "Solar Panel", "SOLAR", 0.85, 1200, 25, 100,
+                null, true, null, null, 10, 250, 18);
+
+        when(repository.findAllActive(pageable)).thenReturn(page);
+        when(dtoMapper.toResponse(domain)).thenReturn(dto);
+
+        var result = service.handleGetAll(0, 20, null, "ab", null, "asc");
+
+        assertEquals(1, result.getContent().size());
+        verify(repository, times(1)).findAllActive(pageable);
+        verify(repository, never()).findAllActiveByNameContaining(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("Should reject unsupported sort field")
+    void shouldRejectUnsupportedSortField() {
+        var exception = assertThrows(BadRequestException.class,
+                () -> service.handleGetAll(0, 20, null, null, "unsupported", "asc"));
+
+        assertEquals("Invalid sortBy value. Allowed values: name, energyType, efficiency, co2Reduction",
+                exception.getMessage());
+        verifyNoInteractions(repository);
+    }
+
+    @Test
+    @DisplayName("Should reject unsupported sort direction")
+    void shouldRejectUnsupportedSortDirection() {
+        var exception = assertThrows(BadRequestException.class,
+                () -> service.handleGetAll(0, 20, null, null, "name", "down"));
+
+        assertEquals("Invalid sortDirection value. Allowed values: asc, desc", exception.getMessage());
+        verifyNoInteractions(repository);
     }
 }

@@ -100,8 +100,11 @@ public class TechnologyController {
     public ResponseEntity<OperationResponse<Page<TechnologyResponseDTO>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String energyType) {
-        var results = getUseCase.getTechnologies(page, size, energyType);
+            @RequestParam(required = false) String energyType,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+        var results = getUseCase.getTechnologies(page, size, energyType, search, sortBy, sortDirection);
         return ResponseEntity.ok(ApiResponseFactory.ok(results, "All technologies retrieved"));
     }
 
