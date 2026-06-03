@@ -6,6 +6,7 @@ import com.renewsim.backend.technology_service.application.command.*;
 import com.renewsim.backend.technology_service.application.dto.TechnologyEstimateDTO;
 import com.renewsim.backend.technology_service.application.port.in.*;
 import com.renewsim.backend.technology_service.application.result.*;
+import com.renewsim.backend.technology_service.web.dto.TechnologyRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -66,9 +67,9 @@ public class TechnologyController {
             @ApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions", content = @Content)
     })
     public ResponseEntity<OperationResponse<TechnologyCreationResultDTO>> create(
-            @Valid @RequestBody CreateTechnologyCommand command) {
+            @Valid @RequestBody TechnologyRequestDTO request) {
 
-        var result = createUseCase.createTechnology(command);
+        var result = createUseCase.createTechnology(toCreateCommand(request));
         return ResponseEntity
                 .status(201)
                 .body(ApiResponseFactory.created(result, "Technology created successfully"));
@@ -121,11 +122,9 @@ public class TechnologyController {
     })
     public ResponseEntity<OperationResponse<TechnologyUpdateResultDTO>> update(
             @Parameter(description = "Technology unique identifier", required = true) @PathVariable Long id,
-            @Valid @RequestBody UpdateTechnologyCommand command) {
+            @Valid @RequestBody TechnologyRequestDTO request) {
 
-        // Crear un nuevo record con el id del path
-        var commandWithId = UpdateTechnologyCommand.withId(id, command);
-        var result = updateUseCase.updateTechnology(commandWithId);
+        var result = updateUseCase.updateTechnology(toUpdateCommand(id, request));
 
         return ResponseEntity.ok(ApiResponseFactory.ok(result, "Technology updated successfully"));
     }
@@ -133,16 +132,41 @@ public class TechnologyController {
     // DELETE
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('SCOPE_admin:delete') or hasRole('ADMIN')")
-    @Operation(summary = "Delete technology", description = "Permanently removes a technology from the catalog. Requires ADMIN role or scope admin:delete.", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Delete technology", description = "Soft-deletes a technology from the catalog. Requires ADMIN role or scope admin:delete.", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Technology deleted successfully", content = @Content),
+            @ApiResponse(responseCode = "204", description = "Technology deleted successfully", content = @Content),
             @ApiResponse(responseCode = "404", description = "Technology not found", content = @Content),
             @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
             @ApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions", content = @Content)
     })
-    public ResponseEntity<OperationResponse<Void>> delete(
+    public ResponseEntity<Void> delete(
             @Parameter(description = "Technology unique identifier", required = true) @PathVariable Long id) {
         deleteUseCase.deleteTechnology(new DeleteTechnologyCommand(id));
-        return ResponseEntity.ok(ApiResponseFactory.noContent("Technology deleted successfully"));
+        return ResponseEntity.noContent().build();
+    }
+
+    private CreateTechnologyCommand toCreateCommand(TechnologyRequestDTO request) {
+        return new CreateTechnologyCommand(
+                request.name(),
+                request.efficiency(),
+                request.installationCost(),
+                request.maintenanceCost(),
+                request.environmentalImpact(),
+                request.co2Reduction(),
+                request.capacityFactor(),
+                request.energyType());
+    }
+
+    private UpdateTechnologyCommand toUpdateCommand(Long id, TechnologyRequestDTO request) {
+        return new UpdateTechnologyCommand(
+                id,
+                request.name(),
+                request.efficiency(),
+                request.installationCost(),
+                request.maintenanceCost(),
+                request.environmentalImpact(),
+                request.co2Reduction(),
+                request.capacityFactor(),
+                request.energyType());
     }
 }

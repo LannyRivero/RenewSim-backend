@@ -14,6 +14,8 @@ public interface TechnologyRepositoryPort {
 
     Optional<Technology> findById(Long id);
 
+    Optional<Technology> findActiveById(Long id);
+
     Optional<Technology> findByName(String name);
 
     List<Technology> findAll();

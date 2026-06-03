@@ -62,13 +62,13 @@ public interface TechnologyMapper {
     @Mapping(target = "maintenanceCost", expression = "java(domain.getMaintenanceCost().value())")
     @Mapping(target = "co2ReductionFactor", expression = "java(domain.getCo2Reduction().value())")
     @Mapping(target = "capacityFactor", expression = "java(java.math.BigDecimal.valueOf(domain.getCapacityFactor().value()))")
-    @Mapping(target = "description", ignore = true)
-    @Mapping(target = "lifespanYears", constant = "25")
+    @Mapping(target = "description", expression = "java(domain.getDescription())")
+    @Mapping(target = "lifespanYears", expression = "java(domain.getLifespanYears())")
     @Mapping(target = "minCapacityKw", constant = "0.00")
     @Mapping(target = "maxCapacityKw", ignore = true)
-    @Mapping(target = "isActive", constant = "true")
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "isActive", expression = "java(domain.isActive())")
+    @Mapping(target = "createdAt", expression = "java(domain.getCreatedAt())")
+    @Mapping(target = "updatedAt", expression = "java(domain.getUpdatedAt())")
     TechnologyEntity toEntity(Technology domain);
 
     // ============================================================

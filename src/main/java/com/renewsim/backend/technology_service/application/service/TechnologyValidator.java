@@ -30,5 +30,10 @@ public class TechnologyValidator {
         return repository.findById(id)
                 .orElseThrow(() -> new TechnologyNotFoundException(id));
     }
+
+    public Technology getExistingActive(Long id) {
+        return repository.findActiveById(id)
+                .orElseThrow(() -> new TechnologyNotFoundException(id));
+    }
 }
 
