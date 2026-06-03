@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import com.renewsim.backend.shared.exception.BadRequestException;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -107,7 +108,12 @@ class TechnologyCommandServiceTest {
                 EnergyType.SOLAR,
                 new Efficiency(0.85),
                 new InstallationCost(BigDecimal.valueOf(1200)),
+                30,
                 new MaintenanceCost(BigDecimal.valueOf(100)),
+                "Existing description",
+                false,
+                Instant.parse("2026-05-01T10:15:30Z"),
+                Instant.parse("2026-05-02T11:15:30Z"),
                 new EnvironmentalImpact(10.0),
                 new Co2Reduction(BigDecimal.valueOf(250)),
                 new CapacityFactor(18.0));
@@ -115,7 +121,7 @@ class TechnologyCommandServiceTest {
         TechnologyUpdateResultDTO expectedDTO = new TechnologyUpdateResultDTO(
                 1L, "Solar Panel", "SOLAR", 0.90, 1400, 120, 8, 300, 6000, true, "Updated successfully");
 
-        when(validator.getExisting(1L)).thenReturn(existing);
+        when(validator.getExistingActive(1L)).thenReturn(existing);
         when(repository.save(any(Technology.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(dtoMapper.toUpdateResult(any(Technology.class))).thenReturn(expectedDTO);
 
@@ -125,9 +131,16 @@ class TechnologyCommandServiceTest {
         assertEquals("Solar Panel", result.name());
         assertEquals(0.90, result.efficiency());
         assertEquals(1400, result.installationCost());
-        verify(validator, times(1)).getExisting(1L);
-        verify(repository, times(1)).save(any(Technology.class));
+        var technologyCaptor = org.mockito.ArgumentCaptor.forClass(Technology.class);
+        verify(validator, times(1)).getExistingActive(1L);
+        verify(repository, times(1)).save(technologyCaptor.capture());
         verify(dtoMapper, times(1)).toUpdateResult(any(Technology.class));
+
+        var savedTechnology = technologyCaptor.getValue();
+        assertEquals(30, savedTechnology.getLifespanYears());
+        assertEquals("Existing description", savedTechnology.getDescription());
+        assertFalse(savedTechnology.isActive());
+        assertEquals(Instant.parse("2026-05-01T10:15:30Z"), savedTechnology.getCreatedAt());
     }
 
     // ============================================================
@@ -136,13 +149,31 @@ class TechnologyCommandServiceTest {
     @Test
     @DisplayName("Should delete an existing technology successfully")
     void shouldDeleteTechnology() {
-        doNothing().when(validator).ensureExists(1L);
-        doNothing().when(repository).deleteById(1L);
+        var existing = new Technology(
+                1L,
+                "Solar Panel",
+                EnergyType.SOLAR,
+                new Efficiency(0.85),
+                new InstallationCost(BigDecimal.valueOf(1200)),
+                25,
+                new MaintenanceCost(BigDecimal.valueOf(100)),
+                "Existing description",
+                true,
+                Instant.parse("2026-05-01T10:15:30Z"),
+                Instant.parse("2026-05-02T11:15:30Z"),
+                new EnvironmentalImpact(10.0),
+                new Co2Reduction(BigDecimal.valueOf(250)),
+                new CapacityFactor(18.0));
+
+        when(validator.getExistingActive(1L)).thenReturn(existing);
+        when(repository.save(any(Technology.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         service.handleDelete(deleteCommand);
 
-        verify(validator, times(1)).ensureExists(1L);
-        verify(repository, times(1)).deleteById(1L);
+        var technologyCaptor = org.mockito.ArgumentCaptor.forClass(Technology.class);
+        verify(validator, times(1)).getExistingActive(1L);
+        verify(repository, times(1)).save(technologyCaptor.capture());
+        assertFalse(technologyCaptor.getValue().isActive());
     }
 
     // ============================================================
@@ -164,6 +195,40 @@ class TechnologyCommandServiceTest {
         assertEquals("Solar Panel", result.name());
         verify(validator, times(1)).getExisting(1L);
         verify(dtoMapper, times(1)).toResponse(domain);
+    }
+
+    @Test
+    @DisplayName("Should get an inactive technology by ID for historical reads")
+    void shouldGetInactiveTechnologyByIdForHistoricalReads() {
+        Technology inactiveTechnology = new Technology(
+                1L,
+                "Solar Panel",
+                EnergyType.SOLAR,
+                new Efficiency(0.85),
+                new InstallationCost(BigDecimal.valueOf(1200)),
+                25,
+                new MaintenanceCost(BigDecimal.valueOf(100)),
+                "Retired technology",
+                false,
+                Instant.parse("2026-05-01T10:15:30Z"),
+                Instant.parse("2026-05-02T11:15:30Z"),
+                new EnvironmentalImpact(10.0),
+                new Co2Reduction(BigDecimal.valueOf(250)),
+                new CapacityFactor(18.0));
+        TechnologyResponseDTO response = new TechnologyResponseDTO(
+                1L, "Solar Panel", "SOLAR", 0.85, 1200, 25, 100,
+                "Retired technology", false, Instant.parse("2026-05-01T10:15:30Z"),
+                Instant.parse("2026-05-02T11:15:30Z"), 10, 250, 18);
+
+        when(validator.getExisting(1L)).thenReturn(inactiveTechnology);
+        when(dtoMapper.toResponse(inactiveTechnology)).thenReturn(response);
+
+        var result = service.handleGetById(getByIdCommand);
+
+        assertNotNull(result);
+        assertFalse(result.isActive());
+        verify(validator, times(1)).getExisting(1L);
+        verify(dtoMapper, times(1)).toResponse(inactiveTechnology);
     }
 
     // ============================================================
