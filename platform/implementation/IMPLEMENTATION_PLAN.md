@@ -296,13 +296,13 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - `@CacheEvict(value="technologies", allEntries=true)` en `createTechnology()` y `updateTechnology()`
     - _Requirements: 5.6_
 
-  - [ ] 3.5 Implementar `GET /api/v1/technologies` (paginado, filtro por energyType) + `GET /api/v1/technologies/{id}`
+  - [x] 3.5 Implementar `GET /api/v1/technologies` (paginado, filtro por energyType) + `GET /api/v1/technologies/{id}`
     - `TechnologyResponseDTO` con todos los campos de Technology
     - `GET /technologies?page=0&size=20&energyType=SOLAR` → `Page<TechnologyResponseDTO>`
     - `GET /technologies/{id}` → `TechnologyResponseDTO`; HTTP 404 si no existe
     - _Requirements: 5.1, 5.2, 5.3_
 
-  - [ ] 3.6 Implementar `POST`, `PUT` y `DELETE` (soft delete) en `/api/v1/technologies` — solo ADMIN
+  - [x ] 3.6 Implementar `POST`, `PUT` y `DELETE` (soft delete) en `/api/v1/technologies` — solo ADMIN
     - `TechnologyRequestDTO` con validaciones `@NotBlank`, `@DecimalMin`, `@DecimalMax`
     - `POST /technologies` → HTTP 201 + invalidar caché
     - `PUT /technologies/{id}` → HTTP 200 + invalidar caché
