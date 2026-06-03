@@ -1,5 +1,6 @@
 package com.renewsim.backend.technology_service.application.service;
 
+import com.renewsim.backend.shared.exception.BadRequestException;
 import com.renewsim.backend.technology_service.application.dto.TechnologyEstimateDTO;
 import com.renewsim.backend.technology_service.application.port.in.EstimateTechnologyUseCase;
 import com.renewsim.backend.technology_service.domain.model.vo.EnergyType;
@@ -21,7 +22,7 @@ public class TechnologyEstimationService implements EstimateTechnologyUseCase {
 
     @Override
     public TechnologyEstimateDTO estimate(String energyType, Double installedCapacityKw) {
-        String normalized = EnergyType.fromString(energyType).name();
+        String normalized = normalizeEnergyType(energyType);
         CapacityFactorRange range = DEFAULT_CAPACITY_FACTORS.getOrDefault(normalized,
                 new CapacityFactorRange(10.0, 50.0, 25.0));
 
@@ -40,6 +41,14 @@ public class TechnologyEstimationService implements EstimateTechnologyUseCase {
                 range.min(),
                 range.max(),
                 confidence);
+    }
+
+    private String normalizeEnergyType(String energyType) {
+        try {
+            return EnergyType.fromString(energyType).name();
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("Invalid energy type: " + energyType);
+        }
     }
 
     private record CapacityFactorRange(double min, double max, double defaultFactor) {
