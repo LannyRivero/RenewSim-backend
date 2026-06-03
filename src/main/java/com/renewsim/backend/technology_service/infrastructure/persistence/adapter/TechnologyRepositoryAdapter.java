@@ -24,6 +24,14 @@ public class TechnologyRepositoryAdapter implements TechnologyRepositoryPort {
     @Override
     public Technology save(Technology technology) {
         var entity = mapper.toEntity(technology);
+
+        if (technology.getId() != null) {
+            jpaRepository.findById(technology.getId()).ifPresent(existing -> {
+                entity.setMinCapacityKw(existing.getMinCapacityKw());
+                entity.setMaxCapacityKw(existing.getMaxCapacityKw());
+            });
+        }
+
         var saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
@@ -31,6 +39,11 @@ public class TechnologyRepositoryAdapter implements TechnologyRepositoryPort {
     @Override
     public Optional<Technology> findById(Long id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<Technology> findActiveById(Long id) {
+        return jpaRepository.findByIdAndIsActiveTrue(id).map(mapper::toDomain);
     }
      @Override
     public Optional<Technology> findByName(String name) { 
