@@ -60,7 +60,7 @@ public class TechnologyCommandService {
     }
 
     public TechnologyUpdateResultDTO handleUpdate(UpdateTechnologyCommand command) {
-        var existing = validator.getExisting(command.id());
+        var existing = validator.getExistingActive(command.id());
 
         var updated = new Technology(
                 existing.getId(),
@@ -68,18 +68,23 @@ public class TechnologyCommandService {
                 EnergyType.fromString(command.energyType()),
                 new Efficiency(command.efficiency()),
                 new InstallationCost(BigDecimal.valueOf(command.installationCost())),
+                existing.getLifespanYears(),
                 new MaintenanceCost(BigDecimal.valueOf(command.maintenanceCost())),
+                existing.getDescription(),
+                existing.isActive(),
+                existing.getCreatedAt(),
+                existing.getUpdatedAt(),
                 new EnvironmentalImpact(command.environmentalImpact()),
                 new Co2Reduction(BigDecimal.valueOf(command.co2Reduction())),
                 new CapacityFactor(command.capacityFactor()));
 
-        repository.save(updated);
-        return dtoMapper.toUpdateResult(updated);
+        var saved = repository.save(updated);
+        return dtoMapper.toUpdateResult(saved);
     }
 
     public void handleDelete(DeleteTechnologyCommand command) {
-        validator.ensureExists(command.id());
-        repository.deleteById(command.id());
+        var existing = validator.getExistingActive(command.id());
+        repository.save(existing.deactivate());
     }
 
     // ============================================================
