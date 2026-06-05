@@ -9,7 +9,6 @@ import com.renewsim.backend.scenario_service.application.port.in.GetScenarioUseC
 import com.renewsim.backend.scenario_service.application.port.in.UpdateScenarioUseCase;
 import com.renewsim.backend.scenario_service.application.port.out.ScenarioRepositoryPort;
 import com.renewsim.backend.scenario_service.application.result.ScenarioResponseDTO;
-import com.renewsim.backend.scenario_service.domain.exception.ScenarioNotFoundException;
 import com.renewsim.backend.scenario_service.domain.model.Scenario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +23,7 @@ public class ScenarioApplicationService implements GetScenarioUseCase, CreateSce
 
     private final ScenarioRepositoryPort repository;
     private final ScenarioDtoMapper dtoMapper;
+    private final ScenarioValidator validator;
 
     @Override
     @Transactional(readOnly = true)
@@ -34,14 +34,14 @@ public class ScenarioApplicationService implements GetScenarioUseCase, CreateSce
     @Override
     @Transactional(readOnly = true)
     public ScenarioResponseDTO getScenarioById(GetScenarioByIdCommand command) {
-        Scenario scenario = repository.findById(command.id())
-                .filter(Scenario::isActive)
-                .orElseThrow(() -> new ScenarioNotFoundException(command.id()));
+        Scenario scenario = validator.getExistingActiveScenario(command.id());
         return dtoMapper.toResponse(scenario);
     }
 
     @Override
     public ScenarioResponseDTO createScenario(CreateScenarioCommand command) {
+        validator.ensureActiveTechnologyExists(command.technologyId().value());
+
         Scenario scenario = new Scenario(
                 command.name(),
                 command.description(),
@@ -56,9 +56,8 @@ public class ScenarioApplicationService implements GetScenarioUseCase, CreateSce
 
     @Override
     public ScenarioResponseDTO updateScenario(UpdateScenarioCommand command) {
-        Scenario existing = repository.findById(command.id())
-                .filter(Scenario::isActive)
-                .orElseThrow(() -> new ScenarioNotFoundException(command.id()));
+        Scenario existing = validator.getExistingActiveScenario(command.id());
+        validator.ensureActiveTechnologyExists(command.technologyId().value());
 
         Scenario updated = new Scenario(
                 existing.getId(),
