@@ -40,6 +40,9 @@ class ScenarioApplicationServiceTest {
     @Mock
     private ScenarioDtoMapper dtoMapper;
 
+    @Mock
+    private ScenarioValidator validator;
+
     @InjectMocks
     private ScenarioApplicationService service;
 
@@ -66,7 +69,7 @@ class ScenarioApplicationServiceTest {
     @Test
     @DisplayName("getScenarioById should throw when scenario is missing or inactive")
     void getScenarioByIdShouldThrowWhenScenarioIsMissingOrInactive() {
-        when(repository.findById(9L)).thenReturn(Optional.empty());
+        when(validator.getExistingActiveScenario(9L)).thenThrow(new ScenarioNotFoundException(9L));
 
         assertThrows(ScenarioNotFoundException.class, () -> service.getScenarioById(new GetScenarioByIdCommand(9L)));
     }
@@ -84,6 +87,7 @@ class ScenarioApplicationServiceTest {
                 new ScenarioTechnologyId(5L), new DefaultCapacityKw(5.0),
                 new Money(new BigDecimal("7500.00"), "USD"), new DefaultTariff(0.15), new DefaultConsumption(6000.0),
                 new ClimateData(5.5, 3.2, 22.0), true);
+        org.mockito.Mockito.doNothing().when(validator).ensureActiveTechnologyExists(5L);
         when(repository.save(any(Scenario.class))).thenReturn(saved);
         when(dtoMapper.toResponse(saved)).thenReturn(new ScenarioResponseDTO(
                 1L, "Residential Solar", null, 5L, 5.0,
@@ -109,7 +113,8 @@ class ScenarioApplicationServiceTest {
                 new ScenarioTechnologyId(6L), new DefaultCapacityKw(6.0),
                 new Money(new BigDecimal("8000.00"), "USD"), new DefaultTariff(0.20), new DefaultConsumption(6500.0),
                 new ClimateData(6.0, 4.0, 21.0));
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(validator.getExistingActiveScenario(1L)).thenReturn(existing);
+        org.mockito.Mockito.doNothing().when(validator).ensureActiveTechnologyExists(6L);
         when(repository.save(any(Scenario.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(dtoMapper.toResponse(any(Scenario.class))).thenAnswer(invocation -> {
             Scenario scenario = invocation.getArgument(0);
