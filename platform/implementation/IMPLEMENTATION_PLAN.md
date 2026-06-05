@@ -309,12 +309,12 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - `DELETE /technologies/{id}` → llamar `deactivate()` + HTTP 204 (soft delete, `is_active=false`)
     - _Requirements: 5.4, 5.5, 5.6_
 
-  - [ ] 3.7 Implementar `Scenario` aggregate (domain layer)
+  - [x ] 3.7 Implementar `Scenario` aggregate (domain layer)
     - `Scenario` entity: id, name, description, technologyId, defaultCapacityKw, defaultInvestment (Money), defaultTariff, defaultConsumption, climateProfile (ClimateData), isActive
     - Sin anotaciones Spring
     - _Requirements: 8.1, 8.2_
 
-  - [ ] 3.8 Implementar `ScenarioRepository` port + JPA adapter
+  - [ x] 3.8 Implementar `ScenarioRepository` port + JPA adapter
     - Port: `save(Scenario)`, `findById(Long)`, `findAllActive()`
     - `ScenarioEntity` con `climate_profile` como `@Column(columnDefinition="JSON")` mapeado a `ClimateData` via `@Convert`
     - _Requirements: 8.1, 8.2_
