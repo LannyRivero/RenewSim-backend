@@ -51,7 +51,7 @@ public class ScenarioController {
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
     @Operation(summary = "List active scenarios", description = "Returns all active predefined scenarios", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Scenarios retrieved successfully", content = @Content(schema = @Schema(implementation = ScenarioResponseDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Scenarios retrieved successfully", content = @Content(schema = @Schema(implementation = OperationResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content)
     })
     public ResponseEntity<OperationResponse<List<ScenarioResponseDTO>>> getAll() {
@@ -63,7 +63,7 @@ public class ScenarioController {
     @PreAuthorize("hasAuthority('SCOPE_user:read') or hasAnyRole('USER','ADMIN')")
     @Operation(summary = "Get scenario by ID", description = "Returns the detail of a predefined scenario", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Scenario found", content = @Content(schema = @Schema(implementation = ScenarioResponseDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Scenario found", content = @Content(schema = @Schema(implementation = OperationResponse.class))),
             @ApiResponse(responseCode = "404", description = "Scenario not found", content = @Content)
     })
     public ResponseEntity<OperationResponse<ScenarioResponseDTO>> getById(
@@ -76,7 +76,7 @@ public class ScenarioController {
     @PreAuthorize("hasAuthority('SCOPE_admin:write') or hasRole('ADMIN')")
     @Operation(summary = "Create scenario", description = "Creates a new predefined scenario", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Scenario created successfully", content = @Content(schema = @Schema(implementation = ScenarioResponseDTO.class))),
+            @ApiResponse(responseCode = "201", description = "Scenario created successfully", content = @Content(schema = @Schema(implementation = OperationResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
             @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content)
     })
@@ -89,7 +89,7 @@ public class ScenarioController {
     @PreAuthorize("hasAuthority('SCOPE_admin:write') or hasRole('ADMIN')")
     @Operation(summary = "Update scenario", description = "Updates an existing predefined scenario", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Scenario updated successfully", content = @Content(schema = @Schema(implementation = ScenarioResponseDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Scenario updated successfully", content = @Content(schema = @Schema(implementation = OperationResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
             @ApiResponse(responseCode = "404", description = "Scenario not found", content = @Content)
     })
