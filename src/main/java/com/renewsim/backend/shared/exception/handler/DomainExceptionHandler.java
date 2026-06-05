@@ -1,6 +1,7 @@
 package com.renewsim.backend.shared.exception.handler;
 
 import com.renewsim.backend.role_service.domain.exception.LastAdminRemovalException;
+import com.renewsim.backend.scenario_service.domain.exception.ScenarioNotFoundException;
 import com.renewsim.backend.shared.dto.ErrorResponse;
 import com.renewsim.backend.shared.exception.*;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
@@ -26,6 +27,7 @@ public class DomainExceptionHandler extends BaseExceptionHandler {
             EntityNotFoundException.class,
             UserNotFoundException.class,
             RoleNotFoundException.class,
+            ScenarioNotFoundException.class,
             TechnologyNotFoundException.class,
             SimulationNotFoundException.class,
             ResourceNotFoundException.class
