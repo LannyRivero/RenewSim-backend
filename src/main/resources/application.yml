@@ -150,7 +150,12 @@ app:
 
 simulation:
   climate:
-    provider: dummy
+    provider: ${SIMULATION_CLIMATE_PROVIDER:openweathermap}
+
+services:
+  weather:
+    url: ${OPENWEATHER_BASE_URL:https://api.openweathermap.org}
+    key: ${OPENWEATHER_API_KEY:dummy-key}
 
 # =============================
 # SERVICE URLS (base - override en perfiles)
