@@ -4,9 +4,6 @@ import java.time.LocalDateTime;
 
 public record SimulationCreationResultDTO(
         Long id,
-        String location,
-        String energyType,
-        double projectSize,
-        double budget,
+        String name,
         LocalDateTime createdAt) {
 }
