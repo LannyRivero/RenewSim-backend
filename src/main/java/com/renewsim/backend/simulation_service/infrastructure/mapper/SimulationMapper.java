@@ -6,6 +6,7 @@ import com.renewsim.backend.simulation_service.infrastructure.persistence.entity
 import org.mapstruct.*;
 
 import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * SimulationMapper
@@ -21,6 +22,8 @@ import java.util.List;
  */
 @Mapper(componentModel = "spring", implementationName = "SimulationMapperImpl", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface SimulationMapper {
+
+    ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     // ============================================================
     // ENTITY → DOMAIN (manual)
@@ -48,13 +51,16 @@ public interface SimulationMapper {
 
         return new Simulation(
                 entity.getId(),
+                firstNonBlank(entity.getName(), "Simulation " + entity.getId()),
                 resolvedLocation,
+                firstNonNull(entity.getLocationLat(), 0.0),
+                firstNonNull(entity.getLocationLng(), 0.0),
                 parseEnergyType(entity.getEnergyType()),
                 new ProjectSize(resolvedProjectSize),
                 new Budget(resolvedBudget),
                 new EnergyOutput(resolvedEstimatedEnergy),
                 new CO2Reduction(entity.getCo2Reduction()),
-                null,
+                parseClimateData(entity.getClimateData()),
                 resolvedTechnologyIds,
                 resolvedCreatedBy,
                 entity.getCreatedAt());
@@ -64,12 +70,16 @@ public interface SimulationMapper {
     // DOMAIN → ENTITY (MapStruct)
     // ============================================================
     @Mapping(target = "location", expression = "java(domain.location())")
+    @Mapping(target = "name", expression = "java(domain.name())")
     @Mapping(target = "energyType", expression = "java(domain.energyType().name())")
+    @Mapping(target = "locationLat", expression = "java(domain.latitude())")
+    @Mapping(target = "locationLng", expression = "java(domain.longitude())")
     @Mapping(target = "projectSize", expression = "java(domain.projectSize().value())")
     @Mapping(target = "budget", expression = "java(domain.budget().value())")
 
     @Mapping(target = "estimatedEnergy", expression = "java(domain.energyOutput().kwhPerYear())")
     @Mapping(target = "co2Reduction", expression = "java(domain.co2Reduction().tonsPerYear())")
+    @Mapping(target = "climateData", expression = "java(writeClimateData(domain.climateData()))")
     @Mapping(target = "technologyIds", expression = "java(domain.technologyIds() != null ? new java.util.ArrayList<>(domain.technologyIds()) : new java.util.ArrayList<>())")
     @Mapping(target = "createdAt", expression = "java(domain.createdAt())")
     @Mapping(target = "createdBy", expression = "java(domain.createdBy())")
@@ -130,6 +140,32 @@ public interface SimulationMapper {
             return fallback;
         }
         return defaultValue;
+    }
+
+    default double firstNonNull(Double primary, double defaultValue) {
+        return primary != null ? primary : defaultValue;
+    }
+
+    default ClimateData parseClimateData(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return OBJECT_MAPPER.readValue(raw, ClimateData.class);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Cannot parse climate_data JSON", ex);
+        }
+    }
+
+    default String writeClimateData(ClimateData climateData) {
+        if (climateData == null) {
+            return null;
+        }
+        try {
+            return OBJECT_MAPPER.writeValueAsString(climateData);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Cannot write climate_data JSON", ex);
+        }
     }
 
     List<Simulation> toDomainList(List<SimulationEntity> entities);

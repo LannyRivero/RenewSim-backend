@@ -7,6 +7,7 @@ public enum EnergyType {
     SOLAR,
     WIND,
     HYDRO,
+    HYBRID,
     GEOTHERMAL,
     BIOMASS;
 
