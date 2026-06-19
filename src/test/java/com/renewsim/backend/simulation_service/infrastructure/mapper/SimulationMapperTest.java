@@ -44,6 +44,7 @@ class SimulationMapperTest {
 
         Simulation result = mapper.toDomain(entity);
 
+        assertThat(result.name()).isEqualTo("Simulation 10");
         assertThat(result.location()).isEqualTo("Santiago");
         assertThat(result.projectSize().value()).isEqualTo(120.0);
         assertThat(result.budget().value()).isEqualTo(50000.0);
@@ -70,6 +71,7 @@ class SimulationMapperTest {
 
         Simulation result = mapper.toDomain(entity);
 
+        assertThat(result.name()).isEqualTo("Simulation 11");
         assertThat(result.location()).isEqualTo("Legacy Location");
         assertThat(result.projectSize().value()).isEqualTo(75.0);
         assertThat(result.budget().value()).isEqualTo(30000.0);
@@ -83,7 +85,10 @@ class SimulationMapperTest {
     void toEntityWritesBaselineContractFields() {
         Simulation domain = new Simulation(
                 12L,
+                "Hydro Mendoza",
                 "Mendoza",
+                -32.8895,
+                -68.8458,
                 EnergyType.HYDRO,
                 new ProjectSize(42.0),
                 new Budget(70000.0),
@@ -96,7 +101,11 @@ class SimulationMapperTest {
 
         SimulationEntity entity = mapper.toEntity(domain);
 
+        assertThat(entity.getId()).isEqualTo(12L);
+        assertThat(entity.getName()).isEqualTo("Hydro Mendoza");
         assertThat(entity.getLocation()).isEqualTo("Mendoza");
+        assertThat(entity.getLocationLat()).isEqualTo(-32.8895);
+        assertThat(entity.getLocationLng()).isEqualTo(-68.8458);
         assertThat(entity.getEnergyType()).isEqualTo("HYDRO");
         assertThat(entity.getProjectSize()).isEqualTo(42.0);
         assertThat(entity.getBudget()).isEqualTo(70000.0);
