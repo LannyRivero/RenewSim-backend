@@ -25,11 +25,47 @@ public interface SimulationDtoMapper {
     // ============================================================
     // DOMAIN → RESULT DTO
     // ============================================================
-    SimulationCreationResultDTO toCreationResult(Simulation domain);
+    default SimulationCreationResultDTO toCreationResult(Simulation domain) {
+        if (domain == null) {
+            return null;
+        }
+        return new SimulationCreationResultDTO(
+                domain.id(),
+                domain.name(),
+                domain.createdAt());
+    }
 
-    SimulationUpdateResultDTO toUpdateResult(Simulation domain);
+    default SimulationUpdateResultDTO toUpdateResult(Simulation domain) {
+        if (domain == null) {
+            return null;
+        }
+        return new SimulationUpdateResultDTO(
+                domain.id(),
+                domain.location(),
+                map(domain.energyType()),
+                map(domain.projectSize()),
+                map(domain.budget()),
+                map(domain.energyOutput()),
+                map(domain.co2Reduction()),
+                domain.createdAt());
+    }
 
-    SimulationQueryResultDTO toQueryResult(Simulation domain);
+    default SimulationQueryResultDTO toQueryResult(Simulation domain) {
+        if (domain == null) {
+            return null;
+        }
+        return new SimulationQueryResultDTO(
+                domain.id(),
+                domain.location(),
+                map(domain.energyType()),
+                map(domain.projectSize()),
+                map(domain.budget()),
+                map(domain.energyOutput()),
+                map(domain.co2Reduction()),
+                domain.createdAt(),
+                domain.technologyIds() == null ? java.util.List.of() : domain.technologyIds().stream().map(String::valueOf).toList(),
+                domain.createdBy());
+    }
 
     // ============================================================
     // VALUE OBJECT MAPPERS
