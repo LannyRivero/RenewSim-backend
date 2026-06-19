@@ -4,10 +4,15 @@ import java.time.LocalDateTime;
 
 public record SimulationHistoryResultDTO(
         Long id,
+        String name,
         String location,
+        String country,
+        double latitude,
+        double longitude,
         String energyType,
+        double installedCapacity,
         double energyGenerated,
-        double estimatedSavings,
-        Double roiYears,
+        double roi,
+        String status,
         LocalDateTime createdAt
 ) {}
