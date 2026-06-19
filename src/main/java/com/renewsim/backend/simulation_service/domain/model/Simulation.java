@@ -16,7 +16,10 @@ import com.renewsim.backend.simulation_service.domain.model.vo.*;
 public final class Simulation {
 
     private final Long id;
+    private final String name;
     private final String location;
+    private final double latitude;
+    private final double longitude;
     private final EnergyType energyType;
     private final ProjectSize projectSize;
     private final Budget budget;
@@ -30,7 +33,10 @@ public final class Simulation {
 
     public Simulation(
             Long id,
+            String name,
             String location,
+            double latitude,
+            double longitude,
             EnergyType energyType,
             ProjectSize projectSize,
             Budget budget,
@@ -41,7 +47,10 @@ public final class Simulation {
             String createdBy,
             LocalDateTime createdAt) {
         this.id = id;
+        this.name = name;
         this.location = location;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.energyType = energyType;
         this.projectSize = projectSize;
         this.budget = budget;
@@ -62,8 +71,20 @@ public final class Simulation {
         return id;
     }
 
+    public String name() {
+        return name;
+    }
+
     public String location() {
         return location;
+    }
+
+    public double latitude() {
+        return latitude;
+    }
+
+    public double longitude() {
+        return longitude;
     }
 
     public EnergyType energyType() {
@@ -132,7 +153,10 @@ public final class Simulation {
             CO2Reduction newCo2Reduction) {
         return new Simulation(
                 this.id,
+                this.name,
                 this.location,
+                this.latitude,
+                this.longitude,
                 this.energyType,
                 this.projectSize,
                 this.budget,
