@@ -6,7 +6,10 @@ import com.renewsim.backend.simulation_service.domain.model.vo.EnergyType;
 
 public record UpdateSimulationCommand(
         Long id,
+        String name,
         String location,
+        double latitude,
+        double longitude,
         EnergyType energyType,
         double projectSize,
         double budget,
