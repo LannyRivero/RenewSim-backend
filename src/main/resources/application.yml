@@ -156,6 +156,8 @@ services:
   weather:
     url: ${OPENWEATHER_BASE_URL:https://api.openweathermap.org}
     key: ${OPENWEATHER_API_KEY:dummy-key}
+    connect-timeout: ${OPENWEATHER_CONNECT_TIMEOUT:2s}
+    read-timeout: ${OPENWEATHER_READ_TIMEOUT:3s}
 
 # =============================
 # SERVICE URLS (base - override en perfiles)
