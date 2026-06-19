@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.command;
+package com.renewsim.backend.simulation_service.application.createSimulation;
 
 import java.util.List;
 import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;

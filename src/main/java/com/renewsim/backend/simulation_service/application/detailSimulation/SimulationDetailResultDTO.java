@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.result;
+package com.renewsim.backend.simulation_service.application.detailSimulation;
 
 import java.time.LocalDateTime;
 import java.util.List;

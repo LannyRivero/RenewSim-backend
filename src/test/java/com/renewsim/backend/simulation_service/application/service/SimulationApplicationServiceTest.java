@@ -1,13 +1,13 @@
 package com.renewsim.backend.simulation_service.application.service;
 
-import com.renewsim.backend.simulation_service.application.command.CreateSimulationCommand;
 import com.renewsim.backend.simulation_service.application.command.GetSimulationByIdCommand;
-import com.renewsim.backend.simulation_service.application.command.UpdateSimulationCommand;
+import com.renewsim.backend.simulation_service.application.createSimulation.CreateSimulationCommand;
+import com.renewsim.backend.simulation_service.application.detailSimulation.SimulationDetailResultDTO;
 import com.renewsim.backend.simulation_service.application.port.out.ClimateDataProviderPort;
 import com.renewsim.backend.simulation_service.application.port.out.SimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.application.port.out.TechnologyRecommendationPort;
-import com.renewsim.backend.simulation_service.application.result.SimulationDetailResultDTO;
-import com.renewsim.backend.simulation_service.application.result.SimulationUpdateResultDTO;
+import com.renewsim.backend.simulation_service.application.updateSimulation.SimulationUpdateResultDTO;
+import com.renewsim.backend.simulation_service.application.updateSimulation.UpdateSimulationCommand;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.vo.Budget;
 import com.renewsim.backend.simulation_service.domain.model.vo.CO2Reduction;

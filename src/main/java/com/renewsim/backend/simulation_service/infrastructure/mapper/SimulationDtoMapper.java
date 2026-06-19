@@ -1,6 +1,8 @@
 package com.renewsim.backend.simulation_service.infrastructure.mapper;
 
+import com.renewsim.backend.simulation_service.application.createSimulation.SimulationCreationResultDTO;
 import com.renewsim.backend.simulation_service.application.result.*;
+import com.renewsim.backend.simulation_service.application.updateSimulation.SimulationUpdateResultDTO;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.vo.*;
 import org.mapstruct.*;

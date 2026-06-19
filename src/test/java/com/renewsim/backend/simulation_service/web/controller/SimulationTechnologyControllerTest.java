@@ -2,9 +2,9 @@ package com.renewsim.backend.simulation_service.web.controller;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.simulation_service.application.command.GetSimulationByIdCommand;
+import com.renewsim.backend.simulation_service.application.detailSimulation.SimulationDetailResultDTO;
 import com.renewsim.backend.simulation_service.application.port.in.GetSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.port.out.TechnologyClientPort;
-import com.renewsim.backend.simulation_service.application.result.SimulationDetailResultDTO;
 import com.renewsim.backend.simulation_service.web.dto.TechnologyResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

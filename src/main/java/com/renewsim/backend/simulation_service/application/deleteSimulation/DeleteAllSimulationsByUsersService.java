@@ -1,10 +1,8 @@
-package com.renewsim.backend.simulation_service.application.service;
+package com.renewsim.backend.simulation_service.application.deleteSimulation;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.renewsim.backend.simulation_service.application.command.DeleteAllSimulationsByUserCommand;
-import com.renewsim.backend.simulation_service.application.port.in.DeleteAllSimulationsByUserUseCase;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationRepositoryAdapter;
 
 import lombok.RequiredArgsConstructor;

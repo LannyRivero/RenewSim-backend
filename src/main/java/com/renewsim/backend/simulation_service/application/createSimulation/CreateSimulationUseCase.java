@@ -1,7 +1,5 @@
-package com.renewsim.backend.simulation_service.application.port.in;
+package com.renewsim.backend.simulation_service.application.createSimulation;
 
-import com.renewsim.backend.simulation_service.application.command.CreateSimulationCommand;
-import com.renewsim.backend.simulation_service.application.result.SimulationCreationResultDTO;
 import com.renewsim.backend.simulation_service.application.result.SimulationRecommendationResultDTO;
 
 public interface CreateSimulationUseCase {

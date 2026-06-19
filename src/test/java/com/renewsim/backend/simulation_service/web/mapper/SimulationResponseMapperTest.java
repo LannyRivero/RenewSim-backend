@@ -1,8 +1,8 @@
 package com.renewsim.backend.simulation_service.web.mapper;
 
-import com.renewsim.backend.simulation_service.application.result.SimulationCreationResultDTO;
-import com.renewsim.backend.simulation_service.application.result.SimulationDetailResultDTO;
-import com.renewsim.backend.simulation_service.application.result.SimulationHistoryResultDTO;
+import com.renewsim.backend.simulation_service.application.createSimulation.SimulationCreationResultDTO;
+import com.renewsim.backend.simulation_service.application.detailSimulation.SimulationDetailResultDTO;
+import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryResultDTO;
 import com.renewsim.backend.simulation_service.application.service.SimulationCalculator;
 import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
 import org.junit.jupiter.api.DisplayName;

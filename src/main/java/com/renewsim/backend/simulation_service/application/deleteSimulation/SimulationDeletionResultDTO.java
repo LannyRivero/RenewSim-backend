@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.result;
+package com.renewsim.backend.simulation_service.application.deleteSimulation;
 
 /**
  * Result DTO returned after deleting a Simulation.
