@@ -10,7 +10,10 @@ public final class SimulationFactory {
     private SimulationFactory() {}
 
     public static Simulation create(
+        String name,
         String location,
+        double latitude,
+        double longitude,
         EnergyType energyType,
         double projectSize,
         double budget,
@@ -20,7 +23,10 @@ public final class SimulationFactory {
     ) {
         return new Simulation(
             null,
+            name,
             location,
+            latitude,
+            longitude,
             energyType,
             new ProjectSize(projectSize),
             new Budget(budget),
