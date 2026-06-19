@@ -5,7 +5,7 @@ public record SimulationFinancialsResponseDTO(
     double opex,
     double revenue,
     double roi,
-    double paybackYears,
+    Double paybackYears,
     double npv,
     double irr
 ) {}
