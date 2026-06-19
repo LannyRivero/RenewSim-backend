@@ -22,9 +22,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.ProjectSize;
 import com.renewsim.backend.simulation_service.application.result.SimulationRecommendationResultDTO;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -34,8 +32,7 @@ public class SimulationApplicationService implements
                 UpdateSimulationUseCase,
                 DeleteSimulationUseCase,
                 GetSimulationUseCase,
-                GetUserSimulationHistoryUseCase,
-                GetSimulationDashboardSummaryUseCase {
+                GetUserSimulationHistoryUseCase {
 
         private final SimulationRepositoryPort repository;
         private final SimulationValidator validator;
@@ -134,6 +131,7 @@ public class SimulationApplicationService implements
                 validator.validateBudget(resolvedBudget);
 
                 ClimateData climateData = resolveClimateDataForUpdate(command, existing);
+                List<Long> technologyIds = resolveTechnologyIdsForUpdate(command, existing);
 
                 // Se conserva identidad del aggregate
                 Simulation updated = new Simulation(
@@ -148,7 +146,7 @@ public class SimulationApplicationService implements
                                 existing.energyOutput(),
                                 existing.co2Reduction(),
                                 climateData,
-                                command.technologyIds(),
+                                technologyIds,
                                 existing.createdBy(),
                                 existing.createdAt());
 
@@ -174,12 +172,27 @@ public class SimulationApplicationService implements
                         return command.climateData();
                 }
 
+                if (hasLocationChanged(existing, command)) {
+                        return climateProvider.fetchClimateData(command.latitude(), command.longitude());
+                }
+
                 ClimateData existingClimate = existing.climateData();
                 if (hasMeaningfulClimateData(existingClimate)) {
                         return existingClimate;
                 }
 
                 return climateProvider.fetchClimateData(command.latitude(), command.longitude());
+        }
+
+        private List<Long> resolveTechnologyIdsForUpdate(UpdateSimulationCommand command, Simulation existing) {
+                return command.technologyIds() == null || command.technologyIds().isEmpty()
+                                ? existing.technologyIds()
+                                : command.technologyIds();
+        }
+
+        private boolean hasLocationChanged(Simulation existing, UpdateSimulationCommand command) {
+                return Double.compare(existing.latitude(), command.latitude()) != 0
+                                || Double.compare(existing.longitude(), command.longitude()) != 0;
         }
 
         private boolean hasMeaningfulClimateData(ClimateData climateData) {
@@ -279,73 +292,6 @@ public class SimulationApplicationService implements
                                                         simulation.createdAt());
                                 })
                                 .toList();
-        }
-
-        @Override
-        @Transactional(readOnly = true)
-        public DashboardSummaryResultDTO getDashboardSummary(String username) {
-                List<Simulation> simulations = repository.findAllByCreatedBy(username);
-                if (simulations.isEmpty()) {
-                        return new DashboardSummaryResultDTO(
-                                        new DashboardStatsResultDTO(0, null, null, null),
-                                        List.of(),
-                                        List.of(),
-                                        List.of());
-                }
-
-                double totalEnergyKwh = 0.0;
-                double totalCo2Kg = 0.0;
-                double totalRoi = 0.0;
-                int roiCount = 0;
-
-                Map<String, Double> energyBySource = new HashMap<>();
-
-                for (Simulation simulation : simulations) {
-                        EnergyOutput energy = simulation.energyOutput() != null
-                                        ? simulation.energyOutput()
-                                        : calculator.calculateEnergyOutput(simulation);
-
-                        CO2Reduction co2 = simulation.co2Reduction() != null
-                                        ? simulation.co2Reduction()
-                                        : calculator.calculateCo2Reduction(energy);
-
-                        Simulation completed = simulation.withCalculatedResults(energy, co2);
-
-                        totalEnergyKwh += energy.kwhPerYear();
-                        totalCo2Kg += co2.tonsPerYear() * 1000.0;
-
-                        totalRoi += calculator.calculateRoiPercent(completed);
-                        roiCount++;
-
-                        String sourceLabel = mapEnergySourceLabel(simulation.energyType().name());
-                        energyBySource.merge(sourceLabel, energy.kwhPerYear(), Double::sum);
-                }
-
-                Double averageRoi = roiCount > 0 ? totalRoi / roiCount : null;
-
-                List<DashboardEnergyBySourceResultDTO> energyBySourceResults = energyBySource.entrySet().stream()
-                                .map(entry -> new DashboardEnergyBySourceResultDTO(entry.getKey(), entry.getValue()))
-                                .toList();
-
-                return new DashboardSummaryResultDTO(
-                                new DashboardStatsResultDTO(
-                                                simulations.size(),
-                                                totalEnergyKwh,
-                                                totalCo2Kg,
-                                                averageRoi),
-                                energyBySourceResults,
-                                List.of(),
-                                List.of());
-        }
-
-        private String mapEnergySourceLabel(String energyType) {
-                return switch (energyType) {
-                        case "SOLAR" -> "Solar";
-                        case "WIND" -> "Wind";
-                        case "HYDRO" -> "Hydroelectric";
-                        case "HYBRID" -> "Hybrid";
-                        default -> energyType;
-                };
         }
 
 }
