@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 🌤 Adapter for fetching weather data from OpenWeatherMap API.
+ * Adapter for fetching climate and location data from OpenWeatherMap.
  *
- *  Implements ClimateDataProviderPort.
- * Optional component used when the backend resolves climate data itself.
+ * <p>Implements {@link ClimateDataProviderPort} and is activated only when the
+ * simulation climate provider is configured as {@code openweathermap}.</p>
  */
 @Component
 @ConditionalOnProperty(prefix = "simulation.climate", name = "provider", havingValue = "openweathermap")

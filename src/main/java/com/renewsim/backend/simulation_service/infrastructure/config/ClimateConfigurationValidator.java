@@ -10,6 +10,12 @@ import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Validates climate-provider configuration during application startup.
+ *
+ * <p>Production-like profiles must not boot with unsafe or incomplete
+ * weather-provider settings.</p>
+ */
 @Component
 @RequiredArgsConstructor
 public class ClimateConfigurationValidator {
@@ -21,6 +27,9 @@ public class ClimateConfigurationValidator {
     private final WeatherServiceProperties weatherProperties;
     private final Environment environment;
 
+    /**
+     * Applies startup checks for climate-provider settings.
+     */
     @PostConstruct
     void validate() {
         String provider = normalize(climateProperties.provider());

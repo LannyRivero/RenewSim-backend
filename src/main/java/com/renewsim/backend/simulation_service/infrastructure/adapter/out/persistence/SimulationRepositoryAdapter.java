@@ -14,6 +14,12 @@ import com.renewsim.backend.shared.exception.ConflictException;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Persistence adapter for simulation aggregates backed by Spring Data JPA.
+ *
+ * <p>Also translates low-level duplicate-key violations into business-level
+ * conflict exceptions.</p>
+ */
 @Slf4j
 @Repository
 @RequiredArgsConstructor

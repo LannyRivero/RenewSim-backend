@@ -21,6 +21,13 @@ import com.renewsim.backend.simulation_service.domain.model.vo.EnergyOutput;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Read-only application service that aggregates dashboard metrics for a
+ * user's simulations.
+ *
+ * <p>Keeps dashboard-specific query logic separate from simulation CRUD and
+ * update workflows.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
