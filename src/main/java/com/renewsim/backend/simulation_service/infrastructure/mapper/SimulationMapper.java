@@ -69,6 +69,7 @@ public interface SimulationMapper {
     // ============================================================
     // DOMAIN → ENTITY (MapStruct)
     // ============================================================
+    @Mapping(target = "id", expression = "java(domain.id())")
     @Mapping(target = "location", expression = "java(domain.location())")
     @Mapping(target = "name", expression = "java(domain.name())")
     @Mapping(target = "energyType", expression = "java(domain.energyType().name())")
