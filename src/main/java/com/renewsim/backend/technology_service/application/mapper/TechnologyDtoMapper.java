@@ -4,6 +4,7 @@ import com.renewsim.backend.technology_service.application.result.*;
 import com.renewsim.backend.technology_service.domain.model.Technology;
 import com.renewsim.backend.technology_service.domain.model.vo.*;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 /**
@@ -29,6 +30,7 @@ public interface TechnologyDtoMapper {
 
     TechnologyQueryResultDTO toQueryResult(Technology domain);
 
+    @Mapping(target = "isActive", expression = "java(domain.isActive())")
     TechnologyResponseDTO toResponse(Technology domain);
 
     // ------------------------------------------------------------
