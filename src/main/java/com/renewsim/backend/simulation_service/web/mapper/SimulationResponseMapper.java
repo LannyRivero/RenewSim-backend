@@ -100,7 +100,7 @@ public class SimulationResponseMapper {
     }
 
     private Simulation toSimulation(SimulationDetailResultDTO result) {
-        return new Simulation(
+        return Simulation.reconstitute(
                 result.id(),
                 result.name(),
                 result.location(),

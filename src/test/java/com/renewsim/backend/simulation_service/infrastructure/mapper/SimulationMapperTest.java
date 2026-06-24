@@ -83,7 +83,7 @@ class SimulationMapperTest {
     @Test
     @DisplayName("toEntity should keep writing the baseline contract fields")
     void toEntityWritesBaselineContractFields() {
-        Simulation domain = new Simulation(
+        Simulation domain = Simulation.reconstitute(
                 12L,
                 "Hydro Mendoza",
                 "Mendoza",

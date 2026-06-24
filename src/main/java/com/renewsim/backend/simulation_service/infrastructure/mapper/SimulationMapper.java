@@ -49,7 +49,7 @@ public interface SimulationMapper {
                 ? entity.getTechnologyIds()
                 : new java.util.ArrayList<>();
 
-        return new Simulation(
+        return Simulation.reconstitute(
                 entity.getId(),
                 firstNonBlank(entity.getName(), "Simulation " + entity.getId()),
                 resolvedLocation,

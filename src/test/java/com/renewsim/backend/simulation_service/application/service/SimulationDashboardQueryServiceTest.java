@@ -36,7 +36,7 @@ class SimulationDashboardQueryServiceTest {
     void getDashboardSummaryReturnsEfficiencyAndTargets() {
         SimulationDashboardQueryService service = new SimulationDashboardQueryService(repository, calculator);
 
-        Simulation solar = new Simulation(
+        Simulation solar = Simulation.reconstitute(
                 1L,
                 "Solar One",
                 "Mendoza",
@@ -52,7 +52,7 @@ class SimulationDashboardQueryServiceTest {
                 "alice",
                 LocalDateTime.parse("2026-05-22T12:00:00"));
 
-        Simulation wind = new Simulation(
+        Simulation wind = Simulation.reconstitute(
                 2L,
                 "Wind Two",
                 "Cordoba",

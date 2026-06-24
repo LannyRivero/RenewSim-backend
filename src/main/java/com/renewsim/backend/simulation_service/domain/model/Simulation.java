@@ -4,7 +4,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
+import com.renewsim.backend.shared.domain.vo.Location;
+import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationParameterException;
 import com.renewsim.backend.simulation_service.domain.model.vo.*;
 
 /**
@@ -31,7 +34,58 @@ public final class Simulation {
 
     private final List<Long> technologyIds;
 
-    public Simulation(
+    private Simulation(Builder builder) {
+        validate(builder);
+
+        this.id = builder.id;
+        this.name = builder.name.trim();
+        this.location = builder.location.trim();
+        this.latitude = builder.latitude;
+        this.longitude = builder.longitude;
+        this.energyType = builder.energyType;
+        this.projectSize = builder.projectSize;
+        this.budget = builder.budget;
+        this.energyOutput = builder.energyOutput;
+        this.co2Reduction = builder.co2Reduction;
+        this.climateData = builder.climateData;
+        this.technologyIds = new ArrayList<>(builder.technologyIds);
+        this.createdBy = builder.createdBy.trim();
+        this.createdAt = builder.createdAt != null ? builder.createdAt : LocalDateTime.now();
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static Simulation create(
+            String name,
+            String location,
+            double latitude,
+            double longitude,
+            EnergyType energyType,
+            ProjectSize projectSize,
+            Budget budget,
+            ClimateData climateData,
+            List<Long> technologyIds,
+            String createdBy) {
+        return builder()
+                .name(name)
+                .location(location)
+                .latitude(latitude)
+                .longitude(longitude)
+                .energyType(energyType)
+                .projectSize(projectSize)
+                .budget(budget)
+                .energyOutput(new EnergyOutput(0))
+                .co2Reduction(new CO2Reduction(0))
+                .climateData(climateData)
+                .technologyIds(technologyIds)
+                .createdBy(createdBy)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    public static Simulation reconstitute(
             Long id,
             String name,
             String location,
@@ -46,22 +100,22 @@ public final class Simulation {
             List<Long> technologyIds,
             String createdBy,
             LocalDateTime createdAt) {
-        this.id = id;
-        this.name = name;
-        this.location = location;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.energyType = energyType;
-        this.projectSize = projectSize;
-        this.budget = budget;
-        this.energyOutput = energyOutput;
-        this.co2Reduction = co2Reduction;
-        this.climateData = climateData;
-        this.technologyIds = (technologyIds != null)
-                ? new ArrayList<>(technologyIds)
-                : new ArrayList<>();
-        this.createdBy = createdBy;
-        this.createdAt = (createdAt != null) ? createdAt : LocalDateTime.now();
+        return builder()
+                .id(id)
+                .name(name)
+                .location(location)
+                .latitude(latitude)
+                .longitude(longitude)
+                .energyType(energyType)
+                .projectSize(projectSize)
+                .budget(budget)
+                .energyOutput(energyOutput)
+                .co2Reduction(co2Reduction)
+                .climateData(climateData)
+                .technologyIds(technologyIds)
+                .createdBy(createdBy)
+                .createdAt(createdAt)
+                .build();
     }
 
     // ==========================
@@ -131,17 +185,16 @@ public final class Simulation {
     // ==========================
 
     /**
-     * Assigns technologies to this simulation.
-     * Internal mutation is allowed only for persistence synchronization.
+     * Returns a new aggregate instance with the assigned technologies.
      */
     public Simulation assignTechnologies(List<Long> newTechnologyIds) {
         if (newTechnologyIds == null || newTechnologyIds.isEmpty()) {
             throw new IllegalArgumentException("Technology list cannot be null or empty");
         }
 
-        this.technologyIds.clear();
-        this.technologyIds.addAll(newTechnologyIds);
-        return this;
+        return toBuilder()
+                .technologyIds(newTechnologyIds)
+                .build();
     }
 
     /**
@@ -151,20 +204,108 @@ public final class Simulation {
     public Simulation withCalculatedResults(
             EnergyOutput newEnergyOutput,
             CO2Reduction newCo2Reduction) {
-        return new Simulation(
-                this.id,
-                this.name,
-                this.location,
-                this.latitude,
-                this.longitude,
-                this.energyType,
-                this.projectSize,
-                this.budget,
-                newEnergyOutput,
-                newCo2Reduction,
-                this.climateData,
-                this.technologyIds,
-                this.createdBy,
-                this.createdAt);
+        return toBuilder()
+                .energyOutput(newEnergyOutput)
+                .co2Reduction(newCo2Reduction)
+                .build();
+    }
+
+    public Simulation revise(
+            String name,
+            String location,
+            double latitude,
+            double longitude,
+            EnergyType energyType,
+            ProjectSize projectSize,
+            Budget budget,
+            ClimateData climateData,
+            List<Long> technologyIds) {
+        return toBuilder()
+                .name(name)
+                .location(location)
+                .latitude(latitude)
+                .longitude(longitude)
+                .energyType(energyType)
+                .projectSize(projectSize)
+                .budget(budget)
+                .climateData(climateData)
+                .technologyIds(technologyIds)
+                .build();
+    }
+
+    private Builder toBuilder() {
+        return builder()
+                .id(id)
+                .name(name)
+                .location(location)
+                .latitude(latitude)
+                .longitude(longitude)
+                .energyType(energyType)
+                .projectSize(projectSize)
+                .budget(budget)
+                .energyOutput(energyOutput)
+                .co2Reduction(co2Reduction)
+                .climateData(climateData)
+                .technologyIds(technologyIds)
+                .createdBy(createdBy)
+                .createdAt(createdAt);
+    }
+
+    private static void validate(Builder builder) {
+        if (builder.name == null || builder.name.isBlank()) {
+            throw new InvalidSimulationParameterException("Simulation name cannot be blank");
+        }
+        if (builder.location == null || builder.location.isBlank()) {
+            throw new InvalidSimulationParameterException("Simulation location cannot be blank");
+        }
+        if (builder.createdBy == null || builder.createdBy.isBlank()) {
+            throw new InvalidSimulationParameterException("Simulation owner cannot be blank");
+        }
+
+        new Location(builder.latitude, builder.longitude);
+        Objects.requireNonNull(builder.energyType, "energyType must not be null");
+        Objects.requireNonNull(builder.projectSize, "projectSize must not be null");
+        Objects.requireNonNull(builder.budget, "budget must not be null");
+        Objects.requireNonNull(builder.energyOutput, "energyOutput must not be null");
+        Objects.requireNonNull(builder.co2Reduction, "co2Reduction must not be null");
+    }
+
+    public static final class Builder {
+        private Long id;
+        private String name;
+        private String location;
+        private double latitude;
+        private double longitude;
+        private EnergyType energyType;
+        private ProjectSize projectSize;
+        private Budget budget;
+        private EnergyOutput energyOutput;
+        private CO2Reduction co2Reduction;
+        private ClimateData climateData;
+        private List<Long> technologyIds = List.of();
+        private String createdBy;
+        private LocalDateTime createdAt;
+
+        public Builder id(Long id) { this.id = id; return this; }
+        public Builder name(String name) { this.name = name; return this; }
+        public Builder location(String location) { this.location = location; return this; }
+        public Builder latitude(double latitude) { this.latitude = latitude; return this; }
+        public Builder longitude(double longitude) { this.longitude = longitude; return this; }
+        public Builder energyType(EnergyType energyType) { this.energyType = energyType; return this; }
+        public Builder projectSize(ProjectSize projectSize) { this.projectSize = projectSize; return this; }
+        public Builder budget(Budget budget) { this.budget = budget; return this; }
+        public Builder energyOutput(EnergyOutput energyOutput) { this.energyOutput = energyOutput; return this; }
+        public Builder co2Reduction(CO2Reduction co2Reduction) { this.co2Reduction = co2Reduction; return this; }
+        public Builder climateData(ClimateData climateData) { this.climateData = climateData; return this; }
+        public Builder technologyIds(List<Long> technologyIds) {
+            this.technologyIds = technologyIds == null ? List.of() : List.copyOf(technologyIds);
+            return this;
+        }
+        public Builder createdBy(String createdBy) { this.createdBy = createdBy; return this; }
+        public Builder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
+
+        public Simulation build() {
+            return new Simulation(this);
+        }
     }
 }

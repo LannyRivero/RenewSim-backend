@@ -28,7 +28,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -39,8 +38,6 @@ class SimulationApplicationServiceTest {
 
     @Mock
     private SimulationRepositoryPort repository;
-    @Mock
-    private SimulationValidator validator;
     @Mock
     private SimulationCalculator calculator;
     @Mock
@@ -53,7 +50,6 @@ class SimulationApplicationServiceTest {
     void createSimulationFetchesClimateFromProviderWhenCommandClimateIsNull() {
         SimulationApplicationService service = new SimulationApplicationService(
                 repository,
-                validator,
                 calculator,
                 climateProvider,
                 recommender);
@@ -72,14 +68,12 @@ class SimulationApplicationServiceTest {
                 "alice");
 
         ClimateData providedByPort = new ClimateData(12, 6, 2);
-        doNothing().when(validator).validateProjectSize(100);
         when(calculator.estimateCapex(EnergyType.SOLAR, 100)).thenReturn(90000.0);
-        doNothing().when(validator).validateBudget(90000);
         when(climateProvider.fetchClimateData(-32.8895, -68.8458)).thenReturn(providedByPort);
         when(calculator.calculateEnergyOutput(any(Simulation.class))).thenReturn(new EnergyOutput(120000));
         when(calculator.calculateCo2Reduction(any(EnergyOutput.class))).thenReturn(new CO2Reduction(84));
 
-        Simulation afterCreateSave = new Simulation(
+        Simulation afterCreateSave = Simulation.reconstitute(
                 99L,
                 "Test Solar",
                 "Mendoza",
@@ -95,7 +89,7 @@ class SimulationApplicationServiceTest {
                 "alice",
                 LocalDateTime.parse("2026-05-22T09:00:00"));
 
-        Simulation afterRecommendationSave = new Simulation(
+        Simulation afterRecommendationSave = Simulation.reconstitute(
                 99L,
                 "Test Solar",
                 "Mendoza",
@@ -128,7 +122,6 @@ class SimulationApplicationServiceTest {
     void createSimulationAssignsRecommendationsWhenCommandHasNoTechnologies() {
         SimulationApplicationService service = new SimulationApplicationService(
                 repository,
-                validator,
                 calculator,
                 climateProvider,
                 recommender);
@@ -147,12 +140,10 @@ class SimulationApplicationServiceTest {
                 List.of(),
                 "alice");
 
-        doNothing().when(validator).validateProjectSize(100);
-        doNothing().when(validator).validateBudget(10000);
         when(calculator.calculateEnergyOutput(any(Simulation.class))).thenReturn(new EnergyOutput(120000));
         when(calculator.calculateCo2Reduction(any(EnergyOutput.class))).thenReturn(new CO2Reduction(84));
 
-        Simulation afterCreateSave = new Simulation(
+        Simulation afterCreateSave = Simulation.reconstitute(
                 99L,
                 "Test Solar",
                 "Mendoza",
@@ -168,7 +159,7 @@ class SimulationApplicationServiceTest {
                 "alice",
                 LocalDateTime.parse("2026-05-22T09:00:00"));
 
-        Simulation afterRecommendationSave = new Simulation(
+        Simulation afterRecommendationSave = Simulation.reconstitute(
                 99L,
                 "Test Solar",
                 "Mendoza",
@@ -200,7 +191,6 @@ class SimulationApplicationServiceTest {
     void createSimulationKeepsExplicitCommandTechnologies() {
         SimulationApplicationService service = new SimulationApplicationService(
                 repository,
-                validator,
                 calculator,
                 climateProvider,
                 recommender);
@@ -219,12 +209,10 @@ class SimulationApplicationServiceTest {
                 List.of(9L, 10L),
                 "alice");
 
-        doNothing().when(validator).validateProjectSize(100);
-        doNothing().when(validator).validateBudget(10000);
         when(calculator.calculateEnergyOutput(any(Simulation.class))).thenReturn(new EnergyOutput(120000));
         when(calculator.calculateCo2Reduction(any(EnergyOutput.class))).thenReturn(new CO2Reduction(84));
 
-        Simulation saved = new Simulation(
+        Simulation saved = Simulation.reconstitute(
                 100L,
                 "Test Solar",
                 "Mendoza",
@@ -258,12 +246,11 @@ class SimulationApplicationServiceTest {
     void getSimulationByIdIncludesTechnologyIdsInDetailResult() {
         SimulationApplicationService service = new SimulationApplicationService(
                 repository,
-                validator,
                 calculator,
                 climateProvider,
                 recommender);
 
-        Simulation simulation = new Simulation(
+        Simulation simulation = Simulation.reconstitute(
                 77L,
                 "Wind Demo",
                 "Cordoba",
@@ -290,12 +277,11 @@ class SimulationApplicationServiceTest {
     void updateSimulationFetchesClimateWhenCommandAndExistingClimateAreMissing() {
         SimulationApplicationService service = new SimulationApplicationService(
                 repository,
-                validator,
                 calculator,
                 climateProvider,
                 recommender);
 
-        Simulation existing = new Simulation(
+        Simulation existing = Simulation.reconstitute(
                 10L,
                 "Solar Rosario",
                 "Rosario",
@@ -343,13 +329,12 @@ class SimulationApplicationServiceTest {
     void updateSimulationPreservesExistingTechnologyIdsWhenMissingInCommand() {
         SimulationApplicationService service = new SimulationApplicationService(
                 repository,
-                validator,
                 calculator,
                 climateProvider,
                 recommender);
 
         ClimateData existingClimate = new ClimateData(10, 3, 1);
-        Simulation existing = new Simulation(
+        Simulation existing = Simulation.reconstitute(
                 10L,
                 "Solar Rosario",
                 "Rosario",
@@ -396,13 +381,12 @@ class SimulationApplicationServiceTest {
     void updateSimulationRefreshesClimateWhenCoordinatesChange() {
         SimulationApplicationService service = new SimulationApplicationService(
                 repository,
-                validator,
                 calculator,
                 climateProvider,
                 recommender);
 
         ClimateData existingClimate = new ClimateData(10, 3, 1);
-        Simulation existing = new Simulation(
+        Simulation existing = Simulation.reconstitute(
                 10L,
                 "Solar Rosario",
                 "Rosario",

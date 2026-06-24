@@ -37,7 +37,7 @@ class SimulationRepositoryAdapterTest {
     @DisplayName("save translates duplicate simulation constraint into ConflictException")
     void saveDuplicateSimulation() {
         SimulationRepositoryAdapter adapter = new SimulationRepositoryAdapter(repository, mapper);
-        Simulation simulation = new Simulation(
+        Simulation simulation = Simulation.reconstitute(
                 null,
                 "Solar Demo",
                 "Mendoza",
