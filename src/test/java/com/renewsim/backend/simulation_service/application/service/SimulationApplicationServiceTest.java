@@ -1,13 +1,13 @@
 package com.renewsim.backend.simulation_service.application.service;
 
-import com.renewsim.backend.simulation_service.application.command.CreateSimulationCommand;
 import com.renewsim.backend.simulation_service.application.command.GetSimulationByIdCommand;
-import com.renewsim.backend.simulation_service.application.command.UpdateSimulationCommand;
+import com.renewsim.backend.simulation_service.application.createSimulation.CreateSimulationCommand;
+import com.renewsim.backend.simulation_service.application.detailSimulation.SimulationDetailResultDTO;
 import com.renewsim.backend.simulation_service.application.port.out.ClimateDataProviderPort;
 import com.renewsim.backend.simulation_service.application.port.out.SimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.application.port.out.TechnologyRecommendationPort;
-import com.renewsim.backend.simulation_service.application.result.SimulationDetailResultDTO;
-import com.renewsim.backend.simulation_service.application.result.SimulationUpdateResultDTO;
+import com.renewsim.backend.simulation_service.application.updateSimulation.SimulationUpdateResultDTO;
+import com.renewsim.backend.simulation_service.application.updateSimulation.UpdateSimulationCommand;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.vo.Budget;
 import com.renewsim.backend.simulation_service.domain.model.vo.CO2Reduction;
@@ -57,29 +57,37 @@ class SimulationApplicationServiceTest {
                 calculator,
                 climateProvider,
                 recommender);
+        when(repository.findDuplicate("alice", "Test Solar", "SOLAR", -32.8895, -68.8458)).thenReturn(Optional.empty());
 
         CreateSimulationCommand command = new CreateSimulationCommand(
+                "Test Solar",
                 "Mendoza",
+                -32.8895,
+                -68.8458,
                 EnergyType.SOLAR,
                 100,
-                10000,
+                0,
                 null,
                 List.of(),
                 "alice");
 
         ClimateData providedByPort = new ClimateData(12, 6, 2);
         doNothing().when(validator).validateProjectSize(100);
-        doNothing().when(validator).validateBudget(10000);
-        when(climateProvider.fetchClimateData("Mendoza")).thenReturn(providedByPort);
+        when(calculator.estimateCapex(EnergyType.SOLAR, 100)).thenReturn(90000.0);
+        doNothing().when(validator).validateBudget(90000);
+        when(climateProvider.fetchClimateData(-32.8895, -68.8458)).thenReturn(providedByPort);
         when(calculator.calculateEnergyOutput(any(Simulation.class))).thenReturn(new EnergyOutput(120000));
         when(calculator.calculateCo2Reduction(any(EnergyOutput.class))).thenReturn(new CO2Reduction(84));
 
         Simulation afterCreateSave = new Simulation(
                 99L,
+                "Test Solar",
                 "Mendoza",
+                -32.8895,
+                -68.8458,
                 EnergyType.SOLAR,
                 new ProjectSize(100),
-                new Budget(10000),
+                new Budget(90000),
                 new EnergyOutput(120000),
                 new CO2Reduction(84),
                 providedByPort,
@@ -89,10 +97,13 @@ class SimulationApplicationServiceTest {
 
         Simulation afterRecommendationSave = new Simulation(
                 99L,
+                "Test Solar",
                 "Mendoza",
+                -32.8895,
+                -68.8458,
                 EnergyType.SOLAR,
                 new ProjectSize(100),
-                new Budget(10000),
+                new Budget(90000),
                 new EnergyOutput(120000),
                 new CO2Reduction(84),
                 providedByPort,
@@ -105,7 +116,7 @@ class SimulationApplicationServiceTest {
 
         service.createSimulation(command);
 
-        verify(climateProvider).fetchClimateData("Mendoza");
+        verify(climateProvider).fetchClimateData(-32.8895, -68.8458);
 
         ArgumentCaptor<Simulation> saveCaptor = ArgumentCaptor.forClass(Simulation.class);
         verify(repository, times(2)).save(saveCaptor.capture());
@@ -121,10 +132,14 @@ class SimulationApplicationServiceTest {
                 calculator,
                 climateProvider,
                 recommender);
+        when(repository.findDuplicate("alice", "Test Solar", "SOLAR", -32.8895, -68.8458)).thenReturn(Optional.empty());
 
         ClimateData climateData = new ClimateData(5, 7, 1);
         CreateSimulationCommand command = new CreateSimulationCommand(
+                "Test Solar",
                 "Mendoza",
+                -32.8895,
+                -68.8458,
                 EnergyType.SOLAR,
                 100,
                 10000,
@@ -139,7 +154,10 @@ class SimulationApplicationServiceTest {
 
         Simulation afterCreateSave = new Simulation(
                 99L,
+                "Test Solar",
                 "Mendoza",
+                -32.8895,
+                -68.8458,
                 EnergyType.SOLAR,
                 new ProjectSize(100),
                 new Budget(10000),
@@ -152,7 +170,10 @@ class SimulationApplicationServiceTest {
 
         Simulation afterRecommendationSave = new Simulation(
                 99L,
+                "Test Solar",
                 "Mendoza",
+                -32.8895,
+                -68.8458,
                 EnergyType.SOLAR,
                 new ProjectSize(100),
                 new Budget(10000),
@@ -183,10 +204,14 @@ class SimulationApplicationServiceTest {
                 calculator,
                 climateProvider,
                 recommender);
+        when(repository.findDuplicate("alice", "Test Solar", "SOLAR", -32.8895, -68.8458)).thenReturn(Optional.empty());
 
         ClimateData climateData = new ClimateData(5, 7, 1);
         CreateSimulationCommand command = new CreateSimulationCommand(
+                "Test Solar",
                 "Mendoza",
+                -32.8895,
+                -68.8458,
                 EnergyType.SOLAR,
                 100,
                 10000,
@@ -201,7 +226,10 @@ class SimulationApplicationServiceTest {
 
         Simulation saved = new Simulation(
                 100L,
+                "Test Solar",
                 "Mendoza",
+                -32.8895,
+                -68.8458,
                 EnergyType.SOLAR,
                 new ProjectSize(100),
                 new Budget(10000),
@@ -218,7 +246,7 @@ class SimulationApplicationServiceTest {
 
         verify(repository, times(2)).save(any(Simulation.class));
         verify(recommender, never()).recommendFor(any(Simulation.class));
-        verify(climateProvider, never()).fetchClimateData(any(String.class));
+        verify(climateProvider, never()).fetchClimateData(any(Double.class), any(Double.class));
 
         ArgumentCaptor<Simulation> saveCaptor = ArgumentCaptor.forClass(Simulation.class);
         verify(repository, times(2)).save(saveCaptor.capture());
@@ -237,7 +265,10 @@ class SimulationApplicationServiceTest {
 
         Simulation simulation = new Simulation(
                 77L,
+                "Wind Demo",
                 "Cordoba",
+                -31.4167,
+                -64.1833,
                 EnergyType.WIND,
                 new ProjectSize(80),
                 new Budget(20000),
@@ -249,9 +280,6 @@ class SimulationApplicationServiceTest {
                 LocalDateTime.parse("2026-05-22T12:00:00"));
 
         when(repository.findById(77L)).thenReturn(Optional.of(simulation));
-        when(calculator.calculateSavings(simulation)).thenReturn(5000.0);
-        when(calculator.calculateRoiYears(simulation)).thenReturn(4.0);
-
         SimulationDetailResultDTO detail = service.getSimulationById(new GetSimulationByIdCommand(77L, "alice", false));
 
         assertThat(detail.technologyIds()).containsExactly(2L, 3L);
@@ -269,7 +297,10 @@ class SimulationApplicationServiceTest {
 
         Simulation existing = new Simulation(
                 10L,
+                "Solar Rosario",
                 "Rosario",
+                -32.9442,
+                -60.6505,
                 EnergyType.SOLAR,
                 new ProjectSize(50),
                 new Budget(5000),
@@ -283,14 +314,17 @@ class SimulationApplicationServiceTest {
         when(repository.findById(10L)).thenReturn(Optional.of(existing));
 
         ClimateData providedClimate = new ClimateData(10, 3, 1);
-        when(climateProvider.fetchClimateData("Rosario")).thenReturn(providedClimate);
+        when(climateProvider.fetchClimateData(-32.9442, -60.6505)).thenReturn(providedClimate);
         when(calculator.calculateEnergyOutput(any(Simulation.class))).thenReturn(new EnergyOutput(60000));
         when(calculator.calculateCo2Reduction(any(EnergyOutput.class))).thenReturn(new CO2Reduction(30));
         when(repository.save(any(Simulation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         UpdateSimulationCommand command = new UpdateSimulationCommand(
                 10L,
+                "Solar Rosario",
                 "Rosario",
+                -32.9442,
+                -60.6505,
                 EnergyType.SOLAR,
                 55,
                 5200,
@@ -301,6 +335,116 @@ class SimulationApplicationServiceTest {
         SimulationUpdateResultDTO result = service.updateSimulation(command);
 
         assertThat(result.id()).isEqualTo(10L);
-        verify(climateProvider).fetchClimateData("Rosario");
+        verify(climateProvider).fetchClimateData(-32.9442, -60.6505);
     }
+
+    @Test
+    @DisplayName("updateSimulation preserves existing technologyIds when command does not send them")
+    void updateSimulationPreservesExistingTechnologyIdsWhenMissingInCommand() {
+        SimulationApplicationService service = new SimulationApplicationService(
+                repository,
+                validator,
+                calculator,
+                climateProvider,
+                recommender);
+
+        ClimateData existingClimate = new ClimateData(10, 3, 1);
+        Simulation existing = new Simulation(
+                10L,
+                "Solar Rosario",
+                "Rosario",
+                -32.9442,
+                -60.6505,
+                EnergyType.SOLAR,
+                new ProjectSize(50),
+                new Budget(5000),
+                new EnergyOutput(50000),
+                new CO2Reduction(20),
+                existingClimate,
+                List.of(7L, 8L),
+                "alice",
+                LocalDateTime.parse("2026-05-22T12:00:00"));
+
+        when(repository.findById(10L)).thenReturn(Optional.of(existing));
+        when(calculator.calculateEnergyOutput(any(Simulation.class))).thenReturn(new EnergyOutput(60000));
+        when(calculator.calculateCo2Reduction(any(EnergyOutput.class))).thenReturn(new CO2Reduction(30));
+        when(repository.save(any(Simulation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UpdateSimulationCommand command = new UpdateSimulationCommand(
+                10L,
+                "Solar Rosario",
+                "Rosario",
+                -32.9442,
+                -60.6505,
+                EnergyType.SOLAR,
+                55,
+                5200,
+                null,
+                List.of(),
+                "alice");
+
+        service.updateSimulation(command);
+
+        ArgumentCaptor<Simulation> saveCaptor = ArgumentCaptor.forClass(Simulation.class);
+        verify(repository).save(saveCaptor.capture());
+        assertThat(saveCaptor.getValue().technologyIds()).containsExactly(7L, 8L);
+        verify(climateProvider, never()).fetchClimateData(any(Double.class), any(Double.class));
+    }
+
+    @Test
+    @DisplayName("updateSimulation refreshes climate when coordinates change even if existing climate is populated")
+    void updateSimulationRefreshesClimateWhenCoordinatesChange() {
+        SimulationApplicationService service = new SimulationApplicationService(
+                repository,
+                validator,
+                calculator,
+                climateProvider,
+                recommender);
+
+        ClimateData existingClimate = new ClimateData(10, 3, 1);
+        Simulation existing = new Simulation(
+                10L,
+                "Solar Rosario",
+                "Rosario",
+                -32.9442,
+                -60.6505,
+                EnergyType.SOLAR,
+                new ProjectSize(50),
+                new Budget(5000),
+                new EnergyOutput(50000),
+                new CO2Reduction(20),
+                existingClimate,
+                List.of(7L, 8L),
+                "alice",
+                LocalDateTime.parse("2026-05-22T12:00:00"));
+
+        ClimateData refreshedClimate = new ClimateData(12, 4, 2);
+
+        when(repository.findById(10L)).thenReturn(Optional.of(existing));
+        when(climateProvider.fetchClimateData(-34.6037, -58.3816)).thenReturn(refreshedClimate);
+        when(calculator.calculateEnergyOutput(any(Simulation.class))).thenReturn(new EnergyOutput(60000));
+        when(calculator.calculateCo2Reduction(any(EnergyOutput.class))).thenReturn(new CO2Reduction(30));
+        when(repository.save(any(Simulation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UpdateSimulationCommand command = new UpdateSimulationCommand(
+                10L,
+                "Solar Buenos Aires",
+                "Buenos Aires",
+                -34.6037,
+                -58.3816,
+                EnergyType.SOLAR,
+                55,
+                5200,
+                null,
+                List.of(),
+                "alice");
+
+        service.updateSimulation(command);
+
+        ArgumentCaptor<Simulation> saveCaptor = ArgumentCaptor.forClass(Simulation.class);
+        verify(repository).save(saveCaptor.capture());
+        verify(climateProvider).fetchClimateData(-34.6037, -58.3816);
+        assertThat(saveCaptor.getValue().climateData()).isEqualTo(refreshedClimate);
+    }
+
 }

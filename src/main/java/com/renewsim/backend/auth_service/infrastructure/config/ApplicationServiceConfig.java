@@ -43,6 +43,7 @@ public class ApplicationServiceConfig {
             RefreshTokenRepositoryPort refreshTokenRepositoryPort,
             UserAccountGateway userAccountGateway,
             TokenProvider tokenProvider,
+            ScopePolicy scopePolicy,
             TransactionalPort transactionalPort,
             TimeProvider timeProvider,
             UserAccountValidator userAccountValidator) {
@@ -50,6 +51,7 @@ public class ApplicationServiceConfig {
                 refreshTokenRepositoryPort,
                 userAccountGateway,
                 tokenProvider,
+                scopePolicy,
                 transactionalPort,
                 timeProvider.getClock(),
                 userAccountValidator);
@@ -95,6 +97,7 @@ public class ApplicationServiceConfig {
             CredentialsValidator credentialsValidator,
             TokenProvider tokenProvider,
             RefreshTokenRepositoryPort refreshTokenRepository,
+            ScopePolicy scopePolicy,
             TransactionalPort transactionalPort,
             TokenTimeService tokenTimeService,
             TimeProvider timeProvider) {
@@ -103,6 +106,7 @@ public class ApplicationServiceConfig {
                 credentialsValidator,
                 tokenProvider,
                 refreshTokenRepository,
+                scopePolicy,
                 transactionalPort,
                 tokenTimeService,
                 timeProvider.getClock());

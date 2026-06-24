@@ -46,6 +46,7 @@ class TechnologyMapperTest {
         assertThat(entity.getId()).isEqualTo(7L);
         assertThat(entity.getLifespanYears()).isEqualTo(30);
         assertThat(entity.getDescription()).isEqualTo("Seeded description");
+        assertThat(entity.getEnvironmentalImpact()).isEqualByComparingTo("8.0");
         assertThat(entity.getIsActive()).isFalse();
         assertThat(entity.getCreatedAt()).isEqualTo(Instant.parse("2026-05-10T08:00:00Z"));
         assertThat(entity.getUpdatedAt()).isEqualTo(Instant.parse("2026-05-11T09:30:00Z"));

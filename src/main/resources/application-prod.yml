@@ -121,6 +121,15 @@ role-service:
 technology-service:
   url: ${TECHNOLOGY_SERVICE_URL:http://localhost:8080}
 
+simulation:
+  climate:
+    provider: ${SIMULATION_CLIMATE_PROVIDER:openweathermap}
+
+services:
+  weather:
+    url: ${OPENWEATHER_BASE_URL:https://api.openweathermap.org}
+    key: ${OPENWEATHER_API_KEY:}
+
 # =============================
 # BREVO EMAIL (prod)
 # =============================

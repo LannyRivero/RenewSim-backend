@@ -69,6 +69,7 @@ class TechnologyRepositoryAdapterTest {
                 .efficiency(BigDecimal.valueOf(0.35))
                 .capacityFactor(BigDecimal.valueOf(35.0))
                 .co2ReductionFactor(BigDecimal.valueOf(300))
+                .environmentalImpact(BigDecimal.valueOf(8.0))
                 .isActive(true)
                 .createdAt(Instant.parse("2026-05-10T08:00:00Z"))
                 .updatedAt(Instant.parse("2026-05-11T09:30:00Z"))
@@ -96,7 +97,10 @@ class TechnologyRepositoryAdapterTest {
     @Test
     @DisplayName("findActiveById should query only active technologies")
     void findActiveByIdShouldQueryOnlyActiveTechnologies() {
-        TechnologyEntity entity = TechnologyEntity.builder().id(9L).build();
+        TechnologyEntity entity = TechnologyEntity.builder()
+                .id(9L)
+                .environmentalImpact(BigDecimal.valueOf(10.0))
+                .build();
         Technology technology = new Technology(
                 9L,
                 "Solar Panel",

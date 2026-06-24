@@ -2,9 +2,9 @@ package com.renewsim.backend.simulation_service.web.controller;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.simulation_service.application.command.GetSimulationByIdCommand;
+import com.renewsim.backend.simulation_service.application.detailSimulation.SimulationDetailResultDTO;
 import com.renewsim.backend.simulation_service.application.port.in.GetSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.port.out.TechnologyClientPort;
-import com.renewsim.backend.simulation_service.application.result.SimulationDetailResultDTO;
 import com.renewsim.backend.simulation_service.web.dto.TechnologyResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,13 +52,16 @@ class SimulationTechnologyControllerTest {
 
         SimulationDetailResultDTO simulation = new SimulationDetailResultDTO(
                 55L,
+                "Solar Demo",
                 "Mendoza",
+                -32.8895,
+                -68.8458,
                 "SOLAR",
                 100,
-                10000,
+                90000,
                 120000,
-                30000,
-                4.0,
+                22.5,
+                new com.renewsim.backend.simulation_service.domain.model.vo.ClimateData(800, 5, 100),
                 LocalDateTime.parse("2026-05-22T11:00:00"),
                 "alice",
                 List.of(1L, 2L));
@@ -89,13 +92,16 @@ class SimulationTechnologyControllerTest {
 
         SimulationDetailResultDTO simulation = new SimulationDetailResultDTO(
                 88L,
+                "Wind Demo",
                 "Cordoba",
+                -31.4167,
+                -64.1833,
                 "WIND",
                 50,
                 7000,
                 60000,
-                11000,
-                2.0,
+                35.0,
+                new com.renewsim.backend.simulation_service.domain.model.vo.ClimateData(400, 9, 0),
                 LocalDateTime.parse("2026-05-22T12:00:00"),
                 "alice",
                 List.of());

@@ -47,7 +47,7 @@ public interface TechnologyMapper {
                 Boolean.TRUE.equals(entity.getIsActive()),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
-                new EnvironmentalImpact(entity.getCo2ReductionFactor().doubleValue()),
+                new EnvironmentalImpact(entity.getEnvironmentalImpact().doubleValue()),
                 new Co2Reduction(entity.getCo2ReductionFactor()),
                 new CapacityFactor(entity.getCapacityFactor().doubleValue()));
     }
@@ -61,6 +61,7 @@ public interface TechnologyMapper {
     @Mapping(target = "unitCost", expression = "java(domain.getInstallationCost().value())")
     @Mapping(target = "maintenanceCost", expression = "java(domain.getMaintenanceCost().value())")
     @Mapping(target = "co2ReductionFactor", expression = "java(domain.getCo2Reduction().value())")
+    @Mapping(target = "environmentalImpact", expression = "java(java.math.BigDecimal.valueOf(domain.getEnvironmentalImpact().value()))")
     @Mapping(target = "capacityFactor", expression = "java(java.math.BigDecimal.valueOf(domain.getCapacityFactor().value()))")
     @Mapping(target = "description", expression = "java(domain.getDescription())")
     @Mapping(target = "lifespanYears", expression = "java(domain.getLifespanYears())")

@@ -270,7 +270,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
 
 ## Fase 3: Technology & Scenario Service
 
-- [ ] 3. Fase 3: Technology & Scenario Service
+- [ x] 3. Fase 3: Technology & Scenario Service
   - [x ] 3.1 Crear seeds Flyway V7–V8 (las tablas ya existen desde Fase 1)
     - `V7__seed_technologies.sql`: INSERT 3 tecnologías (Panel Solar Fotovoltaico efficiency=0.1850 baseCostPerKw=1200 lifespan=25, Turbina Eólica Terrestre efficiency=0.3500 baseCostPerKw=1500 lifespan=20, Microcentral Hidroeléctrica efficiency=0.8500 baseCostPerKw=2500 lifespan=40)
     - `V8__seed_scenarios.sql`: INSERT 3 escenarios predefinidos referenciando tecnologías de V7 con climate_profile JSON (ver Anexo B de requirements.md)
@@ -319,14 +319,14 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - `ScenarioEntity` con `climate_profile` como `@Column(columnDefinition="JSON")` mapeado a `ClimateData` via `@Convert`
     - _Requirements: 8.1, 8.2_
 
-  - [ ] 3.9 Implementar endpoints de Scenario
+  - [x ] 3.9 Implementar endpoints de Scenario
     - `GET /api/v1/scenarios` → lista de escenarios activos
     - `GET /api/v1/scenarios/{id}` → detalle; HTTP 404 si no existe
     - `POST /api/v1/scenarios` (ADMIN) → HTTP 201
     - `PUT /api/v1/scenarios/{id}` (ADMIN) → HTTP 200
     - _Requirements: 8.1, 8.2, 8.3, 8.5_
 
-  - [ ]* 3.10 Tests unitarios + integración con Testcontainers para Technology y Scenario
+  - [x ]* 3.10 Tests unitarios + integración con Testcontainers para Technology y Scenario
     - `TechnologyTest`: deactivate(), validaciones de eficiencia
     - `TechnologyRepositoryIntegrationTest` con Testcontainers: save → findById → findByEnergyType
     - `TechnologyCacheTest`: verificar que segunda llamada usa caché (mock del repositorio)
@@ -343,7 +343,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
 ## Fase 4: Simulation Engine & Core Logic
 
 - [ ] 4. Fase 4: Simulation Engine & Core Logic
-  - [ ] 4.1 Crear migración Flyway V4 (simulations, simulation_share_tokens)
+  - [] 4.1 Crear migración Flyway V4 (simulations, simulation_share_tokens)
     - `V4__create_simulations.sql`: tabla `simulations` con todos los campos del diseño de BD, índices compuestos `idx_simulations_user_status(user_id, status)`, `idx_simulations_created_at`
     - Tabla `simulation_share_tokens`: id, simulation_id FK, token UNIQUE, expires_at, created_at; índices `idx_share_token`, `idx_share_expires`
     - _Requirements: 6.1, 11.1_
@@ -778,7 +778,7 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
     - Color de marcador según EnergyType (solar=amarillo, wind=azul, hydro=verde)
     - _Requirements: 12.3_
 
-  - [ ] 8.12 Implementar `SimulationCreatePage`: formulario React Hook Form + Zod + selector tecnología + mapa Leaflet
+  - [ x] 8.12 Implementar `SimulationCreatePage`: formulario React Hook Form + Zod + selector tecnología + mapa Leaflet
     - `simulationSchema` Zod con todas las validaciones del backend
     - Selector de tecnología: `useQuery(['technologies'])` → dropdown con nombre y tipo
     - Mapa Leaflet interactivo: click en mapa → actualizar `location.latitude/longitude` en formulario

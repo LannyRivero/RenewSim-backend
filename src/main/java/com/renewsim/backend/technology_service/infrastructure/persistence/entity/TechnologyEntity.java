@@ -52,6 +52,9 @@ public class TechnologyEntity {
     @Column(name = "co2_reduction_factor", nullable = false, precision = 10, scale = 4)
     private BigDecimal co2ReductionFactor;
 
+    @Column(name = "environmental_impact", nullable = false, precision = 5, scale = 2)
+    private BigDecimal environmentalImpact;
+
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean isActive = true;

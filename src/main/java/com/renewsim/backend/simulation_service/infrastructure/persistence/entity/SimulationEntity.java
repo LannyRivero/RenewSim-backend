@@ -20,6 +20,9 @@ public class SimulationEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String name;
+
     private String location;
 
     @Column(name = "location_name", insertable = false, updatable = false)
@@ -27,6 +30,12 @@ public class SimulationEntity {
 
     @Column(name = "energy_type", nullable = false)
     private String energyType;
+
+    @Column(name = "location_lat", nullable = false)
+    private Double locationLat;
+
+    @Column(name = "location_lng", nullable = false)
+    private Double locationLng;
 
     @Column(name = "project_size", nullable = false)
     private Double projectSize;
@@ -48,6 +57,9 @@ public class SimulationEntity {
 
     @Column(name = "energy_generated", insertable = false, updatable = false)
     private Double energyGenerated;
+
+    @Column(name = "climate_data")
+    private String climateData;
 
     @Column(name = "co2_reduction", nullable = false)
     private Double co2Reduction;

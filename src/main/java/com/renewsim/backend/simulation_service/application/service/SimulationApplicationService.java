@@ -9,6 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.renewsim.backend.simulation_service.application.port.in.*;
 import com.renewsim.backend.simulation_service.application.port.out.*;
 import com.renewsim.backend.simulation_service.application.command.*;
+import com.renewsim.backend.simulation_service.application.createSimulation.CreateSimulationCommand;
+import com.renewsim.backend.simulation_service.application.createSimulation.CreateSimulationUseCase;
+import com.renewsim.backend.simulation_service.application.createSimulation.SimulationCreationResultDTO;
+import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteSimulationCommand;
+import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteSimulationUseCase;
+import com.renewsim.backend.simulation_service.application.deleteSimulation.SimulationDeletionResultDTO;
+import com.renewsim.backend.simulation_service.application.detailSimulation.SimulationDetailResultDTO;
+import com.renewsim.backend.simulation_service.application.historySimulation.GetUserSimulationHistoryUseCase;
+import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryResultDTO;
 import com.renewsim.backend.simulation_service.application.result.*;
 import com.renewsim.backend.simulation_service.domain.factory.SimulationFactory;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
@@ -17,8 +26,12 @@ import com.renewsim.backend.simulation_service.domain.model.vo.Budget;
 import com.renewsim.backend.simulation_service.domain.model.vo.CO2Reduction;
 import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
 import com.renewsim.backend.simulation_service.domain.model.vo.EnergyOutput;
+import com.renewsim.backend.shared.exception.ConflictException;
 import com.renewsim.backend.simulation_service.domain.model.vo.ProjectSize;
 import com.renewsim.backend.simulation_service.application.result.SimulationRecommendationResultDTO;
+import com.renewsim.backend.simulation_service.application.updateSimulation.SimulationUpdateResultDTO;
+import com.renewsim.backend.simulation_service.application.updateSimulation.UpdateSimulationCommand;
+import com.renewsim.backend.simulation_service.application.updateSimulation.UpdateSimulationUseCase;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -45,18 +58,35 @@ public class SimulationApplicationService implements
         @Override
         public SimulationCreationResultDTO createSimulation(CreateSimulationCommand command) {
 
+                repository.findDuplicate(
+                                command.createdBy(),
+                                command.name(),
+                                command.energyType().name(),
+                                command.latitude(),
+                                command.longitude())
+                                .ifPresent(existing -> {
+                                        throw new ConflictException("Simulation already exists for same name, coordinates, and technology");
+                                });
+
+                double resolvedBudget = command.budget() > 0
+                                ? command.budget()
+                                : calculator.estimateCapex(command.energyType(), command.projectSize());
+
                 validator.validateProjectSize(command.projectSize());
-                validator.validateBudget(command.budget());
+                validator.validateBudget(resolvedBudget);
 
                 ClimateData climateData = command.climateData() != null
                                 ? command.climateData()
-                                : climateProvider.fetchClimateData(command.location());
+                                : climateProvider.fetchClimateData(command.latitude(), command.longitude());
 
                 Simulation base = SimulationFactory.create(
+                                command.name(),
                                 command.location(),
+                                command.latitude(),
+                                command.longitude(),
                                 command.energyType(),
                                 command.projectSize(),
-                                command.budget(),
+                                resolvedBudget,
                                 climateData,
                                 command.technologyIds(),
                                 command.createdBy());
@@ -79,10 +109,7 @@ public class SimulationApplicationService implements
 
                 return new SimulationCreationResultDTO(
                                 saved.id(),
-                                saved.location(),
-                                saved.energyType().name(),
-                                saved.projectSize().value(),
-                                saved.budget().value(),
+                                saved.name(),
                                 saved.createdAt());
         }
 
@@ -110,21 +137,28 @@ public class SimulationApplicationService implements
                                 .orElseThrow(() -> new SimulationNotFoundException(command.id()));
 
                 validator.validateProjectSize(command.projectSize());
-                validator.validateBudget(command.budget());
+                double resolvedBudget = command.budget() > 0
+                                ? command.budget()
+                                : calculator.estimateCapex(command.energyType(), command.projectSize());
+                validator.validateBudget(resolvedBudget);
 
                 ClimateData climateData = resolveClimateDataForUpdate(command, existing);
+                List<Long> technologyIds = resolveTechnologyIdsForUpdate(command, existing);
 
                 // Se conserva identidad del aggregate
                 Simulation updated = new Simulation(
                                 existing.id(),
+                                command.name(),
                                 command.location(),
+                                command.latitude(),
+                                command.longitude(),
                                 command.energyType(),
                                 new ProjectSize(command.projectSize()),
-                                new Budget(command.budget()),
+                                new Budget(resolvedBudget),
                                 existing.energyOutput(),
                                 existing.co2Reduction(),
                                 climateData,
-                                command.technologyIds(),
+                                technologyIds,
                                 existing.createdBy(),
                                 existing.createdAt());
 
@@ -150,12 +184,27 @@ public class SimulationApplicationService implements
                         return command.climateData();
                 }
 
+                if (hasLocationChanged(existing, command)) {
+                        return climateProvider.fetchClimateData(command.latitude(), command.longitude());
+                }
+
                 ClimateData existingClimate = existing.climateData();
                 if (hasMeaningfulClimateData(existingClimate)) {
                         return existingClimate;
                 }
 
-                return climateProvider.fetchClimateData(command.location());
+                return climateProvider.fetchClimateData(command.latitude(), command.longitude());
+        }
+
+        private List<Long> resolveTechnologyIdsForUpdate(UpdateSimulationCommand command, Simulation existing) {
+                return command.technologyIds() == null || command.technologyIds().isEmpty()
+                                ? existing.technologyIds()
+                                : command.technologyIds();
+        }
+
+        private boolean hasLocationChanged(Simulation existing, UpdateSimulationCommand command) {
+                return Double.compare(existing.latitude(), command.latitude()) != 0
+                                || Double.compare(existing.longitude(), command.longitude()) != 0;
         }
 
         private boolean hasMeaningfulClimateData(ClimateData climateData) {
@@ -200,20 +249,20 @@ public class SimulationApplicationService implements
                         throw new AccessDeniedException("Not owner of simulation");
                 }
 
-                double savings = calculator.calculateSavings(simulation);
-                Double roiYears = calculator.calculateRoiYears(simulation);
-                if (roiYears < 0)
-                        roiYears = null;
+                double capacityFactor = calculator.calculateCapacityFactor(simulation);
 
                 return new SimulationDetailResultDTO(
                                 simulation.id(),
+                                simulation.name(),
                                 simulation.location(),
+                                simulation.latitude(),
+                                simulation.longitude(),
                                 simulation.energyType().name(),
                                 simulation.projectSize().value(),
                                 simulation.budget().value(),
                                 simulation.energyOutput().kwhPerYear(),
-                                savings,
-                                roiYears,
+                                capacityFactor,
+                                simulation.climateData(),
                                 simulation.createdAt(),
                                 simulation.createdBy(),
                                 simulation.technologyIds()
@@ -234,23 +283,24 @@ public class SimulationApplicationService implements
                                                         ? simulation.energyOutput()
                                                         : calculator.calculateEnergyOutput(simulation);
 
-                                        double savings = calculator.calculateSavings(
-                                                        simulation.withCalculatedResults(
-                                                                        energy,
-                                                                        calculator.calculateCo2Reduction(energy)));
+                                        Simulation completed = simulation.withCalculatedResults(
+                                                        energy,
+                                                        calculator.calculateCo2Reduction(energy));
 
-                                        double roiYears = calculator.calculateRoiYears(
-                                                        simulation.withCalculatedResults(
-                                                                        energy,
-                                                                        calculator.calculateCo2Reduction(energy)));
+                                        double roi = calculator.calculateRoiPercent(completed);
 
                                         return new SimulationHistoryResultDTO(
                                                         simulation.id(),
+                                                        simulation.name(),
                                                         simulation.location(),
+                                                        simulation.climateData() != null ? simulation.climateData().country() : null,
+                                                        simulation.latitude(),
+                                                        simulation.longitude(),
                                                         simulation.energyType().name(),
+                                                        simulation.projectSize().value(),
                                                         energy.kwhPerYear(),
-                                                        savings,
-                                                        roiYears >= 0 ? roiYears : null,
+                                                        roi,
+                                                        "completed",
                                                         simulation.createdAt());
                                 })
                                 .toList();

@@ -1,6 +1,7 @@
 package com.renewsim.backend.shared.exception.handler;
 
 import com.renewsim.backend.shared.dto.ErrorResponse;
+import com.renewsim.backend.shared.domain.exception.InvalidLocationException;
 import com.renewsim.backend.shared.exception.BadRequestException;
 import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -98,6 +99,7 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
                         TypeMismatchException.class,
                         MissingPathVariableException.class,
                         NumberFormatException.class,
+                        InvalidLocationException.class,
                         InvalidUserDataException.class,
                         BadRequestException.class
         })
