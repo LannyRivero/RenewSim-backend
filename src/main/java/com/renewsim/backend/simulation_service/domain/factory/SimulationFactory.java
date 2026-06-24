@@ -1,6 +1,5 @@
 package com.renewsim.backend.simulation_service.domain.factory;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.vo.*;
@@ -21,8 +20,7 @@ public final class SimulationFactory {
         List<Long> technologyIds,
         String createdBy
     ) {
-        return new Simulation(
-            null,
+        return Simulation.create(
             name,
             location,
             latitude,
@@ -30,12 +28,9 @@ public final class SimulationFactory {
             energyType,
             new ProjectSize(projectSize),
             new Budget(budget),
-            new EnergyOutput(0), 
-            new CO2Reduction(0), 
             climateData,
             technologyIds,
-            createdBy,
-            LocalDateTime.now()
+            createdBy
         );
     }
 }
