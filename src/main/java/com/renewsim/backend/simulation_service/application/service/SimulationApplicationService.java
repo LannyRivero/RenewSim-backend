@@ -18,7 +18,6 @@ import com.renewsim.backend.simulation_service.application.deleteSimulation.Simu
 import com.renewsim.backend.simulation_service.application.detailSimulation.SimulationDetailResultDTO;
 import com.renewsim.backend.simulation_service.application.historySimulation.GetUserSimulationHistoryUseCase;
 import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryResultDTO;
-import com.renewsim.backend.simulation_service.domain.factory.SimulationFactory;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
 import com.renewsim.backend.simulation_service.domain.model.vo.Budget;
@@ -74,14 +73,14 @@ public class SimulationApplicationService implements
                                 ? command.climateData()
                                 : climateProvider.fetchClimateData(command.latitude(), command.longitude());
 
-                Simulation base = SimulationFactory.create(
+                Simulation base = Simulation.create(
                                 command.name(),
                                 command.location(),
                                 command.latitude(),
                                 command.longitude(),
                                 command.energyType(),
-                                command.projectSize(),
-                                resolvedBudget,
+                                new ProjectSize(command.projectSize()),
+                                new Budget(resolvedBudget),
                                 climateData,
                                 command.technologyIds(),
                                 command.createdBy());
