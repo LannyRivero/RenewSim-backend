@@ -3,6 +3,7 @@ package com.renewsim.backend.auth_service.application.service;
 import com.renewsim.backend.auth_service.application.command.LoginCommand;
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.ScopePolicy;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
@@ -47,6 +48,8 @@ class LoginServiceTest {
     @Mock
     private RefreshTokenRepositoryPort refreshTokenRepository;
     @Mock
+    private ScopePolicy scopePolicy;
+    @Mock
     private TransactionalPort transactionalPort;
     @Mock
     private TokenTimeService tokenTimeService;
@@ -74,6 +77,7 @@ class LoginServiceTest {
                 credentialsValidator,
                 tokenProvider,
                 refreshTokenRepository,
+                scopePolicy,
                 transactionalPort,
                 tokenTimeService,
                 clock);
@@ -83,6 +87,7 @@ class LoginServiceTest {
 
         // TTL del refresh token — evita expiresAt == issuedAt con default 0L
         lenient().when(tokenProvider.refreshExpiresInSeconds()).thenReturn(604800L);
+        lenient().when(scopePolicy.getScopes(ROLES)).thenReturn(Set.of("read:simulations", "write:simulations"));
     }
 
     @Nested
@@ -133,6 +138,26 @@ class LoginServiceTest {
             RefreshToken saved = captor.getValue();
             assertThat(saved.getUserId()).isEqualTo(USER_ID);
             assertThat(saved.getTokenHash()).isEqualTo(REFRESH_TOKEN);
+        }
+
+        @Test
+        @DisplayName("should include configured scopes in access token principal")
+        void execute_successfulLogin_includesScopesInAccessTokenPrincipal() {
+            LoginCommand command = new LoginCommand(EMAIL, PASSWORD);
+            UserSnapshot activeUser = UserSnapshot.active(
+                    USER_ID, USERNAME, "Full Name", PASSWORD_HASH, EMAIL, ROLES);
+
+            when(userAccountGateway.findByEmail(EMAIL)).thenReturn(Optional.of(activeUser));
+            when(tokenProvider.generate(any(AuthenticatedUser.class))).thenReturn(ACCESS_TOKEN);
+            when(tokenProvider.generate(any(AuthenticatedUser.class), anyLong())).thenReturn(REFRESH_TOKEN);
+            when(tokenTimeService.getAccessTokenValiditySeconds()).thenReturn(EXPIRES_IN);
+
+            loginService.execute(command);
+
+            ArgumentCaptor<AuthenticatedUser> captor = ArgumentCaptor.forClass(AuthenticatedUser.class);
+            verify(tokenProvider).generate(captor.capture());
+            assertThat(captor.getValue().scopes()).containsExactlyInAnyOrder("read:simulations", "write:simulations");
+            verify(scopePolicy).getScopes(ROLES);
         }
 
         @Test

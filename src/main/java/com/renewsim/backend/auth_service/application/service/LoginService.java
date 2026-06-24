@@ -3,6 +3,7 @@ package com.renewsim.backend.auth_service.application.service;
 import com.renewsim.backend.auth_service.application.command.LoginCommand;
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.in.LoginUseCase;
+import com.renewsim.backend.auth_service.application.port.out.ScopePolicy;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
@@ -46,6 +47,7 @@ public class LoginService implements LoginUseCase {
         private final CredentialsValidator credentialsValidator;
         private final TokenProvider tokenProvider;
         private final RefreshTokenRepositoryPort refreshTokenRepository;
+        private final ScopePolicy scopePolicy;
         private final TransactionalPort transactionalPort;
         private final TokenTimeService tokenTimeService;
         private final Clock clock;
@@ -55,6 +57,7 @@ public class LoginService implements LoginUseCase {
                         CredentialsValidator credentialsValidator,
                         TokenProvider tokenProvider,
                         RefreshTokenRepositoryPort refreshTokenRepository,
+                        ScopePolicy scopePolicy,
                         TransactionalPort transactionalPort,
                         TokenTimeService tokenTimeService,
                         Clock clock) {
@@ -62,6 +65,7 @@ public class LoginService implements LoginUseCase {
                 this.credentialsValidator = credentialsValidator;
                 this.tokenProvider = tokenProvider;
                 this.refreshTokenRepository = refreshTokenRepository;
+                this.scopePolicy = scopePolicy;
                 this.transactionalPort = transactionalPort;
                 this.tokenTimeService = tokenTimeService;
                 this.clock = clock;
@@ -99,11 +103,12 @@ public class LoginService implements LoginUseCase {
                 Set<String> roleNames = user.roles().stream()
                                 .map(RoleName::name)
                                 .collect(Collectors.toSet());
+                Set<String> scopes = scopePolicy.getScopes(user.roles());
 
                 AuthenticatedUser authenticatedUser = AuthenticatedUser.of(
                                 user.username(),
                                 roleNames,
-                                Set.of());
+                                scopes);
 
                 String accessToken = tokenProvider.generate(authenticatedUser);
 

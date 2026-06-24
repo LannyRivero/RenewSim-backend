@@ -36,9 +36,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,8 +49,11 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class SimulationControllerTest {
@@ -137,6 +143,7 @@ class SimulationControllerTest {
         assertThat(response.technology()).isEqualTo("wind");
     }
 
+    @Test
     @DisplayName("getMySimulations returns paginated completed history")
     void getMySimulationsReturnsPaginatedHistory() {
         Authentication auth = authentication("alice", "ROLE_USER");
@@ -200,6 +207,23 @@ class SimulationControllerTest {
         assertThat(response.totalPages()).isEqualTo(2);
         assertThat(response.last()).isFalse();
         assertThat(response.content().getFirst().name()).isEqualTo("Solar One");
+    }
+
+    @Test
+    @DisplayName("get user simulations route does not collide with numeric id mapping")
+    void getUserSimulationsRouteDoesNotCollideWithIdRoute() throws Exception {
+        Authentication auth = authentication("alice", "ROLE_USER");
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        when(historyUseCase.getUserHistory("alice")).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/simulations/user")
+                        .principal(auth)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(historyUseCase).getUserHistory("alice");
+        verify(getUseCase, never()).getSimulationById(any(GetSimulationByIdCommand.class));
     }
 
     @Test

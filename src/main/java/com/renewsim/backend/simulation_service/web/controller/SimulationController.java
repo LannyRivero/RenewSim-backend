@@ -103,7 +103,7 @@ public class SimulationController {
         // ==========================================================
         @Operation(summary = "Update a simulation")
         @PreAuthorize("hasAuthority('SCOPE_write:simulations') or hasRole('ADMIN')")
-        @PutMapping("/{id}")
+        @PutMapping("/{id:\\d+}")
         public ResponseEntity<SimulationUpdateResultDTO> updateSimulation(
                         @PathVariable Long id,
                         @Valid @RequestBody SimulationRequestDTO request,
@@ -140,7 +140,7 @@ public class SimulationController {
         // ==========================================================
         // GET SIMULATION BY ID
         // ==========================================================
-        @GetMapping("/{id}")
+        @GetMapping("/{id:\\d+}")
         @PreAuthorize("hasAuthority('SCOPE_read:simulations') or hasRole('ADMIN')")
         public ResponseEntity<SimulationResultsResponseDTO> getSimulationById(
                         @PathVariable Long id,
@@ -164,7 +164,7 @@ public class SimulationController {
         // ==========================================================
         @Operation(summary = "Export simulation results as file")
         @PreAuthorize("hasAuthority('SCOPE_export:simulations') or hasRole('ADMIN')")
-        @GetMapping("/{id}/export")
+        @GetMapping("/{id:\\d+}/export")
         public ResponseEntity<String> exportSimulation(
                         @PathVariable Long id,
                         Authentication auth) {
@@ -188,7 +188,7 @@ public class SimulationController {
         // ==========================================================
         @Operation(summary = "Delete simulation by ID")
         @PreAuthorize("hasAuthority('SCOPE_delete:simulations') or hasRole('ADMIN')")
-        @DeleteMapping("/{id}")
+        @DeleteMapping("/{id:\\d+}")
         public ResponseEntity<SimulationDeletionResultDTO> deleteSimulation(
                         @PathVariable Long id,
                         Authentication auth) {
@@ -226,7 +226,7 @@ public class SimulationController {
         // ==========================================================
         @Operation(summary = "Get authenticated user simulations with pagination")
         @PreAuthorize("hasAuthority('SCOPE_read:simulations') or hasRole('ADMIN')")
-        @GetMapping("/my-simulations")
+        @GetMapping({ "/user", "/my-simulations" })
         public ResponseEntity<PageResponse<UserSimulationSummaryDTO>> getMySimulations(
                         Authentication auth,
                         @RequestParam(defaultValue = "0") int page,

@@ -3,6 +3,7 @@ package com.renewsim.backend.auth_service.application.service;
 import com.renewsim.backend.auth_service.application.command.RefreshTokenCommand;
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.ScopePolicy;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
@@ -33,6 +34,7 @@ class RefreshTokenServiceTest {
     private RefreshTokenRepositoryPort refreshTokenRepositoryPort;
     private UserAccountGateway userAccountGateway;
     private TokenProvider tokenProvider;
+    private ScopePolicy scopePolicy;
     private TransactionalPort transactionalPort;
     private UserAccountValidator userAccountValidator;
     private Clock clock;
@@ -55,6 +57,7 @@ class RefreshTokenServiceTest {
         refreshTokenRepositoryPort = mock(RefreshTokenRepositoryPort.class);
         userAccountGateway = mock(UserAccountGateway.class);
         tokenProvider = mock(TokenProvider.class);
+        scopePolicy = mock(ScopePolicy.class);
         transactionalPort = mock(TransactionalPort.class);
         userAccountValidator = new UserAccountValidator();
         clock = FIXED_CLOCK;
@@ -66,9 +69,12 @@ class RefreshTokenServiceTest {
                 refreshTokenRepositoryPort,
                 userAccountGateway,
                 tokenProvider,
+                scopePolicy,
                 transactionalPort,
                 clock,
                 userAccountValidator);
+
+        when(scopePolicy.getScopes(Set.of(RoleName.USER))).thenReturn(Set.of("read:simulations", "write:simulations"));
     }
 
     // ─────────────────────────────────────────────
@@ -141,6 +147,17 @@ class RefreshTokenServiceTest {
 
             assertThat(result.roles()).contains("USER");
             assertThat(result.username()).isEqualTo("user@renewsim.com");
+        }
+
+        @Test
+        @DisplayName("should include configured scopes in refreshed access token principal")
+        void shouldIncludeConfiguredScopesInRefreshedAccessTokenPrincipal() {
+            service.execute(new RefreshTokenCommand(RAW_TOKEN));
+
+            ArgumentCaptor<AuthenticatedUser> captor = ArgumentCaptor.forClass(AuthenticatedUser.class);
+            verify(tokenProvider).generate(captor.capture());
+            assertThat(captor.getValue().scopes()).containsExactlyInAnyOrder("read:simulations", "write:simulations");
+            verify(scopePolicy).getScopes(Set.of(RoleName.USER));
         }
 
         @Test

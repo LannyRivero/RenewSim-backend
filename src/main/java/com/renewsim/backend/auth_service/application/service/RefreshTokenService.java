@@ -4,6 +4,7 @@ import com.renewsim.backend.auth_service.application.command.RefreshTokenCommand
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
 import com.renewsim.backend.auth_service.application.port.in.RefreshTokenUseCase;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
+import com.renewsim.backend.auth_service.application.port.out.ScopePolicy;
 import com.renewsim.backend.auth_service.application.port.out.TokenProvider;
 import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
@@ -29,6 +30,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
     private final RefreshTokenRepositoryPort refreshTokenRepositoryPort;
     private final UserAccountGateway userAccountGateway;
     private final TokenProvider tokenProvider;
+    private final ScopePolicy scopePolicy;
     private final TransactionalPort transactionalPort;
     private final Clock clock;
     private final UserAccountValidator userAccountValidator;
@@ -37,12 +39,14 @@ public class RefreshTokenService implements RefreshTokenUseCase {
             RefreshTokenRepositoryPort refreshTokenRepositoryPort,
             UserAccountGateway userAccountGateway,
             TokenProvider tokenProvider,
+            ScopePolicy scopePolicy,
             TransactionalPort transactionalPort,
             Clock clock,
             UserAccountValidator userAccountValidator) {
         this.refreshTokenRepositoryPort = refreshTokenRepositoryPort;
         this.userAccountGateway = userAccountGateway;
         this.tokenProvider = tokenProvider;
+        this.scopePolicy = scopePolicy;
         this.transactionalPort = transactionalPort;
         this.clock = clock;
         this.userAccountValidator = userAccountValidator;
@@ -76,9 +80,10 @@ public class RefreshTokenService implements RefreshTokenUseCase {
         Set<String> roleNames = user.roles().stream()
                 .map(Enum::name)
                 .collect(Collectors.toSet());
+        Set<String> scopes = scopePolicy.getScopes(user.roles());
 
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(
-                user.email(), roleNames, Set.of());
+                user.email(), roleNames, scopes);
 
         String newAccessToken = tokenProvider.generate(authenticatedUser);
 
