@@ -343,12 +343,12 @@ Stack: Java 21 + Spring Boot 3.2.1 (backend hexagonal) · React 18 + TypeScript 
 ## Fase 4: Simulation Engine & Core Logic
 
 - [ ] 4. Fase 4: Simulation Engine & Core Logic
-  - [] 4.1 Crear migración Flyway V4 (simulations, simulation_share_tokens)
+  - [x] 4.1 Crear migración Flyway V4 (simulations, simulation_share_tokens)
     - `V4__create_simulations.sql`: tabla `simulations` con todos los campos del diseño de BD, índices compuestos `idx_simulations_user_status(user_id, status)`, `idx_simulations_created_at`
     - Tabla `simulation_share_tokens`: id, simulation_id FK, token UNIQUE, expires_at, created_at; índices `idx_share_token`, `idx_share_expires`
     - _Requirements: 6.1, 11.1_
 
-  - [ ] 4.2 Implementar `Simulation` aggregate root con Builder pattern y validación de invariantes
+  - [x] 4.2 Implementar `Simulation` aggregate root con Builder pattern y validación de invariantes
     - `Simulation` en `simulation_service/domain/model/` con todos los campos del modelo de dominio
     - Builder estático interno con validación en `build()`: capacityKw ∈ [1, 10000], initialInvestment > 0, location válida
     - Métodos: `completeCalculation(SimulationResults)`, `archive()`, `clone(Long userId)`, `transitionTo(SimulationStatus)`
