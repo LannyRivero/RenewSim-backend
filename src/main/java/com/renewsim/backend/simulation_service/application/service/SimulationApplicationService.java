@@ -18,7 +18,6 @@ import com.renewsim.backend.simulation_service.application.deleteSimulation.Simu
 import com.renewsim.backend.simulation_service.application.detailSimulation.SimulationDetailResultDTO;
 import com.renewsim.backend.simulation_service.application.historySimulation.GetUserSimulationHistoryUseCase;
 import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryResultDTO;
-import com.renewsim.backend.simulation_service.application.result.*;
 import com.renewsim.backend.simulation_service.domain.factory.SimulationFactory;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
@@ -47,7 +46,6 @@ public class SimulationApplicationService implements
                 GetUserSimulationHistoryUseCase {
 
         private final SimulationRepositoryPort repository;
-        private final SimulationValidator validator;
         private final SimulationCalculator calculator;
         private final ClimateDataProviderPort climateProvider;
         private final TechnologyRecommendationPort recommender;
@@ -71,9 +69,6 @@ public class SimulationApplicationService implements
                 double resolvedBudget = command.budget() > 0
                                 ? command.budget()
                                 : calculator.estimateCapex(command.energyType(), command.projectSize());
-
-                validator.validateProjectSize(command.projectSize());
-                validator.validateBudget(resolvedBudget);
 
                 ClimateData climateData = command.climateData() != null
                                 ? command.climateData()
@@ -136,18 +131,15 @@ public class SimulationApplicationService implements
                 Simulation existing = repository.findById(command.id())
                                 .orElseThrow(() -> new SimulationNotFoundException(command.id()));
 
-                validator.validateProjectSize(command.projectSize());
                 double resolvedBudget = command.budget() > 0
                                 ? command.budget()
                                 : calculator.estimateCapex(command.energyType(), command.projectSize());
-                validator.validateBudget(resolvedBudget);
 
                 ClimateData climateData = resolveClimateDataForUpdate(command, existing);
                 List<Long> technologyIds = resolveTechnologyIdsForUpdate(command, existing);
 
                 // Se conserva identidad del aggregate
-                Simulation updated = new Simulation(
-                                existing.id(),
+                Simulation updated = existing.revise(
                                 command.name(),
                                 command.location(),
                                 command.latitude(),
@@ -155,12 +147,8 @@ public class SimulationApplicationService implements
                                 command.energyType(),
                                 new ProjectSize(command.projectSize()),
                                 new Budget(resolvedBudget),
-                                existing.energyOutput(),
-                                existing.co2Reduction(),
                                 climateData,
-                                technologyIds,
-                                existing.createdBy(),
-                                existing.createdAt());
+                                technologyIds);
 
                 EnergyOutput energy = calculator.calculateEnergyOutput(updated);
                 CO2Reduction co2 = calculator.calculateCo2Reduction(energy);
