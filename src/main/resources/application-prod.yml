@@ -129,6 +129,8 @@ services:
   weather:
     url: ${OPENWEATHER_BASE_URL:https://api.openweathermap.org}
     key: ${OPENWEATHER_API_KEY:}
+  pvgis:
+    url: ${PVGIS_BASE_URL:https://re.jrc.ec.europa.eu}
 
 # =============================
 # BREVO EMAIL (prod)
