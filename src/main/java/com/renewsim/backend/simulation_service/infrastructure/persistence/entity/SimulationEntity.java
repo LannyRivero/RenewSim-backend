@@ -73,14 +73,41 @@ public class SimulationEntity {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "model_version")
+    private String modelVersion;
+
+    @Column(name = "resource_source")
+    private String resourceSource;
+
+    @Column(name = "annual_savings")
+    private Double annualSavings;
+
+    @Column(name = "npv")
+    private Double npv;
+
+    @Column(name = "irr_pct")
+    private Double irrPct;
+
+    @Column(name = "recommendation")
+    private String recommendation;
+
+    @Lob
+    @Column(name = "input_snapshot", columnDefinition = "LONGTEXT")
+    private String inputSnapshot;
+
+    @Lob
+    @Column(name = "result_snapshot", columnDefinition = "LONGTEXT")
+    private String resultSnapshot;
+
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
-        name = "simulation_technologies",
-        joinColumns = @JoinColumn(name = "simulation_id")
-    )
+    @CollectionTable(name = "simulation_technologies", joinColumns = @JoinColumn(name = "simulation_id"))
     @Column(name = "technology_id")
     @Builder.Default
     private List<Long> technologyIds = new ArrayList<>();
 }
-
-
