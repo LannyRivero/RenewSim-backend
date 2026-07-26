@@ -132,4 +132,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: "health,info,flyway,metrics"
+        include: "health,info,flyway,metrics,prometheus"

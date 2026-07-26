@@ -101,7 +101,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "health,info"  # SOLO health e info en prod
+        include: "health,info,prometheus"
       base-path: /actuator
   endpoint:
     health:

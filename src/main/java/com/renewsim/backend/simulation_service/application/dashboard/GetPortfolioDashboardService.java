@@ -3,6 +3,7 @@ package com.renewsim.backend.simulation_service.application.dashboard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.simulation_service.application.port.out.SimulationRecordRepositoryPort;
 import com.renewsim.backend.simulation_service.application.port.out.TechnologyLookupPort;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ public class GetPortfolioDashboardService implements GetPortfolioDashboardUseCas
         private final ScenarioSnapshotAssembler snapshotAssembler;
         private final PortfolioDashboardAggregator dashboardAggregator;
 
+        @Autowired
         public GetPortfolioDashboardService(
                         SimulationRecordRepositoryPort repository,
                         TechnologyLookupPort technologyLookupPort,

@@ -6,6 +6,7 @@ import com.renewsim.backend.simulation_service.application.port.out.TechnologyLo
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.SimulationId;
 import com.renewsim.backend.simulation_service.infrastructure.persistence.entity.SimulationEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class SimulationRecordRepositoryAdapter implements SimulationRecordReposi
     private final JpaSimulationRepository repository;
     private final SimulationRecordEntityMapper entityMapper;
 
+    @Autowired
     public SimulationRecordRepositoryAdapter(
             JpaSimulationRepository repository,
             ObjectMapper objectMapper,
