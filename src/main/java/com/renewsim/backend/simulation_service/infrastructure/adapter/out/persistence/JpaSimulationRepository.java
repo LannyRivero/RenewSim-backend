@@ -9,12 +9,6 @@ import java.util.List;
 public interface JpaSimulationRepository extends JpaRepository<SimulationEntity, Long> {
 
     List<SimulationEntity> findByCreatedByOrderByCreatedAtDesc(String createdBy);
-    java.util.Optional<SimulationEntity> findFirstByCreatedByAndNameAndEnergyTypeAndLocationLatAndLocationLng(
-            String createdBy,
-            String name,
-            String energyType,
-            Double locationLat,
-            Double locationLng);
-    
+
     void deleteAllByCreatedBy(String createdBy);
 }

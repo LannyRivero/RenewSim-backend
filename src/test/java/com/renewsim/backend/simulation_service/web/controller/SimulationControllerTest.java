@@ -1,38 +1,22 @@
 package com.renewsim.backend.simulation_service.web.controller;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
-import com.renewsim.backend.simulation_service.application.command.GetSimulationByIdCommand;
-import com.renewsim.backend.simulation_service.application.createSimulation.CreateSimulationCommand;
-import com.renewsim.backend.simulation_service.application.createSimulation.CreateSimulationUseCase;
-import com.renewsim.backend.simulation_service.application.createSimulation.SimulationCreationResultDTO;
-import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteAllSimulationsByUserUseCase;
-import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteSimulationUseCase;
-import com.renewsim.backend.simulation_service.application.detailSimulation.SimulationDetailResultDTO;
-import com.renewsim.backend.simulation_service.application.historySimulation.GetUserSimulationHistoryUseCase;
-import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryResultDTO;
-import com.renewsim.backend.simulation_service.application.port.in.GetSimulationUseCase;
-import com.renewsim.backend.simulation_service.application.port.in.GetSimulationDashboardSummaryUseCase;
+import com.renewsim.backend.simulation_service.application.createSimulation.CreateRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.application.detailSimulation.GetRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.application.historySimulation.ListUserRealSimulationsUseCase;
+import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryRowResult;
+import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.application.port.out.ClimateDataProviderPort;
-import com.renewsim.backend.simulation_service.application.result.SimulationDashboardSummaryResult;
-import com.renewsim.backend.simulation_service.application.result.SimulationDashboardStatsResult;
-import com.renewsim.backend.simulation_service.application.result.SimulationDashboardEnergyBySourceResult;
-import com.renewsim.backend.simulation_service.application.updateSimulation.UpdateSimulationUseCase;
-import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
+import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
-import com.renewsim.backend.simulation_service.web.dto.CreateSimulationResponseDTO;
-import com.renewsim.backend.simulation_service.web.dto.DashboardSummaryResponseDTO;
+import com.renewsim.backend.simulation_service.web.dto.CreateSimulationRequestDTO;
+import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.ResolvedLocationResponseDTO;
-import com.renewsim.backend.simulation_service.web.dto.SimulationLocationSummaryDTO;
-import com.renewsim.backend.simulation_service.web.dto.SimulationLocationRequestDTO;
-import com.renewsim.backend.simulation_service.web.dto.SimulationRequestDTO;
-import com.renewsim.backend.simulation_service.web.dto.SimulationResultsResponseDTO;
-import com.renewsim.backend.simulation_service.web.dto.UserSimulationSummaryDTO;
-import com.renewsim.backend.simulation_service.web.mapper.SimulationResponseMapper;
-import com.renewsim.backend.user_service.web.dto.PageResponse;
+import com.renewsim.backend.simulation_service.web.dto.SimulationDetailsResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -43,7 +27,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -58,155 +41,65 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class SimulationControllerTest {
 
-    @Mock private CreateSimulationUseCase createUseCase;
-    @Mock private UpdateSimulationUseCase updateUseCase;
-    @Mock private DeleteSimulationUseCase deleteUseCase;
-    @Mock private GetSimulationUseCase getUseCase;
-    @Mock private GetSimulationDashboardSummaryUseCase dashboardSummaryUseCase;
-    @Mock private GetUserSimulationHistoryUseCase historyUseCase;
-    @Mock private DeleteAllSimulationsByUserUseCase deleteAllSimulationsByUserUseCase;
-    @Mock private ClimateDataProviderPort climateDataProviderPort;
-    @Mock private SimulationResponseMapper responseMapper;
+    @Mock
+    private ClimateDataProviderPort climateDataProviderPort;
+    @Mock
+    private CreateRealSimulationUseCase createRealSimulationUseCase;
+    @Mock
+    private GetRealSimulationUseCase getRealSimulationUseCase;
+    @Mock
+    private ListUserRealSimulationsUseCase listUserRealSimulationsUseCase;
+    @Mock
+    private DeleteRealSimulationUseCase deleteRealSimulationUseCase;
 
     @InjectMocks
     private SimulationController controller;
 
     @Test
-    @DisplayName("createSimulation maps frontend contract into backend-owned command")
-    void createSimulationMapsFrontendContract() {
+    @DisplayName("createSimulation returns the real simulation details contract")
+    void createSimulationReturnsRealContract() {
         Authentication auth = authentication("alice", "ROLE_USER");
-        SimulationRequestDTO request = new SimulationRequestDTO(
-                "Test Solar",
-                "solar",
-                100,
-                new SimulationLocationRequestDTO(-32.8895, -68.8458));
+        CreateSimulationRequestDTO request = request();
 
-        when(createUseCase.createSimulation(any(CreateSimulationCommand.class))).thenReturn(
-                new SimulationCreationResultDTO(55L, "Test Solar", LocalDateTime.parse("2026-06-08T10:15:30")));
-        when(responseMapper.toCreateResponse(any())).thenReturn(
-                new CreateSimulationResponseDTO(55L, "Test Solar", "completed", LocalDateTime.parse("2026-06-08T10:15:30")));
+        when(createRealSimulationUseCase.createSimulation(any())).thenReturn(sampleResult());
 
-        CreateSimulationResponseDTO response = controller.createSimulation(request, auth).getBody();
+        SimulationDetailsResponseDTO body = controller.createSimulation(request, auth).getBody();
 
-        ArgumentCaptor<CreateSimulationCommand> commandCaptor = ArgumentCaptor.forClass(CreateSimulationCommand.class);
-        verify(createUseCase).createSimulation(commandCaptor.capture());
-        assertThat(commandCaptor.getValue().name()).isEqualTo("Test Solar");
-        assertThat(commandCaptor.getValue().latitude()).isEqualTo(-32.8895);
-        assertThat(commandCaptor.getValue().longitude()).isEqualTo(-68.8458);
-        assertThat(commandCaptor.getValue().budget()).isZero();
-        assertThat(response).isNotNull();
-        assertThat(response.status()).isEqualTo("completed");
+        assertThat(body).isNotNull();
+        assertThat(body.id()).isEqualTo("55");
+        assertThat(body.technical().annualGenerationKwh()).isEqualTo(457200);
+        verify(createRealSimulationUseCase).createSimulation(any());
     }
 
     @Test
-    @DisplayName("getSimulationById returns final results contract with financials and climate")
-    void getSimulationByIdReturnsFinalResultsContract() {
+    @DisplayName("getSimulationById returns the real details contract")
+    void getSimulationByIdReturnsRealDetailsContract() {
         Authentication auth = authentication("alice", "ROLE_USER");
-        SimulationDetailResultDTO detail = new SimulationDetailResultDTO(
-                77L,
-                "Wind Demo",
-                "Cordoba",
-                -31.4167,
-                -64.1833,
-                "WIND",
-                80,
-                120000,
-                245000,
-                35.0,
-                new ClimateData(450, 9, 40, 18.5, "ERA5", "recent_10yr", "AR"),
-                LocalDateTime.parse("2026-06-08T11:00:00"),
-                "alice",
-                List.of(2L, 3L));
+        when(getRealSimulationUseCase.getSimulationById(55L, "alice", false)).thenReturn(sampleResult());
 
-        when(getUseCase.getSimulationById(any(GetSimulationByIdCommand.class))).thenReturn(detail);
-        when(responseMapper.toResultsResponse(detail)).thenReturn(
-                new SimulationResultsResponseDTO(
-                        77L,
-                        "Wind Demo",
-                        LocalDateTime.parse("2026-06-08T11:00:00"),
-                        new com.renewsim.backend.simulation_service.web.dto.SimulationLocationResponseDTO("Cordoba", "AR", -31.4167, -64.1833),
-                        new com.renewsim.backend.simulation_service.web.dto.SimulationClimateDataResponseDTO(450, 9, 40, 18.5, "ERA5", "recent_10yr"),
-                        "wind",
-                        80,
-                        120000,
-                        35.0,
-                        new com.renewsim.backend.simulation_service.web.dto.SimulationFinancialsResponseDTO(245000, 3600, 29400, 21.5, 5.0, 88250, 13.2),
-                        null,
-                        null));
+        SimulationDetailsResponseDTO body = controller.getSimulationById(55L, auth).getBody();
 
-        SimulationResultsResponseDTO response = controller.getSimulationById(77L, auth).getBody();
-
-        assertThat(response).isNotNull();
-        assertThat(response.location().lat()).isEqualTo(-31.4167);
-        assertThat(response.climateData().windSpeed()).isEqualTo(9);
-        assertThat(response.financials().roi()).isEqualTo(21.5);
-        assertThat(response.technology()).isEqualTo("wind");
+        assertThat(body).isNotNull();
+        assertThat(body.summary().recommendation()).isEqualTo("viable_with_reservations");
+        assertThat(body.technical().resource().source()).isEqualTo("PVGIS");
     }
 
     @Test
-    @DisplayName("getMySimulations returns paginated completed history")
-    void getMySimulationsReturnsPaginatedHistory() {
+    @DisplayName("getMySimulations returns list projection contract")
+    void getMySimulationsReturnsListProjectionContract() {
         Authentication auth = authentication("alice", "ROLE_USER");
+        when(listUserRealSimulationsUseCase.getUserSimulations("alice")).thenReturn(
+                new UserSimulationListResult(
+                        List.of(new SimulationHistoryRowResult("55", "Solar - Sevilla", "solar", "completed",
+                                "2026-06-30T14:00:00Z", "Sevilla, Andalucia, ES", 457200, 68700, 121500, 11.4,
+                                "viable_with_reservations", "solar-spain-v1", "PVGIS")),
+                        1));
 
-        SimulationHistoryResultDTO first = new SimulationHistoryResultDTO(
-                10L,
-                "Solar One",
-                "Mendoza",
-                "AR",
-                -32.8895,
-                -68.8458,
-                "SOLAR",
-                100,
-                150000,
-                21.5,
-                "completed",
-                LocalDateTime.parse("2026-06-08T09:00:00"));
-        SimulationHistoryResultDTO second = new SimulationHistoryResultDTO(
-                11L,
-                "Wind Two",
-                "Cordoba",
-                "AR",
-                -31.4167,
-                -64.1833,
-                "WIND",
-                80,
-                120000,
-                18.0,
-                "completed",
-                LocalDateTime.parse("2026-06-08T10:00:00"));
+        ListUserSimulationsResponseDTO body = controller.getMySimulations(auth).getBody();
 
-        when(historyUseCase.getUserHistory("alice")).thenReturn(List.of(first, second));
-        when(responseMapper.toUserSummary(first)).thenReturn(new UserSimulationSummaryDTO(
-                10L,
-                "Solar One",
-                "solar",
-                100,
-                150000,
-                21.5,
-                "completed",
-                LocalDateTime.parse("2026-06-08T09:00:00"),
-                new SimulationLocationSummaryDTO("Mendoza", "AR")));
-        when(responseMapper.toUserSummary(second)).thenReturn(new UserSimulationSummaryDTO(
-                11L,
-                "Wind Two",
-                "wind",
-                80,
-                120000,
-                18.0,
-                "completed",
-                LocalDateTime.parse("2026-06-08T10:00:00"),
-                new SimulationLocationSummaryDTO("Cordoba", "AR")));
-
-        PageResponse<UserSimulationSummaryDTO> response = controller
-                .getMySimulations(auth, 0, 1, "completed")
-                .getBody();
-
-        assertThat(response).isNotNull();
-        assertThat(response.content()).hasSize(1);
-        assertThat(response.totalElements()).isEqualTo(2);
-        assertThat(response.totalPages()).isEqualTo(2);
-        assertThat(response.last()).isFalse();
-        assertThat(response.content().getFirst().name()).isEqualTo("Solar One");
+        assertThat(body).isNotNull();
+        assertThat(body.total()).isEqualTo(1);
+        assertThat(body.items().getFirst().recommendation()).isEqualTo("viable_with_reservations");
     }
 
     @Test
@@ -215,15 +108,14 @@ class SimulationControllerTest {
         Authentication auth = authentication("alice", "ROLE_USER");
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
-        when(historyUseCase.getUserHistory("alice")).thenReturn(List.of());
+        when(listUserRealSimulationsUseCase.getUserSimulations("alice"))
+                .thenReturn(new UserSimulationListResult(List.of(), 0));
 
-        mockMvc.perform(get("/api/v1/simulations/user")
-                        .principal(auth)
-                        .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/v1/simulations/user").principal(auth).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        verify(historyUseCase).getUserHistory("alice");
-        verify(getUseCase, never()).getSimulationById(any(GetSimulationByIdCommand.class));
+        verify(listUserRealSimulationsUseCase).getUserSimulations("alice");
+        verify(getRealSimulationUseCase, never()).getSimulationById(any(), any(), any(Boolean.class));
     }
 
     @Test
@@ -236,52 +128,59 @@ class SimulationControllerTest {
 
         assertThat(response).isNotNull();
         assertThat(response.name()).isEqualTo("Mendoza");
-        assertThat(response.country()).isEqualTo("AR");
-        assertThat(response.lat()).isEqualTo(-32.8895);
-        assertThat(response.lon()).isEqualTo(-68.8458);
     }
 
-    @Test
-    @DisplayName("searchLocations returns backend location suggestions")
-    void searchLocationsReturnsSuggestions() {
-        when(climateDataProviderPort.searchLocations("mendoza", 5)).thenReturn(List.of(
-                new ResolvedLocation("Mendoza", "AR", -32.8895, -68.8458),
-                new ResolvedLocation("Mendoza City", "AR", -32.90, -68.84)));
-
-        List<ResolvedLocationResponseDTO> response = controller.searchLocations("mendoza", 5).getBody();
-
-        assertThat(response).isNotNull();
-        assertThat(response).hasSize(2);
-        assertThat(response.getFirst().name()).isEqualTo("Mendoza");
-        assertThat(response.getFirst().country()).isEqualTo("AR");
+    private CreateSimulationRequestDTO request() {
+        return new CreateSimulationRequestDTO(
+                "Solar - Sevilla",
+                "solar",
+                new CreateSimulationRequestDTO.LocationDTO("Sevilla, Andalucia, ES", 37.3891, -5.9845, "Spain", "ES"),
+                new CreateSimulationRequestDTO.SystemDTO(300, 0.81, 0.5, 99,
+                        new CreateSimulationRequestDTO.LossesPctDTO(2, 6, 1, 3, 1)),
+                new CreateSimulationRequestDTO.DemandDTO(120000,
+                        List.of(10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d,
+                                10000d)),
+                new CreateSimulationRequestDTO.EconomicsDTO("EUR", 315000, 7200, 0.18, 0.07, 8, 20));
     }
 
-    @Test
-    @DisplayName("getDashboardSummary returns aggregated dashboard payload")
-    void getDashboardSummaryReturnsAggregatedPayload() {
-        Authentication auth = authentication("alice", "ROLE_USER");
-
-        when(dashboardSummaryUseCase.getDashboardSummary("alice")).thenReturn(
-                new SimulationDashboardSummaryResult(
-                        new SimulationDashboardStatsResult(2, 3000.0, 1200.0, 14.5),
-                        List.of(new SimulationDashboardEnergyBySourceResult("Solar", 3000.0)),
-                        List.of(),
-                        List.of()));
-
-        DashboardSummaryResponseDTO response = controller.getDashboardSummary(auth).getBody();
-
-        assertThat(response).isNotNull();
-        assertThat(response.stats().totalSimulations()).isEqualTo(2);
-        assertThat(response.stats().totalEnergyGeneratedKwh()).isEqualTo(3000.0);
-        assertThat(response.stats().totalCo2SavedKg()).isEqualTo(1200.0);
-        assertThat(response.energyBySource()).hasSize(1);
-        assertThat(response.energyBySource().getFirst().label()).isEqualTo("Solar");
-        assertThat(response.efficiencyMetrics()).isEmpty();
-        assertThat(response.targetVsActual()).isEmpty();
+    private SimulationDetailsResult sampleResult() {
+        return new SimulationDetailsResult(
+                "55",
+                "completed",
+                "2026-06-30T14:00:00Z",
+                "2026-06-30T14:00:00Z",
+                "solar-spain-v1",
+                "solar",
+                new SimulationDetailsResult.ResolvedLocation("Sevilla, Andalucia, ES", "Sevilla", "Andalucia", "Spain",
+                        "ES", 37.3891, -5.9845, "Europe/Madrid"),
+                new SimulationDetailsResult.Summary("viable_with_reservations", "headline", "summary",
+                        List.of(new SimulationDetailsResult.RecommendationReason("resource", "positive", "msg"))),
+                new SimulationDetailsResult.Input(
+                        "Solar - Sevilla",
+                        "solar",
+                        new SimulationDetailsResult.Location("Sevilla, Andalucia, ES", 37.3891, -5.9845, "Spain", "ES"),
+                        new SimulationDetailsResult.SystemSpec(300, 0.81, 0.5, 99,
+                                new SimulationDetailsResult.LossesPct(2, 6, 1, 3, 1)),
+                        new SimulationDetailsResult.Demand(120000,
+                                List.of(10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d,
+                                        10000d, 10000d)),
+                        new SimulationDetailsResult.Economics("EUR", 315000, 7200, 0.18, 0.07, 8, 20)),
+                new SimulationDetailsResult.Technical(457200, List.of(24800d, 29100d), 1524, 0.81, 17.4, 72.3, 31.5,
+                        new SimulationDetailsResult.ResourceSeries("PVGIS", "2005-2020", List.of(71d), List.of(10d)),
+                        new SimulationDetailsResult.LossesSummary(2, 6, 1, 3, 1, 13),
+                        List.of(new SimulationDetailsResult.MonthlyEnergyBalanceItem("Jan", 24800, 10000, 10000, 14800,
+                                0))),
+                new SimulationDetailsResult.Financial("EUR", 68700, 8800, 70300, 6.9, 8.7, 121500, 11.4, 0.071,
+                        List.of(new SimulationDetailsResult.FinancialYearItem(0, 0, 0, 0, 0, -315000, -315000,
+                                -315000))),
+                new SimulationDetailsResult.Assumptions(8, 20, 0.5, 0.18, 0.07, "PVGIS", "2005-2020"),
+                List.of(new SimulationDetailsResult.SimulationWarning("info", "MONTHLY_PROFILE_USER_SUPPLIED",
+                        "warning")));
     }
 
     private Authentication authentication(String username, String role) {
-        AuthenticatedUser user = AuthenticatedUser.of(username, Set.of(role.replace("ROLE_", "")), Set.of("read:simulations", "write:simulations"));
+        AuthenticatedUser user = AuthenticatedUser.of(username, Set.of(role.replace("ROLE_", "")),
+                Set.of("read:simulations", "write:simulations"));
         return new TestingAuthenticationToken(user, null, List.of(new SimpleGrantedAuthority(role)));
     }
 }
