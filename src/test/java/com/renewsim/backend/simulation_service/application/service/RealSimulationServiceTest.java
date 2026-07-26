@@ -3,8 +3,12 @@ package com.renewsim.backend.simulation_service.application.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.shared.exception.BadRequestException;
 import com.renewsim.backend.simulation_service.application.createSimulation.CreateRealSimulationCommand;
-import com.renewsim.backend.simulation_service.application.createSimulation.CreateSimulationService;
 import com.renewsim.backend.simulation_service.application.createSimulation.SimulationCompletionMapper;
+import com.renewsim.backend.simulation_service.application.createSimulation.CreateSimulationService;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardDistributionByTechnology;
+import com.renewsim.backend.simulation_service.application.dashboard.GetPortfolioDashboardService;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardRiskAlert;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
 import com.renewsim.backend.simulation_service.application.detailSimulation.GetSimulationService;
 import com.renewsim.backend.simulation_service.application.historySimulation.ListSimulationsService;
 import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
@@ -106,6 +110,83 @@ class RealSimulationServiceTest {
         }
 
         @Test
+        @DisplayName("getDashboard aggregates portfolio KPIs, recommendation and alerts")
+        void getDashboardAggregatesPortfolioData() throws Exception {
+                GetPortfolioDashboardService service = new GetPortfolioDashboardService(
+                                repository,
+                                technologyLookupPort,
+                                new ObjectMapper().findAndRegisterModules());
+
+                Simulation best = completedSimulation(55L, "alice",
+                                new ObjectMapper().writeValueAsString(resultWithMetrics(
+                                                "55", "recommended", 82000, 9100, 6.2, 1820, List.of())));
+                Simulation risky = completedSimulation(56L, "alice",
+                                new ObjectMapper().writeValueAsString(resultWithMetrics(
+                                                "56", "not_recommended", 12000, -5000, 12.4, 980,
+                                                List.of(new SimulationDetailsResult.SimulationWarning("warning",
+                                                                "LOW_AVAILABILITY_ASSUMPTION",
+                                                                "Availability assumption is below 95% and may materially reduce annual output.")))));
+                Simulation draft = Simulation.create(
+                                "Solar - Draft",
+                                Technology.solar(),
+                                SimulationLocation.of("Cordoba, Andalucia, ES", 37.8882, -4.7794, "Spain",
+                                                CountryCode.of("ES")),
+                                new SimulationSystem(120, 0.81, 0.5, 99.0,
+                                                new SimulationSystem.LossesPct(2, 6, 1, 3, 1)),
+                                ConsumptionProfile.of(48000,
+                                                List.of(4000d, 4000d, 4000d, 4000d, 4000d, 4000d, 4000d, 4000d, 4000d,
+                                                                4000d, 4000d, 4000d)),
+                                new SimulationEconomics(Currency.of("EUR"), 110000.0, 3000.0, 0.18, 0.07, 8,
+                                                ProjectLifetime.of(20)),
+                                "alice");
+                draft.assignId(SimulationId.of(57L));
+
+                when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(best, risky, draft));
+                when(technologyLookupPort.findActiveCo2ReductionFactorByEnergyType("solar"))
+                                .thenReturn(Optional.of(0.45));
+
+                PortfolioDashboardResult response = service.getDashboard("alice");
+
+                assertThat(response.summary().totalSimulations()).isEqualTo(3);
+                assertThat(response.summary().atRiskCount()).isEqualTo(2);
+                assertThat(response.recommendedScenario()).isNotNull();
+                assertThat(response.recommendedScenario().id()).isEqualTo("55");
+                assertThat(response.prioritizedScenarios()).hasSize(3);
+                assertThat(response.riskAlerts()).extracting(PortfolioDashboardRiskAlert::type)
+                                .contains("NEGATIVE_ROI", "LONG_PAYBACK", "INCOMPLETE_DATA", "REQUIRES_REVIEW");
+                assertThat(response.distribution().byTechnology().getFirst().label()).isEqualTo("SOLAR");
+        }
+
+        @Test
+        @DisplayName("getDashboard tolerates partial historical snapshots")
+        void getDashboardToleratesPartialHistoricalSnapshots() throws Exception {
+                GetPortfolioDashboardService service = new GetPortfolioDashboardService(
+                                repository,
+                                technologyLookupPort,
+                                new ObjectMapper().findAndRegisterModules());
+
+                Simulation partial = completedSimulation(58L, "alice", """
+                                {
+                                  "id": "58",
+                                  "status": "completed",
+                                  "summary": null,
+                                  "technical": null,
+                                  "financial": null,
+                                  "warnings": null
+                                }
+                                """);
+
+                when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(partial));
+
+                PortfolioDashboardResult response = service.getDashboard("alice");
+
+                assertThat(response.summary().totalSimulations()).isEqualTo(1);
+                assertThat(response.summary().atRiskCount()).isEqualTo(1);
+                assertThat(response.prioritizedScenarios()).hasSize(1);
+                assertThat(response.prioritizedScenarios().getFirst().priority()).isEqualTo("REVIEW");
+        }
+
+        @Test
         @DisplayName("ConsumptionProfile rejects annual demand mismatches at domain level")
         void consumptionProfileRejectsAnnualDemandMismatch() {
                 assertThatThrownBy(() -> ConsumptionProfile.of(999999,
@@ -200,4 +281,43 @@ class RealSimulationServiceTest {
                                 List.of());
         }
 
+        private SimulationDetailsResult resultWithMetrics(
+                        String id,
+                        String recommendation,
+                        double annualSavings,
+                        double netAnnualBenefit,
+                        double paybackYears,
+                        double specificYield,
+                        List<SimulationDetailsResult.SimulationWarning> warnings) {
+                return new SimulationDetailsResult(
+                                id,
+                                "completed",
+                                "2026-06-30T14:00:00Z",
+                                "2026-06-30T14:00:00Z",
+                                "solar-spain-v1",
+                                "solar",
+                                new SimulationDetailsResult.ResolvedLocation("Sevilla, Andalucia, ES", "Sevilla",
+                                                "Andalucia", "Spain", "ES", 37.3891, -5.9845, "Europe/Madrid"),
+                                new SimulationDetailsResult.Summary(recommendation, "headline", "summary",
+                                                List.of(new SimulationDetailsResult.RecommendationReason("economics",
+                                                                "positive", "Driver"))),
+                                new SimulationDetailsResult.Input("Solar - Sevilla", "solar",
+                                                new SimulationDetailsResult.Location("Sevilla, Andalucia, ES", 37.3891,
+                                                                -5.9845, "Spain", "ES"),
+                                                new SimulationDetailsResult.SystemSpec(300, 0.81, 0.5, 99,
+                                                                new SimulationDetailsResult.LossesPct(2, 6, 1, 3, 1)),
+                                                new SimulationDetailsResult.Demand(120000, List.of()),
+                                                new SimulationDetailsResult.Economics("EUR", 315000, 7200, 0.18, 0.07,
+                                                                8, 20)),
+                                new SimulationDetailsResult.Technical(457200, List.of(), specificYield, 0.81, 17.4,
+                                                72.3, 31.5,
+                                                new SimulationDetailsResult.ResourceSeries("PVGIS", "2005-2020",
+                                                                List.of(), List.of()),
+                                                new SimulationDetailsResult.LossesSummary(2, 6, 1, 3, 1, 13),
+                                                List.of()),
+                                new SimulationDetailsResult.Financial("EUR", annualSavings, 8800, netAnnualBenefit,
+                                                paybackYears, 8.7, 121500, 11.4, 0.071, List.of()),
+                                new SimulationDetailsResult.Assumptions(8, 20, 0.5, 0.18, 0.07, "PVGIS", "2005-2020"),
+                                warnings);
+        }
 }
