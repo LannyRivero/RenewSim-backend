@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 public interface JpaTechnologyRepository extends JpaRepository<TechnologyEntity, Long> {
 
     boolean existsByName(String name);
-    
+
     Optional<TechnologyEntity> findByName(String name);
 
     Optional<TechnologyEntity> findByIdAndIsActiveTrue(Long id);
@@ -22,9 +22,12 @@ public interface JpaTechnologyRepository extends JpaRepository<TechnologyEntity,
 
     Page<TechnologyEntity> findByEnergyTypeAndIsActiveTrue(TechnologyEntity.EnergyType energyType, Pageable pageable);
 
+    Optional<TechnologyEntity> findFirstByEnergyTypeAndIsActiveTrueOrderByIdAsc(TechnologyEntity.EnergyType energyType);
+
     Page<TechnologyEntity> findByIsActiveTrue(Pageable pageable);
 
     Page<TechnologyEntity> findByIsActiveTrueAndNameContainingIgnoreCase(String name, Pageable pageable);
 
-    Page<TechnologyEntity> findByEnergyTypeAndIsActiveTrueAndNameContainingIgnoreCase(TechnologyEntity.EnergyType energyType, String name, Pageable pageable);
+    Page<TechnologyEntity> findByEnergyTypeAndIsActiveTrueAndNameContainingIgnoreCase(
+            TechnologyEntity.EnergyType energyType, String name, Pageable pageable);
 }
