@@ -11,7 +11,7 @@ public record SimulationDetailsResponseDTO(
                 String technology,
                 ResolvedLocationDTO location,
                 SummaryDTO summary,
-                CreateSimulationRequestDTO input,
+                CreateSolarSimulationRequestDTO input,
                 TechnicalDTO technical,
                 FinancialDTO financial,
                 AssumptionsDTO assumptions,
