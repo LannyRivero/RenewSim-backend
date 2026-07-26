@@ -34,17 +34,17 @@ public class ExistsUserService implements ExistsUserUseCase {
     @Override
     public boolean existsByUsernameOrEmail(String username, String email) {
         MDC.put("action", "existsByUsernameOrEmail");
-        MDC.put("username", username);
-        MDC.put("email", email);
+        MDC.put("lookupUsernamePresent", String.valueOf(username != null && !username.isBlank()));
+        MDC.put("lookupEmailPresent", String.valueOf(email != null && !email.isBlank()));
         try {
             if (username != null && !username.isBlank()) {
                 boolean result = userRepositoryPort.existsByUsername(username);
-                log.info("Checked existence by username={}, exists={}", username, result);
+                log.info("Checked existence by username lookup, exists={}", result);
                 return result;
             }
             if (email != null && !email.isBlank()) {
                 boolean result = userRepositoryPort.existsByEmail(email);
-                log.info("Checked existence by email={}, exists={}", email, result);
+                log.info("Checked existence by email lookup, exists={}", result);
                 return result;
             }
             log.warn("Invalid request: both username and email are null/blank");

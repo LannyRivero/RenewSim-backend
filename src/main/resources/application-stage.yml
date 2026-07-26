@@ -11,17 +11,17 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
+security:
+  jwt:
+    issuer: ${SECURITY_JWT_ISSUER:renewsim-auth-stage}
+    audience: ${SECURITY_JWT_AUDIENCE:renewsim-app-stage}
+    secret-base64: ${SECURITY_JWT_SECRET_BASE64}
+  rate-limiting:
+    max-attempts: 5
+    window: 300s
+    retry-after: 900s
+
 app:
-  security:
-    jwt:
-      secret: ${APP_SECURITY_JWT_SECRET}
-      issuer: ${APP_SECURITY_JWT_ISSUER}
-      access-expiration-minutes: ${APP_SECURITY_JWT_ACCESS_EXPIRATION_MINUTES}
-      refresh-expiration-minutes: ${APP_SECURITY_JWT_REFRESH_EXPIRATION_MINUTES}
-    rate-limiting:                        
-      max-attempts: 5                     
-      window-seconds: 300                 
-      lockout-duration-seconds: 900       
   frontend:
     url: ${APP_FRONTEND_URL}
   email:

@@ -11,7 +11,7 @@
 
     <property name="MDC_CUSTOM"
               value="action=%X{action:-N/A} page=%X{page:-N/A} size=%X{size:-N/A} 
-                     usernameFilter=%X{usernameFilter:-N/A} emailFilter=%X{emailFilter:-N/A} enabledFilter=%X{enabledFilter:-N/A}"/>
+                     usernameFilterPresent=%X{usernameFilterPresent:-N/A} emailFilterPresent=%X{emailFilterPresent:-N/A} enabledFilter=%X{enabledFilter:-N/A}"/>
 
     <!-- Global pattern -->
     <property name="LOG_PATTERN"

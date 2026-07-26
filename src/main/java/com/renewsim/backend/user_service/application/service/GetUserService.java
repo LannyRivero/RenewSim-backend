@@ -52,8 +52,8 @@ public class GetUserService implements GetUserUseCase {
     @Override
     public UserResponse getUserByUsernameOrEmail(String username, String email) {
         org.slf4j.MDC.put("action", "getUserByUsernameOrEmail");
-        org.slf4j.MDC.put("username", username);
-        org.slf4j.MDC.put("email", email);
+        org.slf4j.MDC.put("lookupUsernamePresent", String.valueOf(username != null && !username.isBlank()));
+        org.slf4j.MDC.put("lookupEmailPresent", String.valueOf(email != null && !email.isBlank()));
         try {
             if ((username == null || username.isBlank()) && (email == null || email.isBlank())) {
                 log.warn("Invalid request: both username and email are null/blank");
@@ -61,14 +61,14 @@ public class GetUserService implements GetUserUseCase {
             }
 
             if (username != null && !username.isBlank()) {
-                log.info("Fetching user by username={}", username);
+                log.info("Fetching user by username lookup");
                 return userRepositoryPort.findByUsername(username)
                         .map(mapper::toResponse)
                         .orElseThrow(() -> new UserNotFoundException(
                                 "User with username '" + username + "' not found"));
             }
 
-            log.info("Fetching user by email={}", email);
+            log.info("Fetching user by email lookup");
             return userRepositoryPort.findByEmail(email)
                     .map(mapper::toResponse)
                     .orElseThrow(
@@ -81,10 +81,10 @@ public class GetUserService implements GetUserUseCase {
     @Override
     public User getDomainUserByUsernameOrEmail(String username, String email) {
         org.slf4j.MDC.put("action", "getDomainUserByUsernameOrEmail");
-        org.slf4j.MDC.put("username", username);
-        org.slf4j.MDC.put("email", email);
+        org.slf4j.MDC.put("lookupUsernamePresent", String.valueOf(username != null && !username.isBlank()));
+        org.slf4j.MDC.put("lookupEmailPresent", String.valueOf(email != null && !email.isBlank()));
         try {
-            log.info("Fetching domain user by username={} or email={}", username, email);
+            log.info("Fetching domain user by username/email lookup");
 
             if (username != null && !username.isBlank()) {
                 return userRepositoryPort.findByUsername(username)
