@@ -1,6 +1,7 @@
 package com.renewsim.backend.simulation_service.web.controller;
 
 import com.renewsim.backend.simulation_service.application.createSimulation.CreateRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.application.dashboard.GetPortfolioDashboardUseCase;
 import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.detailSimulation.GetRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.historySimulation.ListUserRealSimulationsUseCase;
@@ -8,6 +9,7 @@ import com.renewsim.backend.simulation_service.application.port.out.ClimateDataP
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 import com.renewsim.backend.simulation_service.web.dto.CreateSimulationRequestDTO;
 import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
+import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.ResolvedLocationResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.SimulationDetailsResponseDTO;
 import com.renewsim.backend.shared.domain.vo.Location;
@@ -50,6 +52,7 @@ public class SimulationController {
     private final ClimateDataProviderPort climateDataProviderPort;
     private final CreateRealSimulationUseCase createRealSimulationUseCase;
     private final GetRealSimulationUseCase getRealSimulationUseCase;
+    private final GetPortfolioDashboardUseCase getPortfolioDashboardUseCase;
     private final ListUserRealSimulationsUseCase listUserRealSimulationsUseCase;
     private final DeleteRealSimulationUseCase deleteRealSimulationUseCase;
     private final SimulationWebMapper webMapper = new SimulationWebMapper();
@@ -125,6 +128,17 @@ public class SimulationController {
         log.info("User {} retrieved {} simulations", requestContext.username(), history.total());
 
         return ResponseEntity.ok(history);
+    }
+
+    @Operation(summary = "Get executive portfolio dashboard for authenticated user")
+    @PreAuthorize("hasAuthority('SCOPE_read:simulations') or hasRole('ADMIN')")
+    @GetMapping("/dashboard")
+    public ResponseEntity<PortfolioDashboardResponseDTO> getDashboard(Authentication auth) {
+
+        SimulationRequestContext requestContext = requestContextFactory.from(auth);
+
+        return ResponseEntity
+                .ok(webMapper.toWebDashboard(getPortfolioDashboardUseCase.getDashboard(requestContext.username())));
     }
 
     @Operation(summary = "Resolve location from coordinates")

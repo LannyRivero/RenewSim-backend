@@ -2,6 +2,15 @@ package com.renewsim.backend.simulation_service.web.controller;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.simulation_service.application.createSimulation.CreateRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.application.dashboard.GetPortfolioDashboardUseCase;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardDistribution;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardDistributionByStatus;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardDistributionByTechnology;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardPrioritizedScenario;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardRecommendedScenario;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardRiskAlert;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardSummary;
 import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.detailSimulation.GetRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.historySimulation.ListUserRealSimulationsUseCase;
@@ -12,6 +21,7 @@ import com.renewsim.backend.simulation_service.application.shared.SimulationDeta
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 import com.renewsim.backend.simulation_service.web.dto.CreateSimulationRequestDTO;
 import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
+import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.ResolvedLocationResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.SimulationDetailsResponseDTO;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +57,8 @@ class SimulationControllerTest {
     private CreateRealSimulationUseCase createRealSimulationUseCase;
     @Mock
     private GetRealSimulationUseCase getRealSimulationUseCase;
+    @Mock
+    private GetPortfolioDashboardUseCase getPortfolioDashboardUseCase;
     @Mock
     private ListUserRealSimulationsUseCase listUserRealSimulationsUseCase;
     @Mock
@@ -100,6 +112,35 @@ class SimulationControllerTest {
         assertThat(body).isNotNull();
         assertThat(body.total()).isEqualTo(1);
         assertThat(body.items().getFirst().recommendation()).isEqualTo("viable_with_reservations");
+    }
+
+    @Test
+    @DisplayName("getDashboard returns executive portfolio contract")
+    void getDashboardReturnsExecutivePortfolioContract() {
+        Authentication auth = authentication("alice", "ROLE_USER");
+        when(getPortfolioDashboardUseCase.getDashboard("alice")).thenReturn(
+                new PortfolioDashboardResult(
+                        new PortfolioDashboardSummary(3, 3, 14.2, 6.2, 912300, 410535, 2),
+                        new PortfolioDashboardRecommendedScenario(
+                                "55", "Solar - Sevilla", "SOLAR", "Sevilla, ES", 22.5, 6.2, 315000.0, 82000.0,
+                                "HIGH", "headline", List.of("driver 1"), "main risk", "next step"),
+                        List.of(new PortfolioDashboardPrioritizedScenario(
+                                "55", "Solar - Sevilla", "SOLAR", "COMPLETED", "Sevilla, ES", 22.5, 6.2,
+                                315000.0, 82000.0, "HIGH", 82)),
+                        List.of(new PortfolioDashboardRiskAlert("INCOMPLETE_DATA", "MEDIUM", 1,
+                                "1 simulaciones no tienen información suficiente para priorizar")),
+                        new PortfolioDashboardDistribution(
+                                List.of(new PortfolioDashboardDistributionByTechnology("SOLAR", 3, 912300)),
+                                List.of(new PortfolioDashboardDistributionByStatus("COMPLETED", 2),
+                                        new PortfolioDashboardDistributionByStatus("DRAFT", 1)))));
+
+        PortfolioDashboardResponseDTO body = controller.getDashboard(auth).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.summary().totalSimulations()).isEqualTo(3);
+        assertThat(body.recommendedScenario()).isNotNull();
+        assertThat(body.recommendedScenario().name()).isEqualTo("Solar - Sevilla");
+        assertThat(body.riskAlerts().getFirst().type()).isEqualTo("INCOMPLETE_DATA");
     }
 
     @Test

@@ -1,0 +1,15 @@
+package com.renewsim.backend.simulation_service.web.dto;
+
+public record PortfolioDashboardPrioritizedScenarioDTO(
+                String id,
+                String name,
+                String technology,
+                String status,
+                String location,
+                Double roiPercent,
+                Double paybackYears,
+                Double capex,
+                Double estimatedAnnualSavings,
+                String priority,
+                Integer score) {
+}

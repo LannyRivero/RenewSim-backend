@@ -1,6 +1,7 @@
 package com.renewsim.backend.simulation_service.web.controller;
 
 import com.renewsim.backend.simulation_service.application.createSimulation.CreateRealSimulationCommand;
+import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
 import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
@@ -13,6 +14,14 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.web.dto.CreateSimulationRequestDTO;
 import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
+import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardDistributionByStatusDTO;
+import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardDistributionByTechnologyDTO;
+import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardDistributionDTO;
+import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardPrioritizedScenarioDTO;
+import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardRecommendedScenarioDTO;
+import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardResponseDTO;
+import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardRiskAlertDTO;
+import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardSummaryDTO;
 import com.renewsim.backend.simulation_service.web.dto.SimulationDetailsResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.SimulationHistoryRowDTO;
 
@@ -201,4 +210,62 @@ final class SimulationWebMapper {
                 result.total());
     }
 
+    PortfolioDashboardResponseDTO toWebDashboard(PortfolioDashboardResult result) {
+        return new PortfolioDashboardResponseDTO(
+                new PortfolioDashboardSummaryDTO(
+                        result.summary().totalSimulations(),
+                        result.summary().activeSimulations(),
+                        result.summary().averageRoiPercent(),
+                        result.summary().medianPaybackYears(),
+                        result.summary().totalEnergyGeneratedKwh(),
+                        result.summary().totalCo2SavedKg(),
+                        result.summary().atRiskCount()),
+                result.recommendedScenario() == null ? null : new PortfolioDashboardRecommendedScenarioDTO(
+                        result.recommendedScenario().id(),
+                        result.recommendedScenario().name(),
+                        result.recommendedScenario().technology(),
+                        result.recommendedScenario().location(),
+                        result.recommendedScenario().roiPercent(),
+                        result.recommendedScenario().paybackYears(),
+                        result.recommendedScenario().capex(),
+                        result.recommendedScenario().estimatedAnnualSavings(),
+                        result.recommendedScenario().priority(),
+                        result.recommendedScenario().headline(),
+                        result.recommendedScenario().drivers(),
+                        result.recommendedScenario().mainRisk(),
+                        result.recommendedScenario().nextStep()),
+                result.prioritizedScenarios().stream()
+                        .map(item -> new PortfolioDashboardPrioritizedScenarioDTO(
+                                item.id(),
+                                item.name(),
+                                item.technology(),
+                                item.status(),
+                                item.location(),
+                                item.roiPercent(),
+                                item.paybackYears(),
+                                item.capex(),
+                                item.estimatedAnnualSavings(),
+                                item.priority(),
+                                item.score()))
+                        .toList(),
+                result.riskAlerts().stream()
+                        .map(alert -> new PortfolioDashboardRiskAlertDTO(
+                                alert.type(),
+                                alert.severity(),
+                                alert.count(),
+                                alert.message()))
+                        .toList(),
+                new PortfolioDashboardDistributionDTO(
+                        result.distribution().byTechnology().stream()
+                                .map(item -> new PortfolioDashboardDistributionByTechnologyDTO(
+                                        item.label(),
+                                        item.count(),
+                                        item.energyKwh()))
+                                .toList(),
+                        result.distribution().byStatus().stream()
+                                .map(item -> new PortfolioDashboardDistributionByStatusDTO(
+                                        item.label(),
+                                        item.count()))
+                                .toList()));
+    }
 }
