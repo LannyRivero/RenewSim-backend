@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.infrastructure.config;
 
-import com.renewsim.backend.simulation_service.application.port.out.ClimateDataProviderPort;
+import com.renewsim.backend.simulation_service.application.port.out.LocationLookupPort;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.external.OpenWeatherMapAdapter;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration;
@@ -20,11 +20,11 @@ class ClimateProviderWiringTest {
                     OpenWeatherMapAdapter.class));
 
     @Test
-    @DisplayName("missing provider does not instantiate a climate provider")
-    void missingProviderDoesNotInstantiateClimateProvider() {
+    @DisplayName("missing provider does not instantiate a location lookup provider")
+    void missingProviderDoesNotInstantiateLocationLookupProvider() {
         contextRunner
                 .run(context -> {
-                    assertThat(context).doesNotHaveBean(ClimateDataProviderPort.class);
+                    assertThat(context).doesNotHaveBean(LocationLookupPort.class);
                     assertThat(context).doesNotHaveBean(OpenWeatherMapAdapter.class);
                 });
     }
@@ -39,8 +39,8 @@ class ClimateProviderWiringTest {
                         "services.weather.url=https://api.openweathermap.org",
                         "services.weather.key=test-key")
                 .run(context -> {
-                    assertThat(context).hasSingleBean(ClimateDataProviderPort.class);
-                    assertThat(context.getBean(ClimateDataProviderPort.class)).isInstanceOf(OpenWeatherMapAdapter.class);
+                    assertThat(context).hasSingleBean(LocationLookupPort.class);
+                    assertThat(context.getBean(LocationLookupPort.class)).isInstanceOf(OpenWeatherMapAdapter.class);
                     assertThat(context).hasBean("openWeatherRestTemplate");
                     assertThat(context.getBean("openWeatherRestTemplate", RestTemplate.class)).isNotNull();
                 });

@@ -5,7 +5,7 @@ import com.renewsim.backend.simulation_service.application.dashboard.GetPortfoli
 import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.detailSimulation.GetRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.historySimulation.ListUserRealSimulationsUseCase;
-import com.renewsim.backend.simulation_service.application.port.out.ClimateDataProviderPort;
+import com.renewsim.backend.simulation_service.application.port.out.LocationLookupPort;
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 import com.renewsim.backend.simulation_service.web.dto.CreateSimulationRequestDTO;
 import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
@@ -49,7 +49,7 @@ import java.util.List;
 @Tag(name = "Simulation API", description = "Operations for renewable energy simulations")
 public class SimulationController {
 
-    private final ClimateDataProviderPort climateDataProviderPort;
+    private final LocationLookupPort locationLookupPort;
     private final CreateRealSimulationUseCase createRealSimulationUseCase;
     private final GetRealSimulationUseCase getRealSimulationUseCase;
     private final GetPortfolioDashboardUseCase getPortfolioDashboardUseCase;
@@ -148,7 +148,7 @@ public class SimulationController {
             @RequestParam double lat,
             @RequestParam double lon) {
         new Location(lat, lon);
-        ResolvedLocation resolvedLocation = climateDataProviderPort.resolveLocation(lat, lon);
+        ResolvedLocation resolvedLocation = locationLookupPort.resolveLocation(lat, lon);
 
         return ResponseEntity.ok(new ResolvedLocationResponseDTO(
                 resolvedLocation.name(),
@@ -170,7 +170,7 @@ public class SimulationController {
 
         int safeLimit = Math.min(Math.max(limit, 1), 10);
 
-        List<ResolvedLocationResponseDTO> results = climateDataProviderPort.searchLocations(query, safeLimit)
+        List<ResolvedLocationResponseDTO> results = locationLookupPort.searchLocations(query, safeLimit)
                 .stream()
                 .map(location -> new ResolvedLocationResponseDTO(
                         location.name(),

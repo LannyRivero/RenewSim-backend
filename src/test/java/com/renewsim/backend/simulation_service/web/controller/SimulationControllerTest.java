@@ -16,7 +16,7 @@ import com.renewsim.backend.simulation_service.application.detailSimulation.GetR
 import com.renewsim.backend.simulation_service.application.historySimulation.ListUserRealSimulationsUseCase;
 import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryRowResult;
 import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
-import com.renewsim.backend.simulation_service.application.port.out.ClimateDataProviderPort;
+import com.renewsim.backend.simulation_service.application.port.out.LocationLookupPort;
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 import com.renewsim.backend.simulation_service.web.dto.CreateSimulationRequestDTO;
@@ -52,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SimulationControllerTest {
 
     @Mock
-    private ClimateDataProviderPort climateDataProviderPort;
+    private LocationLookupPort locationLookupPort;
     @Mock
     private CreateRealSimulationUseCase createRealSimulationUseCase;
     @Mock
@@ -162,7 +162,7 @@ class SimulationControllerTest {
     @Test
     @DisplayName("reverseGeocode returns resolved location from coordinates")
     void reverseGeocodeReturnsResolvedLocation() {
-        when(climateDataProviderPort.resolveLocation(-32.8895, -68.8458))
+        when(locationLookupPort.resolveLocation(-32.8895, -68.8458))
                 .thenReturn(new ResolvedLocation("Mendoza", "AR", -32.8895, -68.8458));
 
         ResolvedLocationResponseDTO response = controller.reverseGeocode(-32.8895, -68.8458).getBody();
