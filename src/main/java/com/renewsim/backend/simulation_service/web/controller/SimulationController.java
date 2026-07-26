@@ -7,7 +7,7 @@ import com.renewsim.backend.simulation_service.application.detailSimulation.GetR
 import com.renewsim.backend.simulation_service.application.historySimulation.ListUserRealSimulationsUseCase;
 import com.renewsim.backend.simulation_service.application.port.out.LocationLookupPort;
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
-import com.renewsim.backend.simulation_service.web.dto.CreateSimulationRequestDTO;
+import com.renewsim.backend.simulation_service.web.dto.CreateSolarSimulationRequestDTO;
 import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.ResolvedLocationResponseDTO;
@@ -62,7 +62,7 @@ public class SimulationController {
     @PreAuthorize("hasAuthority('SCOPE_write:simulations') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<SimulationDetailsResponseDTO> createSimulation(
-            @Valid @RequestBody CreateSimulationRequestDTO request,
+            @Valid @RequestBody CreateSolarSimulationRequestDTO request,
             Authentication auth) {
 
         SimulationRequestContext requestContext = requestContextFactory.from(auth);
