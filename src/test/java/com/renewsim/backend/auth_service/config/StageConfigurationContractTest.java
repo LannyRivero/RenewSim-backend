@@ -30,4 +30,13 @@ class StageConfigurationContractTest {
         assertThat(content).doesNotContain("renewsim_root_password");
         assertThat(content).doesNotContain("renewsim_stage_password");
     }
+
+    @Test
+    void authScopesExposeActuatorReadForOperationalRoles() throws IOException {
+        String content = Files.readString(Path.of("src/main/resources/application.yml"));
+
+        assertThat(content).contains("ADMIN:");
+        assertThat(content).contains("SERVICE_AUTH:");
+        assertThat(content).contains("- actuator:read");
+    }
 }
