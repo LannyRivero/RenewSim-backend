@@ -42,8 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || p.startsWith("/api/v1/auth/register")
                 || p.startsWith("/api/v1/auth/activate")
                 || p.startsWith("/api/v1/auth/resend-otp")
-                || p.startsWith("/actuator/health")
-                || p.startsWith("/actuator/info");
+                || p.startsWith("/actuator/health");
     }
 
     @Override

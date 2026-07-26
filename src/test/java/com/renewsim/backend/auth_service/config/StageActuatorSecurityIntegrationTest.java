@@ -37,6 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("stage")
 class StageActuatorSecurityIntegrationTest {
 
+    private static final String VALID_SCOPED_BEARER = "stage-actuator-token";
+
     @Autowired
     private MockMvc mvc;
 
@@ -59,6 +61,21 @@ class StageActuatorSecurityIntegrationTest {
     @DisplayName("stage actuator prometheus allows scoped identity")
     void actuatorPrometheusAllowsScopedIdentity() throws Exception {
         mvc.perform(get("/actuator/prometheus"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("stage actuator info is not public")
+    void actuatorInfoIsNotPublicInStage() throws Exception {
+        mvc.perform(get("/actuator/info"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("stage actuator info allows scoped bearer token")
+    void actuatorInfoAllowsScopedBearerToken() throws Exception {
+        mvc.perform(get("/actuator/info")
+                .header("Authorization", "Bearer " + VALID_SCOPED_BEARER))
                 .andExpect(status().isOk());
     }
 
@@ -92,6 +109,9 @@ class StageActuatorSecurityIntegrationTest {
 
                 @Override
                 public Optional<AuthenticatedUser> validate(String token) {
+                    if (VALID_SCOPED_BEARER.equals(token)) {
+                        return Optional.of(AuthenticatedUser.of("ops-service", Set.of("SERVICE_AUTH"), Set.of("actuator:read")));
+                    }
                     return Optional.empty();
                 }
 
@@ -148,6 +168,11 @@ class StageActuatorSecurityIntegrationTest {
         @GetMapping("/actuator/prometheus")
         String prometheus() {
             return "metrics";
+        }
+
+        @GetMapping("/actuator/info")
+        String info() {
+            return "info";
         }
     }
 }

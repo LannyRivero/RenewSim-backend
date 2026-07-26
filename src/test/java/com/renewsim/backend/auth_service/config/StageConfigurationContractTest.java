@@ -11,6 +11,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 class StageConfigurationContractTest {
 
     @Test
+    void localYamlSupportsDocumentedJwtSecretVariable() throws IOException {
+        String content = Files.readString(Path.of("src/main/resources/application-local.yml"));
+
+        assertThat(content).contains("secret: ${JWT_SECRET:}");
+        assertThat(content).contains("secret-base64: ${JWT_SECRET_BASE64:}");
+    }
+
+    @Test
     void stageYamlUsesSecurityJwtNamespace() throws IOException {
         String content = Files.readString(Path.of("src/main/resources/application-stage.yml"));
 
