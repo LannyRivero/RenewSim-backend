@@ -15,14 +15,6 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     open-in-view: false
 
-  cache:
-    type: caffeine
-    caffeine:
-      spec:
-        tokens: maximumSize=1000,expireAfterWrite=5m,recordStats
-        roles: maximumSize=100,expireAfterWrite=30m,recordStats
-        default: maximumSize=100,expireAfterWrite=10m,recordStats
-
 # =============================
 # JWT CONFIG (común a todos los perfiles)
 # =============================
@@ -76,9 +68,11 @@ auth:
       - delete:simulations
       - read:users
       - manage:users
+      - actuator:read
     SERVICE_AUTH:
       - user:write
       - user:read
+      - actuator:read
 
 # =============================
 # CORS CONFIG (centralizado)

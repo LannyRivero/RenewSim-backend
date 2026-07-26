@@ -32,8 +32,8 @@ public class ListUsersService implements ListUsersUseCase {
         MDC.put("action", "listUsers");
         MDC.put("page", String.valueOf(page));
         MDC.put("size", String.valueOf(size));
-        MDC.put("usernameFilter", filters.username());
-        MDC.put("emailFilter", filters.email());
+        MDC.put("usernameFilterPresent", String.valueOf(filters.username() != null && !filters.username().isBlank()));
+        MDC.put("emailFilterPresent", String.valueOf(filters.email() != null && !filters.email().isBlank()));
         MDC.put("enabledFilter", String.valueOf(filters.enabled()));
 
         try {

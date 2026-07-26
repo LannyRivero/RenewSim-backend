@@ -14,7 +14,7 @@ import org.springframework.security.web.context.SecurityContextHolderFilter;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
-@Profile("!prod")
+@Profile({ "local", "dev", "test" })
 public class ActuatorSecurityConfig {
 
     @Bean

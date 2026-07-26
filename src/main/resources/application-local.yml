@@ -68,7 +68,7 @@ security:
   jwt:
     issuer: renewsim-auth-local
     audience: renewsim-app-local
-    secret-base64: kWlPmDQojxCrr3SNIAKVrFEk80KAH7gYJp+H6QeB4mxsQYitsTnUqCawyVQRXnMVyZ/ej6/0YhA1v+c94kMt4A==
+    secret-base64: ${JWT_SECRET_BASE64:}
     expiration-seconds: 3600
     service-expiration-seconds: 300
     not-before-skew-seconds: 0
@@ -97,7 +97,7 @@ app:
 # =============================
 email:
   brevo:
-    api-key: ${BREVO_API_KEY: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}
+    api-key: ${BREVO_API_KEY:}
     sender-email: noreply@renewsim.com
     sender-name: RenewSim
 
