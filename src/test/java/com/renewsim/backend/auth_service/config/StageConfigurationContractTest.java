@@ -25,10 +25,19 @@ class StageConfigurationContractTest {
     void stageComposeRequiresExplicitDatabaseSecrets() throws IOException {
         String content = Files.readString(Path.of("docker-compose.stage.yml"));
 
-        assertThat(content).contains("MYSQL_ROOT_PASSWORD: ${STAGE_MYSQL_ROOT_PASSWORD}");
-        assertThat(content).contains("MYSQL_PASSWORD: ${STAGE_MYSQL_PASSWORD}");
+        assertThat(content).contains("MYSQL_ROOT_PASSWORD: ${STAGE_MYSQL_ROOT_PASSWORD:?STAGE_MYSQL_ROOT_PASSWORD is required}");
+        assertThat(content).contains("MYSQL_PASSWORD: ${STAGE_MYSQL_PASSWORD:?STAGE_MYSQL_PASSWORD is required}");
         assertThat(content).doesNotContain("renewsim_root_password");
         assertThat(content).doesNotContain("renewsim_stage_password");
+    }
+
+    @Test
+    void stageComposeRequiresCriticalOperationalSecrets() throws IOException {
+        String content = Files.readString(Path.of("docker-compose.stage.yml"));
+
+        assertThat(content).contains("SECURITY_JWT_SECRET_BASE64: ${SECURITY_JWT_SECRET_BASE64:?SECURITY_JWT_SECRET_BASE64 is required}");
+        assertThat(content).contains("OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:?OPENWEATHER_API_KEY is required}");
+        assertThat(content).contains("EMAIL_BREVO_API_KEY: ${EMAIL_BREVO_API_KEY:?EMAIL_BREVO_API_KEY is required}");
     }
 
     @Test
