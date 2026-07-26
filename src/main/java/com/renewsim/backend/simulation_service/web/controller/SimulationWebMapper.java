@@ -12,7 +12,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationEconomi
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocation;
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
-import com.renewsim.backend.simulation_service.web.dto.CreateSimulationRequestDTO;
+import com.renewsim.backend.simulation_service.web.dto.CreateSolarSimulationRequestDTO;
 import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardDistributionByStatusDTO;
 import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardDistributionByTechnologyDTO;
@@ -30,10 +30,10 @@ import com.renewsim.backend.simulation_service.web.dto.SimulationHistoryRowDTO;
  */
 final class SimulationWebMapper {
 
-    CreateRealSimulationCommand toCommand(CreateSimulationRequestDTO request, String username) {
+    CreateRealSimulationCommand toCommand(CreateSolarSimulationRequestDTO request, String username) {
         return new CreateRealSimulationCommand(
                 request.name(),
-                Technology.of(request.technology()),
+                Technology.solar(),
                 SimulationLocation.of(
                         request.location().label(),
                         request.location().lat(),
@@ -92,30 +92,29 @@ final class SimulationWebMapper {
                                         reason.severity(),
                                         reason.message()))
                                 .toList()),
-                new CreateSimulationRequestDTO(
+                new CreateSolarSimulationRequestDTO(
                         result.input().name(),
-                        result.input().technology(),
-                        new CreateSimulationRequestDTO.LocationDTO(
+                        new CreateSolarSimulationRequestDTO.LocationDTO(
                                 result.input().location().label(),
                                 result.input().location().lat(),
                                 result.input().location().lon(),
                                 result.input().location().country(),
                                 result.input().location().countryCode()),
-                        new CreateSimulationRequestDTO.SystemDTO(
+                        new CreateSolarSimulationRequestDTO.SolarSystemDTO(
                                 result.input().system().installedCapacityKw(),
                                 result.input().system().performanceRatio(),
                                 result.input().system().degradationRateAnnualPct(),
                                 result.input().system().availabilityPct(),
-                                new CreateSimulationRequestDTO.LossesPctDTO(
+                                new CreateSolarSimulationRequestDTO.LossesPctDTO(
                                         result.input().system().lossesPct().inverter(),
                                         result.input().system().lossesPct().temperature(),
                                         result.input().system().lossesPct().wiring(),
                                         result.input().system().lossesPct().soiling(),
                                         result.input().system().lossesPct().other())),
-                        new CreateSimulationRequestDTO.DemandDTO(
+                        new CreateSolarSimulationRequestDTO.DemandDTO(
                                 result.input().demand().annualConsumptionKwh(),
                                 result.input().demand().monthlyConsumptionKwh()),
-                        new CreateSimulationRequestDTO.EconomicsDTO(
+                        new CreateSolarSimulationRequestDTO.EconomicsDTO(
                                 result.input().economics().currency(),
                                 result.input().economics().capexTotal(),
                                 result.input().economics().opexAnnual(),
