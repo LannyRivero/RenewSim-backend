@@ -185,6 +185,7 @@ cd backend
 # Configurar variables de entorno
 export SPRING_PROFILES_ACTIVE=local
 export JWT_SECRET=your-secret-key-minimum-64-chars-long-for-hs512-signing-security
+export OPENWEATHER_API_KEY=your-real-openweather-api-key
 export DATABASE_URL=jdbc:mysql://localhost:3306/renewsim
 export DATABASE_USERNAME=root
 export DATABASE_PASSWORD=password
