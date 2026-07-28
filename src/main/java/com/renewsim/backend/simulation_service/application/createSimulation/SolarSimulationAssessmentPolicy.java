@@ -2,12 +2,14 @@ package com.renewsim.backend.simulation_service.application.createSimulation;
 
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@Primary
 public class SolarSimulationAssessmentPolicy implements SimulationAssessmentPolicy {
 
     @Override
