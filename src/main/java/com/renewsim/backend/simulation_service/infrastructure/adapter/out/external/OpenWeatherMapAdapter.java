@@ -1,7 +1,6 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.external;
 
-import com.renewsim.backend.simulation_service.application.port.out.ClimateDataProviderPort;
-import com.renewsim.backend.simulation_service.domain.model.vo.ClimateData;
+import com.renewsim.backend.simulation_service.application.port.out.LocationLookupPort;
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 import com.renewsim.backend.simulation_service.infrastructure.config.WeatherServiceProperties;
 import lombok.RequiredArgsConstructor;
@@ -17,49 +16,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Adapter for fetching climate and location data from OpenWeatherMap.
+ * Adapter for resolving and searching locations through OpenWeatherMap.
  *
- * <p>Implements {@link ClimateDataProviderPort} and is activated only when the
+ * <p>Implements {@link LocationLookupPort} and is activated only when the
  * simulation climate provider is configured as {@code openweathermap}.</p>
  */
 @Component
 @ConditionalOnProperty(prefix = "simulation.climate", name = "provider", havingValue = "openweathermap")
 @RequiredArgsConstructor
-public class OpenWeatherMapAdapter implements ClimateDataProviderPort {
+public class OpenWeatherMapAdapter implements LocationLookupPort {
 
     private static final Logger log = LoggerFactory.getLogger(OpenWeatherMapAdapter.class);
 
     private final WeatherServiceProperties weatherProperties;
     @Qualifier("openWeatherRestTemplate")
     private final RestTemplate restTemplate;
-
-    @Override
-    public ClimateData fetchClimateData(double latitude, double longitude) {
-        try {
-            Map<?, ?> response = fetchWeatherResponse(latitude, longitude);
-            if (response == null) return defaultClimate();
-
-            Map<?, ?> main = (Map<?, ?>) response.get("main");
-            Map<?, ?> wind = (Map<?, ?>) response.get("wind");
-            Map<?, ?> sys = (Map<?, ?>) response.get("sys");
-
-            double temperature = main != null && main.get("temp") != null ? ((Number) main.get("temp")).doubleValue() : 0.0;
-            double windSpeed = wind != null && wind.get("speed") != null ? ((Number) wind.get("speed")).doubleValue() : 0.0;
-            String country = sys != null && sys.get("country") != null ? String.valueOf(sys.get("country")) : null;
-
-            double irradiance = Math.max(100, 1000 - (temperature * 12));
-            double hydrology = Math.max(0, windSpeed * 2);
-
-            return new ClimateData(irradiance, windSpeed, hydrology, temperature, "OPENWEATHERMAP", "current", country);
-
-        } catch (Exception e) {
-            log.error("Error fetching weather data for coordinates: {}, {} ({})",
-                    latitude,
-                    longitude,
-                    summarizeFailure(e));
-            return defaultClimate();
-        }
-    }
 
     @Override
     public ResolvedLocation resolveLocation(double latitude, double longitude) {
@@ -158,7 +129,4 @@ public class OpenWeatherMapAdapter implements ClimateDataProviderPort {
                 .replace(apiKey(), "<redacted>");
     }
 
-    private ClimateData defaultClimate() {
-        return new ClimateData(800, 5, 1, null, "OPENWEATHERMAP", "current", null);
-    }
 }

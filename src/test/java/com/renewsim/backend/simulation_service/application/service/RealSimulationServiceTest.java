@@ -3,9 +3,12 @@ package com.renewsim.backend.simulation_service.application.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.shared.exception.BadRequestException;
 import com.renewsim.backend.simulation_service.application.createSimulation.CreateRealSimulationCommand;
-import com.renewsim.backend.simulation_service.application.createSimulation.SimulationCompletionMapper;
 import com.renewsim.backend.simulation_service.application.createSimulation.CreateSimulationService;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardDistributionByTechnology;
+import com.renewsim.backend.simulation_service.application.createSimulation.HydroSimulationEngine;
+import com.renewsim.backend.simulation_service.application.createSimulation.SolarSimulationAssessmentPolicy;
+import com.renewsim.backend.simulation_service.application.createSimulation.SimulationCompletionMapper;
+import com.renewsim.backend.simulation_service.application.createSimulation.SolarSimulationEngine;
+import com.renewsim.backend.simulation_service.application.createSimulation.WindSimulationEngine;
 import com.renewsim.backend.simulation_service.application.dashboard.GetPortfolioDashboardService;
 import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardRiskAlert;
 import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
@@ -39,6 +42,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class RealSimulationServiceTest {
@@ -55,8 +59,8 @@ class RealSimulationServiceTest {
         void createSimulationComputesAndStoresRealContractSnapshots() {
                 CreateSimulationService service = new CreateSimulationService(
                                 repository,
-                                resourcePort,
                                 technologyLookupPort,
+                                engines(),
                                 new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
                 CreateRealSimulationCommand command = validCommand();
 
@@ -79,6 +83,33 @@ class RealSimulationServiceTest {
                 ArgumentCaptor<Simulation> captor = ArgumentCaptor.forClass(Simulation.class);
                 verify(repository, times(2)).save(captor.capture());
                 assertThat(captor.getAllValues().get(1).getResultSnapshot()).isNotBlank();
+        }
+
+        @Test
+        @DisplayName("createSimulation rejects not-yet-implemented wind before persisting a draft")
+        void createSimulationRejectsNotImplementedWindBeforePersisting() {
+                CreateSimulationService service = new CreateSimulationService(
+                                repository,
+                                technologyLookupPort,
+                                engines(),
+                                new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
+
+                CreateRealSimulationCommand command = new CreateRealSimulationCommand(
+                                validCommand().name(),
+                                Technology.of("wind"),
+                                validCommand().location(),
+                                validCommand().system(),
+                                validCommand().demand(),
+                                validCommand().economics(),
+                                validCommand().createdBy());
+
+                when(technologyLookupPort.existsActiveByEnergyType("wind")).thenReturn(true);
+
+                assertThatThrownBy(() -> service.createSimulation(command))
+                                .isInstanceOf(BadRequestException.class)
+                                .hasMessage("UNSUPPORTED_TECHNOLOGY: 'wind' simulation is not implemented yet");
+
+                verify(repository, never()).save(any());
         }
 
         @Test
@@ -220,6 +251,13 @@ class RealSimulationServiceTest {
                                 new SimulationEconomics(Currency.of("EUR"), 315000, 7200, 0.18, 0.07, 8,
                                                 ProjectLifetime.of(20)),
                                 "alice");
+        }
+
+        private List<com.renewsim.backend.simulation_service.application.createSimulation.SimulationEngine> engines() {
+                return List.of(
+                                new SolarSimulationEngine(resourcePort, new SolarSimulationAssessmentPolicy()),
+                                new WindSimulationEngine(),
+                                new HydroSimulationEngine());
         }
 
         private Simulation completedSimulation(Long id, String owner, String resultJson) {

@@ -12,11 +12,10 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public record CreateSimulationRequestDTO(
+public record CreateHydroSimulationRequestDTO(
                 @NotBlank @Size(min = 2, max = 120) String name,
-                @NotBlank String technology,
                 @NotNull @Valid LocationDTO location,
-                @NotNull @Valid SystemDTO system,
+                @NotNull @Valid HydroSystemDTO system,
                 @NotNull @Valid DemandDTO demand,
                 @NotNull @Valid EconomicsDTO economics) {
 
@@ -28,20 +27,10 @@ public record CreateSimulationRequestDTO(
                         @NotBlank String countryCode) {
         }
 
-        public record SystemDTO(
+        public record HydroSystemDTO(
                         @Positive double installedCapacityKw,
-                        @DecimalMin(value = "0.0", inclusive = false) @DecimalMax(value = "1.0") double performanceRatio,
                         @DecimalMin("0.0") @DecimalMax("5.0") double degradationRateAnnualPct,
-                        @DecimalMin(value = "0.0", inclusive = false) @DecimalMax("100.0") double availabilityPct,
-                        @NotNull @Valid LossesPctDTO lossesPct) {
-        }
-
-        public record LossesPctDTO(
-                        @PositiveOrZero double inverter,
-                        @PositiveOrZero double temperature,
-                        @PositiveOrZero double wiring,
-                        @PositiveOrZero double soiling,
-                        @PositiveOrZero double other) {
+                        @DecimalMin(value = "0.0", inclusive = false) @DecimalMax("100.0") double availabilityPct) {
         }
 
         public record DemandDTO(

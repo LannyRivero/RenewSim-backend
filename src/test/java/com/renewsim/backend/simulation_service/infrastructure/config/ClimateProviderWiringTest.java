@@ -1,7 +1,6 @@
 package com.renewsim.backend.simulation_service.infrastructure.config;
 
-import com.renewsim.backend.simulation_service.application.port.out.ClimateDataProviderPort;
-import com.renewsim.backend.simulation_service.infrastructure.adapter.out.dummy.DummyClimateDataAdapter;
+import com.renewsim.backend.simulation_service.application.port.out.LocationLookupPort;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.external.OpenWeatherMapAdapter;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration;
@@ -17,20 +16,15 @@ class ClimateProviderWiringTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
                     RestTemplateAutoConfiguration.class,
-                    DummyClimateDataAdapter.class,
                     OpenWeatherClientConfig.class,
                     OpenWeatherMapAdapter.class));
 
     @Test
-    @DisplayName("dummy provider keeps dummy climate adapter regardless of profile")
-    void dummyProviderKeepsDummyClimateProvider() {
+    @DisplayName("missing provider does not instantiate a location lookup provider")
+    void missingProviderDoesNotInstantiateLocationLookupProvider() {
         contextRunner
-                .withPropertyValues(
-                        "spring.profiles.active=local",
-                        "simulation.climate.provider=dummy")
                 .run(context -> {
-                    assertThat(context).hasSingleBean(ClimateDataProviderPort.class);
-                    assertThat(context.getBean(ClimateDataProviderPort.class)).isInstanceOf(DummyClimateDataAdapter.class);
+                    assertThat(context).doesNotHaveBean(LocationLookupPort.class);
                     assertThat(context).doesNotHaveBean(OpenWeatherMapAdapter.class);
                 });
     }
@@ -45,25 +39,10 @@ class ClimateProviderWiringTest {
                         "services.weather.url=https://api.openweathermap.org",
                         "services.weather.key=test-key")
                 .run(context -> {
-                    assertThat(context).hasSingleBean(ClimateDataProviderPort.class);
-                    assertThat(context.getBean(ClimateDataProviderPort.class)).isInstanceOf(OpenWeatherMapAdapter.class);
+                    assertThat(context).hasSingleBean(LocationLookupPort.class);
+                    assertThat(context.getBean(LocationLookupPort.class)).isInstanceOf(OpenWeatherMapAdapter.class);
                     assertThat(context).hasBean("openWeatherRestTemplate");
                     assertThat(context.getBean("openWeatherRestTemplate", RestTemplate.class)).isNotNull();
-                    assertThat(context).doesNotHaveBean(DummyClimateDataAdapter.class);
-                });
-    }
-
-    @Test
-    @DisplayName("weather-enabled profile with explicit dummy provider keeps dummy adapter")
-    void weatherEnabledProfileWithDummyProviderKeepsDummyAdapter() {
-        contextRunner
-                .withPropertyValues(
-                        "spring.profiles.active=weather-enabled",
-                        "simulation.climate.provider=dummy")
-                .run(context -> {
-                    assertThat(context).hasSingleBean(ClimateDataProviderPort.class);
-                    assertThat(context.getBean(ClimateDataProviderPort.class)).isInstanceOf(DummyClimateDataAdapter.class);
-                    assertThat(context).doesNotHaveBean(OpenWeatherMapAdapter.class);
                 });
     }
 }

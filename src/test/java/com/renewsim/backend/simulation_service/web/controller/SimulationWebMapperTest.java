@@ -11,7 +11,7 @@ import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDa
 import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryRowResult;
 import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
-import com.renewsim.backend.simulation_service.web.dto.CreateSimulationRequestDTO;
+import com.renewsim.backend.simulation_service.web.dto.CreateSolarSimulationRequestDTO;
 import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.SimulationDetailsResponseDTO;
@@ -29,7 +29,7 @@ class SimulationWebMapperTest {
     @Test
     @DisplayName("toCommand maps request DTO into application command")
     void toCommandMapsRequestDtoIntoApplicationCommand() {
-        CreateSimulationRequestDTO request = request();
+        CreateSolarSimulationRequestDTO request = request();
 
         var command = mapper.toCommand(request, "alice");
 
@@ -82,17 +82,16 @@ class SimulationWebMapperTest {
         assertThat(dashboardResponse.distribution().byTechnology().getFirst().energyKwh()).isEqualTo(912300.0);
     }
 
-    private CreateSimulationRequestDTO request() {
-        return new CreateSimulationRequestDTO(
+    private CreateSolarSimulationRequestDTO request() {
+        return new CreateSolarSimulationRequestDTO(
                 "Solar - Sevilla",
-                "solar",
-                new CreateSimulationRequestDTO.LocationDTO("Sevilla, Andalucia, ES", 37.3891, -5.9845, "Spain", "ES"),
-                new CreateSimulationRequestDTO.SystemDTO(300, 0.81, 0.5, 99,
-                        new CreateSimulationRequestDTO.LossesPctDTO(2, 6, 1, 3, 1)),
-                new CreateSimulationRequestDTO.DemandDTO(120000,
+                new CreateSolarSimulationRequestDTO.LocationDTO("Sevilla, Andalucia, ES", 37.3891, -5.9845, "Spain", "ES"),
+                new CreateSolarSimulationRequestDTO.SolarSystemDTO(300, 0.81, 0.5, 99,
+                        new CreateSolarSimulationRequestDTO.LossesPctDTO(2, 6, 1, 3, 1)),
+                new CreateSolarSimulationRequestDTO.DemandDTO(120000,
                         List.of(10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d,
                                 10000d)),
-                new CreateSimulationRequestDTO.EconomicsDTO("EUR", 315000, 7200, 0.18, 0.07, 8, 20));
+                new CreateSolarSimulationRequestDTO.EconomicsDTO("EUR", 315000, 7200, 0.18, 0.07, 8, 20));
     }
 
     private SimulationDetailsResult sampleResult() {

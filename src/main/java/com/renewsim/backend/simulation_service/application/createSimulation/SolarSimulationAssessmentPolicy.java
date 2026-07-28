@@ -1,23 +1,29 @@
 package com.renewsim.backend.simulation_service.application.createSimulation;
 
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public final class SimulationSummaryBuilder {
+@Component
+@Primary
+public class SolarSimulationAssessmentPolicy implements SimulationAssessmentPolicy {
 
-    private SimulationSummaryBuilder() {
+    @Override
+    public boolean supports(Technology technology) {
+        return "solar".equals(technology.value());
     }
 
-    public record Result(String recommendation, String headline, String summary,
-            List<SimulationDetailsResult.RecommendationReason> reasons) {
-    }
-
-    public static Result build(
+    @Override
+    public Assessment assess(
             CreateRealSimulationCommand command,
+            TechnologySystemProfile systemProfile,
             double specificYield,
             FinancialCalculator.Result financialResult) {
+        SolarSystemProfile solarProfile = requireSolarProfile(systemProfile);
 
         List<SimulationDetailsResult.RecommendationReason> reasons = new ArrayList<>();
 
@@ -45,13 +51,9 @@ public final class SimulationSummaryBuilder {
                     "The submitted assumptions do not recover investment adequately within project life."));
         }
 
-        double totalLossPct = command.system().lossesPct().inverter()
-                + command.system().lossesPct().temperature()
-                + command.system().lossesPct().wiring()
-                + command.system().lossesPct().soiling()
-                + command.system().lossesPct().other();
+        double totalLossPct = solarProfile.losses().total();
 
-        if (command.system().performanceRatio() < 0.78 || totalLossPct > 20.0) {
+        if (solarProfile.performanceRatio() < 0.78 || totalLossPct > 20.0) {
             reasons.add(new SimulationDetailsResult.RecommendationReason("assumptions", "warning",
                     "Performance assumptions are conservative and materially affect the outcome."));
         }
@@ -71,7 +73,7 @@ public final class SimulationSummaryBuilder {
             summary = "Resource quality, annual yield, and discounted returns support moving the case into detailed engineering and commercial validation.";
         } else if (financialResult.npv() > 0
                 || (financialResult.paybackYears() != null
-                        && financialResult.paybackYears() <= command.economics().projectLifetime().years())) {
+                && financialResult.paybackYears() <= command.economics().projectLifetime().years())) {
             recommendation = "viable_with_reservations";
             headline = "The scenario is viable, but the decision depends on validating core assumptions.";
             summary = "The project shows credible technical output, while the financial profile still requires executive review of pricing, losses, and recovery targets.";
@@ -81,28 +83,24 @@ public final class SimulationSummaryBuilder {
             summary = "Under the submitted inputs, the technical and financial outputs do not justify progressing the case in its current form.";
         }
 
-        return new Result(recommendation, headline, summary, reasons);
+        return new Assessment(recommendation, headline, summary, reasons);
     }
 
-    public static List<SimulationDetailsResult.SimulationWarning> buildWarnings(
-            CreateRealSimulationCommand command) {
-
+    @Override
+    public List<SimulationDetailsResult.SimulationWarning> buildWarnings(CreateRealSimulationCommand command, TechnologySystemProfile systemProfile) {
+        SolarSystemProfile solarProfile = requireSolarProfile(systemProfile);
         List<SimulationDetailsResult.SimulationWarning> warnings = new ArrayList<>();
         warnings.add(new SimulationDetailsResult.SimulationWarning("info",
                 "MONTHLY_PROFILE_USER_SUPPLIED",
                 "Monthly demand profile was supplied by the user and accepted without normalization."));
 
-        if (command.system().availabilityPct() < 95.0) {
+        if (solarProfile.availabilityPct() < 95.0) {
             warnings.add(new SimulationDetailsResult.SimulationWarning("warning",
                     "LOW_AVAILABILITY_ASSUMPTION",
                     "Availability assumption is below 95% and may materially reduce annual output."));
         }
 
-        double totalLossPct = command.system().lossesPct().inverter()
-                + command.system().lossesPct().temperature()
-                + command.system().lossesPct().wiring()
-                + command.system().lossesPct().soiling()
-                + command.system().lossesPct().other();
+        double totalLossPct = solarProfile.losses().total();
 
         if (totalLossPct > 20.0) {
             warnings.add(new SimulationDetailsResult.SimulationWarning("warning",
@@ -110,5 +108,12 @@ public final class SimulationSummaryBuilder {
                     "Combined system losses exceed 20% and should be validated before investment review."));
         }
         return warnings;
+    }
+
+    private SolarSystemProfile requireSolarProfile(TechnologySystemProfile systemProfile) {
+        if (systemProfile instanceof SolarSystemProfile solarProfile) {
+            return solarProfile;
+        }
+        throw new IllegalArgumentException("Solar assessment policy requires a SolarSystemProfile.");
     }
 }

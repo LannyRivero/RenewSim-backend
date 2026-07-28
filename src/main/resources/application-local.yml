@@ -68,6 +68,7 @@ security:
   jwt:
     issuer: renewsim-auth-local
     audience: renewsim-app-local
+    secret: ${JWT_SECRET:}
     secret-base64: ${JWT_SECRET_BASE64:}
     expiration-seconds: 3600
     service-expiration-seconds: 300
