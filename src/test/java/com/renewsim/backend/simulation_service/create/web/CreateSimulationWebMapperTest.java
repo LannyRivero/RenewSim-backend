@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.create.web;
 
-import com.renewsim.backend.simulation_service.web.dto.CreateSolarSimulationRequestDTO;
+import com.renewsim.backend.simulation_service.create.web.dto.CreateSolarSimulationRequestDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

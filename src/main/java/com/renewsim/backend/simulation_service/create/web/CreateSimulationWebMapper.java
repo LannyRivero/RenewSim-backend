@@ -9,7 +9,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationEconomi
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocation;
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
-import com.renewsim.backend.simulation_service.web.dto.CreateSolarSimulationRequestDTO;
+import com.renewsim.backend.simulation_service.create.web.dto.CreateSolarSimulationRequestDTO;
 
 public final class CreateSimulationWebMapper {
 
