@@ -2,8 +2,9 @@ package com.renewsim.backend.simulation_service.detail.web;
 
 import com.renewsim.backend.simulation_service.application.detailSimulation.GetRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
+import com.renewsim.backend.simulation_service.shared.web.SimulationDetailsWebMapper;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;
-import com.renewsim.backend.simulation_service.detail.web.dto.SimulationDetailsResponseDTO;
+import com.renewsim.backend.simulation_service.shared.web.dto.SimulationDetailsResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

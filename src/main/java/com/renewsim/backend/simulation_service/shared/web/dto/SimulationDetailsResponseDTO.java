@@ -1,6 +1,4 @@
-package com.renewsim.backend.simulation_service.detail.web.dto;
-
-import com.renewsim.backend.simulation_service.create.web.dto.CreateSolarSimulationRequestDTO;
+package com.renewsim.backend.simulation_service.shared.web.dto;
 
 import java.util.List;
 
@@ -13,7 +11,7 @@ public record SimulationDetailsResponseDTO(
                 String technology,
                 ResolvedLocationDTO location,
                 SummaryDTO summary,
-                CreateSolarSimulationRequestDTO input,
+                SimulationInputSnapshotDTO input,
                 TechnicalDTO technical,
                 FinancialDTO financial,
                 AssumptionsDTO assumptions,

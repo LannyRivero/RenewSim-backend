@@ -2,10 +2,10 @@ package com.renewsim.backend.simulation_service.create.web;
 
 import com.renewsim.backend.simulation_service.create.application.CreateRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
+import com.renewsim.backend.simulation_service.shared.web.SimulationDetailsWebMapper;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;
-import com.renewsim.backend.simulation_service.detail.web.SimulationDetailsWebMapper;
-import com.renewsim.backend.simulation_service.detail.web.dto.SimulationDetailsResponseDTO;
 import com.renewsim.backend.simulation_service.create.web.dto.CreateSolarSimulationRequestDTO;
+import com.renewsim.backend.simulation_service.shared.web.dto.SimulationDetailsResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

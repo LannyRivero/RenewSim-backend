@@ -1,7 +1,7 @@
-package com.renewsim.backend.simulation_service.detail.web;
+package com.renewsim.backend.simulation_service.shared.web;
 
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
-import com.renewsim.backend.simulation_service.detail.web.dto.SimulationDetailsResponseDTO;
+import com.renewsim.backend.simulation_service.shared.web.dto.SimulationDetailsResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

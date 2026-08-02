@@ -6,6 +6,7 @@ import com.renewsim.backend.simulation_service.application.detailSimulation.GetR
 import com.renewsim.backend.simulation_service.application.historySimulation.ListUserRealSimulationsUseCase;
 import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryRowResult;
 import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
+import com.renewsim.backend.simulation_service.detail.web.SimulationDetailController;
 import com.renewsim.backend.simulation_service.history.web.dto.ListUserSimulationsResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -66,7 +67,8 @@ class SimulationHistoryControllerTest {
     @DisplayName("get user simulations route does not collide with numeric id mapping")
     void getUserSimulationsRouteDoesNotCollideWithIdRoute() throws Exception {
         Authentication auth = authentication("alice", "ROLE_USER");
-        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        SimulationDetailController detailController = new SimulationDetailController(getRealSimulationUseCase);
+        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller, detailController).build();
 
         when(listUserRealSimulationsUseCase.getUserSimulations("alice"))
                 .thenReturn(new UserSimulationListResult(List.of(), 0));
