@@ -3,8 +3,8 @@ package com.renewsim.backend.simulation_service.create.web;
 import com.renewsim.backend.simulation_service.create.application.CreateRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;
+import com.renewsim.backend.simulation_service.detail.web.SimulationDetailsWebMapper;
 import com.renewsim.backend.simulation_service.detail.web.dto.SimulationDetailsResponseDTO;
-import com.renewsim.backend.simulation_service.web.controller.SimulationWebMapper;
 import com.renewsim.backend.simulation_service.create.web.dto.CreateSolarSimulationRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +29,7 @@ public class CreateSimulationController {
 
     private final CreateRealSimulationUseCase createRealSimulationUseCase;
     private final CreateSimulationWebMapper createWebMapper = new CreateSimulationWebMapper();
-    private final SimulationWebMapper webMapper = new SimulationWebMapper();
+    private final SimulationDetailsWebMapper detailsWebMapper = new SimulationDetailsWebMapper();
     private final SimulationRequestContextFactory requestContextFactory = new SimulationRequestContextFactory();
 
     @Operation(summary = "Create a new simulation")
@@ -41,7 +41,7 @@ public class CreateSimulationController {
 
         SimulationRequestContext requestContext = requestContextFactory.from(auth);
 
-        SimulationDetailsResponseDTO result = webMapper.toWebDetails(
+        SimulationDetailsResponseDTO result = detailsWebMapper.toWebDetails(
                 createRealSimulationUseCase.createSimulation(createWebMapper.toCommand(request, requestContext.username())));
         log.info("User {} created simulation {}", requestContext.username(), result.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(result);

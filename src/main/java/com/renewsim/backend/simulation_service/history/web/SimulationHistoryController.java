@@ -5,7 +5,6 @@ import com.renewsim.backend.simulation_service.application.historySimulation.Lis
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;
 import com.renewsim.backend.simulation_service.history.web.dto.ListUserSimulationsResponseDTO;
-import com.renewsim.backend.simulation_service.web.controller.SimulationWebMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +25,7 @@ public class SimulationHistoryController {
 
     private final ListUserRealSimulationsUseCase listUserRealSimulationsUseCase;
     private final DeleteRealSimulationUseCase deleteRealSimulationUseCase;
-    private final SimulationWebMapper webMapper = new SimulationWebMapper();
+    private final SimulationHistoryWebMapper historyWebMapper = new SimulationHistoryWebMapper();
     private final SimulationRequestContextFactory requestContextFactory = new SimulationRequestContextFactory();
 
     @Operation(summary = "Delete simulation by ID")
@@ -62,7 +61,7 @@ public class SimulationHistoryController {
     public ResponseEntity<ListUserSimulationsResponseDTO> getMySimulations(Authentication auth) {
         SimulationRequestContext requestContext = requestContextFactory.from(auth);
 
-        ListUserSimulationsResponseDTO history = webMapper.toWebList(
+        ListUserSimulationsResponseDTO history = historyWebMapper.toWebList(
                 listUserRealSimulationsUseCase.getUserSimulations(requestContext.username()));
         log.info("User {} retrieved {} simulations", requestContext.username(), history.total());
 

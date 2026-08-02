@@ -4,7 +4,6 @@ import com.renewsim.backend.simulation_service.application.detailSimulation.GetR
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;
 import com.renewsim.backend.simulation_service.detail.web.dto.SimulationDetailsResponseDTO;
-import com.renewsim.backend.simulation_service.web.controller.SimulationWebMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SimulationDetailController {
 
     private final GetRealSimulationUseCase getRealSimulationUseCase;
-    private final SimulationWebMapper webMapper = new SimulationWebMapper();
+    private final SimulationDetailsWebMapper detailsWebMapper = new SimulationDetailsWebMapper();
     private final SimulationRequestContextFactory requestContextFactory = new SimulationRequestContextFactory();
 
     @GetMapping("/{id:\\d+}")
@@ -30,7 +29,7 @@ public class SimulationDetailController {
             Authentication auth) {
         SimulationRequestContext requestContext = requestContextFactory.from(auth);
 
-        return ResponseEntity.ok(webMapper.toWebDetails(
+        return ResponseEntity.ok(detailsWebMapper.toWebDetails(
                 getRealSimulationUseCase.getSimulationById(
                         id,
                         requestContext.username(),

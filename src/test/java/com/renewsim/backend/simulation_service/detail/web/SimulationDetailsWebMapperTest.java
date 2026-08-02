@@ -1,19 +1,7 @@
-package com.renewsim.backend.simulation_service.web.controller;
+package com.renewsim.backend.simulation_service.detail.web;
 
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardDistribution;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardDistributionByStatus;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardDistributionByTechnology;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardPrioritizedScenario;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardRecommendedScenario;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardRiskAlert;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardSummary;
-import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryRowResult;
-import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.detail.web.dto.SimulationDetailsResponseDTO;
-import com.renewsim.backend.simulation_service.history.web.dto.ListUserSimulationsResponseDTO;
-import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -21,9 +9,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class SimulationResponseWebMapperTest {
+class SimulationDetailsWebMapperTest {
 
-    private final SimulationWebMapper mapper = new SimulationWebMapper();
+    private final SimulationDetailsWebMapper mapper = new SimulationDetailsWebMapper();
 
     @Test
     @DisplayName("toWebDetails maps nested simulation details contract")
@@ -36,33 +24,6 @@ class SimulationResponseWebMapperTest {
         assertThat(response.technical().resource().source()).isEqualTo("PVGIS");
         assertThat(response.financial().yearlyCashFlows()).hasSize(1);
         assertThat(response.warnings()).hasSize(1);
-    }
-
-    @Test
-    @DisplayName("toWebList and toWebDashboard preserve response projections")
-    void toWebListAndToWebDashboardPreserveResponseProjections() {
-        ListUserSimulationsResponseDTO listResponse = mapper.toWebList(new UserSimulationListResult(
-                List.of(new SimulationHistoryRowResult("55", "Solar - Sevilla", "solar", "completed",
-                        "2026-06-30T14:00:00Z", "Sevilla", 457200, 68700, 121500, 11.4, "viable_with_reservations",
-                        "solar-spain-v1", "PVGIS")),
-                1));
-        PortfolioDashboardResponseDTO dashboardResponse = mapper.toWebDashboard(new PortfolioDashboardResult(
-                new PortfolioDashboardSummary(3, 3, 14.2, 6.2, 912300, 410535, 2),
-                new PortfolioDashboardRecommendedScenario("55", "Solar - Sevilla", "SOLAR", "Sevilla, ES", 22.5, 6.2,
-                        315000.0, 82000.0, "HIGH", "headline", List.of("driver 1"), "main risk", "next step"),
-                List.of(new PortfolioDashboardPrioritizedScenario("55", "Solar - Sevilla", "SOLAR", "COMPLETED",
-                        "Sevilla, ES", 22.5, 6.2, 315000.0, 82000.0, "HIGH", 82)),
-                List.of(new PortfolioDashboardRiskAlert("INCOMPLETE_DATA", "MEDIUM", 1,
-                        "1 simulaciones no tienen información suficiente para priorizar")),
-                new PortfolioDashboardDistribution(
-                        List.of(new PortfolioDashboardDistributionByTechnology("SOLAR", 3, 912300)),
-                        List.of(new PortfolioDashboardDistributionByStatus("COMPLETED", 2)))));
-
-        assertThat(listResponse.total()).isEqualTo(1);
-        assertThat(listResponse.items().getFirst().technology()).isEqualTo("solar");
-        assertThat(dashboardResponse.summary().totalSimulations()).isEqualTo(3);
-        assertThat(dashboardResponse.recommendedScenario().name()).isEqualTo("Solar - Sevilla");
-        assertThat(dashboardResponse.distribution().byTechnology().getFirst().energyKwh()).isEqualTo(912300.0);
     }
 
     private SimulationDetailsResult sampleResult() {
