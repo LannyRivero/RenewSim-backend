@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.web.controller;
 
-import com.renewsim.backend.simulation_service.application.createSimulation.CreateRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.create.application.CreateRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.create.web.CreateSimulationWebMapper;
 import com.renewsim.backend.simulation_service.application.dashboard.GetPortfolioDashboardUseCase;
 import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteRealSimulationUseCase;
