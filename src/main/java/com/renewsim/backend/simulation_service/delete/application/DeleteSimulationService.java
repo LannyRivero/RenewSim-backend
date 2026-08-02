@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.deleteSimulation;
+package com.renewsim.backend.simulation_service.delete.application;
 
 import com.renewsim.backend.simulation_service.application.port.out.SimulationRecordRepositoryPort;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;

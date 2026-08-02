@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.deleteSimulation;
+package com.renewsim.backend.simulation_service.delete.application;
 
 public interface DeleteRealSimulationUseCase {
     void deleteSimulation(Long id, String requesterUsername, boolean isAdmin);

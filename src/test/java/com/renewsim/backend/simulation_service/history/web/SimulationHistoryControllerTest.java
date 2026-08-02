@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.history.web;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
-import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.delete.application.DeleteRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.detail.application.GetRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.history.application.ListUserRealSimulationsUseCase;
 import com.renewsim.backend.simulation_service.history.application.SimulationHistoryRowResult;
