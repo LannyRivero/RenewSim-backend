@@ -1,6 +1,7 @@
 package com.renewsim.backend.simulation_service.dashboard.application;
 
 import com.renewsim.backend.simulation_service.domain.model.SimulationRecommendation;
+import com.renewsim.backend.simulation_service.domain.policy.SimulationRecommendationReviewPolicy;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 
 import java.util.List;
@@ -12,6 +13,7 @@ final class PortfolioScenarioScoringPolicy {
 
     private static final double LONG_PAYBACK_YEARS = 10.0;
     private static final double WEAK_ROI_PERCENT = 5.0;
+    private final SimulationRecommendationReviewPolicy reviewPolicy = new SimulationRecommendationReviewPolicy();
 
     int computeScore(SimulationDetailsResult details, Double roiPercent, Double paybackYears) {
         if (details == null || details.summary() == null) {
@@ -64,10 +66,10 @@ final class PortfolioScenarioScoringPolicy {
         if (details == null) {
             return true;
         }
-        if (SimulationRecommendation.fromWireValue(recommendation) != SimulationRecommendation.RECOMMENDED) {
-            return true;
-        }
-        return safeWarnings(details).stream().anyMatch(warning -> "warning".equalsIgnoreCase(warning.severity()));
+        return reviewPolicy.needsReview(
+                SimulationRecommendation.fromWireValue(recommendation),
+                safeWarnings(details).stream().anyMatch(warning -> "warning".equalsIgnoreCase(warning.severity())),
+                true);
     }
 
     String priorityFor(int score, boolean hasDetails) {

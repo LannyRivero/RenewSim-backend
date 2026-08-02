@@ -2,6 +2,7 @@ package com.renewsim.backend.simulation_service.dashboard.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.simulation_service.domain.model.SimulationRecommendation;
+import com.renewsim.backend.simulation_service.domain.policy.SimulationRecommendationReviewPolicy;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.ScenarioSnapshot;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
@@ -18,6 +19,7 @@ final class ScenarioSnapshotAssembler {
     private final TechnologyLookupPort technologyLookupPort;
     private final ObjectMapper objectMapper;
     private final PortfolioScenarioScoringPolicy scoringPolicy;
+    private final SimulationRecommendationReviewPolicy reviewPolicy;
 
     ScenarioSnapshotAssembler(
             TechnologyLookupPort technologyLookupPort,
@@ -26,6 +28,7 @@ final class ScenarioSnapshotAssembler {
         this.technologyLookupPort = technologyLookupPort;
         this.objectMapper = objectMapper;
         this.scoringPolicy = scoringPolicy;
+        this.reviewPolicy = new SimulationRecommendationReviewPolicy();
     }
 
     ScenarioSnapshot toSnapshot(Simulation simulation) {
@@ -51,6 +54,7 @@ final class ScenarioSnapshotAssembler {
         String recommendation = summary != null && summary.recommendation() != null
                 ? summary.recommendation()
                 : "review_required";
+        SimulationRecommendation normalizedRecommendation = SimulationRecommendation.fromWireValue(recommendation);
         List<String> drivers = summary != null && summary.reasons() != null
                 ? summary.reasons().stream()
                         .map(SimulationDetailsResult.RecommendationReason::message)
@@ -81,12 +85,16 @@ final class ScenarioSnapshotAssembler {
                         : "El escenario necesita completar datos antes de priorizarse.",
                 drivers,
                 scoringPolicy.resolveMainRisk(details, paybackYears, roiPercent),
-                nextStepFor(recommendation),
+                reviewPolicy.nextStepFor(normalizedRecommendation),
                 scoringPolicy.priorityFor(score, hasCompleteDetails),
                 score,
                 simulation.getCreatedAt(),
                 !hasCompleteDetails,
-                scoringPolicy.needsReview(details, recommendation),
+                reviewPolicy.needsReview(
+                        normalizedRecommendation,
+                        details != null && details.warnings() != null
+                                && details.warnings().stream().anyMatch(warning -> "warning".equalsIgnoreCase(warning.severity())),
+                        hasCompleteDetails),
                 scoringPolicy.hasNegativeRoi(roiPercent),
                 scoringPolicy.hasLongPayback(paybackYears));
     }
@@ -107,14 +115,6 @@ final class ScenarioSnapshotAssembler {
             return null;
         }
         return round((annualBenefit / capex) * 100.0);
-    }
-
-    private String nextStepFor(String recommendation) {
-        return switch (SimulationRecommendation.fromWireValue(recommendation)) {
-            case RECOMMENDED -> "Validar sensibilidad y elevar a evaluacion ejecutiva";
-            case VIABLE_WITH_RESERVATIONS -> "Revisar supuestos criticos antes de priorizar inversion";
-            case NOT_RECOMMENDED -> "Completar datos y replantear supuestos antes de avanzar";
-        };
     }
 
     private String normalizeLabel(String value) {
