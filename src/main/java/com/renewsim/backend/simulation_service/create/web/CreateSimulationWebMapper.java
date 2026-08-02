@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.create.web;
 
-import com.renewsim.backend.simulation_service.create.application.CreateRealSimulationCommand;
+import com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand;
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
 import com.renewsim.backend.simulation_service.domain.model.vo.CountryCode;
 import com.renewsim.backend.simulation_service.domain.model.vo.Currency;

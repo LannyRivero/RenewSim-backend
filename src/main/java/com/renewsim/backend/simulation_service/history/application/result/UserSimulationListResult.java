@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.history.application;
+package com.renewsim.backend.simulation_service.history.application.result;
 
 import java.util.List;
 

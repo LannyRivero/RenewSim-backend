@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.history.web;
 
-import com.renewsim.backend.simulation_service.history.application.UserSimulationListResult;
+import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.history.web.dto.ListUserSimulationsResponseDTO;
 import com.renewsim.backend.simulation_service.history.web.dto.SimulationHistoryRowDTO;
 

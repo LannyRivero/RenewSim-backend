@@ -1,11 +1,11 @@
 package com.renewsim.backend.simulation_service.history.web;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
-import com.renewsim.backend.simulation_service.delete.application.DeleteRealSimulationUseCase;
-import com.renewsim.backend.simulation_service.detail.application.GetRealSimulationUseCase;
-import com.renewsim.backend.simulation_service.history.application.ListUserRealSimulationsUseCase;
-import com.renewsim.backend.simulation_service.history.application.SimulationHistoryRowResult;
-import com.renewsim.backend.simulation_service.history.application.UserSimulationListResult;
+import com.renewsim.backend.simulation_service.delete.application.port.in.DeleteRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.detail.application.port.in.GetRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.history.application.port.in.ListUserRealSimulationsUseCase;
+import com.renewsim.backend.simulation_service.history.application.result.SimulationHistoryRowResult;
+import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.detail.web.SimulationDetailController;
 import com.renewsim.backend.simulation_service.history.web.dto.ListUserSimulationsResponseDTO;
 import org.junit.jupiter.api.DisplayName;

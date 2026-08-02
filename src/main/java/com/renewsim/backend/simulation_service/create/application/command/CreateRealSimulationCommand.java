@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.create.application;
+package com.renewsim.backend.simulation_service.create.application.command;
 
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationEconomics;
