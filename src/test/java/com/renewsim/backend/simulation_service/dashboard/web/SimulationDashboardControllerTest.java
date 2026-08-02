@@ -10,7 +10,7 @@ import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDa
 import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardRiskAlert;
 import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardSummary;
 import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
-import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardResponseDTO;
+import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

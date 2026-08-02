@@ -4,8 +4,8 @@ import com.renewsim.backend.simulation_service.application.deleteSimulation.Dele
 import com.renewsim.backend.simulation_service.application.historySimulation.ListUserRealSimulationsUseCase;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;
+import com.renewsim.backend.simulation_service.history.web.dto.ListUserSimulationsResponseDTO;
 import com.renewsim.backend.simulation_service.web.controller.SimulationWebMapper;
-import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

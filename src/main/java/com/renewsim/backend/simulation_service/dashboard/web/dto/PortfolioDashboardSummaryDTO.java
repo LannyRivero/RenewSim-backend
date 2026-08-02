@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.web.dto;
+package com.renewsim.backend.simulation_service.dashboard.web.dto;
 
 public record PortfolioDashboardSummaryDTO(
                 long totalSimulations,

@@ -3,18 +3,18 @@ package com.renewsim.backend.simulation_service.web.controller;
 import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
 import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
-import com.renewsim.backend.simulation_service.web.dto.CreateSolarSimulationRequestDTO;
-import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
-import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardDistributionByStatusDTO;
-import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardDistributionByTechnologyDTO;
-import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardDistributionDTO;
-import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardPrioritizedScenarioDTO;
-import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardRecommendedScenarioDTO;
-import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardResponseDTO;
-import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardRiskAlertDTO;
-import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardSummaryDTO;
-import com.renewsim.backend.simulation_service.web.dto.SimulationDetailsResponseDTO;
-import com.renewsim.backend.simulation_service.web.dto.SimulationHistoryRowDTO;
+import com.renewsim.backend.simulation_service.create.web.dto.CreateSolarSimulationRequestDTO;
+import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardDistributionByStatusDTO;
+import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardDistributionByTechnologyDTO;
+import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardDistributionDTO;
+import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardPrioritizedScenarioDTO;
+import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardRecommendedScenarioDTO;
+import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardResponseDTO;
+import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardRiskAlertDTO;
+import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardSummaryDTO;
+import com.renewsim.backend.simulation_service.detail.web.dto.SimulationDetailsResponseDTO;
+import com.renewsim.backend.simulation_service.history.web.dto.ListUserSimulationsResponseDTO;
+import com.renewsim.backend.simulation_service.history.web.dto.SimulationHistoryRowDTO;
 
 /**
  * Maps simulation HTTP requests and responses to the application layer models.

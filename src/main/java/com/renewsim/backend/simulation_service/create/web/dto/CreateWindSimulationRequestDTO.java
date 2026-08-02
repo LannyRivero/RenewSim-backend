@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.web.dto;
+package com.renewsim.backend.simulation_service.create.web.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;

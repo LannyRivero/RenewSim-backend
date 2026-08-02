@@ -11,9 +11,9 @@ import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDa
 import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryRowResult;
 import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
-import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
-import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardResponseDTO;
-import com.renewsim.backend.simulation_service.web.dto.SimulationDetailsResponseDTO;
+import com.renewsim.backend.simulation_service.detail.web.dto.SimulationDetailsResponseDTO;
+import com.renewsim.backend.simulation_service.history.web.dto.ListUserSimulationsResponseDTO;
+import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

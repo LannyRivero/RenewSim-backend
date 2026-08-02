@@ -1,4 +1,6 @@
-package com.renewsim.backend.simulation_service.web.dto;
+package com.renewsim.backend.simulation_service.detail.web.dto;
+
+import com.renewsim.backend.simulation_service.create.web.dto.CreateSolarSimulationRequestDTO;
 
 import java.util.List;
 

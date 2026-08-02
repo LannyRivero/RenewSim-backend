@@ -1,15 +1,19 @@
-package com.renewsim.backend.simulation_service.web.dto;
+package com.renewsim.backend.simulation_service.dashboard.web.dto;
 
-public record PortfolioDashboardPrioritizedScenarioDTO(
+import java.util.List;
+
+public record PortfolioDashboardRecommendedScenarioDTO(
                 String id,
                 String name,
                 String technology,
-                String status,
                 String location,
                 Double roiPercent,
                 Double paybackYears,
                 Double capex,
                 Double estimatedAnnualSavings,
                 String priority,
-                Integer score) {
+                String headline,
+                List<String> drivers,
+                String mainRisk,
+                String nextStep) {
 }
