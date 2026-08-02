@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.simulation_service.application.port.out.TechnologyLookupPort;
+import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.SimulationStatus;
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;

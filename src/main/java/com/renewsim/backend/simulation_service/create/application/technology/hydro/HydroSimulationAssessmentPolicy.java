@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.create.application.technology.hydro;
 
-import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
-import com.renewsim.backend.simulation_service.create.application.CreateRealSimulationCommand;
+import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand;
 import com.renewsim.backend.simulation_service.create.application.FinancialCalculator;
 import com.renewsim.backend.simulation_service.create.application.technology.SimulationAssessmentPolicy;
 import com.renewsim.backend.simulation_service.create.application.technology.TechnologySystemProfile;

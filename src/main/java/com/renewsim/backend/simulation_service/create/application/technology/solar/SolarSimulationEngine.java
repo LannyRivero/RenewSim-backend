@@ -1,8 +1,8 @@
 package com.renewsim.backend.simulation_service.create.application.technology.solar;
 
-import com.renewsim.backend.simulation_service.application.port.out.PvgisSolarResourcePort;
-import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
-import com.renewsim.backend.simulation_service.create.application.CreateRealSimulationCommand;
+import com.renewsim.backend.simulation_service.create.application.port.out.PvgisSolarResourcePort;
+import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand;
 import com.renewsim.backend.simulation_service.create.application.FinancialCalculator;
 import com.renewsim.backend.simulation_service.create.application.SimulationEngine;
 import com.renewsim.backend.simulation_service.create.application.technology.SimulationAssessmentPolicy;
@@ -16,11 +16,11 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.renewsim.backend.simulation_service.application.shared.SimulationMathUtils.formatDate;
-import static com.renewsim.backend.simulation_service.application.shared.SimulationMathUtils.round;
-import static com.renewsim.backend.simulation_service.application.shared.SimulationMathUtils.roundList;
-import static com.renewsim.backend.simulation_service.application.shared.SimulationMathUtils.scale;
-import static com.renewsim.backend.simulation_service.application.shared.SimulationMathUtils.sum;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.formatDate;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.round;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.roundList;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.scale;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.sum;
 
 @Component
 @RequiredArgsConstructor

@@ -1,5 +1,6 @@
 package com.renewsim.backend.simulation_service.create.application;
 
+import com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 
 final class SimulationCommandMapper {

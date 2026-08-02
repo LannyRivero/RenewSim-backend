@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.create.web;
 
-import com.renewsim.backend.simulation_service.create.application.CreateRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.create.application.port.in.CreateRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
 import com.renewsim.backend.simulation_service.shared.web.SimulationDetailsWebMapper;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;

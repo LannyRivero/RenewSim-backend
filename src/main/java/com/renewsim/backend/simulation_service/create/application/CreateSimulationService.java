@@ -1,8 +1,10 @@
 package com.renewsim.backend.simulation_service.create.application;
 
-import com.renewsim.backend.simulation_service.application.port.out.SimulationRecordRepositoryPort;
-import com.renewsim.backend.simulation_service.application.port.out.TechnologyLookupPort;
-import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand;
+import com.renewsim.backend.simulation_service.create.application.port.in.CreateRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
+import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
+import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationTechnologyException;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;

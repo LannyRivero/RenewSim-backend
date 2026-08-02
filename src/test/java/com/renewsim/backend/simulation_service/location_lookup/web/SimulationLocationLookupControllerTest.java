@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.location_lookup.web;
 
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
-import com.renewsim.backend.simulation_service.location_lookup.application.LocationLookupPort;
+import com.renewsim.backend.simulation_service.location_lookup.application.port.in.LocationLookupPort;
 import com.renewsim.backend.simulation_service.location_lookup.web.dto.ResolvedLocationResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

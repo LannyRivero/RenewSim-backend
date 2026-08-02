@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.dashboard.web;
 
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardResult;
 import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardDistributionByStatusDTO;
 import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardDistributionByTechnologyDTO;
 import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardDistributionDTO;

@@ -1,13 +1,13 @@
 package com.renewsim.backend.simulation_service.dashboard.web;
 
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardDistribution;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardDistributionByStatus;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardDistributionByTechnology;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardPrioritizedScenario;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardRecommendedScenario;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardRiskAlert;
-import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardSummary;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardDistribution;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardDistributionByStatus;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardDistributionByTechnology;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardPrioritizedScenario;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardRecommendedScenario;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardResult;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardRiskAlert;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardSummary;
 import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

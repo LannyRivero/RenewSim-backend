@@ -2,7 +2,7 @@ package com.renewsim.backend.simulation_service.create.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.domain.model.SimulationCompletion;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

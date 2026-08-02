@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.dashboard.web;
 
-import com.renewsim.backend.simulation_service.application.dashboard.GetPortfolioDashboardUseCase;
+import com.renewsim.backend.simulation_service.dashboard.application.port.in.GetPortfolioDashboardUseCase;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
 import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;
 import com.renewsim.backend.simulation_service.dashboard.web.dto.PortfolioDashboardResponseDTO;

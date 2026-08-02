@@ -3,7 +3,7 @@ package com.renewsim.backend.simulation_service.infrastructure.adapter.out.exter
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.shared.exception.BadRequestException;
-import com.renewsim.backend.simulation_service.application.port.out.PvgisSolarResourcePort;
+import com.renewsim.backend.simulation_service.create.application.port.out.PvgisSolarResourcePort;
 import com.renewsim.backend.simulation_service.infrastructure.config.PvgisProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.client.RestTemplateBuilder;

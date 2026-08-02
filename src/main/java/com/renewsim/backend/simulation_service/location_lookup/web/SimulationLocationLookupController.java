@@ -2,7 +2,7 @@ package com.renewsim.backend.simulation_service.location_lookup.web;
 
 import com.renewsim.backend.shared.domain.vo.Location;
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
-import com.renewsim.backend.simulation_service.location_lookup.application.LocationLookupPort;
+import com.renewsim.backend.simulation_service.location_lookup.application.port.in.LocationLookupPort;
 import com.renewsim.backend.simulation_service.location_lookup.web.dto.ResolvedLocationResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
