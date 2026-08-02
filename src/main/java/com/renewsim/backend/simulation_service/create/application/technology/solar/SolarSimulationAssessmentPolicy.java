@@ -5,6 +5,7 @@ import com.renewsim.backend.simulation_service.create.application.command.Create
 import com.renewsim.backend.simulation_service.create.application.FinancialCalculator;
 import com.renewsim.backend.simulation_service.create.application.technology.SimulationAssessmentPolicy;
 import com.renewsim.backend.simulation_service.create.application.technology.TechnologySystemProfile;
+import com.renewsim.backend.simulation_service.domain.policy.SolarSimulationRecommendationPolicy;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,8 @@ import java.util.List;
 @Component
 @Primary
 public class SolarSimulationAssessmentPolicy implements SimulationAssessmentPolicy {
+
+    private final SolarSimulationRecommendationPolicy recommendationPolicy = new SolarSimulationRecommendationPolicy();
 
     @Override
     public boolean supports(Technology technology) {
@@ -62,32 +65,15 @@ public class SolarSimulationAssessmentPolicy implements SimulationAssessmentPoli
                     "Performance assumptions are conservative and materially affect the outcome."));
         }
 
-        String recommendation;
-        String headline;
-        String summary;
+        SolarSimulationRecommendationPolicy.RecommendationDecision decision = recommendationPolicy.decide(
+                financialResult.npv(),
+                financialResult.irrPct(),
+                command.economics().discountRatePct(),
+                financialResult.paybackYears(),
+                command.economics().projectLifetime().years(),
+                specificYield);
 
-        if (financialResult.npv() > 0
-                && financialResult.irrPct() != null
-                && financialResult.irrPct() >= command.economics().discountRatePct()
-                && financialResult.paybackYears() != null
-                && financialResult.paybackYears() <= command.economics().projectLifetime().years() / 2.0
-                && specificYield >= 1250) {
-            recommendation = "recommended";
-            headline = "The scenario is technically solid and clears the baseline financial gate.";
-            summary = "Resource quality, annual yield, and discounted returns support moving the case into detailed engineering and commercial validation.";
-        } else if (financialResult.npv() > 0
-                || (financialResult.paybackYears() != null
-                && financialResult.paybackYears() <= command.economics().projectLifetime().years())) {
-            recommendation = "viable_with_reservations";
-            headline = "The scenario is viable, but the decision depends on validating core assumptions.";
-            summary = "The project shows credible technical output, while the financial profile still requires executive review of pricing, losses, and recovery targets.";
-        } else {
-            recommendation = "not_recommended";
-            headline = "The scenario should not move forward without material assumption changes.";
-            summary = "Under the submitted inputs, the technical and financial outputs do not justify progressing the case in its current form.";
-        }
-
-        return new Assessment(recommendation, headline, summary, reasons);
+        return new Assessment(decision.recommendation().wireValue(), decision.headline(), decision.summary(), reasons);
     }
 
     @Override

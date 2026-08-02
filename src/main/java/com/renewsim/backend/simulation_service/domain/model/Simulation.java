@@ -1,6 +1,9 @@
 package com.renewsim.backend.simulation_service.domain.model;
 
+import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationCompletionException;
+import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationCreatorException;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationIdentityAssignmentException;
+import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationNameException;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationStatusTransitionException;
 import com.renewsim.backend.simulation_service.domain.model.vo.*;
 
@@ -34,6 +37,9 @@ public class Simulation {
             Double annualGenerationKwh, Double annualSavings,
             Double npv, Double irrPct, String recommendation,
             String createdBy, LocalDateTime createdAt, LocalDateTime updatedAt) {
+
+        validateName(name);
+        validateCreator(createdBy);
 
         this.id = id;
         this.name = name;
@@ -89,6 +95,9 @@ public class Simulation {
     public void complete(SimulationCompletion completion) {
         if (status != SimulationStatus.DRAFT) {
             throw new InvalidSimulationStatusTransitionException("complete", status);
+        }
+        if (completion == null) {
+            throw new InvalidSimulationCompletionException("Simulation completion is required");
         }
         this.resultSnapshot = completion.resultSnapshot();
         this.annualGenerationKwh = completion.annualGenerationKwh();
@@ -150,5 +159,17 @@ public class Simulation {
     public String getCreatedBy() { return createdBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    private static void validateName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new InvalidSimulationNameException("Simulation name must not be blank");
+        }
+    }
+
+    private static void validateCreator(String createdBy) {
+        if (createdBy == null || createdBy.isBlank()) {
+            throw new InvalidSimulationCreatorException("Simulation creator must not be blank");
+        }
+    }
 
 }
