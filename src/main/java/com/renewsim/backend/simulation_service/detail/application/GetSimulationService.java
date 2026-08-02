@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.detailSimulation;
+package com.renewsim.backend.simulation_service.detail.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.simulation_service.application.port.out.SimulationRecordRepositoryPort;

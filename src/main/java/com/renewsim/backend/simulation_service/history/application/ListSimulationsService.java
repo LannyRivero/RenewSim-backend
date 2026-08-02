@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.historySimulation;
+package com.renewsim.backend.simulation_service.history.application;
 
 import com.renewsim.backend.simulation_service.application.port.out.SimulationRecordRepositoryPort;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;

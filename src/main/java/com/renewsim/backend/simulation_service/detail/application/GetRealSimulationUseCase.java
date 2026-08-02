@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.detailSimulation;
+package com.renewsim.backend.simulation_service.detail.application;
 
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
 

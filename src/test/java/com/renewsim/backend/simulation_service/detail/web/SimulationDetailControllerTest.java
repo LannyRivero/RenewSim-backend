@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.detail.web;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
-import com.renewsim.backend.simulation_service.application.detailSimulation.GetRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.detail.application.GetRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.web.dto.SimulationDetailsResponseDTO;
 import org.junit.jupiter.api.DisplayName;
