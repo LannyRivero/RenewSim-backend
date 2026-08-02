@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.history.web;
 
-import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryRowResult;
-import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
+import com.renewsim.backend.simulation_service.history.application.SimulationHistoryRowResult;
+import com.renewsim.backend.simulation_service.history.application.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.history.web.dto.ListUserSimulationsResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
