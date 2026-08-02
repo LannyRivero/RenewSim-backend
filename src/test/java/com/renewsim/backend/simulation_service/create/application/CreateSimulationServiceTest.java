@@ -9,7 +9,7 @@ import com.renewsim.backend.simulation_service.create.application.technology.win
 import com.renewsim.backend.simulation_service.application.dashboard.GetPortfolioDashboardService;
 import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardRiskAlert;
 import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
-import com.renewsim.backend.simulation_service.application.detailSimulation.GetSimulationService;
+import com.renewsim.backend.simulation_service.detail.application.GetSimulationService;
 import com.renewsim.backend.simulation_service.application.historySimulation.ListSimulationsService;
 import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.application.port.out.PvgisSolarResourcePort;
