@@ -15,19 +15,18 @@ class SimulationFinancialRiskPolicyTest {
     @Test
     @DisplayName("resolveMainRisk prefers explicit warnings")
     void resolveMainRiskPrefersWarnings() {
-        SimulationDetailsResult details = details(List.of(
-                new SimulationDetailsResult.SimulationWarning("warning", "LOW_AVAILABILITY", "Availability too low")));
-
-        assertThat(policy.resolveMainRisk(details, 12.0, 2.0)).isEqualTo("Availability too low");
+        assertThat(policy.resolveMainRisk("Availability too low", 12.0, 2.0)).isEqualTo("Availability too low");
     }
 
     @Test
     @DisplayName("resolveMainRisk falls back to payback and roi thresholds")
     void resolveMainRiskFallsBackToThresholds() {
-        assertThat(policy.resolveMainRisk(details(List.of()), 12.0, 6.0))
+        assertThat(policy.resolveMainRisk(null, 12.0, 6.0))
                 .contains("Payback");
-        assertThat(policy.resolveMainRisk(details(List.of()), 8.0, 2.0))
+        assertThat(policy.resolveMainRisk(null, 8.0, 2.0))
                 .contains("Retorno anual");
+        assertThat(policy.resolveMainRisk(null, null, null))
+                .contains("incompleta");
     }
 
     @Test
@@ -39,22 +38,5 @@ class SimulationFinancialRiskPolicyTest {
         assertThat(policy.hasLongPayback(10.0)).isFalse();
         assertThat(policy.hasWeakRoi(4.9)).isTrue();
         assertThat(policy.hasWeakRoi(5.0)).isFalse();
-    }
-
-    private SimulationDetailsResult details(List<SimulationDetailsResult.SimulationWarning> warnings) {
-        return new SimulationDetailsResult(
-                "55",
-                "completed",
-                "2026-06-30T14:00:00Z",
-                "2026-06-30T14:00:00Z",
-                "solar-spain-v1",
-                "solar",
-                null,
-                new SimulationDetailsResult.Summary("recommended", "headline", "summary", List.of()),
-                null,
-                null,
-                null,
-                null,
-                warnings);
     }
 }

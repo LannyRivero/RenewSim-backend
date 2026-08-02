@@ -44,7 +44,7 @@ final class PortfolioScenarioScoringPolicy {
     }
 
     String resolveMainRisk(SimulationDetailsResult details, Double paybackYears, Double roiPercent) {
-        return financialRiskPolicy.resolveMainRisk(details, paybackYears, roiPercent);
+        return financialRiskPolicy.resolveMainRisk(firstWarningMessage(details), paybackYears, roiPercent);
     }
 
     boolean needsReview(SimulationDetailsResult details, String recommendation) {
@@ -71,5 +71,16 @@ final class PortfolioScenarioScoringPolicy {
 
     private List<SimulationDetailsResult.SimulationWarning> safeWarnings(SimulationDetailsResult details) {
         return details.warnings() == null ? List.of() : details.warnings();
+    }
+
+    private String firstWarningMessage(SimulationDetailsResult details) {
+        if (details == null) {
+            return null;
+        }
+        return safeWarnings(details).stream()
+                .filter(warning -> "warning".equalsIgnoreCase(warning.severity()))
+                .map(SimulationDetailsResult.SimulationWarning::message)
+                .findFirst()
+                .orElse(null);
     }
 }

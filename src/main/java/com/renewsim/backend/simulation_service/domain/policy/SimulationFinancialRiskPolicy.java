@@ -1,26 +1,16 @@
 package com.renewsim.backend.simulation_service.domain.policy;
 
-import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
-
-import java.util.List;
-
 public final class SimulationFinancialRiskPolicy {
 
     private static final double LONG_PAYBACK_YEARS = 10.0;
     private static final double WEAK_ROI_PERCENT = 5.0;
 
-    public String resolveMainRisk(SimulationDetailsResult details, Double paybackYears, Double roiPercent) {
-        if (details == null) {
-            return "Informacion financiera incompleta";
-        }
-
-        String warningRisk = safeWarnings(details).stream()
-                .filter(warning -> "warning".equalsIgnoreCase(warning.severity()))
-                .map(SimulationDetailsResult.SimulationWarning::message)
-                .findFirst()
-                .orElse(null);
-        if (warningRisk != null) {
+    public String resolveMainRisk(String warningRisk, Double paybackYears, Double roiPercent) {
+        if (warningRisk != null && !warningRisk.isBlank()) {
             return warningRisk;
+        }
+        if (paybackYears == null && roiPercent == null) {
+            return "Informacion financiera incompleta";
         }
         if (hasLongPayback(paybackYears)) {
             return "Payback por encima de la banda esperada";
@@ -41,9 +31,5 @@ public final class SimulationFinancialRiskPolicy {
 
     public boolean hasWeakRoi(Double roiPercent) {
         return roiPercent != null && roiPercent < WEAK_ROI_PERCENT;
-    }
-
-    private List<SimulationDetailsResult.SimulationWarning> safeWarnings(SimulationDetailsResult details) {
-        return details.warnings() == null ? List.of() : details.warnings();
     }
 }
