@@ -1,6 +1,6 @@
-package com.renewsim.backend.simulation_service.application.dashboard;
+package com.renewsim.backend.simulation_service.dashboard.application;
 
-import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

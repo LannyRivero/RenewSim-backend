@@ -1,8 +1,11 @@
-package com.renewsim.backend.simulation_service.application.dashboard;
+package com.renewsim.backend.simulation_service.dashboard.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.simulation_service.application.port.out.SimulationRecordRepositoryPort;
-import com.renewsim.backend.simulation_service.application.port.out.TechnologyLookupPort;
+import com.renewsim.backend.simulation_service.dashboard.application.port.in.GetPortfolioDashboardUseCase;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardResult;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.ScenarioSnapshot;
+import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
+import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

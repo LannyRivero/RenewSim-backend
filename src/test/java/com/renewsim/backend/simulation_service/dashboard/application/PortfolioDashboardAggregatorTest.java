@@ -1,5 +1,11 @@
-package com.renewsim.backend.simulation_service.application.dashboard;
+package com.renewsim.backend.simulation_service.dashboard.application;
 
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardDistributionByStatus;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardDistributionByTechnology;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardPrioritizedScenario;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardResult;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardRiskAlert;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.ScenarioSnapshot;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

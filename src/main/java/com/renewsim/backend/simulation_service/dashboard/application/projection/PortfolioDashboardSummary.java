@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.dashboard;
+package com.renewsim.backend.simulation_service.dashboard.application.projection;
 
 public record PortfolioDashboardSummary(
         long totalSimulations,

@@ -1,9 +1,9 @@
-package com.renewsim.backend.simulation_service.application.dashboard;
+package com.renewsim.backend.simulation_service.dashboard.application.projection;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-record ScenarioSnapshot(
+public record ScenarioSnapshot(
         String id,
         String name,
         String technology,
@@ -27,11 +27,11 @@ record ScenarioSnapshot(
         boolean hasNegativeRoi,
         boolean hasLongPayback) {
 
-    boolean hasFinancials() {
+    public boolean hasFinancials() {
         return roiPercent != null || paybackYears != null;
     }
 
-    boolean requiresAttention() {
+    public boolean requiresAttention() {
         return hasIncompleteData || hasNegativeRoi || hasLongPayback || needsReview;
     }
 }

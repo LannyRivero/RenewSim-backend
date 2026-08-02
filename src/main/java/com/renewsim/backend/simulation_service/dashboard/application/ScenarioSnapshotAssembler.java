@@ -1,8 +1,9 @@
-package com.renewsim.backend.simulation_service.application.dashboard;
+package com.renewsim.backend.simulation_service.dashboard.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.simulation_service.application.port.out.TechnologyLookupPort;
-import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.ScenarioSnapshot;
+import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
+import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 
 import java.util.List;

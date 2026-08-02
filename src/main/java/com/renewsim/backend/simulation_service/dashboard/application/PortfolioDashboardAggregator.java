@@ -1,5 +1,14 @@
-package com.renewsim.backend.simulation_service.application.dashboard;
+package com.renewsim.backend.simulation_service.dashboard.application;
 
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardDistribution;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardDistributionByStatus;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardDistributionByTechnology;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardPrioritizedScenario;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardRecommendedScenario;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardResult;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardRiskAlert;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardSummary;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.ScenarioSnapshot;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;

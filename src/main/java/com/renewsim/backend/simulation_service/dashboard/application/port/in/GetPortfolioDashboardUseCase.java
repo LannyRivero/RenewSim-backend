@@ -1,4 +1,6 @@
-package com.renewsim.backend.simulation_service.application.dashboard;
+package com.renewsim.backend.simulation_service.dashboard.application.port.in;
+
+import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardResult;
 
 /**
  * Produces the executive dashboard for a user's simulation portfolio.
