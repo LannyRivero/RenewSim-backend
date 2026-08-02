@@ -2,6 +2,7 @@ package com.renewsim.backend.simulation_service.dashboard.application;
 
 import com.renewsim.backend.simulation_service.domain.model.SimulationRecommendation;
 import com.renewsim.backend.simulation_service.domain.policy.SimulationFinancialRiskPolicy;
+import com.renewsim.backend.simulation_service.domain.policy.SimulationPortfolioPriorityPolicy;
 import com.renewsim.backend.simulation_service.domain.policy.SimulationRecommendationReviewPolicy;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 
@@ -14,6 +15,7 @@ final class PortfolioScenarioScoringPolicy {
 
     private final SimulationRecommendationReviewPolicy reviewPolicy = new SimulationRecommendationReviewPolicy();
     private final SimulationFinancialRiskPolicy financialRiskPolicy = new SimulationFinancialRiskPolicy();
+    private final SimulationPortfolioPriorityPolicy priorityPolicy = new SimulationPortfolioPriorityPolicy();
 
     int computeScore(SimulationDetailsResult details, Double roiPercent, Double paybackYears) {
         if (details == null || details.summary() == null) {
@@ -56,16 +58,7 @@ final class PortfolioScenarioScoringPolicy {
     }
 
     String priorityFor(int score, boolean hasDetails) {
-        if (!hasDetails) {
-            return "REVIEW";
-        }
-        if (score >= 75) {
-            return "HIGH";
-        }
-        if (score >= 50) {
-            return "MEDIUM";
-        }
-        return "LOW";
+        return priorityPolicy.priorityFor(score, hasDetails);
     }
 
     boolean hasNegativeRoi(Double roiPercent) {
