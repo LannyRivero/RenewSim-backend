@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.web.controller;
+package com.renewsim.backend.simulation_service.shared.web;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import org.junit.jupiter.api.DisplayName;

@@ -19,9 +19,9 @@ import com.renewsim.backend.simulation_service.web.dto.SimulationHistoryRowDTO;
 /**
  * Maps simulation HTTP requests and responses to the application layer models.
  */
-final class SimulationWebMapper {
+public final class SimulationWebMapper {
 
-    SimulationDetailsResponseDTO toWebDetails(SimulationDetailsResult result) {
+    public SimulationDetailsResponseDTO toWebDetails(SimulationDetailsResult result) {
         return new SimulationDetailsResponseDTO(
                 result.id(),
                 result.status(),
@@ -144,7 +144,7 @@ final class SimulationWebMapper {
                         .toList());
     }
 
-    ListUserSimulationsResponseDTO toWebList(UserSimulationListResult result) {
+    public ListUserSimulationsResponseDTO toWebList(UserSimulationListResult result) {
         return new ListUserSimulationsResponseDTO(
                 result.items().stream()
                         .map(item -> new SimulationHistoryRowDTO(
@@ -165,7 +165,7 @@ final class SimulationWebMapper {
                 result.total());
     }
 
-    PortfolioDashboardResponseDTO toWebDashboard(PortfolioDashboardResult result) {
+    public PortfolioDashboardResponseDTO toWebDashboard(PortfolioDashboardResult result) {
         return new PortfolioDashboardResponseDTO(
                 new PortfolioDashboardSummaryDTO(
                         result.summary().totalSimulations(),

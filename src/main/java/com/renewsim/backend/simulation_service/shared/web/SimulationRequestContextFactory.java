@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.web.controller;
+package com.renewsim.backend.simulation_service.shared.web;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import org.springframework.security.core.Authentication;
@@ -6,9 +6,9 @@ import org.springframework.security.core.Authentication;
 /**
  * Extracts the simulation request security context from Spring Authentication.
  */
-final class SimulationRequestContextFactory {
+public final class SimulationRequestContextFactory {
 
-    SimulationRequestContext from(Authentication auth) {
+    public SimulationRequestContext from(Authentication auth) {
         AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
