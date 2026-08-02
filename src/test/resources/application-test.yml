@@ -80,6 +80,9 @@ logging:
     org.springframework: INFO
     org.hibernate: WARN
     com.renewsim.backend: DEBUG
+    com.renewsim.backend.user_service.application.service: WARN
+    org.testcontainers: WARN
+    org.testcontainers.utility.ResourceReaper: ERROR
 
 # =============================
 # TEST EXCLUSIONS
