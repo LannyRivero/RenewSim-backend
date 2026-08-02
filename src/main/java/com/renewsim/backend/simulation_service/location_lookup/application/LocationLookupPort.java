@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.port.out;
+package com.renewsim.backend.simulation_service.location_lookup.application;
 
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 

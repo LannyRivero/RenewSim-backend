@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.web.dto;
+package com.renewsim.backend.simulation_service.location_lookup.web.dto;
 
 public record ResolvedLocationResponseDTO(
         String name,
