@@ -1,5 +1,6 @@
-package com.renewsim.backend.simulation_service.application.createSimulation;
+package com.renewsim.backend.simulation_service.create.application.technology.solar;
 
+import com.renewsim.backend.simulation_service.create.application.technology.TechnologySystemProfile;
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 
 public record SolarSystemProfile(

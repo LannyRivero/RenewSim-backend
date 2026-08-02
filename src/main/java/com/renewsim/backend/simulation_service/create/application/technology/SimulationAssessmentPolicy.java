@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.createSimulation;
+package com.renewsim.backend.simulation_service.create.application.technology;
 
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.create.application.CreateRealSimulationCommand;

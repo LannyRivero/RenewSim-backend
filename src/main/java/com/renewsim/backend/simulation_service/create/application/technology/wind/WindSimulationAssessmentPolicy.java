@@ -1,8 +1,10 @@
-package com.renewsim.backend.simulation_service.application.createSimulation;
+package com.renewsim.backend.simulation_service.create.application.technology.wind;
 
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.create.application.CreateRealSimulationCommand;
 import com.renewsim.backend.simulation_service.create.application.FinancialCalculator;
+import com.renewsim.backend.simulation_service.create.application.technology.SimulationAssessmentPolicy;
+import com.renewsim.backend.simulation_service.create.application.technology.TechnologySystemProfile;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import org.springframework.stereotype.Component;
 

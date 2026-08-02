@@ -2,10 +2,10 @@ package com.renewsim.backend.simulation_service.create.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.shared.exception.BadRequestException;
-import com.renewsim.backend.simulation_service.application.createSimulation.HydroSimulationEngine;
-import com.renewsim.backend.simulation_service.application.createSimulation.SolarSimulationAssessmentPolicy;
-import com.renewsim.backend.simulation_service.application.createSimulation.SolarSimulationEngine;
-import com.renewsim.backend.simulation_service.application.createSimulation.WindSimulationEngine;
+import com.renewsim.backend.simulation_service.create.application.technology.hydro.HydroSimulationEngine;
+import com.renewsim.backend.simulation_service.create.application.technology.solar.SolarSimulationAssessmentPolicy;
+import com.renewsim.backend.simulation_service.create.application.technology.solar.SolarSimulationEngine;
+import com.renewsim.backend.simulation_service.create.application.technology.wind.WindSimulationEngine;
 import com.renewsim.backend.simulation_service.application.dashboard.GetPortfolioDashboardService;
 import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardRiskAlert;
 import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
