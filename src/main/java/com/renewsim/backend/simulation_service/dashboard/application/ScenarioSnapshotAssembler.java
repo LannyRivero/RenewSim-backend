@@ -1,6 +1,7 @@
 package com.renewsim.backend.simulation_service.dashboard.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.renewsim.backend.simulation_service.domain.model.SimulationRecommendation;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.ScenarioSnapshot;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
@@ -109,10 +110,10 @@ final class ScenarioSnapshotAssembler {
     }
 
     private String nextStepFor(String recommendation) {
-        return switch (recommendation) {
-            case "recommended" -> "Validar sensibilidad y elevar a evaluacion ejecutiva";
-            case "viable_with_reservations" -> "Revisar supuestos criticos antes de priorizar inversion";
-            default -> "Completar datos y replantear supuestos antes de avanzar";
+        return switch (SimulationRecommendation.fromWireValue(recommendation)) {
+            case RECOMMENDED -> "Validar sensibilidad y elevar a evaluacion ejecutiva";
+            case VIABLE_WITH_RESERVATIONS -> "Revisar supuestos criticos antes de priorizar inversion";
+            case NOT_RECOMMENDED -> "Completar datos y replantear supuestos antes de avanzar";
         };
     }
 

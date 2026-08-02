@@ -1,5 +1,6 @@
 package com.renewsim.backend.simulation_service.dashboard.application;
 
+import com.renewsim.backend.simulation_service.domain.model.SimulationRecommendation;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 
 import java.util.List;
@@ -17,10 +18,10 @@ final class PortfolioScenarioScoringPolicy {
             return 20;
         }
 
-        int score = switch (details.summary().recommendation()) {
-            case "recommended" -> 45;
-            case "viable_with_reservations" -> 30;
-            default -> 10;
+        int score = switch (SimulationRecommendation.fromWireValue(details.summary().recommendation())) {
+            case RECOMMENDED -> 45;
+            case VIABLE_WITH_RESERVATIONS -> 30;
+            case NOT_RECOMMENDED -> 10;
         };
 
         if (roiPercent != null) {
@@ -63,7 +64,7 @@ final class PortfolioScenarioScoringPolicy {
         if (details == null) {
             return true;
         }
-        if (!"recommended".equalsIgnoreCase(recommendation)) {
+        if (SimulationRecommendation.fromWireValue(recommendation) != SimulationRecommendation.RECOMMENDED) {
             return true;
         }
         return safeWarnings(details).stream().anyMatch(warning -> "warning".equalsIgnoreCase(warning.severity()));
