@@ -1,17 +1,8 @@
 package com.renewsim.backend.simulation_service.web.controller;
 
-import com.renewsim.backend.simulation_service.application.createSimulation.CreateRealSimulationCommand;
 import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDashboardResult;
 import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
-import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
-import com.renewsim.backend.simulation_service.domain.model.vo.CountryCode;
-import com.renewsim.backend.simulation_service.domain.model.vo.Currency;
-import com.renewsim.backend.simulation_service.domain.model.vo.ProjectLifetime;
-import com.renewsim.backend.simulation_service.domain.model.vo.SimulationEconomics;
-import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocation;
-import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
-import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.web.dto.CreateSolarSimulationRequestDTO;
 import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardDistributionByStatusDTO;
@@ -29,41 +20,6 @@ import com.renewsim.backend.simulation_service.web.dto.SimulationHistoryRowDTO;
  * Maps simulation HTTP requests and responses to the application layer models.
  */
 final class SimulationWebMapper {
-
-    CreateRealSimulationCommand toCommand(CreateSolarSimulationRequestDTO request, String username) {
-        return new CreateRealSimulationCommand(
-                request.name(),
-                Technology.solar(),
-                SimulationLocation.of(
-                        request.location().label(),
-                        request.location().lat(),
-                        request.location().lon(),
-                        request.location().country(),
-                        CountryCode.of(request.location().countryCode())),
-                new SimulationSystem(
-                        request.system().installedCapacityKw(),
-                        request.system().performanceRatio(),
-                        request.system().degradationRateAnnualPct(),
-                        request.system().availabilityPct(),
-                        new SimulationSystem.LossesPct(
-                                request.system().lossesPct().inverter(),
-                                request.system().lossesPct().temperature(),
-                                request.system().lossesPct().wiring(),
-                                request.system().lossesPct().soiling(),
-                                request.system().lossesPct().other())),
-                ConsumptionProfile.of(
-                        request.demand().annualConsumptionKwh(),
-                        request.demand().monthlyConsumptionKwh()),
-                new SimulationEconomics(
-                        Currency.of(request.economics().currency()),
-                        request.economics().capexTotal(),
-                        request.economics().opexAnnual(),
-                        request.economics().electricityPurchasePricePerKwh(),
-                        request.economics().exportPricePerKwh(),
-                        request.economics().discountRatePct(),
-                        ProjectLifetime.of(request.economics().projectLifetimeYears())),
-                username);
-    }
 
     SimulationDetailsResponseDTO toWebDetails(SimulationDetailsResult result) {
         return new SimulationDetailsResponseDTO(

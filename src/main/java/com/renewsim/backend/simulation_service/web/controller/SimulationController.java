@@ -1,6 +1,7 @@
 package com.renewsim.backend.simulation_service.web.controller;
 
 import com.renewsim.backend.simulation_service.application.createSimulation.CreateRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.create.web.CreateSimulationWebMapper;
 import com.renewsim.backend.simulation_service.application.dashboard.GetPortfolioDashboardUseCase;
 import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.detailSimulation.GetRealSimulationUseCase;
@@ -47,6 +48,7 @@ public class SimulationController {
     private final GetPortfolioDashboardUseCase getPortfolioDashboardUseCase;
     private final ListUserRealSimulationsUseCase listUserRealSimulationsUseCase;
     private final DeleteRealSimulationUseCase deleteRealSimulationUseCase;
+    private final CreateSimulationWebMapper createWebMapper = new CreateSimulationWebMapper();
     private final SimulationWebMapper webMapper = new SimulationWebMapper();
     private final SimulationRequestContextFactory requestContextFactory = new SimulationRequestContextFactory();
 
@@ -60,7 +62,7 @@ public class SimulationController {
         SimulationRequestContext requestContext = requestContextFactory.from(auth);
 
         SimulationDetailsResponseDTO result = webMapper.toWebDetails(
-                createRealSimulationUseCase.createSimulation(webMapper.toCommand(request, requestContext.username())));
+                createRealSimulationUseCase.createSimulation(createWebMapper.toCommand(request, requestContext.username())));
         log.info("User {} created simulation {}", requestContext.username(), result.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }

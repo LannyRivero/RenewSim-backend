@@ -11,7 +11,6 @@ import com.renewsim.backend.simulation_service.application.dashboard.PortfolioDa
 import com.renewsim.backend.simulation_service.application.historySimulation.SimulationHistoryRowResult;
 import com.renewsim.backend.simulation_service.application.historySimulation.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
-import com.renewsim.backend.simulation_service.web.dto.CreateSolarSimulationRequestDTO;
 import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.SimulationDetailsResponseDTO;
@@ -22,25 +21,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class SimulationWebMapperTest {
+class SimulationResponseWebMapperTest {
 
     private final SimulationWebMapper mapper = new SimulationWebMapper();
-
-    @Test
-    @DisplayName("toCommand maps request DTO into application command")
-    void toCommandMapsRequestDtoIntoApplicationCommand() {
-        CreateSolarSimulationRequestDTO request = request();
-
-        var command = mapper.toCommand(request, "alice");
-
-        assertThat(command.name()).isEqualTo("Solar - Sevilla");
-        assertThat(command.technology().value()).isEqualTo("solar");
-        assertThat(command.location().country()).isEqualTo("Spain");
-        assertThat(command.system().installedCapacityKw()).isEqualTo(300.0);
-        assertThat(command.demand().annualConsumptionKwh()).isEqualTo(120000.0);
-        assertThat(command.economics().currency().value()).isEqualTo("EUR");
-        assertThat(command.createdBy()).isEqualTo("alice");
-    }
 
     @Test
     @DisplayName("toWebDetails maps nested simulation details contract")
@@ -80,18 +63,6 @@ class SimulationWebMapperTest {
         assertThat(dashboardResponse.summary().totalSimulations()).isEqualTo(3);
         assertThat(dashboardResponse.recommendedScenario().name()).isEqualTo("Solar - Sevilla");
         assertThat(dashboardResponse.distribution().byTechnology().getFirst().energyKwh()).isEqualTo(912300.0);
-    }
-
-    private CreateSolarSimulationRequestDTO request() {
-        return new CreateSolarSimulationRequestDTO(
-                "Solar - Sevilla",
-                new CreateSolarSimulationRequestDTO.LocationDTO("Sevilla, Andalucia, ES", 37.3891, -5.9845, "Spain", "ES"),
-                new CreateSolarSimulationRequestDTO.SolarSystemDTO(300, 0.81, 0.5, 99,
-                        new CreateSolarSimulationRequestDTO.LossesPctDTO(2, 6, 1, 3, 1)),
-                new CreateSolarSimulationRequestDTO.DemandDTO(120000,
-                        List.of(10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d,
-                                10000d)),
-                new CreateSolarSimulationRequestDTO.EconomicsDTO("EUR", 315000, 7200, 0.18, 0.07, 8, 20));
     }
 
     private SimulationDetailsResult sampleResult() {
