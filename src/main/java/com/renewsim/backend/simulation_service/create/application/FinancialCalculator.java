@@ -1,11 +1,12 @@
 package com.renewsim.backend.simulation_service.create.application;
 
-import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand;
+import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.renewsim.backend.simulation_service.application.shared.SimulationMathUtils.round;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.round;
 
 public final class FinancialCalculator {
 

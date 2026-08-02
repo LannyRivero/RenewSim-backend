@@ -1,6 +1,7 @@
 package com.renewsim.backend.simulation_service.delete.application;
 
-import com.renewsim.backend.simulation_service.application.port.out.SimulationRecordRepositoryPort;
+import com.renewsim.backend.simulation_service.delete.application.port.in.DeleteRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.port.out;
+package com.renewsim.backend.simulation_service.shared.application.port.out;
 
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 

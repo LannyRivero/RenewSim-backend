@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.shared.web;
 
-import com.renewsim.backend.simulation_service.application.shared.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.web.dto.SimulationDetailsResponseDTO;
 import com.renewsim.backend.simulation_service.shared.web.dto.SimulationInputSnapshotDTO;
 

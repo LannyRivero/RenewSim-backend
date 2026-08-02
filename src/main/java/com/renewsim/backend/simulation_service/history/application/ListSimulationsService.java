@@ -1,6 +1,9 @@
 package com.renewsim.backend.simulation_service.history.application;
 
-import com.renewsim.backend.simulation_service.application.port.out.SimulationRecordRepositoryPort;
+import com.renewsim.backend.simulation_service.history.application.port.in.ListUserRealSimulationsUseCase;
+import com.renewsim.backend.simulation_service.history.application.result.SimulationHistoryRowResult;
+import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
+import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -8,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.renewsim.backend.simulation_service.application.shared.SimulationMathUtils.*;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.*;
 
 @Service
 @RequiredArgsConstructor

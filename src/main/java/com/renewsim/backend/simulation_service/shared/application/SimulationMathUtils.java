@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.application.shared;
+package com.renewsim.backend.simulation_service.shared.application;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
