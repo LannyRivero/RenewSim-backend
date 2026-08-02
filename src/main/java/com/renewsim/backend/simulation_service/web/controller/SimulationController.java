@@ -1,18 +1,15 @@
 package com.renewsim.backend.simulation_service.web.controller;
 
-import com.renewsim.backend.simulation_service.application.createSimulation.CreateRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.create.application.CreateRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.create.web.CreateSimulationWebMapper;
 import com.renewsim.backend.simulation_service.application.dashboard.GetPortfolioDashboardUseCase;
 import com.renewsim.backend.simulation_service.application.deleteSimulation.DeleteRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.detailSimulation.GetRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.application.historySimulation.ListUserRealSimulationsUseCase;
-import com.renewsim.backend.simulation_service.application.port.out.LocationLookupPort;
-import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 import com.renewsim.backend.simulation_service.web.dto.CreateSolarSimulationRequestDTO;
 import com.renewsim.backend.simulation_service.web.dto.ListUserSimulationsResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.PortfolioDashboardResponseDTO;
-import com.renewsim.backend.simulation_service.web.dto.ResolvedLocationResponseDTO;
 import com.renewsim.backend.simulation_service.web.dto.SimulationDetailsResponseDTO;
-import com.renewsim.backend.shared.domain.vo.Location;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,10 +25,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * SimulationController
@@ -49,12 +43,12 @@ import java.util.List;
 @Tag(name = "Simulation API", description = "Operations for renewable energy simulations")
 public class SimulationController {
 
-    private final LocationLookupPort locationLookupPort;
     private final CreateRealSimulationUseCase createRealSimulationUseCase;
     private final GetRealSimulationUseCase getRealSimulationUseCase;
     private final GetPortfolioDashboardUseCase getPortfolioDashboardUseCase;
     private final ListUserRealSimulationsUseCase listUserRealSimulationsUseCase;
     private final DeleteRealSimulationUseCase deleteRealSimulationUseCase;
+    private final CreateSimulationWebMapper createWebMapper = new CreateSimulationWebMapper();
     private final SimulationWebMapper webMapper = new SimulationWebMapper();
     private final SimulationRequestContextFactory requestContextFactory = new SimulationRequestContextFactory();
 
@@ -68,7 +62,7 @@ public class SimulationController {
         SimulationRequestContext requestContext = requestContextFactory.from(auth);
 
         SimulationDetailsResponseDTO result = webMapper.toWebDetails(
-                createRealSimulationUseCase.createSimulation(webMapper.toCommand(request, requestContext.username())));
+                createRealSimulationUseCase.createSimulation(createWebMapper.toCommand(request, requestContext.username())));
         log.info("User {} created simulation {}", requestContext.username(), result.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
@@ -139,47 +133,6 @@ public class SimulationController {
 
         return ResponseEntity
                 .ok(webMapper.toWebDashboard(getPortfolioDashboardUseCase.getDashboard(requestContext.username())));
-    }
-
-    @Operation(summary = "Resolve location from coordinates")
-    @PreAuthorize("hasAuthority('SCOPE_read:simulations') or hasRole('ADMIN')")
-    @GetMapping("/locations/reverse")
-    public ResponseEntity<ResolvedLocationResponseDTO> reverseGeocode(
-            @RequestParam double lat,
-            @RequestParam double lon) {
-        new Location(lat, lon);
-        ResolvedLocation resolvedLocation = locationLookupPort.resolveLocation(lat, lon);
-
-        return ResponseEntity.ok(new ResolvedLocationResponseDTO(
-                resolvedLocation.name(),
-                resolvedLocation.country(),
-                lat,
-                lon));
-    }
-
-    @Operation(summary = "Search locations by query")
-    @PreAuthorize("hasAuthority('SCOPE_read:simulations') or hasRole('ADMIN')")
-    @GetMapping("/locations/search")
-    public ResponseEntity<List<ResolvedLocationResponseDTO>> searchLocations(
-            @RequestParam String q,
-            @RequestParam(defaultValue = "5") int limit) {
-        String query = q == null ? "" : q.trim();
-        if (query.length() < 2) {
-            return ResponseEntity.ok(List.of());
-        }
-
-        int safeLimit = Math.min(Math.max(limit, 1), 10);
-
-        List<ResolvedLocationResponseDTO> results = locationLookupPort.searchLocations(query, safeLimit)
-                .stream()
-                .map(location -> new ResolvedLocationResponseDTO(
-                        location.name(),
-                        location.country(),
-                        location.latitude(),
-                        location.longitude()))
-                .toList();
-
-        return ResponseEntity.ok(results);
     }
 
 }

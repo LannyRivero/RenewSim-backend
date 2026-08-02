@@ -1,8 +1,8 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.external;
 
-import com.renewsim.backend.simulation_service.application.port.out.LocationLookupPort;
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 import com.renewsim.backend.simulation_service.infrastructure.config.WeatherServiceProperties;
+import com.renewsim.backend.simulation_service.location_lookup.application.LocationLookupPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.infrastructure.config;
 
-import com.renewsim.backend.simulation_service.application.port.out.LocationLookupPort;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.external.OpenWeatherMapAdapter;
+import com.renewsim.backend.simulation_service.location_lookup.application.LocationLookupPort;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration;
 import org.junit.jupiter.api.DisplayName;
