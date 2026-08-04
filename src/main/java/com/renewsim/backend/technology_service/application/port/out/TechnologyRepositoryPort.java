@@ -26,6 +26,8 @@ public interface TechnologyRepositoryPort {
 
     Page<Technology> findActiveByEnergyType(EnergyType energyType, Pageable pageable);
 
+    Optional<Technology> findFirstActiveByEnergyType(EnergyType energyType);
+
     Page<Technology> findAllActive(Pageable pageable);
 
     Page<Technology> findAllActiveByNameContaining(String name, Pageable pageable);

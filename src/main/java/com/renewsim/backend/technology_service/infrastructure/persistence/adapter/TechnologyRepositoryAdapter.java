@@ -72,6 +72,12 @@ public class TechnologyRepositoryAdapter implements TechnologyRepositoryPort {
     }
 
     @Override
+    public Optional<Technology> findFirstActiveByEnergyType(EnergyType energyType) {
+        return jpaRepository.findFirstByEnergyTypeAndIsActiveTrueOrderByIdAsc(toEntityEnergyType(energyType))
+                .map(mapper::toDomain);
+    }
+
+    @Override
     public Page<Technology> findAllActive(Pageable pageable) {
         return jpaRepository.findByIsActiveTrue(pageable).map(mapper::toDomain);
     }
