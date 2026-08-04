@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.location_lookup.web;
 
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
-import com.renewsim.backend.simulation_service.location_lookup.application.port.in.LocationLookupPort;
+import com.renewsim.backend.simulation_service.location_lookup.application.port.in.LocationLookupUseCase;
 import com.renewsim.backend.simulation_service.location_lookup.web.dto.ResolvedLocationResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 class SimulationLocationLookupControllerTest {
 
     @Mock
-    private LocationLookupPort locationLookupPort;
+    private LocationLookupUseCase locationLookupUseCase;
 
     @InjectMocks
     private SimulationLocationLookupController controller;
@@ -27,7 +27,7 @@ class SimulationLocationLookupControllerTest {
     @Test
     @DisplayName("reverseGeocode returns resolved location from coordinates")
     void reverseGeocodeReturnsResolvedLocation() {
-        when(locationLookupPort.resolveLocation(-32.8895, -68.8458))
+        when(locationLookupUseCase.resolveLocation(-32.8895, -68.8458))
                 .thenReturn(new ResolvedLocation("Mendoza", "AR", -32.8895, -68.8458));
 
         ResolvedLocationResponseDTO response = controller.reverseGeocode(-32.8895, -68.8458).getBody();
@@ -39,7 +39,7 @@ class SimulationLocationLookupControllerTest {
     @Test
     @DisplayName("searchLocations returns mapped lookup results")
     void searchLocationsReturnsMappedLookupResults() {
-        when(locationLookupPort.searchLocations("mendoza", 5))
+        when(locationLookupUseCase.searchLocations("mendoza", 5))
                 .thenReturn(List.of(new ResolvedLocation("Mendoza", "AR", -32.8895, -68.8458)));
 
         List<ResolvedLocationResponseDTO> response = controller.searchLocations("mendoza", 5).getBody();

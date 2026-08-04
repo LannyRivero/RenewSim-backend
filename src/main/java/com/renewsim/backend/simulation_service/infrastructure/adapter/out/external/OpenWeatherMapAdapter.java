@@ -2,7 +2,7 @@ package com.renewsim.backend.simulation_service.infrastructure.adapter.out.exter
 
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 import com.renewsim.backend.simulation_service.infrastructure.config.WeatherServiceProperties;
-import com.renewsim.backend.simulation_service.location_lookup.application.port.in.LocationLookupPort;
+import com.renewsim.backend.simulation_service.location_lookup.application.port.out.LocationLookupProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -18,13 +18,13 @@ import java.util.Map;
 /**
  * Adapter for resolving and searching locations through OpenWeatherMap.
  *
- * <p>Implements {@link LocationLookupPort} and is activated only when the
+ * <p>Implements {@link LocationLookupProvider} and is activated only when the
  * simulation climate provider is configured as {@code openweathermap}.</p>
  */
 @Component
 @ConditionalOnProperty(prefix = "simulation.climate", name = "provider", havingValue = "openweathermap")
 @RequiredArgsConstructor
-public class OpenWeatherMapAdapter implements LocationLookupPort {
+public class OpenWeatherMapAdapter implements LocationLookupProvider {
 
     private static final Logger log = LoggerFactory.getLogger(OpenWeatherMapAdapter.class);
 
