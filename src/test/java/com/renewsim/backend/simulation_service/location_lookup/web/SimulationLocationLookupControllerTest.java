@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.location_lookup.web;
 
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
-import com.renewsim.backend.simulation_service.location_lookup.application.port.in.LocationLookupPort;
+import com.renewsim.backend.simulation_service.location_lookup.application.port.in.LocationLookupUseCase;
 import com.renewsim.backend.simulation_service.location_lookup.web.dto.ResolvedLocationResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 class SimulationLocationLookupControllerTest {
 
     @Mock
-    private LocationLookupPort locationLookupPort;
+    private LocationLookupUseCase locationLookupUseCase;
 
     @InjectMocks
     private SimulationLocationLookupController controller;
@@ -27,25 +27,25 @@ class SimulationLocationLookupControllerTest {
     @Test
     @DisplayName("reverseGeocode returns resolved location from coordinates")
     void reverseGeocodeReturnsResolvedLocation() {
-        when(locationLookupPort.resolveLocation(-32.8895, -68.8458))
-                .thenReturn(new ResolvedLocation("Mendoza", "AR", -32.8895, -68.8458));
+        when(locationLookupUseCase.resolveLocation(-32.8895, -68.8458))
+                .thenReturn(new ResolvedLocation("Sevilla", "ES", 37.3891, -5.9845));
 
         ResolvedLocationResponseDTO response = controller.reverseGeocode(-32.8895, -68.8458).getBody();
 
         assertThat(response).isNotNull();
-        assertThat(response.name()).isEqualTo("Mendoza");
+        assertThat(response.name()).isEqualTo("Sevilla");
     }
 
     @Test
     @DisplayName("searchLocations returns mapped lookup results")
     void searchLocationsReturnsMappedLookupResults() {
-        when(locationLookupPort.searchLocations("mendoza", 5))
-                .thenReturn(List.of(new ResolvedLocation("Mendoza", "AR", -32.8895, -68.8458)));
+        when(locationLookupUseCase.searchLocations("mendoza", 5))
+                .thenReturn(List.of(new ResolvedLocation("Sevilla", "ES", 37.3891, -5.9845)));
 
         List<ResolvedLocationResponseDTO> response = controller.searchLocations("mendoza", 5).getBody();
 
         assertThat(response).isNotNull();
         assertThat(response).hasSize(1);
-        assertThat(response.getFirst().name()).isEqualTo("Mendoza");
+        assertThat(response.getFirst().name()).isEqualTo("Sevilla");
     }
 }

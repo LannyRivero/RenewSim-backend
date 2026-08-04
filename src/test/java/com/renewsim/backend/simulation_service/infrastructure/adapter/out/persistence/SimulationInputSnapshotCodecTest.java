@@ -2,7 +2,7 @@ package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persi
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationInputSnapshotCodec.SimulationInputData;
-import com.renewsim.backend.simulation_service.infrastructure.persistence.entity.SimulationEntity;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -59,8 +59,8 @@ class SimulationInputSnapshotCodecTest {
   }
 
   @Test
-  @DisplayName("readNormalized preserves complete snapshot data")
-  void readNormalizedPreservesCompleteSnapshotData() {
+  @DisplayName("readNormalized falls back unsupported country codes to Spain")
+  void readNormalizedFallsBackUnsupportedCountryCodesToSpain() {
     SimulationEntity entity = new SimulationEntity();
     entity.setLocation("Cordoba, Andalucia, ES");
     entity.setEstimatedEnergy(1000.0);
@@ -88,8 +88,8 @@ class SimulationInputSnapshotCodecTest {
         }
         """, entity);
 
-    assertThat(normalized.locationCountry()).isEqualTo("Argentina");
-    assertThat(normalized.locationCountryCode()).isEqualTo("AR");
+    assertThat(normalized.locationCountry()).isEqualTo("Spain");
+    assertThat(normalized.locationCountryCode()).isEqualTo("ES");
     assertThat(normalized.monthlyConsumptionKwh())
         .isEqualTo(List.of(1000d, 1000d, 1000d, 1000d, 1000d, 1000d, 1000d, 1000d, 1000d, 1000d, 1000d, 1000d));
     assertThat(normalized.currency()).isEqualTo("USD");

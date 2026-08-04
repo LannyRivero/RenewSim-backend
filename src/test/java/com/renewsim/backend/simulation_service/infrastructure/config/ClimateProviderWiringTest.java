@@ -1,7 +1,8 @@
 package com.renewsim.backend.simulation_service.infrastructure.config;
 
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.external.OpenWeatherMapAdapter;
-import com.renewsim.backend.simulation_service.location_lookup.application.port.in.LocationLookupPort;
+import com.renewsim.backend.simulation_service.location_lookup.application.LocationLookupService;
+import com.renewsim.backend.simulation_service.location_lookup.application.port.out.LocationLookupProvider;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +18,7 @@ class ClimateProviderWiringTest {
             .withConfiguration(AutoConfigurations.of(
                     RestTemplateAutoConfiguration.class,
                     OpenWeatherClientConfig.class,
+                    LocationLookupService.class,
                     OpenWeatherMapAdapter.class));
 
     @Test
@@ -24,7 +26,7 @@ class ClimateProviderWiringTest {
     void missingProviderDoesNotInstantiateLocationLookupProvider() {
         contextRunner
                 .run(context -> {
-                    assertThat(context).doesNotHaveBean(LocationLookupPort.class);
+                    assertThat(context).doesNotHaveBean(LocationLookupProvider.class);
                     assertThat(context).doesNotHaveBean(OpenWeatherMapAdapter.class);
                 });
     }
@@ -39,8 +41,9 @@ class ClimateProviderWiringTest {
                         "services.weather.url=https://api.openweathermap.org",
                         "services.weather.key=test-key")
                 .run(context -> {
-                    assertThat(context).hasSingleBean(LocationLookupPort.class);
-                    assertThat(context.getBean(LocationLookupPort.class)).isInstanceOf(OpenWeatherMapAdapter.class);
+                    assertThat(context).hasSingleBean(LocationLookupProvider.class);
+                    assertThat(context.getBean(LocationLookupProvider.class)).isInstanceOf(OpenWeatherMapAdapter.class);
+                    assertThat(context).hasSingleBean(LocationLookupService.class);
                     assertThat(context).hasBean("openWeatherRestTemplate");
                     assertThat(context.getBean("openWeatherRestTemplate", RestTemplate.class)).isNotNull();
                 });

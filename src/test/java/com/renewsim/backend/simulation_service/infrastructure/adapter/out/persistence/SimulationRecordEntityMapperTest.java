@@ -1,7 +1,6 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.SimulationStatus;
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
@@ -12,37 +11,23 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationEconomi
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocation;
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
-import com.renewsim.backend.simulation_service.infrastructure.persistence.entity.SimulationEntity;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SimulationRecordEntityMapperTest {
 
-    private final TechnologyLookupPort technologyLookupPort = new TechnologyLookupPort() {
-        @Override
-        public boolean existsActiveByEnergyType(String energyType) {
-            return true;
-        }
-
-        @Override
-        public Optional<Double> findActiveCo2ReductionFactorByEnergyType(String energyType) {
-            return Optional.of(0.45);
-        }
-    };
-
     private final SimulationRecordEntityMapper mapper = new SimulationRecordEntityMapper(
-            new SimulationInputSnapshotCodec(new ObjectMapper().findAndRegisterModules()),
-            technologyLookupPort);
+            new SimulationInputSnapshotCodec(new ObjectMapper().findAndRegisterModules()));
 
     @Test
-    @DisplayName("toEntity persists aggregate values and computed co2 reduction")
-    void toEntityPersistsAggregateValuesAndComputedCo2Reduction() {
+    @DisplayName("toEntity persists aggregate values without recomputing co2 reduction")
+    void toEntityPersistsAggregateValuesWithoutRecomputingCo2Reduction() {
         Simulation simulation = completedSimulation();
 
         SimulationEntity entity = mapper.toEntity(simulation);
@@ -50,7 +35,7 @@ class SimulationRecordEntityMapperTest {
         assertThat(entity.getId()).isEqualTo(55L);
         assertThat(entity.getEnergyType()).isEqualTo("solar");
         assertThat(entity.getEstimatedEnergy()).isEqualTo(457200.0);
-        assertThat(entity.getCo2Reduction()).isEqualTo(205740.0);
+        assertThat(entity.getCo2Reduction()).isNull();
         assertThat(entity.getStatus()).isEqualTo("COMPLETED");
         assertThat(entity.getInputSnapshot()).contains("\"locationCountry\":\"Spain\"");
     }

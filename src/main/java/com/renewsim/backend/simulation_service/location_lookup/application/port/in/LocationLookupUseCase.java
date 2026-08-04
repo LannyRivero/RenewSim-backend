@@ -4,7 +4,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 
 import java.util.List;
 
-public interface LocationLookupPort {
+public interface LocationLookupUseCase {
     ResolvedLocation resolveLocation(double latitude, double longitude);
 
     List<ResolvedLocation> searchLocations(String query, int limit);

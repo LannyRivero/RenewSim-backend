@@ -2,7 +2,8 @@ package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persi
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
-import com.renewsim.backend.simulation_service.infrastructure.persistence.entity.SimulationEntity;
+import com.renewsim.backend.simulation_service.domain.model.vo.CountryCode;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 
 import java.util.Collections;
 import java.util.List;
@@ -48,12 +49,8 @@ final class SimulationInputSnapshotCodec {
 
     SimulationInputData readNormalized(String json, SimulationEntity entity) {
         SimulationInputData input = read(json);
-        String normalizedCountryCode = isBlank(input.locationCountryCode())
-                ? deriveCountryCode(entity.getLocation())
-                : input.locationCountryCode();
-        String normalizedCountry = isBlank(input.locationCountry())
-                ? deriveCountry(normalizedCountryCode)
-                : input.locationCountry();
+        String normalizedCountryCode = normalizeCountryCode(input.locationCountryCode(), entity.getLocation());
+        String normalizedCountry = deriveCountry(normalizedCountryCode);
 
         double annualConsumption = input.annualConsumptionKwh() > 0
                 ? input.annualConsumptionKwh()
@@ -105,6 +102,13 @@ final class SimulationInputSnapshotCodec {
             }
         }
         return "ES";
+    }
+
+    private String normalizeCountryCode(String snapshotCountryCode, String locationLabel) {
+        String candidate = isBlank(snapshotCountryCode)
+                ? deriveCountryCode(locationLabel)
+                : snapshotCountryCode.trim().toUpperCase();
+        return CountryCode.isSupported(candidate) ? candidate : "ES";
     }
 
     private String deriveCountry(String countryCode) {
