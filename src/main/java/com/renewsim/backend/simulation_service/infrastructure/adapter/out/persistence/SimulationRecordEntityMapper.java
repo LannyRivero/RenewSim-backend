@@ -1,6 +1,5 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence;
 
-import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.SimulationStatus;
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
@@ -12,7 +11,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocatio
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationInputSnapshotCodec.SimulationInputData;
-import com.renewsim.backend.simulation_service.infrastructure.persistence.entity.SimulationEntity;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 
 /**
  * Maps between the simulation aggregate and its persistence entity.
@@ -20,13 +19,9 @@ import com.renewsim.backend.simulation_service.infrastructure.persistence.entity
 final class SimulationRecordEntityMapper {
 
     private final SimulationInputSnapshotCodec snapshotCodec;
-    private final TechnologyLookupPort technologyLookupPort;
 
-    SimulationRecordEntityMapper(
-            SimulationInputSnapshotCodec snapshotCodec,
-            TechnologyLookupPort technologyLookupPort) {
+    SimulationRecordEntityMapper(SimulationInputSnapshotCodec snapshotCodec) {
         this.snapshotCodec = snapshotCodec;
-        this.technologyLookupPort = technologyLookupPort;
     }
 
     SimulationEntity toEntity(Simulation simulation) {
@@ -41,7 +36,6 @@ final class SimulationRecordEntityMapper {
         entity.setBudget(simulation.getEconomics().capexTotal());
         entity.setEstimatedEnergy(
                 simulation.getAnnualGenerationKwh() != null ? simulation.getAnnualGenerationKwh() : 0.0);
-        entity.setCo2Reduction(calculateCo2Reduction(simulation));
         entity.setCreatedBy(simulation.getCreatedBy());
         entity.setCreatedAt(simulation.getCreatedAt());
         entity.setUpdatedAt(simulation.getUpdatedAt());
@@ -104,15 +98,6 @@ final class SimulationRecordEntityMapper {
                 entity.getCreatedBy(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());
-    }
-
-    private double calculateCo2Reduction(Simulation simulation) {
-        if (simulation.getAnnualGenerationKwh() == null || simulation.getTechnology() == null) {
-            return 0.0;
-        }
-        return technologyLookupPort.findActiveCo2ReductionFactorByEnergyType(simulation.getTechnology().value())
-                .map(factor -> simulation.getAnnualGenerationKwh() * factor)
-                .orElse(0.0);
     }
 
     private SimulationStatus parseStatus(String status) {

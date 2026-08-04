@@ -2,7 +2,7 @@ package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persi
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationInputSnapshotCodec.SimulationInputData;
-import com.renewsim.backend.simulation_service.infrastructure.persistence.entity.SimulationEntity;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

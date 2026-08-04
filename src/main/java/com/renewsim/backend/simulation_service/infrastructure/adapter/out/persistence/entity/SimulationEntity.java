@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.infrastructure.persistence.entity;
+package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

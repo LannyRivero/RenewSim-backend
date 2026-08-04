@@ -2,7 +2,7 @@ package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persi
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.renewsim.backend.simulation_service.infrastructure.persistence.entity.SimulationEntity;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 
 import java.util.List;
 
