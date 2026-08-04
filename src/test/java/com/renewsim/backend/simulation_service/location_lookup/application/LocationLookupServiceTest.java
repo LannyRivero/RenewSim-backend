@@ -27,7 +27,7 @@ class LocationLookupServiceTest {
     @Test
     @DisplayName("resolveLocation delegates to provider")
     void resolveLocationDelegatesToProvider() {
-        ResolvedLocation expected = new ResolvedLocation("Mendoza", "AR", -32.8895, -68.8458);
+        ResolvedLocation expected = new ResolvedLocation("Sevilla", "ES", 37.3891, -5.9845);
         when(locationLookupProvider.resolveLocation(-32.8895, -68.8458)).thenReturn(expected);
 
         ResolvedLocation result = service.resolveLocation(-32.8895, -68.8458);
@@ -39,7 +39,7 @@ class LocationLookupServiceTest {
     @Test
     @DisplayName("searchLocations delegates to provider")
     void searchLocationsDelegatesToProvider() {
-        List<ResolvedLocation> expected = List.of(new ResolvedLocation("Mendoza", "AR", -32.8895, -68.8458));
+        List<ResolvedLocation> expected = List.of(new ResolvedLocation("Sevilla", "ES", 37.3891, -5.9845));
         when(locationLookupProvider.searchLocations("mendoza", 5)).thenReturn(expected);
 
         List<ResolvedLocation> result = service.searchLocations("mendoza", 5);
