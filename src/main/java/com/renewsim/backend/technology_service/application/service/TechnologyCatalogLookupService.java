@@ -4,9 +4,11 @@ import com.renewsim.backend.technology_service.application.port.in.TechnologyCat
 import com.renewsim.backend.technology_service.application.port.out.TechnologyRepositoryPort;
 import com.renewsim.backend.technology_service.domain.model.vo.EnergyType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -38,6 +40,25 @@ public class TechnologyCatalogLookupService implements TechnologyCatalogLookupUs
         }
         return technologyRepository.findFirstActiveByEnergyType(parsed)
                 .map(technology -> technology.getCo2Reduction().value().doubleValue());
+    }
+
+    @Override
+    public List<Long> recommendActiveTechnologyIdsByEnergyType(String energyType) {
+        EnergyType parsed = parseEnergyType(energyType);
+        if (parsed == null) {
+            return List.of();
+        }
+        return technologyRepository.findActiveByEnergyType(parsed, PageRequest.of(0, 100))
+                .getContent()
+                .stream()
+                .map(technology -> technology.getId())
+                .toList();
+    }
+
+    @Override
+    public Optional<String> findActiveEnergyTypeByTechnologyId(Long technologyId) {
+        return technologyRepository.findActiveById(technologyId)
+                .map(technology -> technology.getEnergyType().name().toLowerCase());
     }
 
     private EnergyType parseEnergyType(String value) {

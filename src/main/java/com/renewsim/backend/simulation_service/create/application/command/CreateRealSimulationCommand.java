@@ -6,12 +6,16 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocatio
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 
+import java.util.List;
+
 public record CreateRealSimulationCommand(
-                String name,
-                Technology technology,
-                SimulationLocation location,
-                SimulationSystem system,
-                ConsumptionProfile demand,
-                SimulationEconomics economics,
-                String createdBy) {
+        String name,
+        Technology technology,
+        SimulationLocation location,
+        SimulationSystem system,
+        ConsumptionProfile demand,
+        SimulationEconomics economics,
+        List<Long> technologyIds,
+        Long scenarioId,
+        String createdBy) {
 }
