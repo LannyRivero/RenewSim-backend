@@ -32,6 +32,8 @@ class SimulationTest {
                 validSystem(),
                 validDemand(),
                 validEconomics(),
+                List.of(),
+                null,
                 "alice"))
                 .isInstanceOf(InvalidSimulationNameException.class)
                 .hasMessageContaining("name");
@@ -47,6 +49,8 @@ class SimulationTest {
                 validSystem(),
                 validDemand(),
                 validEconomics(),
+                List.of(),
+                null,
                 " "))
                 .isInstanceOf(InvalidSimulationCreatorException.class)
                 .hasMessageContaining("creator");
@@ -72,13 +76,15 @@ class SimulationTest {
                 82000.0,
                 121500.0,
                 14.2,
-                "recommended");
+                "recommended",
+                List.of(21L, 22L));
 
         simulation.complete(completion);
 
         assertThat(simulation.getStatus()).isEqualTo(SimulationStatus.COMPLETED);
         assertThat(simulation.getResultSnapshot()).isEqualTo("{\"result\":true}");
         assertThat(simulation.getRecommendation()).isEqualTo("recommended");
+        assertThat(simulation.getTechnologyIds()).containsExactly(21L, 22L);
         assertThat(simulation.getUpdatedAt()).isAfterOrEqualTo(simulation.getCreatedAt());
     }
 
@@ -94,7 +100,8 @@ class SimulationTest {
                 82000.0,
                 121500.0,
                 14.2,
-                "recommended")))
+                "recommended",
+                List.of(21L, 22L))))
                 .isInstanceOf(InvalidSimulationStatusTransitionException.class)
                 .hasMessageContaining("complete");
     }
@@ -107,6 +114,8 @@ class SimulationTest {
                 validSystem(),
                 validDemand(),
                 validEconomics(),
+                List.of(11L, 12L),
+                null,
                 "alice");
     }
 

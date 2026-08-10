@@ -111,6 +111,8 @@ class SimulationRecordRepositoryAdapterTest {
                         List.of(10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d,
                                 10000d)),
                 new SimulationEconomics(Currency.of("EUR"), 315000.0, 7200.0, 0.18, 0.07, 8, ProjectLifetime.of(20)),
+                List.of(),
+                null,
                 "alice");
     }
 
@@ -132,6 +134,8 @@ class SimulationRecordRepositoryAdapterTest {
                 121500.0,
                 11.4,
                 "viable_with_reservations",
+                List.of(11L, 12L),
+                null,
                 "alice",
                 LocalDateTime.parse("2026-06-30T14:00:00"),
                 LocalDateTime.parse("2026-06-30T14:30:00"));

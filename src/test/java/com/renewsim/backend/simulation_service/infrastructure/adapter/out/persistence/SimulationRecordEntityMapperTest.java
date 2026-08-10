@@ -37,6 +37,20 @@ class SimulationRecordEntityMapperTest {
         assertThat(entity.getEstimatedEnergy()).isEqualTo(457200.0);
         assertThat(entity.getStatus()).isEqualTo("COMPLETED");
         assertThat(entity.getInputSnapshot()).contains("\"locationCountry\":\"Spain\"");
+        assertThat(entity.getTechnologyIds()).containsExactly(11L, 12L);
+    }
+
+    @Test
+    @DisplayName("toEntity keeps technologyIds mutable for JPA merge operations")
+    void toEntityKeepsTechnologyIdsMutableForJpaMergeOperations() {
+        Simulation simulation = completedSimulation();
+
+        SimulationEntity entity = mapper.toEntity(simulation);
+
+        entity.getTechnologyIds().clear();
+
+        assertThat(entity.getTechnologyIds()).isEmpty();
+        assertThat(simulation.getTechnologyIds()).containsExactly(11L, 12L);
     }
 
     @Test
@@ -61,6 +75,7 @@ class SimulationRecordEntityMapperTest {
         entity.setIrrPct(11.4);
         entity.setRecommendation("viable_with_reservations");
         entity.setResultSnapshot("{}");
+        entity.setTechnologyIds(List.of(11L, 12L));
         entity.setInputSnapshot("""
                 {
                   "locationCountry": "Spain",
@@ -92,6 +107,7 @@ class SimulationRecordEntityMapperTest {
         assertThat(simulation.getDemand().annualConsumptionKwh()).isEqualTo(120000.0);
         assertThat(simulation.getEconomics().capexTotal()).isEqualTo(315000.0);
         assertThat(simulation.getRecommendation()).isEqualTo("viable_with_reservations");
+        assertThat(simulation.getTechnologyIds()).containsExactly(11L, 12L);
     }
 
     private Simulation completedSimulation() {
@@ -112,6 +128,8 @@ class SimulationRecordEntityMapperTest {
                 121500.0,
                 11.4,
                 "viable_with_reservations",
+                List.of(11L, 12L),
+                null,
                 "alice",
                 LocalDateTime.parse("2026-06-30T14:00:00"),
                 LocalDateTime.parse("2026-06-30T14:30:00"));

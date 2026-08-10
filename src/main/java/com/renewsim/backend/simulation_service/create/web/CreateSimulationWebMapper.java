@@ -11,6 +11,8 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.create.web.dto.CreateSolarSimulationRequestDTO;
 
+import java.util.List;
+
 public final class CreateSimulationWebMapper {
 
     public CreateRealSimulationCommand toCommand(CreateSolarSimulationRequestDTO request, String username) {
@@ -45,6 +47,8 @@ public final class CreateSimulationWebMapper {
                         request.economics().exportPricePerKwh(),
                         request.economics().discountRatePct(),
                         ProjectLifetime.of(request.economics().projectLifetimeYears())),
+                List.of(),
+                null,
                 username);
     }
 }

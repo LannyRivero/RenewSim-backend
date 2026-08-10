@@ -13,6 +13,8 @@ import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationInputSnapshotCodec.SimulationInputData;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 
+import java.util.ArrayList;
+
 /**
  * Maps between the simulation aggregate and its persistence entity.
  */
@@ -47,6 +49,7 @@ final class SimulationRecordEntityMapper {
         entity.setRecommendation(simulation.getRecommendation());
         entity.setInputSnapshot(snapshotCodec.write(simulation));
         entity.setResultSnapshot(simulation.getResultSnapshot());
+        entity.setTechnologyIds(new ArrayList<>(simulation.getTechnologyIds()));
         return entity;
     }
 
@@ -93,6 +96,8 @@ final class SimulationRecordEntityMapper {
                 entity.getNpv(),
                 entity.getIrrPct(),
                 entity.getRecommendation(),
+                entity.getTechnologyIds(),
+                null,
                 entity.getCreatedBy(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());

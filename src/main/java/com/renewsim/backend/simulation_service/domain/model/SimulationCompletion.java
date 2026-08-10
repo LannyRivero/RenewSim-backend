@@ -2,13 +2,16 @@ package com.renewsim.backend.simulation_service.domain.model;
 
 import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationCompletionException;
 
+import java.util.List;
+
 public record SimulationCompletion(
         String resultSnapshot,
         Double annualGenerationKwh,
         Double annualSavings,
         Double npv,
         Double irrPct,
-        String recommendation) {
+        String recommendation,
+        List<Long> technologyIds) {
 
     public SimulationCompletion {
         if (resultSnapshot == null || resultSnapshot.isBlank()) {

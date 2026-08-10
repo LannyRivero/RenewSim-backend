@@ -8,6 +8,8 @@ import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulatio
 import com.renewsim.backend.simulation_service.domain.model.vo.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Simulation {
 
@@ -25,6 +27,8 @@ public class Simulation {
     private Double npv;
     private Double irrPct;
     private String recommendation;
+    private List<Long> technologyIds;
+    private Long scenarioId;
     private final String createdBy;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -36,6 +40,7 @@ public class Simulation {
             SimulationStatus status, String resultSnapshot,
             Double annualGenerationKwh, Double annualSavings,
             Double npv, Double irrPct, String recommendation,
+            List<Long> technologyIds, Long scenarioId,
             String createdBy, LocalDateTime createdAt, LocalDateTime updatedAt) {
 
         validateName(name);
@@ -55,6 +60,8 @@ public class Simulation {
         this.npv = npv;
         this.irrPct = irrPct;
         this.recommendation = recommendation;
+        this.technologyIds = technologyIds == null ? new ArrayList<>() : new ArrayList<>(technologyIds);
+        this.scenarioId = scenarioId;
         this.createdBy = createdBy;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -66,12 +73,14 @@ public class Simulation {
             String name, Technology technology,
             SimulationLocation location, SimulationSystem system,
             ConsumptionProfile demand, SimulationEconomics economics,
+            List<Long> technologyIds, Long scenarioId,
             String createdBy) {
         LocalDateTime now = LocalDateTime.now();
         return new Simulation(
                 null, name, technology, location, system, demand, economics,
                 SimulationStatus.DRAFT, null,
                 null, null, null, null, null,
+                technologyIds, scenarioId,
                 createdBy, now, now);
     }
 
@@ -82,11 +91,13 @@ public class Simulation {
             SimulationStatus status, String resultSnapshot,
             Double annualGenerationKwh, Double annualSavings,
             Double npv, Double irrPct, String recommendation,
+            List<Long> technologyIds, Long scenarioId,
             String createdBy, LocalDateTime createdAt, LocalDateTime updatedAt) {
         return new Simulation(
                 id == null ? null : SimulationId.of(id), name, technology, location, system, demand, economics,
                 status, resultSnapshot,
                 annualGenerationKwh, annualSavings, npv, irrPct, recommendation,
+                technologyIds, scenarioId,
                 createdBy, createdAt, updatedAt);
     }
 
@@ -105,6 +116,9 @@ public class Simulation {
         this.npv = completion.npv();
         this.irrPct = completion.irrPct();
         this.recommendation = completion.recommendation();
+        if (completion.technologyIds() != null) {
+            this.technologyIds = new ArrayList<>(completion.technologyIds());
+        }
         this.status = SimulationStatus.COMPLETED;
         this.updatedAt = LocalDateTime.now();
     }
@@ -140,6 +154,14 @@ public class Simulation {
         this.id = id;
     }
 
+    public void assignTechnologyIds(List<Long> technologyIds) {
+        this.technologyIds = technologyIds == null ? new ArrayList<>() : new ArrayList<>(technologyIds);
+    }
+
+    public void assignScenarioId(Long scenarioId) {
+        this.scenarioId = scenarioId;
+    }
+
     // ========== GETTERS ==========
 
     public SimulationId getId() { return id; }
@@ -156,6 +178,8 @@ public class Simulation {
     public Double getNpv() { return npv; }
     public Double getIrrPct() { return irrPct; }
     public String getRecommendation() { return recommendation; }
+    public List<Long> getTechnologyIds() { return List.copyOf(technologyIds); }
+    public Long getScenarioId() { return scenarioId; }
     public String getCreatedBy() { return createdBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

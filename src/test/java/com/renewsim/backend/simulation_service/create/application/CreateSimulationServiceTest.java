@@ -63,6 +63,7 @@ class RealSimulationServiceTest {
                 CreateRealSimulationCommand command = validCommand();
 
                 when(technologyLookupPort.existsActiveByEnergyType("solar")).thenReturn(true);
+                when(technologyLookupPort.recommendActiveTechnologyIdsByEnergyType("solar")).thenReturn(List.of(1L, 2L));
                 when(resourcePort.fetchProfile(37.3891, -5.9845, 13.0)).thenReturn(profile());
                 when(repository.save(any())).thenAnswer(invocation -> {
                         Simulation sim = invocation.getArgument(0);
@@ -81,6 +82,8 @@ class RealSimulationServiceTest {
                 ArgumentCaptor<Simulation> captor = ArgumentCaptor.forClass(Simulation.class);
                 verify(repository, times(2)).save(captor.capture());
                 assertThat(captor.getAllValues().get(1).getResultSnapshot()).isNotBlank();
+                assertThat(captor.getAllValues().get(1).getTechnologyIds()).containsExactly(1L, 2L);
+                verify(technologyLookupPort).recommendActiveTechnologyIdsByEnergyType("solar");
         }
 
         @Test
@@ -99,6 +102,8 @@ class RealSimulationServiceTest {
                                 validCommand().system(),
                                 validCommand().demand(),
                                 validCommand().economics(),
+                                validCommand().technologyIds(),
+                                validCommand().scenarioId(),
                                 validCommand().createdBy());
 
                 when(technologyLookupPort.existsActiveByEnergyType("wind")).thenReturn(true);
@@ -126,16 +131,19 @@ class RealSimulationServiceTest {
         }
 
         @Test
-        @DisplayName("getUserSimulations maps stored summary columns into list projection")
-        void getUserSimulationsMapsStoredSummaryColumns() {
+        @DisplayName("getUserSimulations maps stored summary columns for scenario-created simulations")
+        void getUserSimulationsMapsStoredSummaryColumnsForScenarioCreatedSimulations() {
                 ListSimulationsService service = new ListSimulationsService(repository);
                 Simulation simulation = completedSimulation(55L, "alice", null);
+                simulation.assignScenarioId(42L);
+                simulation.assignTechnologyIds(List.of(11L, 12L));
                 when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(simulation));
 
                 UserSimulationListResult response = service.getUserSimulations("alice");
 
                 assertThat(response.total()).isEqualTo(1);
                 assertThat(response.items().getFirst().annualSavings()).isEqualTo(68700.0);
+                assertThat(response.items().getFirst().technology()).isEqualTo("solar");
         }
 
         @Test
@@ -149,12 +157,16 @@ class RealSimulationServiceTest {
                 Simulation best = completedSimulation(55L, "alice",
                                 new ObjectMapper().writeValueAsString(resultWithMetrics(
                                                 "55", "recommended", 82000, 9100, 6.2, 1820, List.of())));
+                best.assignScenarioId(42L);
+                best.assignTechnologyIds(List.of(11L, 12L));
                 Simulation risky = completedSimulation(56L, "alice",
                                 new ObjectMapper().writeValueAsString(resultWithMetrics(
                                                 "56", "not_recommended", 12000, -5000, 12.4, 980,
                                                 List.of(new SimulationDetailsResult.SimulationWarning("warning",
                                                                 "LOW_AVAILABILITY_ASSUMPTION",
                                                                 "Availability assumption is below 95% and may materially reduce annual output.")))));
+                risky.assignScenarioId(43L);
+                risky.assignTechnologyIds(List.of(12L, 13L));
                 Simulation draft = Simulation.create(
                                 "Solar - Draft",
                                 Technology.solar(),
@@ -167,8 +179,12 @@ class RealSimulationServiceTest {
                                                                 4000d, 4000d, 4000d)),
                                 new SimulationEconomics(Currency.of("EUR"), 110000.0, 3000.0, 0.18, 0.07, 8,
                                                 ProjectLifetime.of(20)),
+                                List.of(),
+                                null,
                                 "alice");
                 draft.assignId(SimulationId.of(57L));
+                draft.assignScenarioId(44L);
+                draft.assignTechnologyIds(List.of(11L));
 
                 when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(best, risky, draft));
                 when(technologyLookupPort.findActiveCo2ReductionFactorByEnergyType("solar"))
@@ -248,6 +264,8 @@ class RealSimulationServiceTest {
                                                                 10000d, 10000d, 10000d, 10000d)),
                                 new SimulationEconomics(Currency.of("EUR"), 315000, 7200, 0.18, 0.07, 8,
                                                 ProjectLifetime.of(20)),
+                                List.of(),
+                                null,
                                 "alice");
         }
 
@@ -275,6 +293,8 @@ class RealSimulationServiceTest {
                                 economics,
                                 SimulationStatus.COMPLETED, resultJson,
                                 457200.0, 68700.0, 121500.0, 11.4, "viable_with_reservations",
+                                List.of(11L, 12L),
+                                null,
                                 owner, LocalDateTime.parse("2026-06-30T14:00:00"),
                                 LocalDateTime.parse("2026-06-30T14:00:00"));
         }
