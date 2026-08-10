@@ -45,9 +45,25 @@ public class CreateSimulationService implements CreateRealSimulationUseCase {
 
     private List<Long> resolveTechnologyIds(CreateRealSimulationCommand command) {
         if (command.technologyIds() != null && !command.technologyIds().isEmpty()) {
+            validateTechnologyIds(command.technology(), command.technologyIds());
             return List.copyOf(command.technologyIds());
         }
         return technologyLookupPort.recommendActiveTechnologyIdsByEnergyType(command.technology().value());
+    }
+
+    private void validateTechnologyIds(Technology technology, List<Long> technologyIds) {
+        for (Long technologyId : technologyIds) {
+            String technologyEnergyType = technologyLookupPort.findActiveEnergyTypeByTechnologyId(technologyId)
+                    .orElseThrow(() -> new InvalidSimulationTechnologyException(
+                            "UNSUPPORTED_TECHNOLOGY_ID: '" + technologyId
+                                    + "' is not registered or is inactive in the technology catalog"));
+
+            if (!technology.value().equals(technologyEnergyType)) {
+                throw new InvalidSimulationTechnologyException(
+                        "INCOMPATIBLE_TECHNOLOGY_ID: '" + technologyId + "' does not belong to energyType '"
+                                + technology.value() + "'");
+            }
+        }
     }
 
     private void validateTechnology(Technology technology) {
