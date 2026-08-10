@@ -61,9 +61,6 @@ public class SimulationEntity {
     @Column(name = "climate_data")
     private String climateData;
 
-    @Column(name = "co2_reduction", nullable = false)
-    private Double co2Reduction;
-
     @Column(name = "created_by", nullable = false)
     private String createdBy;
 
@@ -78,12 +75,6 @@ public class SimulationEntity {
 
     @Column(name = "status")
     private String status;
-
-    @Column(name = "model_version")
-    private String modelVersion;
-
-    @Column(name = "resource_source")
-    private String resourceSource;
 
     @Column(name = "annual_savings")
     private Double annualSavings;

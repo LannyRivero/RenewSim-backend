@@ -41,8 +41,6 @@ final class SimulationRecordEntityMapper {
         entity.setUpdatedAt(simulation.getUpdatedAt());
         entity.setStatus(
                 simulation.getStatus() != null ? simulation.getStatus().name() : SimulationStatus.DRAFT.name());
-        entity.setModelVersion("solar-spain-v1");
-        entity.setResourceSource("PVGIS");
         entity.setAnnualSavings(simulation.getAnnualSavings());
         entity.setNpv(simulation.getNpv());
         entity.setIrrPct(simulation.getIrrPct());
