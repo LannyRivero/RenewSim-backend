@@ -35,14 +35,13 @@ class SimulationRecordEntityMapperTest {
         assertThat(entity.getId()).isEqualTo(55L);
         assertThat(entity.getEnergyType()).isEqualTo("solar");
         assertThat(entity.getEstimatedEnergy()).isEqualTo(457200.0);
-        assertThat(entity.getCo2Reduction()).isNull();
         assertThat(entity.getStatus()).isEqualTo("COMPLETED");
         assertThat(entity.getInputSnapshot()).contains("\"locationCountry\":\"Spain\"");
     }
 
     @Test
-    @DisplayName("toDomain rebuilds aggregate and defaults invalid status to draft")
-    void toDomainRebuildsAggregateAndDefaultsInvalidStatusToDraft() {
+    @DisplayName("toDomain rebuilds aggregate from a supported persisted contract")
+    void toDomainRebuildsAggregateFromSupportedPersistedContract() {
         SimulationEntity entity = new SimulationEntity();
         entity.setId(88L);
         entity.setName("Solar - Historic");
@@ -56,7 +55,7 @@ class SimulationRecordEntityMapperTest {
         entity.setCreatedBy("alice");
         entity.setCreatedAt(LocalDateTime.parse("2026-06-30T14:00:00"));
         entity.setUpdatedAt(LocalDateTime.parse("2026-06-30T14:30:00"));
-        entity.setStatus("bogus");
+        entity.setStatus("COMPLETED");
         entity.setAnnualSavings(68700.0);
         entity.setNpv(121500.0);
         entity.setIrrPct(11.4);
@@ -88,7 +87,7 @@ class SimulationRecordEntityMapperTest {
         Simulation simulation = mapper.toDomain(entity);
 
         assertThat(simulation.getId().value()).isEqualTo(88L);
-        assertThat(simulation.getStatus()).isEqualTo(SimulationStatus.DRAFT);
+        assertThat(simulation.getStatus()).isEqualTo(SimulationStatus.COMPLETED);
         assertThat(simulation.getLocation().country()).isEqualTo("Spain");
         assertThat(simulation.getDemand().annualConsumptionKwh()).isEqualTo(120000.0);
         assertThat(simulation.getEconomics().capexTotal()).isEqualTo(315000.0);

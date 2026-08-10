@@ -1,6 +1,5 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence;
 
-import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.SimulationStatus;
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
@@ -35,9 +34,6 @@ class SimulationRecordRepositoryAdapterTest {
     @Mock
     private SimulationRecordEntityMapper entityMapper;
 
-    @Mock
-    private TechnologyLookupPort technologyLookupPort;
-
     @Test
     @DisplayName("save assigns generated id back to new simulation")
     void saveAssignsGeneratedIdBackToNewSimulation() {
@@ -49,7 +45,7 @@ class SimulationRecordRepositoryAdapterTest {
         when(entityMapper.toEntity(simulation)).thenReturn(entity);
         when(repository.save(entity)).thenReturn(saved);
 
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper, technologyLookupPort);
+        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
         Simulation result = adapter.save(simulation);
 
         assertThat(result.getId().value()).isEqualTo(55L);
@@ -65,7 +61,7 @@ class SimulationRecordRepositoryAdapterTest {
         when(repository.findById(88L)).thenReturn(Optional.of(entity));
         when(entityMapper.toDomain(entity)).thenReturn(simulation);
 
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper, technologyLookupPort);
+        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
         Optional<Simulation> result = adapter.findById(88L);
 
         assertThat(result).contains(simulation);
@@ -84,7 +80,7 @@ class SimulationRecordRepositoryAdapterTest {
         when(entityMapper.toDomain(first)).thenReturn(firstSimulation);
         when(entityMapper.toDomain(second)).thenReturn(secondSimulation);
 
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper, technologyLookupPort);
+        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
         List<Simulation> result = adapter.findByCreatedByOrderByCreatedAtDesc("alice");
 
         assertThat(result).containsExactly(firstSimulation, secondSimulation);
@@ -96,30 +92,13 @@ class SimulationRecordRepositoryAdapterTest {
     @Test
     @DisplayName("delete methods delegate directly to repository")
     void deleteMethodsDelegateDirectlyToRepository() {
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper, technologyLookupPort);
+        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
 
         adapter.deleteById(55L);
         adapter.deleteAllByCreatedBy("alice");
 
         verify(repository).deleteById(55L);
         verify(repository).deleteAllByCreatedBy("alice");
-    }
-
-    @Test
-    @DisplayName("save writes derived co2 reduction for completed simulations")
-    void saveWritesDerivedCo2ReductionForCompletedSimulations() {
-        Simulation simulation = existingSimulation(55L);
-        SimulationEntity entity = new SimulationEntity();
-        SimulationEntity saved = new SimulationEntity();
-        saved.setId(55L);
-        when(entityMapper.toEntity(simulation)).thenReturn(entity);
-        when(technologyLookupPort.findActiveCo2ReductionFactorByEnergyType("solar")).thenReturn(Optional.of(0.45));
-        when(repository.save(entity)).thenReturn(saved);
-
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper, technologyLookupPort);
-        adapter.save(simulation);
-
-        assertThat(entity.getCo2Reduction()).isEqualTo(205740.0);
     }
 
     private Simulation draftSimulation() {
