@@ -88,6 +88,9 @@ public class SimulationEntity {
     @Column(name = "recommendation")
     private String recommendation;
 
+    @Column(name = "scenario_id")
+    private Long scenarioId;
+
     @Lob
     @Column(name = "input_snapshot", columnDefinition = "LONGTEXT")
     private String inputSnapshot;

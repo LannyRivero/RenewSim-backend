@@ -108,6 +108,20 @@ class SimulationRecordEntityMapperTest {
         assertThat(simulation.getEconomics().capexTotal()).isEqualTo(315000.0);
         assertThat(simulation.getRecommendation()).isEqualTo("viable_with_reservations");
         assertThat(simulation.getTechnologyIds()).containsExactly(11L, 12L);
+        assertThat(simulation.getScenarioId()).isNull();
+    }
+
+    @Test
+    @DisplayName("toEntity and toDomain round-trip the scenario origin reference")
+    void toEntityAndToDomainRoundTripScenarioOrigin() {
+        Simulation simulation = completedSimulation();
+        simulation.assignScenarioId(42L);
+
+        SimulationEntity entity = mapper.toEntity(simulation);
+        Simulation rebuilt = mapper.toDomain(entity);
+
+        assertThat(entity.getScenarioId()).isEqualTo(42L);
+        assertThat(rebuilt.getScenarioId()).isEqualTo(42L);
     }
 
     private Simulation completedSimulation() {
