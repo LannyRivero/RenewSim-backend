@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @Service
@@ -52,6 +53,11 @@ public class CreateSimulationService implements CreateRealSimulationUseCase {
     }
 
     private void validateTechnologyIds(Technology technology, List<Long> technologyIds) {
+        if (new LinkedHashSet<>(technologyIds).size() != technologyIds.size()) {
+            throw new InvalidSimulationTechnologyException(
+                    "DUPLICATE_TECHNOLOGY_IDS: technologyIds must not contain duplicates");
+        }
+
         for (Long technologyId : technologyIds) {
             String technologyEnergyType = technologyLookupPort.findActiveEnergyTypeByTechnologyId(technologyId)
                     .orElseThrow(() -> new InvalidSimulationTechnologyException(

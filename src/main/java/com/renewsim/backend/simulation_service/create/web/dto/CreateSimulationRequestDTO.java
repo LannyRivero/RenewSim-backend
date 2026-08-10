@@ -19,7 +19,7 @@ public record CreateSimulationRequestDTO(
                 @NotNull @Valid SystemDTO system,
                 @NotNull @Valid DemandDTO demand,
                 @NotNull @Valid EconomicsDTO economics,
-                List<@Positive Long> technologyIds) {
+                @Size(max = 100) List<@NotNull @Positive Long> technologyIds) {
 
         public record SystemDTO(
                         @Positive double installedCapacityKw,
