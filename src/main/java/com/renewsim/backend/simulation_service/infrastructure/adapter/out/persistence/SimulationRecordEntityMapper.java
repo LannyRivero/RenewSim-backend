@@ -50,6 +50,7 @@ final class SimulationRecordEntityMapper {
         entity.setInputSnapshot(snapshotCodec.write(simulation));
         entity.setResultSnapshot(simulation.getResultSnapshot());
         entity.setTechnologyIds(new ArrayList<>(simulation.getTechnologyIds()));
+        entity.setScenarioId(simulation.getScenarioId());
         return entity;
     }
 
@@ -97,7 +98,7 @@ final class SimulationRecordEntityMapper {
                 entity.getIrrPct(),
                 entity.getRecommendation(),
                 entity.getTechnologyIds(),
-                null,
+                entity.getScenarioId(),
                 entity.getCreatedBy(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());
