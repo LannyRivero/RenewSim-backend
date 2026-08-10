@@ -177,6 +177,35 @@ class RealSimulationServiceTest {
         }
 
         @Test
+        @DisplayName("createSimulation rejects caller supplied technology ids that are duplicated")
+        void createSimulationRejectsCallerSuppliedTechnologyIdsThatAreDuplicated() {
+                CreateSimulationService service = new CreateSimulationService(
+                                repository,
+                                technologyLookupPort,
+                                engines(),
+                                new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
+
+                CreateRealSimulationCommand command = new CreateRealSimulationCommand(
+                                validCommand().name(),
+                                validCommand().technology(),
+                                validCommand().location(),
+                                validCommand().system(),
+                                validCommand().demand(),
+                                validCommand().economics(),
+                                List.of(11L, 11L),
+                                null,
+                                validCommand().createdBy());
+
+                when(technologyLookupPort.existsActiveByEnergyType("solar")).thenReturn(true);
+
+                assertThatThrownBy(() -> service.createSimulation(command))
+                                .isInstanceOf(BadRequestException.class)
+                                .hasMessage("DUPLICATE_TECHNOLOGY_IDS: technologyIds must not contain duplicates");
+
+                verify(repository, never()).save(any());
+        }
+
+        @Test
         @DisplayName("getSimulationById enforces ownership for non admins")
         void getSimulationByIdEnforcesOwnership() throws Exception {
                 GetSimulationService service = new GetSimulationService(repository,

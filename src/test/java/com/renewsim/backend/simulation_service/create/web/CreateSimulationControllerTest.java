@@ -149,6 +149,56 @@ class CreateSimulationControllerTest {
         }
 
         @Test
+        @DisplayName("createSimulation returns 400 when technologyIds contains null values")
+        void createSimulationReturns400WhenTechnologyIdsContainsNullValues() throws Exception {
+                mockMvc.perform(post("/api/v1/simulations")
+                                .header(HttpHeaders.AUTHORIZATION, bearer(AUTHORIZED_TOKEN))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {
+                                                  "name": "Solar - Sevilla",
+                                                  "energyType": "solar",
+                                                  "location": {
+                                                    "label": "Sevilla, Andalucia, ES",
+                                                    "lat": 37.3891,
+                                                    "lon": -5.9845,
+                                                    "country": "Spain",
+                                                    "countryCode": "ES"
+                                                  },
+                                                  "system": {
+                                                    "installedCapacityKw": 300,
+                                                    "performanceRatio": 0.81,
+                                                    "degradationRateAnnualPct": 0.5,
+                                                    "availabilityPct": 99,
+                                                    "lossesPct": {
+                                                      "inverter": 2,
+                                                      "temperature": 6,
+                                                      "wiring": 1,
+                                                      "soiling": 3,
+                                                      "other": 1
+                                                    }
+                                                  },
+                                                  "demand": {
+                                                    "annualConsumptionKwh": 120000,
+                                                    "monthlyConsumptionKwh": [10000,10000,10000,10000,10000,10000,10000,10000,10000,10000,10000,10000]
+                                                  },
+                                                  "economics": {
+                                                    "currency": "EUR",
+                                                    "capexTotal": 315000,
+                                                    "opexAnnual": 7200,
+                                                    "electricityPurchasePricePerKwh": 0.18,
+                                                    "exportPricePerKwh": 0.07,
+                                                    "discountRatePct": 8,
+                                                    "projectLifetimeYears": 20
+                                                  },
+                                                  "technologyIds": [null]
+                                                }
+                                                """))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.fieldErrors").exists());
+        }
+
+        @Test
         @DisplayName("createSimulationFromScenario returns 201 for a user with write scope")
         void createSimulationFromScenarioReturns201ForUserWithWriteScope() throws Exception {
                 when(createSimulationFromScenarioUseCase.createSimulationFromScenario(any()))
