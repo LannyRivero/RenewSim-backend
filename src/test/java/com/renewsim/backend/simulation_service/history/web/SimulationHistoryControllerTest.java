@@ -1,7 +1,6 @@
 package com.renewsim.backend.simulation_service.history.web;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
-import com.renewsim.backend.simulation_service.delete.application.port.in.DeleteRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.detail.application.port.in.GetRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.history.application.port.in.ListUserRealSimulationsUseCase;
 import com.renewsim.backend.simulation_service.history.application.result.SimulationHistoryRowResult;
@@ -37,8 +36,6 @@ class SimulationHistoryControllerTest {
 
     @Mock
     private ListUserRealSimulationsUseCase listUserRealSimulationsUseCase;
-    @Mock
-    private DeleteRealSimulationUseCase deleteRealSimulationUseCase;
     @Mock
     private GetRealSimulationUseCase getRealSimulationUseCase;
 
@@ -81,7 +78,8 @@ class SimulationHistoryControllerTest {
     }
 
     private Authentication authentication(String username, String role) {
-        AuthenticatedUser user = AuthenticatedUser.of(username, Set.of(role.replace("ROLE_", "")), Set.of("read:simulations", "write:simulations"));
+        AuthenticatedUser user = AuthenticatedUser.of(username, Set.of(role.replace("ROLE_", "")),
+                Set.of("read:simulations", "write:simulations"));
         return new TestingAuthenticationToken(user, null, List.of(new SimpleGrantedAuthority(role)));
     }
 }
