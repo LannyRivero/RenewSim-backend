@@ -5,13 +5,15 @@ import com.renewsim.backend.simulation_service.domain.policy.SimulationFinancial
 import com.renewsim.backend.simulation_service.domain.policy.SimulationPortfolioPriorityPolicy;
 import com.renewsim.backend.simulation_service.domain.policy.SimulationRecommendationReviewPolicy;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 /**
  * Encapsulates portfolio prioritization and risk scoring rules.
  */
-final class PortfolioScenarioScoringPolicy {
+@Component
+public final class PortfolioScenarioScoringPolicy {
 
     private final SimulationRecommendationReviewPolicy reviewPolicy = new SimulationRecommendationReviewPolicy();
     private final SimulationFinancialRiskPolicy financialRiskPolicy = new SimulationFinancialRiskPolicy();
