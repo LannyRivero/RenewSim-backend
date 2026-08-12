@@ -11,6 +11,7 @@ import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.SimulationId;
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationResultSnapshotJacksonWriter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,11 +46,7 @@ class CreateSimulationServiceTest {
         @Test
         @DisplayName("createSimulation computes and stores the real contract snapshots")
         void createSimulationComputesAndStoresRealContractSnapshots() {
-                CreateSimulationService service = new CreateSimulationService(
-                                repository,
-                                technologyLookupPort,
-                                engines(resourcePort),
-                                new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
+                CreateSimulationService service = newCreateSimulationService();
                 CreateRealSimulationCommand command = validCommand();
 
                 when(technologyLookupPort.existsActiveByEnergyType("solar")).thenReturn(true);
@@ -80,11 +77,7 @@ class CreateSimulationServiceTest {
         @Test
         @DisplayName("createSimulation rejects not-yet-implemented wind before persisting a draft")
         void createSimulationRejectsNotImplementedWindBeforePersisting() {
-                CreateSimulationService service = new CreateSimulationService(
-                                repository,
-                                technologyLookupPort,
-                                engines(resourcePort),
-                                new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
+                CreateSimulationService service = newCreateSimulationService();
 
                 CreateRealSimulationCommand command = new CreateRealSimulationCommand(
                                 validCommand().name(),
@@ -109,11 +102,7 @@ class CreateSimulationServiceTest {
         @Test
         @DisplayName("createSimulation rejects caller supplied technology ids that are inactive")
         void createSimulationRejectsCallerSuppliedTechnologyIdsThatAreInactive() {
-                CreateSimulationService service = new CreateSimulationService(
-                                repository,
-                                technologyLookupPort,
-                                engines(resourcePort),
-                                new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
+                CreateSimulationService service = newCreateSimulationService();
 
                 CreateRealSimulationCommand command = new CreateRealSimulationCommand(
                                 validCommand().name(),
@@ -139,11 +128,7 @@ class CreateSimulationServiceTest {
         @Test
         @DisplayName("createSimulation rejects caller supplied technology ids that do not match the simulation energy type")
         void createSimulationRejectsCallerSuppliedTechnologyIdsThatDoNotMatchTheSimulationEnergyType() {
-                CreateSimulationService service = new CreateSimulationService(
-                                repository,
-                                technologyLookupPort,
-                                engines(resourcePort),
-                                new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
+                CreateSimulationService service = newCreateSimulationService();
 
                 CreateRealSimulationCommand command = new CreateRealSimulationCommand(
                                 validCommand().name(),
@@ -169,11 +154,7 @@ class CreateSimulationServiceTest {
         @Test
         @DisplayName("createSimulation rejects caller supplied technology ids that are duplicated")
         void createSimulationRejectsCallerSuppliedTechnologyIdsThatAreDuplicated() {
-                CreateSimulationService service = new CreateSimulationService(
-                                repository,
-                                technologyLookupPort,
-                                engines(resourcePort),
-                                new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
+                CreateSimulationService service = newCreateSimulationService();
 
                 CreateRealSimulationCommand command = new CreateRealSimulationCommand(
                                 validCommand().name(),
@@ -202,5 +183,15 @@ class CreateSimulationServiceTest {
                                 List.of(10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d,
                                                 10000d, 10000d)))
                                 .isInstanceOf(BadRequestException.class);
+        }
+
+        private CreateSimulationService newCreateSimulationService() {
+                ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+                return new CreateSimulationService(
+                                repository,
+                                technologyLookupPort,
+                                engines(resourcePort),
+                                new SimulationCompletionAssembler(
+                                                new SimulationResultSnapshotJacksonWriter(objectMapper)));
         }
 }

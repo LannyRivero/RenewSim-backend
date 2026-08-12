@@ -23,7 +23,7 @@ public class CreateSimulationService implements CreateRealSimulationUseCase {
     private final CreateSimulationRepositoryPort repository;
     private final TechnologyLookupPort technologyLookupPort;
     private final List<SimulationEngine> simulationEngines;
-    private final SimulationCompletionMapper completionMapper;
+    private final SimulationCompletionAssembler completionAssembler;
 
     @Override
     public SimulationDetailsResult createSimulation(CreateRealSimulationCommand command) {
@@ -34,7 +34,7 @@ public class CreateSimulationService implements CreateRealSimulationUseCase {
         List<Long> technologyIds = resolveTechnologyIds(command);
         Simulation simulation = persistDraft(command, technologyIds);
         SimulationDetailsResult result = simulationEngine.simulate(simulation, command);
-        simulation.complete(completionMapper.toCompletion(result, technologyIds));
+        simulation.complete(completionAssembler.toCompletion(result, technologyIds));
         repository.save(simulation);
 
         return result;

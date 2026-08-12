@@ -21,6 +21,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.CountryCode;
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocation;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.JpaSimulationRepository;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationRecordRepositoryAdapter;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationResultSnapshotJacksonWriter;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -374,7 +375,9 @@ class CreateSimulationFromScenarioServiceTest {
                                                                 new SolarSimulationAssessmentPolicy()),
                                                 new WindSimulationEngine(),
                                                 new HydroSimulationEngine()),
-                                new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
+                                new SimulationCompletionAssembler(
+                                                new SimulationResultSnapshotJacksonWriter(
+                                                                new ObjectMapper().findAndRegisterModules())));
         }
 
         private SimulationRecordRepositoryAdapter inMemoryPersistenceRepository(JpaSimulationRepository jpaRepository) {
