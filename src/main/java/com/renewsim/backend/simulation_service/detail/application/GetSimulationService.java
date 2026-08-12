@@ -1,9 +1,9 @@
 package com.renewsim.backend.simulation_service.detail.application;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.simulation_service.detail.application.port.in.GetRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.detail.application.port.out.SimulationDetailQueryPort;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationResultSnapshotReaderPort;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class GetSimulationService implements GetRealSimulationUseCase {
 
     private final SimulationDetailQueryPort repository;
-    private final ObjectMapper objectMapper;
+    private final SimulationResultSnapshotReaderPort snapshotReader;
 
     @Override
     public SimulationDetailsResult getSimulationById(Long id, String requesterUsername, boolean isAdmin) {
@@ -25,7 +25,7 @@ public class GetSimulationService implements GetRealSimulationUseCase {
         if (!simulation.hasResult()) {
             throw new SimulationNotFoundException(id);
         }
-        return readJson(simulation.getResultSnapshot(), SimulationDetailsResult.class);
+        return snapshotReader.read(simulation.getResultSnapshot());
     }
 
     private Simulation getAccessibleSimulation(Long id, String requesterUsername, boolean isAdmin) {
@@ -35,13 +35,5 @@ public class GetSimulationService implements GetRealSimulationUseCase {
             throw new AccessDeniedException("Not owner of simulation");
         }
         return simulation;
-    }
-
-    private <T> T readJson(String raw, Class<T> type) {
-        try {
-            return objectMapper.readValue(raw, type);
-        } catch (Exception ex) {
-            throw new IllegalStateException("Failed to deserialize simulation payload", ex);
-        }
     }
 }
