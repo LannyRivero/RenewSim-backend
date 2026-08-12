@@ -13,9 +13,9 @@ import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Optional;
 
-import static com.renewsim.backend.simulation_service.support.SimulationServiceTestFixtures.completedSimulation;
-import static com.renewsim.backend.simulation_service.support.SimulationServiceTestFixtures.minimalResult;
-import static com.renewsim.backend.simulation_service.support.SimulationServiceTestFixtures.snapshotReader;
+import static com.renewsim.backend.simulation_service.support.SimulationDetailTestFixtures.completedSimulation;
+import static com.renewsim.backend.simulation_service.support.SimulationDetailTestFixtures.minimalResult;
+import static com.renewsim.backend.simulation_service.support.SimulationDetailTestFixtures.snapshotReader;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
