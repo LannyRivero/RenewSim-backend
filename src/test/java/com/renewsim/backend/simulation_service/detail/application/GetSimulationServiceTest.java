@@ -50,4 +50,15 @@ class GetSimulationServiceTest {
         assertThatThrownBy(() -> service.getSimulationById(55L, "alice", false))
                 .isInstanceOf(SimulationNotFoundException.class);
     }
+
+    @Test
+    @DisplayName("getSimulationById degrades invalid snapshots to not found")
+    void getSimulationByIdDegradesInvalidSnapshotsToNotFound() {
+        GetSimulationService service = new GetSimulationService(repository, snapshotReader());
+        var simulation = completedSimulation(55L, "alice", "{ bad json");
+        when(repository.findById(55L)).thenReturn(Optional.of(simulation));
+
+        assertThatThrownBy(() -> service.getSimulationById(55L, "alice", false))
+                .isInstanceOf(SimulationNotFoundException.class);
+    }
 }

@@ -11,6 +11,7 @@ import com.renewsim.backend.simulation_service.create.application.technology.sol
 import com.renewsim.backend.simulation_service.create.application.technology.wind.WindSimulationEngine;
 import com.renewsim.backend.simulation_service.create.application.port.out.PvgisSolarResourcePort;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidConsumptionProfileException;
+import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationCurrencyException;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.application.port.out.ScenarioLookupPort;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
@@ -150,7 +151,7 @@ class CreateSimulationFromScenarioServiceTest {
                                 Optional.of(scenarioSnapshot()),
                                 Optional.of(new ScenarioLookupPort.ScenarioSnapshot(
                                                 7L, "Hogar solar - Sevilla", 1L,
-                                                8.0, 18000.0, "USD", 0.21, 9000.0)));
+                                                8.0, 18000.0, "EUR", 0.21, 9000.0)));
                 when(technologyLookupPort.findActiveEnergyTypeByTechnologyId(1L)).thenReturn(Optional.of("solar"));
                 when(technologyLookupPort.findActiveEnergyTypeByTechnologyId(2L)).thenReturn(Optional.of("solar"));
                 when(technologyLookupPort.existsActiveByEnergyType("solar")).thenReturn(true);
@@ -301,6 +302,65 @@ class CreateSimulationFromScenarioServiceTest {
                 verify(repository, never()).save(any());
         }
 
+        @Test
+        @DisplayName("createSimulationFromScenario rejects scenario currencies outside the supported simulation contract")
+        void createSimulationFromScenarioRejectsUnsupportedScenarioCurrency() {
+                CreateSimulationFromScenarioService service = new CreateSimulationFromScenarioService(
+                                scenarioLookupPort,
+                                technologyLookupPort,
+                                realCreateService(),
+                                scenarioSimulationCommandFactory);
+
+                when(scenarioLookupPort.findActiveScenarioById(7L)).thenReturn(Optional.of(
+                                new ScenarioLookupPort.ScenarioSnapshot(7L, "Hogar solar - Sevilla", 1L,
+                                                5.0, 12000.0, "USD", 0.15, 6000.0)));
+                when(technologyLookupPort.findActiveEnergyTypeByTechnologyId(1L)).thenReturn(Optional.of("solar"));
+                when(technologyLookupPort.recommendActiveTechnologyIdsByEnergyType("solar"))
+                                .thenReturn(List.of(1L, 2L));
+
+                assertThatThrownBy(() -> service.createSimulationFromScenario(
+                                new CreateSimulationFromScenarioCommand(
+                                                7L, null,
+                                                SimulationLocation.of("Sevilla, Andalucia, ES", 37.3891, -5.9845,
+                                                                "Spain", CountryCode.of("ES")),
+                                                "alice")))
+                                .isInstanceOf(InvalidSimulationCurrencyException.class)
+                                .hasMessage("VALIDATION_ERROR: scenario defaultInvestmentCurrency must be EUR");
+        }
+
+        @Test
+        @DisplayName("createSimulationFromScenario accepts supported scenario currency with surrounding whitespace")
+        void createSimulationFromScenarioAcceptsSupportedScenarioCurrencyWithWhitespace() {
+                CreateSimulationFromScenarioService service = new CreateSimulationFromScenarioService(
+                                scenarioLookupPort,
+                                technologyLookupPort,
+                                realCreateService(),
+                                scenarioSimulationCommandFactory);
+
+                when(scenarioLookupPort.findActiveScenarioById(7L)).thenReturn(Optional.of(
+                                new ScenarioLookupPort.ScenarioSnapshot(7L, "Hogar solar - Sevilla", 1L,
+                                                5.0, 12000.0, " EUR ", 0.15, 6000.0)));
+                when(technologyLookupPort.findActiveEnergyTypeByTechnologyId(1L)).thenReturn(Optional.of("solar"));
+                when(technologyLookupPort.findActiveEnergyTypeByTechnologyId(2L)).thenReturn(Optional.of("solar"));
+                when(technologyLookupPort.existsActiveByEnergyType("solar")).thenReturn(true);
+                when(technologyLookupPort.recommendActiveTechnologyIdsByEnergyType("solar"))
+                                .thenReturn(List.of(1L, 2L));
+                when(resourcePort.fetchProfile(37.3891, -5.9845, 13.0)).thenReturn(profile());
+                when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+                service.createSimulationFromScenario(
+                                new CreateSimulationFromScenarioCommand(
+                                                7L, null,
+                                                SimulationLocation.of("Sevilla, Andalucia, ES", 37.3891, -5.9845,
+                                                                "Spain", CountryCode.of("ES")),
+                                                "alice"));
+
+                ArgumentCaptor<Simulation> captor = ArgumentCaptor.forClass(Simulation.class);
+                verify(repository, atLeastOnce()).save(captor.capture());
+                assertThat(captor.getAllValues().get(captor.getAllValues().size() - 1).getEconomics().currency().value())
+                                .isEqualTo("EUR");
+        }
+
         private CreateRealSimulationUseCase realCreateService() {
                 return realCreateService(repository);
         }
@@ -377,7 +437,7 @@ class CreateSimulationFromScenarioServiceTest {
         private ScenarioLookupPort.ScenarioSnapshot scenarioSnapshot() {
                 return new ScenarioLookupPort.ScenarioSnapshot(
                                 7L, "Hogar solar - Sevilla", 1L,
-                                5.0, 12000.0, "USD", 0.15, 6000.0);
+                                5.0, 12000.0, "EUR", 0.15, 6000.0);
         }
 
         private PvgisSolarResourcePort.PvgisSolarResourceProfile profile() {

@@ -3,6 +3,7 @@ package com.renewsim.backend.simulation_service.create.application;
 import com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand;
 import com.renewsim.backend.simulation_service.create.application.command.CreateSimulationFromScenarioCommand;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidConsumptionProfileException;
+import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationCurrencyException;
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
 import com.renewsim.backend.simulation_service.domain.model.vo.Currency;
 import com.renewsim.backend.simulation_service.domain.model.vo.ProjectLifetime;
@@ -82,6 +83,10 @@ public class ScenarioSimulationCommandFactory {
     }
 
     private String resolveSimulationCurrency(String scenarioCurrency) {
+        if (!SUPPORTED_SIMULATION_CURRENCY.equalsIgnoreCase(scenarioCurrency == null ? null : scenarioCurrency.trim())) {
+            throw new InvalidSimulationCurrencyException(
+                    "VALIDATION_ERROR: scenario defaultInvestmentCurrency must be " + SUPPORTED_SIMULATION_CURRENCY);
+        }
         return SUPPORTED_SIMULATION_CURRENCY;
     }
 }

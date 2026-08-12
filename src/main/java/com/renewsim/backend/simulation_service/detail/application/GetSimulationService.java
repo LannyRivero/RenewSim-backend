@@ -25,7 +25,11 @@ public class GetSimulationService implements GetRealSimulationUseCase {
         if (!simulation.hasResult()) {
             throw new SimulationNotFoundException(id);
         }
-        return snapshotReader.read(simulation.getResultSnapshot());
+        try {
+            return snapshotReader.read(simulation.getResultSnapshot());
+        } catch (IllegalStateException ex) {
+            throw new SimulationNotFoundException(id);
+        }
     }
 
     private Simulation getAccessibleSimulation(Long id, String requesterUsername, boolean isAdmin) {

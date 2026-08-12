@@ -62,7 +62,11 @@ public final class ScenarioSnapshotAssembler {
         }
 
         private SimulationDetailsResult readDetails(String raw) {
-                return snapshotReader.read(raw);
+                try {
+                        return snapshotReader.read(raw);
+                } catch (IllegalStateException ex) {
+                        return null;
+                }
         }
 
         private String normalizeLabel(String value) {
