@@ -83,7 +83,7 @@ public class ScenarioSimulationCommandFactory {
     }
 
     private String resolveSimulationCurrency(String scenarioCurrency) {
-        if (!SUPPORTED_SIMULATION_CURRENCY.equalsIgnoreCase(scenarioCurrency)) {
+        if (!SUPPORTED_SIMULATION_CURRENCY.equalsIgnoreCase(scenarioCurrency == null ? null : scenarioCurrency.trim())) {
             throw new InvalidSimulationCurrencyException(
                     "VALIDATION_ERROR: scenario defaultInvestmentCurrency must be " + SUPPORTED_SIMULATION_CURRENCY);
         }

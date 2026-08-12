@@ -5,4 +5,9 @@
 
 UPDATE scenarios
 SET default_investment_currency = 'EUR'
-WHERE default_investment_currency = 'USD';
+WHERE default_investment_currency = 'USD'
+  AND name IN (
+    'Hogar con paneles solares - clima soleado',
+    'PyME con turbinas eolicas - zona costera',
+    'Microcentral hidroelectrica - zona rural con rio'
+  );
