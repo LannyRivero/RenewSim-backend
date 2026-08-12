@@ -9,6 +9,8 @@ import com.renewsim.backend.simulation_service.dashboard.application.projection.
 import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardRiskAlert;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardSummary;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.ScenarioSnapshot;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -18,9 +20,10 @@ import java.util.Map;
 /**
  * Aggregates ranked scenario snapshots into the portfolio dashboard view model.
  */
-final class PortfolioDashboardAggregator {
+@Component
+public final class PortfolioDashboardAggregator {
 
-    PortfolioDashboardResult buildDashboard(List<ScenarioSnapshot> snapshots, List<ScenarioSnapshot> rankedSnapshots) {
+    public PortfolioDashboardResult buildDashboard(List<ScenarioSnapshot> snapshots, List<ScenarioSnapshot> rankedSnapshots) {
         return new PortfolioDashboardResult(
                 buildSummary(snapshots),
                 buildRecommendedScenario(rankedSnapshots),
