@@ -8,7 +8,10 @@ import com.renewsim.backend.simulation_service.create.application.technology.hyd
 import com.renewsim.backend.simulation_service.create.application.technology.solar.SolarSimulationAssessmentPolicy;
 import com.renewsim.backend.simulation_service.create.application.technology.solar.SolarSimulationEngine;
 import com.renewsim.backend.simulation_service.create.application.technology.wind.WindSimulationEngine;
+import com.renewsim.backend.simulation_service.dashboard.application.PortfolioDashboardAggregator;
 import com.renewsim.backend.simulation_service.dashboard.application.PortfolioScenarioScoringPolicy;
+import com.renewsim.backend.simulation_service.dashboard.application.ScenarioSnapshotMetricsResolver;
+import com.renewsim.backend.simulation_service.dashboard.application.ScenarioSnapshotNarrativeResolver;
 import com.renewsim.backend.simulation_service.dashboard.application.ScenarioSnapshotAssembler;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.SimulationStatus;
@@ -164,8 +167,13 @@ public final class SimulationServiceTestFixtures {
 
         public static ScenarioSnapshotAssembler snapshotAssembler(TechnologyLookupPort technologyLookupPort) {
                 return new ScenarioSnapshotAssembler(
-                                technologyLookupPort,
                                 snapshotReader(),
-                                new PortfolioScenarioScoringPolicy());
+                                new PortfolioScenarioScoringPolicy(),
+                                new ScenarioSnapshotMetricsResolver(technologyLookupPort),
+                                new ScenarioSnapshotNarrativeResolver());
+        }
+
+        public static PortfolioDashboardAggregator dashboardAggregator() {
+                return new PortfolioDashboardAggregator();
         }
 }

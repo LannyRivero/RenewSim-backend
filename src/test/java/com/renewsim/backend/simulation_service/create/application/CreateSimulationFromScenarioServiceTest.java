@@ -55,13 +55,16 @@ class CreateSimulationFromScenarioServiceTest {
         @Mock
         private PvgisSolarResourcePort resourcePort;
 
+        private final ScenarioSimulationCommandFactory scenarioSimulationCommandFactory = new ScenarioSimulationCommandFactory();
+
         @Test
         @DisplayName("createSimulationFromScenario resolves scenario defaults and delegates to the real flow")
         void createSimulationFromScenarioResolvesScenarioDefaultsAndDelegates() {
                 CreateSimulationFromScenarioService service = new CreateSimulationFromScenarioService(
                                 scenarioLookupPort,
                                 technologyLookupPort,
-                                realCreateService());
+                                realCreateService(),
+                                scenarioSimulationCommandFactory);
 
                 when(scenarioLookupPort.findActiveScenarioById(7L)).thenReturn(Optional.of(scenarioSnapshot()));
                 when(technologyLookupPort.findActiveEnergyTypeByTechnologyId(1L)).thenReturn(Optional.of("solar"));
@@ -106,7 +109,8 @@ class CreateSimulationFromScenarioServiceTest {
                 CreateSimulationFromScenarioService service = new CreateSimulationFromScenarioService(
                                 scenarioLookupPort,
                                 technologyLookupPort,
-                                realCreateService());
+                                realCreateService(),
+                                scenarioSimulationCommandFactory);
 
                 when(scenarioLookupPort.findActiveScenarioById(7L)).thenReturn(Optional.of(scenarioSnapshot()));
                 when(technologyLookupPort.findActiveEnergyTypeByTechnologyId(1L)).thenReturn(Optional.of("solar"));
@@ -139,7 +143,8 @@ class CreateSimulationFromScenarioServiceTest {
                 CreateSimulationFromScenarioService service = new CreateSimulationFromScenarioService(
                                 scenarioLookupPort,
                                 technologyLookupPort,
-                                realCreateService(persistenceRepository));
+                                realCreateService(persistenceRepository),
+                                scenarioSimulationCommandFactory);
 
                 when(scenarioLookupPort.findActiveScenarioById(7L)).thenReturn(
                                 Optional.of(scenarioSnapshot()),
@@ -193,7 +198,8 @@ class CreateSimulationFromScenarioServiceTest {
                 CreateSimulationFromScenarioService service = new CreateSimulationFromScenarioService(
                                 scenarioLookupPort,
                                 technologyLookupPort,
-                                realCreateService());
+                                realCreateService(),
+                                scenarioSimulationCommandFactory);
 
                 when(scenarioLookupPort.findActiveScenarioById(7L)).thenReturn(Optional.of(scenarioSnapshot()));
                 when(technologyLookupPort.findActiveEnergyTypeByTechnologyId(1L)).thenReturn(Optional.of("solar"));
@@ -224,7 +230,8 @@ class CreateSimulationFromScenarioServiceTest {
                 CreateSimulationFromScenarioService service = new CreateSimulationFromScenarioService(
                                 scenarioLookupPort,
                                 technologyLookupPort,
-                                realCreateService());
+                                realCreateService(),
+                                scenarioSimulationCommandFactory);
 
                 when(scenarioLookupPort.findActiveScenarioById(99L)).thenReturn(Optional.empty());
 
@@ -247,7 +254,8 @@ class CreateSimulationFromScenarioServiceTest {
                 CreateSimulationFromScenarioService service = new CreateSimulationFromScenarioService(
                                 scenarioLookupPort,
                                 technologyLookupPort,
-                                realCreateService());
+                                realCreateService(),
+                                scenarioSimulationCommandFactory);
 
                 when(scenarioLookupPort.findActiveScenarioById(7L)).thenReturn(Optional.of(scenarioSnapshot()));
                 when(technologyLookupPort.findActiveEnergyTypeByTechnologyId(1L)).thenReturn(Optional.empty());
@@ -270,7 +278,8 @@ class CreateSimulationFromScenarioServiceTest {
                 CreateSimulationFromScenarioService service = new CreateSimulationFromScenarioService(
                                 scenarioLookupPort,
                                 technologyLookupPort,
-                                realCreateService());
+                                realCreateService(),
+                                scenarioSimulationCommandFactory);
 
                 when(scenarioLookupPort.findActiveScenarioById(7L)).thenReturn(Optional.of(
                                 new ScenarioLookupPort.ScenarioSnapshot(7L, "Hogar solar - Sevilla", 1L,
