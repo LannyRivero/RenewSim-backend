@@ -123,4 +123,24 @@ class GetPortfolioDashboardServiceTest {
         assertThat(response.prioritizedScenarios()).hasSize(1);
         assertThat(response.prioritizedScenarios().getFirst().priority()).isEqualTo("REVIEW");
     }
+
+    @Test
+    @DisplayName("getDashboard tolerates malformed historical snapshots")
+    void getDashboardToleratesMalformedHistoricalSnapshots() {
+        GetPortfolioDashboardService service = new GetPortfolioDashboardService(
+                repository,
+                snapshotAssembler(technologyLookupPort),
+                new PortfolioDashboardAggregator());
+
+        Simulation malformed = completedSimulation(59L, "alice", "{ bad json");
+
+        when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(malformed));
+
+        PortfolioDashboardResult response = service.getDashboard("alice");
+
+        assertThat(response.summary().totalSimulations()).isEqualTo(1);
+        assertThat(response.summary().atRiskCount()).isEqualTo(1);
+        assertThat(response.prioritizedScenarios()).hasSize(1);
+        assertThat(response.prioritizedScenarios().getFirst().priority()).isEqualTo("REVIEW");
+    }
 }
