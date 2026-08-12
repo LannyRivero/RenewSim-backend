@@ -2,12 +2,12 @@ package com.renewsim.backend.simulation_service.create.web;
 
 import com.renewsim.backend.simulation_service.create.application.port.in.CreateRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.create.application.port.in.CreateSimulationFromScenarioUseCase;
-import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
 import com.renewsim.backend.simulation_service.shared.web.SimulationDetailsWebMapper;
-import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;
 import com.renewsim.backend.simulation_service.create.web.dto.CreateSimulationRequestDTO;
 import com.renewsim.backend.simulation_service.create.web.dto.CreateSimulationFromScenarioRequestDTO;
 import com.renewsim.backend.simulation_service.shared.web.dto.SimulationDetailsResponseDTO;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContext;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContextFactory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -34,7 +34,7 @@ public class CreateSimulationController {
         private final CreateSimulationWebMapper createWebMapper = new CreateSimulationWebMapper();
         private final CreateSimulationFromScenarioWebMapper createFromScenarioWebMapper = new CreateSimulationFromScenarioWebMapper();
         private final SimulationDetailsWebMapper detailsWebMapper = new SimulationDetailsWebMapper();
-        private final SimulationRequestContextFactory requestContextFactory = new SimulationRequestContextFactory();
+        private final AuthenticatedRequestContextFactory requestContextFactory;
 
         @Operation(summary = "Create a new simulation")
         @PreAuthorize("hasAuthority('SCOPE_write:simulations') or hasRole('ADMIN')")
@@ -43,7 +43,7 @@ public class CreateSimulationController {
                         @Valid @RequestBody CreateSimulationRequestDTO request,
                         Authentication auth) {
 
-                SimulationRequestContext requestContext = requestContextFactory.from(auth);
+                AuthenticatedRequestContext requestContext = requestContextFactory.from(auth);
 
                 SimulationDetailsResponseDTO result = detailsWebMapper.toWebDetails(
                                 createRealSimulationUseCase.createSimulation(
@@ -59,7 +59,7 @@ public class CreateSimulationController {
                         @Valid @RequestBody CreateSimulationFromScenarioRequestDTO request,
                         Authentication auth) {
 
-                SimulationRequestContext requestContext = requestContextFactory.from(auth);
+                AuthenticatedRequestContext requestContext = requestContextFactory.from(auth);
 
                 SimulationDetailsResponseDTO result = detailsWebMapper.toWebDetails(
                                 createSimulationFromScenarioUseCase.createSimulationFromScenario(

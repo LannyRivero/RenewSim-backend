@@ -1,9 +1,9 @@
 package com.renewsim.backend.simulation_service.history.web;
 
 import com.renewsim.backend.simulation_service.history.application.port.in.ListUserRealSimulationsUseCase;
-import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
-import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;
 import com.renewsim.backend.simulation_service.history.web.dto.ListUserSimulationsResponseDTO;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContext;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContextFactory;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,13 +22,13 @@ public class SimulationHistoryController {
 
     private final ListUserRealSimulationsUseCase listUserRealSimulationsUseCase;
     private final SimulationHistoryWebMapper historyWebMapper = new SimulationHistoryWebMapper();
-    private final SimulationRequestContextFactory requestContextFactory = new SimulationRequestContextFactory();
+    private final AuthenticatedRequestContextFactory requestContextFactory;
 
     @Operation(summary = "Get authenticated user simulations with pagination")
     @PreAuthorize("hasAuthority('SCOPE_read:simulations') or hasRole('ADMIN')")
     @GetMapping({ "/user", "/my-simulations" })
     public ResponseEntity<ListUserSimulationsResponseDTO> getMySimulations(Authentication auth) {
-        SimulationRequestContext requestContext = requestContextFactory.from(auth);
+        AuthenticatedRequestContext requestContext = requestContextFactory.from(auth);
 
         ListUserSimulationsResponseDTO history = historyWebMapper.toWebList(
                 listUserRealSimulationsUseCase.getUserSimulations(requestContext.username()));

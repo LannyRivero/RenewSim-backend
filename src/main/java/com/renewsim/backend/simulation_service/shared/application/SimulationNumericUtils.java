@@ -1,14 +1,10 @@
 package com.renewsim.backend.simulation_service.shared.application;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-public final class SimulationMathUtils {
+public final class SimulationNumericUtils {
 
-    private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-
-    private SimulationMathUtils() {
+    private SimulationNumericUtils() {
     }
 
     public static double round(double value, int scale) {
@@ -30,13 +26,5 @@ public final class SimulationMathUtils {
 
     public static double defaultNumber(Double value) {
         return value == null ? 0.0 : value;
-    }
-
-    public static String firstNonBlank(String value, String fallback) {
-        return value == null || value.isBlank() ? fallback : value;
-    }
-
-    public static String formatDate(LocalDateTime value) {
-        return value == null ? null : ISO_FORMATTER.format(value) + "Z";
     }
 }

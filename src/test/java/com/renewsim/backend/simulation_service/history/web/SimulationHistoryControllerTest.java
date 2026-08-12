@@ -1,11 +1,13 @@
 package com.renewsim.backend.simulation_service.history.web;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContext;
 import com.renewsim.backend.simulation_service.detail.application.port.in.GetRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.history.application.port.in.ListUserRealSimulationsUseCase;
 import com.renewsim.backend.simulation_service.history.application.result.SimulationHistoryRowResult;
 import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.detail.web.SimulationDetailController;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContextFactory;
 import com.renewsim.backend.simulation_service.history.web.dto.ListUserSimulationsResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,8 @@ class SimulationHistoryControllerTest {
     private ListUserRealSimulationsUseCase listUserRealSimulationsUseCase;
     @Mock
     private GetRealSimulationUseCase getRealSimulationUseCase;
+    @Mock
+    private AuthenticatedRequestContextFactory requestContextFactory;
 
     @InjectMocks
     private SimulationHistoryController controller;
@@ -46,6 +50,7 @@ class SimulationHistoryControllerTest {
     @DisplayName("getMySimulations returns list projection contract")
     void getMySimulationsReturnsListProjectionContract() {
         Authentication auth = authentication("alice", "ROLE_USER");
+        when(requestContextFactory.from(auth)).thenReturn(new AuthenticatedRequestContext("alice", false));
         when(listUserRealSimulationsUseCase.getUserSimulations("alice")).thenReturn(
                 new UserSimulationListResult(
                         List.of(new SimulationHistoryRowResult("55", "Solar - Sevilla", "solar", "completed",
@@ -64,7 +69,9 @@ class SimulationHistoryControllerTest {
     @DisplayName("get user simulations route does not collide with numeric id mapping")
     void getUserSimulationsRouteDoesNotCollideWithIdRoute() throws Exception {
         Authentication auth = authentication("alice", "ROLE_USER");
-        SimulationDetailController detailController = new SimulationDetailController(getRealSimulationUseCase);
+        when(requestContextFactory.from(auth)).thenReturn(new AuthenticatedRequestContext("alice", false));
+        SimulationDetailController detailController = new SimulationDetailController(getRealSimulationUseCase,
+                new AuthenticatedRequestContextFactory());
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller, detailController).build();
 
         when(listUserRealSimulationsUseCase.getUserSimulations("alice"))

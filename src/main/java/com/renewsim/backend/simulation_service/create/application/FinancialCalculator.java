@@ -6,7 +6,7 @@ import com.renewsim.backend.simulation_service.shared.application.SimulationDeta
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.round;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationNumericUtils.round;
 
 public final class FinancialCalculator {
 

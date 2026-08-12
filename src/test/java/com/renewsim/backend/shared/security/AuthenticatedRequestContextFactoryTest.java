@@ -1,4 +1,4 @@
-package com.renewsim.backend.simulation_service.shared.web;
+package com.renewsim.backend.shared.security;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import org.junit.jupiter.api.DisplayName;
@@ -12,16 +12,16 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class SimulationRequestContextFactoryTest {
+class AuthenticatedRequestContextFactoryTest {
 
-    private final SimulationRequestContextFactory factory = new SimulationRequestContextFactory();
+    private final AuthenticatedRequestContextFactory factory = new AuthenticatedRequestContextFactory();
 
     @Test
     @DisplayName("from extracts username and admin role from authentication")
     void fromExtractsUsernameAndAdminRoleFromAuthentication() {
         Authentication auth = authentication("alice", "ROLE_USER", "ROLE_ADMIN");
 
-        SimulationRequestContext context = factory.from(auth);
+        AuthenticatedRequestContext context = factory.from(auth);
 
         assertThat(context.username()).isEqualTo("alice");
         assertThat(context.isAdmin()).isTrue();
@@ -32,7 +32,7 @@ class SimulationRequestContextFactoryTest {
     void fromMarksNonAdminUsersCorrectly() {
         Authentication auth = authentication("bob", "ROLE_USER");
 
-        SimulationRequestContext context = factory.from(auth);
+        AuthenticatedRequestContext context = factory.from(auth);
 
         assertThat(context.username()).isEqualTo("bob");
         assertThat(context.isAdmin()).isFalse();

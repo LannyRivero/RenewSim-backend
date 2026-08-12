@@ -1,10 +1,10 @@
 package com.renewsim.backend.simulation_service.detail.web;
 
 import com.renewsim.backend.simulation_service.detail.application.port.in.GetRealSimulationUseCase;
-import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
 import com.renewsim.backend.simulation_service.shared.web.SimulationDetailsWebMapper;
-import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;
 import com.renewsim.backend.simulation_service.shared.web.dto.SimulationDetailsResponseDTO;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContext;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContextFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,14 +21,14 @@ public class SimulationDetailController {
 
     private final GetRealSimulationUseCase getRealSimulationUseCase;
     private final SimulationDetailsWebMapper detailsWebMapper = new SimulationDetailsWebMapper();
-    private final SimulationRequestContextFactory requestContextFactory = new SimulationRequestContextFactory();
+    private final AuthenticatedRequestContextFactory requestContextFactory;
 
     @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasAuthority('SCOPE_read:simulations') or hasRole('ADMIN')")
     public ResponseEntity<SimulationDetailsResponseDTO> getSimulationById(
             @PathVariable Long id,
             Authentication auth) {
-        SimulationRequestContext requestContext = requestContextFactory.from(auth);
+        AuthenticatedRequestContext requestContext = requestContextFactory.from(auth);
 
         return ResponseEntity.ok(detailsWebMapper.toWebDetails(
                 getRealSimulationUseCase.getSimulationById(
