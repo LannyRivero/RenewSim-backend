@@ -11,7 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.*;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationFormatUtils.formatDate;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationNumericUtils.defaultNumber;
 
 @Service
 @RequiredArgsConstructor

@@ -16,11 +16,11 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.formatDate;
-import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.round;
-import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.roundList;
-import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.scale;
-import static com.renewsim.backend.simulation_service.shared.application.SimulationMathUtils.sum;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationFormatUtils.formatDate;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationNumericUtils.round;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationNumericUtils.roundList;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationNumericUtils.scale;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationNumericUtils.sum;
 
 @Component
 @RequiredArgsConstructor
