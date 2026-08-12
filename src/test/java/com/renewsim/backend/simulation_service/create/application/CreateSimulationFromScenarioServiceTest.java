@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.scenario_service.domain.exception.ScenarioNotFoundException;
 import com.renewsim.backend.simulation_service.create.application.command.CreateSimulationFromScenarioCommand;
 import com.renewsim.backend.simulation_service.create.application.port.in.CreateRealSimulationUseCase;
+import com.renewsim.backend.simulation_service.create.application.port.out.CreateSimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.create.application.technology.hydro.HydroSimulationEngine;
 import com.renewsim.backend.simulation_service.create.application.technology.solar.SolarSimulationAssessmentPolicy;
 import com.renewsim.backend.simulation_service.create.application.technology.solar.SolarSimulationEngine;
@@ -12,7 +13,6 @@ import com.renewsim.backend.simulation_service.create.application.port.out.Pvgis
 import com.renewsim.backend.simulation_service.domain.exception.InvalidConsumptionProfileException;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.application.port.out.ScenarioLookupPort;
-import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.SimulationId;
@@ -51,7 +51,7 @@ class CreateSimulationFromScenarioServiceTest {
         @Mock
         private TechnologyLookupPort technologyLookupPort;
         @Mock
-        private SimulationRecordRepositoryPort repository;
+        private CreateSimulationRepositoryPort repository;
         @Mock
         private PvgisSolarResourcePort resourcePort;
 
@@ -135,7 +135,7 @@ class CreateSimulationFromScenarioServiceTest {
         @DisplayName("createSimulationFromScenario snapshots scenario defaults at creation time")
         void createSimulationFromScenarioSnapshotsScenarioDefaultsAtCreationTime() {
                 JpaSimulationRepository jpaRepository = mock(JpaSimulationRepository.class);
-                SimulationRecordRepositoryPort persistenceRepository = inMemoryPersistenceRepository(jpaRepository);
+                SimulationRecordRepositoryAdapter persistenceRepository = inMemoryPersistenceRepository(jpaRepository);
                 CreateSimulationFromScenarioService service = new CreateSimulationFromScenarioService(
                                 scenarioLookupPort,
                                 technologyLookupPort,
@@ -296,7 +296,7 @@ class CreateSimulationFromScenarioServiceTest {
                 return realCreateService(repository);
         }
 
-        private CreateRealSimulationUseCase realCreateService(SimulationRecordRepositoryPort simulationRepository) {
+        private CreateRealSimulationUseCase realCreateService(CreateSimulationRepositoryPort simulationRepository) {
                 return new CreateSimulationService(
                                 simulationRepository,
                                 technologyLookupPort,
@@ -308,7 +308,7 @@ class CreateSimulationFromScenarioServiceTest {
                                 new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
         }
 
-        private SimulationRecordRepositoryPort inMemoryPersistenceRepository(JpaSimulationRepository jpaRepository) {
+        private SimulationRecordRepositoryAdapter inMemoryPersistenceRepository(JpaSimulationRepository jpaRepository) {
                 Map<Long, SimulationEntity> store = new HashMap<>();
                 AtomicLong sequence = new AtomicLong(60L);
 

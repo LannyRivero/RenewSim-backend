@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.delete.application;
 
 import com.renewsim.backend.simulation_service.delete.application.port.in.DeleteRealSimulationUseCase;
-import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
+import com.renewsim.backend.simulation_service.delete.application.port.out.DeleteSimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class DeleteSimulationService implements DeleteRealSimulationUseCase {
 
-    private final SimulationRecordRepositoryPort repository;
+    private final DeleteSimulationRepositoryPort repository;
 
     @Override
     public void deleteSimulation(Long id, String requesterUsername, boolean isAdmin) {

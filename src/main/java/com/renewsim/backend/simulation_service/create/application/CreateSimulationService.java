@@ -2,7 +2,7 @@ package com.renewsim.backend.simulation_service.create.application;
 
 import com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand;
 import com.renewsim.backend.simulation_service.create.application.port.in.CreateRealSimulationUseCase;
-import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
+import com.renewsim.backend.simulation_service.create.application.port.out.CreateSimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationTechnologyException;
@@ -20,7 +20,7 @@ import java.util.List;
 @Transactional
 public class CreateSimulationService implements CreateRealSimulationUseCase {
 
-    private final SimulationRecordRepositoryPort repository;
+    private final CreateSimulationRepositoryPort repository;
     private final TechnologyLookupPort technologyLookupPort;
     private final List<SimulationEngine> simulationEngines;
     private final SimulationCompletionMapper completionMapper;

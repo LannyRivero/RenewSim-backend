@@ -1,9 +1,9 @@
 package com.renewsim.backend.simulation_service.history.application;
 
 import com.renewsim.backend.simulation_service.history.application.port.in.ListUserRealSimulationsUseCase;
+import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
 import com.renewsim.backend.simulation_service.history.application.result.SimulationHistoryRowResult;
 import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
-import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class ListSimulationsService implements ListUserRealSimulationsUseCase {
     private static final String MODEL_VERSION = "solar-spain-v1";
     private static final String RESOURCE_SOURCE = "PVGIS";
 
-    private final SimulationRecordRepositoryPort repository;
+    private final SimulationHistoryQueryPort repository;
 
     @Override
     public UserSimulationListResult getUserSimulations(String username) {

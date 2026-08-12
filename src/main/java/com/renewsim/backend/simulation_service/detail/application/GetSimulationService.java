@@ -2,7 +2,7 @@ package com.renewsim.backend.simulation_service.detail.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.simulation_service.detail.application.port.in.GetRealSimulationUseCase;
-import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
+import com.renewsim.backend.simulation_service.detail.application.port.out.SimulationDetailQueryPort;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class GetSimulationService implements GetRealSimulationUseCase {
 
-    private final SimulationRecordRepositoryPort repository;
+    private final SimulationDetailQueryPort repository;
     private final ObjectMapper objectMapper;
 
     @Override

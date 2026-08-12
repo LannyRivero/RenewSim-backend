@@ -6,15 +6,18 @@ import com.renewsim.backend.simulation_service.create.application.technology.hyd
 import com.renewsim.backend.simulation_service.create.application.technology.solar.SolarSimulationAssessmentPolicy;
 import com.renewsim.backend.simulation_service.create.application.technology.solar.SolarSimulationEngine;
 import com.renewsim.backend.simulation_service.create.application.technology.wind.WindSimulationEngine;
+import com.renewsim.backend.simulation_service.create.application.port.out.CreateSimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.dashboard.application.GetPortfolioDashboardService;
+import com.renewsim.backend.simulation_service.dashboard.application.port.out.PortfolioDashboardQueryPort;
 import com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardRiskAlert;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardResult;
 import com.renewsim.backend.simulation_service.detail.application.GetSimulationService;
+import com.renewsim.backend.simulation_service.detail.application.port.out.SimulationDetailQueryPort;
 import com.renewsim.backend.simulation_service.history.application.ListSimulationsService;
+import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
 import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
 import com.renewsim.backend.simulation_service.create.application.port.out.PvgisSolarResourcePort;
-import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
@@ -45,8 +48,12 @@ import static org.mockito.Mockito.never;
 @ExtendWith(MockitoExtension.class)
 class RealSimulationServiceTest {
 
+        private interface SimulationRepositoryPorts extends CreateSimulationRepositoryPort, SimulationDetailQueryPort,
+                        SimulationHistoryQueryPort, PortfolioDashboardQueryPort {
+        }
+
         @Mock
-        private SimulationRecordRepositoryPort repository;
+        private SimulationRepositoryPorts repository;
         @Mock
         private PvgisSolarResourcePort resourcePort;
         @Mock

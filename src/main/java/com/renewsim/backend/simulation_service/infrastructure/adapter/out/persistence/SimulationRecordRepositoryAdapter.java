@@ -1,7 +1,11 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
+import com.renewsim.backend.simulation_service.create.application.port.out.CreateSimulationRepositoryPort;
+import com.renewsim.backend.simulation_service.dashboard.application.port.out.PortfolioDashboardQueryPort;
+import com.renewsim.backend.simulation_service.delete.application.port.out.DeleteSimulationRepositoryPort;
+import com.renewsim.backend.simulation_service.detail.application.port.out.SimulationDetailQueryPort;
+import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.SimulationId;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
@@ -12,7 +16,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class SimulationRecordRepositoryAdapter implements SimulationRecordRepositoryPort {
+public class SimulationRecordRepositoryAdapter
+        implements CreateSimulationRepositoryPort, SimulationDetailQueryPort, SimulationHistoryQueryPort,
+        DeleteSimulationRepositoryPort, PortfolioDashboardQueryPort {
 
     private final JpaSimulationRepository repository;
     private final SimulationRecordEntityMapper entityMapper;
