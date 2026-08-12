@@ -1,10 +1,10 @@
 package com.renewsim.backend.simulation_service.dashboard.application;
 
+import com.renewsim.backend.simulation_service.dashboard.application.projection.DashboardSnapshotData;
 import com.renewsim.backend.simulation_service.domain.model.SimulationRecommendation;
 import com.renewsim.backend.simulation_service.domain.policy.SimulationFinancialRiskPolicy;
 import com.renewsim.backend.simulation_service.domain.policy.SimulationPortfolioPriorityPolicy;
 import com.renewsim.backend.simulation_service.domain.policy.SimulationRecommendationReviewPolicy;
-import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public final class PortfolioScenarioScoringPolicy {
     private final SimulationFinancialRiskPolicy financialRiskPolicy = new SimulationFinancialRiskPolicy();
     private final SimulationPortfolioPriorityPolicy priorityPolicy = new SimulationPortfolioPriorityPolicy();
 
-    int computeScore(SimulationDetailsResult details, Double roiPercent, Double paybackYears) {
+    int computeScore(DashboardSnapshotData details, Double roiPercent, Double paybackYears) {
         if (details == null || details.summary() == null) {
             return 20;
         }
@@ -45,11 +45,11 @@ public final class PortfolioScenarioScoringPolicy {
         return Math.max(0, Math.min(100, score));
     }
 
-    String resolveMainRisk(SimulationDetailsResult details, Double paybackYears, Double roiPercent) {
+    String resolveMainRisk(DashboardSnapshotData details, Double paybackYears, Double roiPercent) {
         return financialRiskPolicy.resolveMainRisk(firstWarningMessage(details), paybackYears, roiPercent);
     }
 
-    boolean needsReview(SimulationDetailsResult details, String recommendation) {
+    boolean needsReview(DashboardSnapshotData details, String recommendation) {
         if (details == null) {
             return true;
         }
@@ -71,17 +71,17 @@ public final class PortfolioScenarioScoringPolicy {
         return financialRiskPolicy.hasLongPayback(paybackYears);
     }
 
-    private List<SimulationDetailsResult.SimulationWarning> safeWarnings(SimulationDetailsResult details) {
+    private List<DashboardSnapshotData.Warning> safeWarnings(DashboardSnapshotData details) {
         return details.warnings() == null ? List.of() : details.warnings();
     }
 
-    private String firstWarningMessage(SimulationDetailsResult details) {
+    private String firstWarningMessage(DashboardSnapshotData details) {
         if (details == null) {
             return null;
         }
         return safeWarnings(details).stream()
                 .filter(warning -> "warning".equalsIgnoreCase(warning.severity()))
-                .map(SimulationDetailsResult.SimulationWarning::message)
+                .map(DashboardSnapshotData.Warning::message)
                 .findFirst()
                 .orElse(null);
     }

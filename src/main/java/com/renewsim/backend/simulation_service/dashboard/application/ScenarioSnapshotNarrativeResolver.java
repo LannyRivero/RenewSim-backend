@@ -1,8 +1,8 @@
 package com.renewsim.backend.simulation_service.dashboard.application;
 
+import com.renewsim.backend.simulation_service.dashboard.application.projection.DashboardSnapshotData;
 import com.renewsim.backend.simulation_service.domain.model.SimulationRecommendation;
 import com.renewsim.backend.simulation_service.domain.policy.SimulationRecommendationReviewPolicy;
-import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -12,8 +12,8 @@ public final class ScenarioSnapshotNarrativeResolver {
 
         private final SimulationRecommendationReviewPolicy reviewPolicy = new SimulationRecommendationReviewPolicy();
 
-        public ScenarioSnapshotNarrative resolve(SimulationDetailsResult details) {
-                SimulationDetailsResult.Summary summary = details != null ? details.summary() : null;
+        public ScenarioSnapshotNarrative resolve(DashboardSnapshotData details) {
+                DashboardSnapshotData.Summary summary = details != null ? details.summary() : null;
                 String recommendation = summary != null && summary.recommendation() != null
                                 ? summary.recommendation()
                                 : "review_required";
@@ -22,7 +22,7 @@ public final class ScenarioSnapshotNarrativeResolver {
 
                 List<String> drivers = summary != null && summary.reasons() != null
                                 ? summary.reasons().stream()
-                                                .map(SimulationDetailsResult.RecommendationReason::message)
+                                                .map(DashboardSnapshotData.Reason::message)
                                                 .filter(message -> message != null && !message.isBlank())
                                                 .limit(3)
                                                 .toList()

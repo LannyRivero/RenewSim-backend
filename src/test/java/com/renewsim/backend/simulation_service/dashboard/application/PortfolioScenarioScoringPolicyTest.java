@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.dashboard.application;
 
-import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.DashboardSnapshotData;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,9 +15,9 @@ class PortfolioScenarioScoringPolicyTest {
     @Test
     @DisplayName("computeScore combines recommendation, roi, payback and warnings")
     void computeScoreCombinesRecommendationRoiPaybackAndWarnings() {
-        SimulationDetailsResult details = details(
+        DashboardSnapshotData details = details(
                 "recommended",
-                List.of(new SimulationDetailsResult.SimulationWarning("warning", "LOW_AVAILABILITY",
+                List.of(new DashboardSnapshotData.Warning("warning",
                         "warning message")));
 
         int score = policy.computeScore(details, 20.0, 5.0);
@@ -34,9 +34,9 @@ class PortfolioScenarioScoringPolicyTest {
     @Test
     @DisplayName("resolveMainRisk prefers warning messages over generic thresholds")
     void resolveMainRiskPrefersWarningMessagesOverGenericThresholds() {
-        SimulationDetailsResult details = details(
+        DashboardSnapshotData details = details(
                 "viable_with_reservations",
-                List.of(new SimulationDetailsResult.SimulationWarning("warning", "LOW_AVAILABILITY",
+                List.of(new DashboardSnapshotData.Warning("warning",
                         "Availability too low")));
 
         String mainRisk = policy.resolveMainRisk(details, 12.0, 2.0);
@@ -56,10 +56,10 @@ class PortfolioScenarioScoringPolicyTest {
     @Test
     @DisplayName("needsReview only clears recommended scenarios without warnings")
     void needsReviewOnlyClearsRecommendedScenariosWithoutWarnings() {
-        SimulationDetailsResult cleanRecommended = details("recommended", List.of());
-        SimulationDetailsResult warnedRecommended = details(
+        DashboardSnapshotData cleanRecommended = details("recommended", List.of());
+        DashboardSnapshotData warnedRecommended = details(
                 "recommended",
-                List.of(new SimulationDetailsResult.SimulationWarning("warning", "LOW_AVAILABILITY",
+                List.of(new DashboardSnapshotData.Warning("warning",
                         "Availability too low")));
 
         assertThat(policy.needsReview(cleanRecommended, "recommended")).isFalse();
@@ -77,20 +77,11 @@ class PortfolioScenarioScoringPolicyTest {
         assertThat(policy.hasLongPayback(10.0)).isFalse();
     }
 
-    private SimulationDetailsResult details(
+    private DashboardSnapshotData details(
             String recommendation,
-            List<SimulationDetailsResult.SimulationWarning> warnings) {
-        return new SimulationDetailsResult(
-                "55",
-                "completed",
-                "2026-06-30T14:00:00Z",
-                "2026-06-30T14:00:00Z",
-                "solar-spain-v1",
-                "solar",
-                null,
-                new SimulationDetailsResult.Summary(recommendation, "headline", "summary", List.of()),
-                null,
-                null,
+            List<DashboardSnapshotData.Warning> warnings) {
+        return new DashboardSnapshotData(
+                new DashboardSnapshotData.Summary(recommendation, "headline", List.of()),
                 null,
                 null,
                 warnings);

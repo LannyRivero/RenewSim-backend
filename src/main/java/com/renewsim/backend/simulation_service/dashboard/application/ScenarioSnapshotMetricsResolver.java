@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.dashboard.application;
 
+import com.renewsim.backend.simulation_service.dashboard.application.projection.DashboardSnapshotData;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
-import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -12,9 +12,9 @@ public final class ScenarioSnapshotMetricsResolver {
 
     private final TechnologyLookupPort technologyLookupPort;
 
-    public ScenarioSnapshotMetrics resolve(Simulation simulation, SimulationDetailsResult details) {
-        SimulationDetailsResult.Financial financial = details != null ? details.financial() : null;
-        SimulationDetailsResult.Technical technical = details != null ? details.technical() : null;
+    public ScenarioSnapshotMetrics resolve(Simulation simulation, DashboardSnapshotData details) {
+        DashboardSnapshotData.Financial financial = details != null ? details.financial() : null;
+        DashboardSnapshotData.Technical technical = details != null ? details.technical() : null;
 
         Double capex = simulation.getEconomics() != null ? simulation.getEconomics().capexTotal() : null;
         Double annualSavings = financial != null ? Double.valueOf(financial.annualSavings())

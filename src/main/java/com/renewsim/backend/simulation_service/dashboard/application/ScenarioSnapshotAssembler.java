@@ -1,10 +1,10 @@
 package com.renewsim.backend.simulation_service.dashboard.application;
 
+import com.renewsim.backend.simulation_service.dashboard.application.port.out.DashboardSnapshotReaderPort;
+import com.renewsim.backend.simulation_service.dashboard.application.projection.DashboardSnapshotData;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.ScenarioSnapshot;
 import com.renewsim.backend.simulation_service.dashboard.application.ScenarioSnapshotMetricsResolver.ScenarioSnapshotMetrics;
 import com.renewsim.backend.simulation_service.dashboard.application.ScenarioSnapshotNarrativeResolver.ScenarioSnapshotNarrative;
-import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationResultSnapshotReaderPort;
-import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,16 +18,16 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public final class ScenarioSnapshotAssembler {
 
-        private final SimulationResultSnapshotReaderPort snapshotReader;
+        private final DashboardSnapshotReaderPort snapshotReader;
         private final PortfolioScenarioScoringPolicy scoringPolicy;
         private final ScenarioSnapshotMetricsResolver metricsResolver;
         private final ScenarioSnapshotNarrativeResolver narrativeResolver;
 
         public ScenarioSnapshot toSnapshot(Simulation simulation) {
-                SimulationDetailsResult details = readDetails(simulation.getResultSnapshot());
-                SimulationDetailsResult.Financial financial = details != null ? details.financial() : null;
-                SimulationDetailsResult.Technical technical = details != null ? details.technical() : null;
-                SimulationDetailsResult.Summary summary = details != null ? details.summary() : null;
+                DashboardSnapshotData details = readDetails(simulation.getResultSnapshot());
+                DashboardSnapshotData.Financial financial = details != null ? details.financial() : null;
+                DashboardSnapshotData.Technical technical = details != null ? details.technical() : null;
+                DashboardSnapshotData.Summary summary = details != null ? details.summary() : null;
                 boolean hasCompleteDetails = financial != null && technical != null && summary != null;
                 ScenarioSnapshotMetrics metrics = metricsResolver.resolve(simulation, details);
                 ScenarioSnapshotNarrative narrative = narrativeResolver.resolve(details);
@@ -61,7 +61,7 @@ public final class ScenarioSnapshotAssembler {
                                 scoringPolicy.hasLongPayback(metrics.paybackYears()));
         }
 
-        private SimulationDetailsResult readDetails(String raw) {
+        private DashboardSnapshotData readDetails(String raw) {
                 try {
                         return snapshotReader.read(raw);
                 } catch (IllegalStateException ex) {
