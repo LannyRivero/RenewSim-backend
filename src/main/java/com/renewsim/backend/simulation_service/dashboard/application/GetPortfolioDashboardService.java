@@ -1,10 +1,10 @@
 package com.renewsim.backend.simulation_service.dashboard.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.renewsim.backend.simulation_service.dashboard.application.port.out.PortfolioDashboardQueryPort;
 import com.renewsim.backend.simulation_service.dashboard.application.port.in.GetPortfolioDashboardUseCase;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardResult;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.ScenarioSnapshot;
-import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationRecordRepositoryPort;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,13 +20,13 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class GetPortfolioDashboardService implements GetPortfolioDashboardUseCase {
 
-        private final SimulationRecordRepositoryPort repository;
+        private final PortfolioDashboardQueryPort repository;
         private final ScenarioSnapshotAssembler snapshotAssembler;
         private final PortfolioDashboardAggregator dashboardAggregator;
 
         @Autowired
         public GetPortfolioDashboardService(
-                        SimulationRecordRepositoryPort repository,
+                        PortfolioDashboardQueryPort repository,
                         TechnologyLookupPort technologyLookupPort,
                         ObjectMapper objectMapper) {
                 this(repository, new ScenarioSnapshotAssembler(
@@ -37,7 +37,7 @@ public class GetPortfolioDashboardService implements GetPortfolioDashboardUseCas
         }
 
         GetPortfolioDashboardService(
-                        SimulationRecordRepositoryPort repository,
+                        PortfolioDashboardQueryPort repository,
                         ScenarioSnapshotAssembler snapshotAssembler,
                         PortfolioDashboardAggregator dashboardAggregator) {
                 this.repository = repository;
