@@ -1,8 +1,8 @@
 package com.renewsim.backend.simulation_service.delete.web;
 
 import com.renewsim.backend.simulation_service.delete.application.port.in.DeleteRealSimulationUseCase;
-import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContext;
-import com.renewsim.backend.simulation_service.shared.web.SimulationRequestContextFactory;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContext;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContextFactory;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SimulationDeleteController {
 
     private final DeleteRealSimulationUseCase deleteRealSimulationUseCase;
-    private final SimulationRequestContextFactory requestContextFactory = new SimulationRequestContextFactory();
+    private final AuthenticatedRequestContextFactory requestContextFactory;
 
     @Operation(summary = "Delete simulation by ID")
     @PreAuthorize("hasAuthority('SCOPE_delete:simulations') or hasRole('ADMIN')")
@@ -30,7 +30,7 @@ public class SimulationDeleteController {
             @PathVariable Long id,
             Authentication auth) {
 
-        SimulationRequestContext requestContext = requestContextFactory.from(auth);
+        AuthenticatedRequestContext requestContext = requestContextFactory.from(auth);
 
         deleteRealSimulationUseCase.deleteSimulation(id, requestContext.username(), requestContext.isAdmin());
         log.warn("User {} deleted simulation {}", requestContext.username(), id);
@@ -42,7 +42,7 @@ public class SimulationDeleteController {
     @PreAuthorize("hasAuthority('SCOPE_delete:simulations') or hasRole('ADMIN')")
     @DeleteMapping("/user")
     public ResponseEntity<Void> deleteAllUserSimulations(Authentication auth) {
-        SimulationRequestContext requestContext = requestContextFactory.from(auth);
+        AuthenticatedRequestContext requestContext = requestContextFactory.from(auth);
 
         deleteRealSimulationUseCase.deleteAllUserSimulations(requestContext.username());
         log.warn("User {} deleted all simulations", requestContext.username());

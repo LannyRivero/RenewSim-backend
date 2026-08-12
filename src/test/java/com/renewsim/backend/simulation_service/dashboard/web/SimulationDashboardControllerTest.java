@@ -1,6 +1,8 @@
 package com.renewsim.backend.simulation_service.dashboard.web;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContext;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContextFactory;
 import com.renewsim.backend.simulation_service.dashboard.application.port.in.GetPortfolioDashboardUseCase;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardDistribution;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardDistributionByStatus;
@@ -32,6 +34,8 @@ class SimulationDashboardControllerTest {
 
     @Mock
     private GetPortfolioDashboardUseCase getPortfolioDashboardUseCase;
+    @Mock
+    private AuthenticatedRequestContextFactory requestContextFactory;
 
     @InjectMocks
     private SimulationDashboardController controller;
@@ -40,6 +44,7 @@ class SimulationDashboardControllerTest {
     @DisplayName("getDashboard returns executive portfolio contract")
     void getDashboardReturnsExecutivePortfolioContract() {
         Authentication auth = authentication("alice", "ROLE_USER");
+        when(requestContextFactory.from(auth)).thenReturn(new AuthenticatedRequestContext("alice", false));
         when(getPortfolioDashboardUseCase.getDashboard("alice")).thenReturn(
                 new PortfolioDashboardResult(
                         new PortfolioDashboardSummary(3, 3, 14.2, 6.2, 912300, 410535, 2),

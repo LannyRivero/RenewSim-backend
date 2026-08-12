@@ -2,6 +2,8 @@ package com.renewsim.backend.simulation_service.detail.web;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.simulation_service.detail.application.port.in.GetRealSimulationUseCase;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContext;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContextFactory;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.web.dto.SimulationDetailsResponseDTO;
 import org.junit.jupiter.api.DisplayName;
@@ -25,6 +27,8 @@ class SimulationDetailControllerTest {
 
     @Mock
     private GetRealSimulationUseCase getRealSimulationUseCase;
+    @Mock
+    private AuthenticatedRequestContextFactory requestContextFactory;
 
     @InjectMocks
     private SimulationDetailController controller;
@@ -33,6 +37,7 @@ class SimulationDetailControllerTest {
     @DisplayName("getSimulationById returns the real details contract")
     void getSimulationByIdReturnsRealDetailsContract() {
         Authentication auth = authentication("alice", "ROLE_USER");
+        when(requestContextFactory.from(auth)).thenReturn(new AuthenticatedRequestContext("alice", false));
         when(getRealSimulationUseCase.getSimulationById(55L, "alice", false)).thenReturn(sampleResult());
 
         SimulationDetailsResponseDTO body = controller.getSimulationById(55L, auth).getBody();

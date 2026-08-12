@@ -1,6 +1,8 @@
 package com.renewsim.backend.simulation_service.delete.web;
 
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContext;
+import com.renewsim.backend.shared.security.AuthenticatedRequestContextFactory;
 import com.renewsim.backend.simulation_service.delete.application.port.in.DeleteRealSimulationUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,8 @@ class SimulationDeleteControllerTest {
 
     @Mock
     private DeleteRealSimulationUseCase deleteRealSimulationUseCase;
+    @Mock
+    private AuthenticatedRequestContextFactory requestContextFactory;
 
     @InjectMocks
     private SimulationDeleteController controller;
@@ -30,6 +34,7 @@ class SimulationDeleteControllerTest {
     @DisplayName("deleteSimulation delegates to delete use case with request context")
     void deleteSimulationDelegatesToDeleteUseCaseWithRequestContext() {
         Authentication auth = authentication("alice", "ROLE_USER");
+        org.mockito.Mockito.when(requestContextFactory.from(auth)).thenReturn(new AuthenticatedRequestContext("alice", false));
 
         controller.deleteSimulation(55L, auth);
 
@@ -40,6 +45,7 @@ class SimulationDeleteControllerTest {
     @DisplayName("deleteAllUserSimulations delegates to delete use case with current username")
     void deleteAllUserSimulationsDelegatesToDeleteUseCaseWithCurrentUsername() {
         Authentication auth = authentication("alice", "ROLE_USER");
+        org.mockito.Mockito.when(requestContextFactory.from(auth)).thenReturn(new AuthenticatedRequestContext("alice", false));
 
         controller.deleteAllUserSimulations(auth);
 
