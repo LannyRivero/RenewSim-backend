@@ -63,7 +63,8 @@ class RealSimulationServiceTest {
                 CreateRealSimulationCommand command = validCommand();
 
                 when(technologyLookupPort.existsActiveByEnergyType("solar")).thenReturn(true);
-                when(technologyLookupPort.recommendActiveTechnologyIdsByEnergyType("solar")).thenReturn(List.of(1L, 2L));
+                when(technologyLookupPort.recommendActiveTechnologyIdsByEnergyType("solar"))
+                                .thenReturn(List.of(1L, 2L));
                 when(resourcePort.fetchProfile(37.3891, -5.9845, 13.0)).thenReturn(profile());
                 when(repository.save(any())).thenAnswer(invocation -> {
                         Simulation sim = invocation.getArgument(0);
@@ -111,6 +112,95 @@ class RealSimulationServiceTest {
                 assertThatThrownBy(() -> service.createSimulation(command))
                                 .isInstanceOf(BadRequestException.class)
                                 .hasMessage("UNSUPPORTED_TECHNOLOGY: 'wind' simulation is not implemented yet");
+
+                verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("createSimulation rejects caller supplied technology ids that are inactive")
+        void createSimulationRejectsCallerSuppliedTechnologyIdsThatAreInactive() {
+                CreateSimulationService service = new CreateSimulationService(
+                                repository,
+                                technologyLookupPort,
+                                engines(),
+                                new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
+
+                CreateRealSimulationCommand command = new CreateRealSimulationCommand(
+                                validCommand().name(),
+                                validCommand().technology(),
+                                validCommand().location(),
+                                validCommand().system(),
+                                validCommand().demand(),
+                                validCommand().economics(),
+                                List.of(99L),
+                                null,
+                                validCommand().createdBy());
+
+                when(technologyLookupPort.existsActiveByEnergyType("solar")).thenReturn(true);
+                when(technologyLookupPort.findActiveEnergyTypeByTechnologyId(99L)).thenReturn(Optional.empty());
+
+                assertThatThrownBy(() -> service.createSimulation(command))
+                                .isInstanceOf(BadRequestException.class)
+                                .hasMessage("UNSUPPORTED_TECHNOLOGY_ID: '99' is not registered or is inactive in the technology catalog");
+
+                verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("createSimulation rejects caller supplied technology ids that do not match the simulation energy type")
+        void createSimulationRejectsCallerSuppliedTechnologyIdsThatDoNotMatchTheSimulationEnergyType() {
+                CreateSimulationService service = new CreateSimulationService(
+                                repository,
+                                technologyLookupPort,
+                                engines(),
+                                new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
+
+                CreateRealSimulationCommand command = new CreateRealSimulationCommand(
+                                validCommand().name(),
+                                validCommand().technology(),
+                                validCommand().location(),
+                                validCommand().system(),
+                                validCommand().demand(),
+                                validCommand().economics(),
+                                List.of(15L),
+                                null,
+                                validCommand().createdBy());
+
+                when(technologyLookupPort.existsActiveByEnergyType("solar")).thenReturn(true);
+                when(technologyLookupPort.findActiveEnergyTypeByTechnologyId(15L)).thenReturn(Optional.of("wind"));
+
+                assertThatThrownBy(() -> service.createSimulation(command))
+                                .isInstanceOf(BadRequestException.class)
+                                .hasMessage("INCOMPATIBLE_TECHNOLOGY_ID: '15' does not belong to energyType 'solar'");
+
+                verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("createSimulation rejects caller supplied technology ids that are duplicated")
+        void createSimulationRejectsCallerSuppliedTechnologyIdsThatAreDuplicated() {
+                CreateSimulationService service = new CreateSimulationService(
+                                repository,
+                                technologyLookupPort,
+                                engines(),
+                                new SimulationCompletionMapper(new ObjectMapper().findAndRegisterModules()));
+
+                CreateRealSimulationCommand command = new CreateRealSimulationCommand(
+                                validCommand().name(),
+                                validCommand().technology(),
+                                validCommand().location(),
+                                validCommand().system(),
+                                validCommand().demand(),
+                                validCommand().economics(),
+                                List.of(11L, 11L),
+                                null,
+                                validCommand().createdBy());
+
+                when(technologyLookupPort.existsActiveByEnergyType("solar")).thenReturn(true);
+
+                assertThatThrownBy(() -> service.createSimulation(command))
+                                .isInstanceOf(BadRequestException.class)
+                                .hasMessage("DUPLICATE_TECHNOLOGY_IDS: technologyIds must not contain duplicates");
 
                 verify(repository, never()).save(any());
         }

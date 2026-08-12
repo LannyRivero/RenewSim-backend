@@ -12,22 +12,16 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public record CreateSolarSimulationRequestDTO(
+public record CreateSimulationRequestDTO(
                 @NotBlank @Size(min = 2, max = 120) String name,
-                @NotNull @Valid LocationDTO location,
-                @NotNull @Valid SolarSystemDTO system,
+                @NotBlank String energyType,
+                @NotNull @Valid SimulationLocationRequestDTO location,
+                @NotNull @Valid SystemDTO system,
                 @NotNull @Valid DemandDTO demand,
-                @NotNull @Valid EconomicsDTO economics) {
+                @NotNull @Valid EconomicsDTO economics,
+                @Size(max = 100) List<@NotNull @Positive Long> technologyIds) {
 
-        public record LocationDTO(
-                        @NotBlank String label,
-                        @DecimalMin(value = "-90.0") @DecimalMax(value = "90.0") double lat,
-                        @DecimalMin(value = "-180.0") @DecimalMax(value = "180.0") double lon,
-                        @NotBlank String country,
-                        @NotBlank String countryCode) {
-        }
-
-        public record SolarSystemDTO(
+        public record SystemDTO(
                         @Positive double installedCapacityKw,
                         @DecimalMin(value = "0.0", inclusive = false) @DecimalMax(value = "1.0") double performanceRatio,
                         @DecimalMin("0.0") @DecimalMax("5.0") double degradationRateAnnualPct,
