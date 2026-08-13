@@ -4,6 +4,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.CountryCode;
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 import com.renewsim.backend.simulation_service.infrastructure.config.WeatherServiceProperties;
 import com.renewsim.backend.simulation_service.location_lookup.application.port.out.LocationLookupProvider;
+import com.renewsim.backend.simulation_service.shared.application.SimulationProviderTelemetry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
@@ -41,32 +42,47 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
     private final RestTemplate restTemplate;
     private final CircuitBreaker circuitBreaker;
     private final Retry retry;
+    private final SimulationProviderTelemetry telemetry;
 
     @Autowired
     public OpenWeatherMapAdapter(
             WeatherServiceProperties weatherProperties,
             @Qualifier("openWeatherRestTemplate") RestTemplate restTemplate,
             CircuitBreakerRegistry circuitBreakerRegistry,
-            RetryRegistry retryRegistry) {
+            RetryRegistry retryRegistry,
+            SimulationProviderTelemetry telemetry) {
         this.weatherProperties = weatherProperties;
         this.restTemplate = restTemplate;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker("simulationOpenWeather");
         this.retry = retryRegistry.retry("simulationOpenWeather");
+        this.telemetry = telemetry;
     }
 
-    OpenWeatherMapAdapter(WeatherServiceProperties weatherProperties, RestTemplate restTemplate) {
+    OpenWeatherMapAdapter(
+            WeatherServiceProperties weatherProperties,
+            RestTemplate restTemplate,
+            SimulationProviderTelemetry telemetry) {
         this(
                 weatherProperties,
                 restTemplate,
                 CircuitBreakerRegistry.ofDefaults(),
-                RetryRegistry.ofDefaults());
+                RetryRegistry.ofDefaults(),
+                telemetry);
     }
 
     @Override
     public ResolvedLocation resolveLocation(double latitude, double longitude) {
+        var sample = telemetry.start();
         try {
-            return execute(() -> doResolveLocation(latitude, longitude));
+            ResolvedLocation result = execute(() -> doResolveLocation(latitude, longitude));
+            if (isDegradedResolveLocation(latitude, longitude, result)) {
+                telemetry.recordFallback("openweather", sample);
+            } else {
+                telemetry.recordSuccess("openweather", sample);
+            }
+            return result;
         } catch (Exception exception) {
+            telemetry.recordFallback("openweather", sample);
             log.warn("OpenWeather fallback for resolveLocation reason={}",
                     summarizeFailure(exception));
             return new ResolvedLocation(coordinateLabel(latitude, longitude), "Unknown");
@@ -76,9 +92,13 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
     @Override
     public List<ResolvedLocation> searchLocations(String query, int limit) {
         int requestedLimit = Math.max(1, limit);
+        var sample = telemetry.start();
         try {
-            return execute(() -> doSearchLocations(query, requestedLimit));
+            List<ResolvedLocation> result = execute(() -> doSearchLocations(query, requestedLimit));
+            telemetry.recordSuccess("openweather", sample);
+            return result;
         } catch (Exception exception) {
+            telemetry.recordFallback("openweather", sample);
             log.warn("OpenWeather fallback for searchLocations queryLength={} limit={} reason={}",
                     query == null ? 0 : query.length(),
                     requestedLimit,
@@ -191,6 +211,12 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
 
     private String coordinateLabel(double latitude, double longitude) {
         return String.format(Locale.ROOT, "%.4f, %.4f", latitude, longitude);
+    }
+
+    private boolean isDegradedResolveLocation(double latitude, double longitude, ResolvedLocation result) {
+        return result != null
+                && "Unknown".equals(result.country())
+                && coordinateLabel(latitude, longitude).equals(result.name());
     }
 
 }

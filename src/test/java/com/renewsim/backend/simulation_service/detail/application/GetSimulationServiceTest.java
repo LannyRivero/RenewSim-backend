@@ -66,5 +66,22 @@ class GetSimulationServiceTest {
                 .isInstanceOf(SimulationNotFoundException.class);
         assertThat(meterRegistry.counter("simulation_service_use_case_total", "use_case", "detail", "outcome", "degraded").count())
                 .isEqualTo(1.0d);
+        assertThat(meterRegistry.counter("simulation_service_snapshot_degraded_total", "reason", "invalid_result_snapshot").count())
+                .isEqualTo(1.0d);
+    }
+
+    @Test
+    @DisplayName("getSimulationById degrades null-decoded snapshots to not found")
+    void getSimulationByIdDegradesNullDecodedSnapshotsToNotFound() {
+        GetSimulationService service = new GetSimulationService(repository, snapshotReader(), new SimulationUseCaseTelemetry(meterRegistry));
+        var simulation = completedSimulation(55L, "alice", "null");
+        when(repository.findById(55L)).thenReturn(Optional.of(simulation));
+
+        assertThatThrownBy(() -> service.getSimulationById(55L, "alice", false))
+                .isInstanceOf(SimulationNotFoundException.class);
+        assertThat(meterRegistry.counter("simulation_service_use_case_total", "use_case", "detail", "outcome", "degraded").count())
+                .isGreaterThanOrEqualTo(1.0d);
+        assertThat(meterRegistry.counter("simulation_service_snapshot_degraded_total", "reason", "invalid_result_snapshot").count())
+                .isGreaterThanOrEqualTo(1.0d);
     }
 }

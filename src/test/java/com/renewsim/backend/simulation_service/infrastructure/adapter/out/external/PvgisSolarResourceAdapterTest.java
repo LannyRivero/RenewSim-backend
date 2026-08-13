@@ -11,6 +11,8 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.shared.exception.BadRequestException;
 import com.renewsim.backend.simulation_service.infrastructure.config.PvgisProperties;
+import com.renewsim.backend.simulation_service.shared.application.SimulationProviderTelemetry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -25,10 +27,12 @@ class PvgisSolarResourceAdapterTest {
         void fetchProfileParsesResponsesIntoCompleteProfile() {
                 RestTemplate restTemplate = new RestTemplate();
                 MockRestServiceServer server = MockRestServiceServer.createServer(restTemplate);
+                SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
                 PvgisSolarResourceAdapter adapter = new PvgisSolarResourceAdapter(
                                 new PvgisProperties("https://re.jrc.ec.europa.eu", null, null),
                                 new ObjectMapper(),
-                                restTemplate);
+                                restTemplate,
+                                new SimulationProviderTelemetry(meterRegistry));
 
                 server.expect(requestTo(
                                 "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?lat=37.3891&lon=-5.9845&peakpower=1&loss=14.0&optimalangles=1&outputformat=json"))
@@ -47,6 +51,8 @@ class PvgisSolarResourceAdapterTest {
                 assertThat(profile.monthlyTemperatureC()).hasSize(12);
                 assertThat(profile.climatePeriod()).isEqualTo("2005-2020");
                 assertThat(profile.source()).isEqualTo("PVGIS");
+                assertThat(meterRegistry.counter("simulation_service_provider_calls_total", "provider", "pvgis", "outcome", "success").count())
+                                .isEqualTo(1.0d);
                 server.verify();
         }
 
@@ -55,10 +61,12 @@ class PvgisSolarResourceAdapterTest {
         void fetchProfileFailsFastWhenResponseIsIncomplete() {
                 RestTemplate restTemplate = new RestTemplate();
                 MockRestServiceServer server = MockRestServiceServer.createServer(restTemplate);
+                SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
                 PvgisSolarResourceAdapter adapter = new PvgisSolarResourceAdapter(
                                 new PvgisProperties("https://re.jrc.ec.europa.eu", null, null),
                                 new ObjectMapper(),
-                                restTemplate);
+                                restTemplate,
+                                new SimulationProviderTelemetry(meterRegistry));
 
                 server.expect(manyTimes(), requestTo(
                                 "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?lat=37.3891&lon=-5.9845&peakpower=1&loss=14.0&optimalangles=1&outputformat=json"))
@@ -76,6 +84,8 @@ class PvgisSolarResourceAdapterTest {
                 assertThatThrownBy(() -> adapter.fetchProfile(37.3891, -5.9845, 14.0))
                                 .isInstanceOf(BadRequestException.class)
                                 .hasMessageContaining("PVGIS response is incomplete");
+                assertThat(meterRegistry.counter("simulation_service_provider_calls_total", "provider", "pvgis", "outcome", "error").count())
+                                .isEqualTo(1.0d);
 
                 server.verify();
         }
@@ -85,10 +95,12 @@ class PvgisSolarResourceAdapterTest {
         void fetchProfileWrapsProviderFailure() {
                 RestTemplate restTemplate = new RestTemplate();
                 MockRestServiceServer server = MockRestServiceServer.createServer(restTemplate);
+                SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
                 PvgisSolarResourceAdapter adapter = new PvgisSolarResourceAdapter(
                                 new PvgisProperties("https://re.jrc.ec.europa.eu", null, null),
                                 new ObjectMapper(),
-                                restTemplate);
+                                restTemplate,
+                                new SimulationProviderTelemetry(meterRegistry));
 
                 server.expect(manyTimes(), requestTo(
                                 "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?lat=37.3891&lon=-5.9845&peakpower=1&loss=14.0&optimalangles=1&outputformat=json"))
@@ -98,6 +110,8 @@ class PvgisSolarResourceAdapterTest {
                 assertThatThrownBy(() -> adapter.fetchProfile(37.3891, -5.9845, 14.0))
                                 .isInstanceOf(IllegalStateException.class)
                                 .hasMessageContaining("Failed to fetch PVGIS solar resource data");
+                assertThat(meterRegistry.counter("simulation_service_provider_calls_total", "provider", "pvgis", "outcome", "error").count())
+                                .isEqualTo(1.0d);
 
                 server.verify();
         }

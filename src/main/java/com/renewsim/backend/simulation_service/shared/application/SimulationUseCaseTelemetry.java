@@ -35,6 +35,13 @@ public class SimulationUseCaseTelemetry {
         record(useCase, "degraded", sample);
     }
 
+    public void recordSnapshotDegraded(String reason) {
+        Counter.builder("simulation_service_snapshot_degraded_total")
+                .tag("reason", reason)
+                .register(meterRegistry)
+                .increment();
+    }
+
     private void record(String useCase, String outcome, Timer.Sample sample) {
         counter(useCase, outcome).increment();
         sample.stop(timer(useCase, outcome));
