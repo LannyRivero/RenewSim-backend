@@ -12,6 +12,8 @@ import com.renewsim.backend.simulation_service.domain.model.SimulationId;
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationResultSnapshotJacksonWriter;
+import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,6 +74,8 @@ class CreateSimulationServiceTest {
                 assertThat(captor.getAllValues().get(1).getResultSnapshot()).isNotBlank();
                 assertThat(captor.getAllValues().get(1).getTechnologyIds()).containsExactly(1L, 2L);
                 verify(technologyLookupPort).recommendActiveTechnologyIdsByEnergyType("solar");
+                assertThat(meterRegistry().counter("simulation_service_use_case_total", "use_case", "create", "outcome", "success").count())
+                                .isEqualTo(1.0d);
         }
 
         @Test
@@ -192,6 +196,13 @@ class CreateSimulationServiceTest {
                                 technologyLookupPort,
                                 engines(resourcePort),
                                 new SimulationCompletionAssembler(
-                                                new SimulationResultSnapshotJacksonWriter(objectMapper)));
+                                                new SimulationResultSnapshotJacksonWriter(objectMapper)),
+                                new SimulationUseCaseTelemetry(meterRegistry()));
         }
+
+        private SimpleMeterRegistry meterRegistry() {
+                return registry;
+        }
+
+        private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
 }

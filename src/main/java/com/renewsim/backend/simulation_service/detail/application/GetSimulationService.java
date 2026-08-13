@@ -2,11 +2,15 @@ package com.renewsim.backend.simulation_service.detail.application;
 
 import com.renewsim.backend.simulation_service.detail.application.port.in.GetRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.detail.application.port.out.SimulationDetailQueryPort;
-import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
-import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationResultSnapshotReaderPort;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
+import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationResultSnapshotReaderPort;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,19 +20,42 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class GetSimulationService implements GetRealSimulationUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(GetSimulationService.class);
+    private static final String USE_CASE = "detail";
+
     private final SimulationDetailQueryPort repository;
     private final SimulationResultSnapshotReaderPort snapshotReader;
+    private final SimulationUseCaseTelemetry telemetry;
 
     @Override
     public SimulationDetailsResult getSimulationById(Long id, String requesterUsername, boolean isAdmin) {
-        Simulation simulation = getAccessibleSimulation(id, requesterUsername, isAdmin);
-        if (!simulation.hasResult()) {
-            throw new SimulationNotFoundException(id);
-        }
+        Timer.Sample sample = telemetry.start();
         try {
-            return snapshotReader.read(simulation.getResultSnapshot());
+            Simulation simulation = getAccessibleSimulation(id, requesterUsername, isAdmin);
+            if (!simulation.hasResult()) {
+                throw new SimulationNotFoundException(id);
+            }
+
+            SimulationDetailsResult result = snapshotReader.read(simulation.getResultSnapshot());
+            telemetry.recordSuccess(USE_CASE, sample);
+            log.info("Simulation detail retrieved requester={} simulationId={} admin={}", requesterUsername, id, isAdmin);
+            return result;
         } catch (IllegalStateException ex) {
+            telemetry.recordDegraded(USE_CASE, sample);
+            log.warn("Simulation detail snapshot degraded requester={} simulationId={} admin={} reason={}",
+                    requesterUsername,
+                    id,
+                    isAdmin,
+                    ex.getClass().getSimpleName());
             throw new SimulationNotFoundException(id);
+        } catch (RuntimeException ex) {
+            telemetry.recordError(USE_CASE, sample);
+            log.info("Simulation detail rejected requester={} simulationId={} admin={} reason={}",
+                    requesterUsername,
+                    id,
+                    isAdmin,
+                    ex.getClass().getSimpleName());
+            throw ex;
         }
     }
 
