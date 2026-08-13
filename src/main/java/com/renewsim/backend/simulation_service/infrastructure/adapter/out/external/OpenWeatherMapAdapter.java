@@ -4,7 +4,10 @@ import com.renewsim.backend.simulation_service.domain.model.vo.CountryCode;
 import com.renewsim.backend.simulation_service.domain.model.vo.ResolvedLocation;
 import com.renewsim.backend.simulation_service.infrastructure.config.WeatherServiceProperties;
 import com.renewsim.backend.simulation_service.location_lookup.application.port.out.LocationLookupProvider;
-import lombok.RequiredArgsConstructor;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -16,44 +19,56 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Adapter for resolving and searching locations through OpenWeatherMap.
  *
  * <p>Implements {@link LocationLookupProvider} and is activated only when the
  * simulation climate provider is configured as {@code openweathermap}.</p>
+ *
+ * <p>This integration tolerates degraded fallback because location enrichment is
+ * useful but not critical for preserving simulation correctness.</p>
  */
 @Component
 @ConditionalOnProperty(prefix = "simulation.climate", name = "provider", havingValue = "openweathermap")
-@RequiredArgsConstructor
 public class OpenWeatherMapAdapter implements LocationLookupProvider {
 
     private static final Logger log = LoggerFactory.getLogger(OpenWeatherMapAdapter.class);
 
     private final WeatherServiceProperties weatherProperties;
-    @Qualifier("openWeatherRestTemplate")
     private final RestTemplate restTemplate;
+    private final CircuitBreaker circuitBreaker;
+    private final Retry retry;
+
+    public OpenWeatherMapAdapter(
+            WeatherServiceProperties weatherProperties,
+            @Qualifier("openWeatherRestTemplate") RestTemplate restTemplate,
+            CircuitBreakerRegistry circuitBreakerRegistry,
+            RetryRegistry retryRegistry) {
+        this.weatherProperties = weatherProperties;
+        this.restTemplate = restTemplate;
+        this.circuitBreaker = circuitBreakerRegistry.circuitBreaker("simulationOpenWeather");
+        this.retry = retryRegistry.retry("simulationOpenWeather");
+    }
+
+    OpenWeatherMapAdapter(WeatherServiceProperties weatherProperties, RestTemplate restTemplate) {
+        this(
+                weatherProperties,
+                restTemplate,
+                CircuitBreakerRegistry.ofDefaults(),
+                RetryRegistry.ofDefaults());
+    }
 
     @Override
     public ResolvedLocation resolveLocation(double latitude, double longitude) {
         try {
-            Map<?, ?> response = fetchWeatherResponse(latitude, longitude);
-            if (response == null) {
-                return new ResolvedLocation(coordinateLabel(latitude, longitude), "Unknown");
-            }
-
-            String name = response.get("name") != null ? String.valueOf(response.get("name")) : null;
-            Map<?, ?> sys = (Map<?, ?>) response.get("sys");
-            String country = sys != null && sys.get("country") != null ? String.valueOf(sys.get("country")) : null;
-            if (!CountryCode.isSupported(country)) {
-                return new ResolvedLocation(coordinateLabel(latitude, longitude), "Unknown");
-            }
-
-            return new ResolvedLocation(
-                    name != null && !name.isBlank() ? name : coordinateLabel(latitude, longitude),
-                    country != null && !country.isBlank() ? country : "Unknown");
-        } catch (Exception e) {
-            log.error("Error resolving location from weather provider ({})", summarizeFailure(e));
+            return execute(() -> doResolveLocation(latitude, longitude));
+        } catch (Exception exception) {
+            log.warn("OpenWeather fallback for resolveLocation lat={} lon={} reason={}",
+                    latitude,
+                    longitude,
+                    summarizeFailure(exception));
             return new ResolvedLocation(coordinateLabel(latitude, longitude), "Unknown");
         }
     }
@@ -62,31 +77,60 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
     public List<ResolvedLocation> searchLocations(String query, int limit) {
         int requestedLimit = Math.max(1, limit);
         try {
-            String url = UriComponentsBuilder.fromHttpUrl(baseUrl() + "/geo/1.0/direct")
-                    .queryParam("q", query)
-                    .queryParam("limit", Math.max(requestedLimit * 5, 10))
-                    .queryParam("appid", apiKey())
-                    .toUriString();
-
-            List<?> response = restTemplate.getForObject(url, List.class);
-            if (response == null) {
-                return List.of();
-            }
-
-            return response.stream()
-                    .filter(Map.class::isInstance)
-                    .map(Map.class::cast)
-                    .map(this::toResolvedLocation)
-                    .filter(location -> CountryCode.isSupported(location.country()))
-                    .limit(requestedLimit)
-                    .toList();
-        } catch (Exception e) {
-            log.error("Error searching locations from weather provider (queryLength={}, limit={}) ({})",
+            return execute(() -> doSearchLocations(query, requestedLimit));
+        } catch (Exception exception) {
+            log.warn("OpenWeather fallback for searchLocations queryLength={} limit={} reason={}",
                     query == null ? 0 : query.length(),
                     requestedLimit,
-                    summarizeFailure(e));
+                    summarizeFailure(exception));
             return List.of();
         }
+    }
+
+    private ResolvedLocation doResolveLocation(double latitude, double longitude) {
+        Map<?, ?> response = fetchWeatherResponse(latitude, longitude);
+        if (response == null) {
+            return new ResolvedLocation(coordinateLabel(latitude, longitude), "Unknown");
+        }
+
+        String name = response.get("name") != null ? String.valueOf(response.get("name")) : null;
+        Map<?, ?> sys = (Map<?, ?>) response.get("sys");
+        String country = sys != null && sys.get("country") != null ? String.valueOf(sys.get("country")) : null;
+        if (!CountryCode.isSupported(country)) {
+            return new ResolvedLocation(coordinateLabel(latitude, longitude), "Unknown");
+        }
+
+        return new ResolvedLocation(
+                name != null && !name.isBlank() ? name : coordinateLabel(latitude, longitude),
+                country != null && !country.isBlank() ? country : "Unknown");
+    }
+
+    private List<ResolvedLocation> doSearchLocations(String query, int requestedLimit) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl() + "/geo/1.0/direct")
+                .queryParam("q", query)
+                .queryParam("limit", Math.max(requestedLimit * 5, 10))
+                .queryParam("appid", apiKey())
+                .toUriString();
+
+        List<?> response = restTemplate.getForObject(url, List.class);
+        if (response == null) {
+            return List.of();
+        }
+
+        return response.stream()
+                .filter(Map.class::isInstance)
+                .map(Map.class::cast)
+                .map(this::toResolvedLocation)
+                .filter(location -> CountryCode.isSupported(location.country()))
+                .limit(requestedLimit)
+                .toList();
+    }
+
+    private <T> T execute(Supplier<T> supplier) {
+        // Use explicit registries so resilience is exercised consistently even in direct adapter tests.
+        Supplier<T> decorated = CircuitBreaker.decorateSupplier(circuitBreaker, supplier);
+        decorated = Retry.decorateSupplier(retry, decorated);
+        return decorated.get();
     }
 
     private ResolvedLocation toResolvedLocation(Map<?, ?> candidate) {
@@ -122,9 +166,9 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
         return weatherProperties.key();
     }
 
-    private String summarizeFailure(Exception exception) {
-        String type = exception.getClass().getSimpleName();
-        String message = exception.getMessage();
+    private String summarizeFailure(Throwable throwable) {
+        String type = throwable.getClass().getSimpleName();
+        String message = throwable.getMessage();
         if (message == null || message.isBlank()) {
             return type;
         }

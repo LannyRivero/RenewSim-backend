@@ -125,15 +125,33 @@ resilience4j:
         wait-duration-in-open-state: 10s
         permitted-number-of-calls-in-half-open-state: 3
         automatic-transition-from-open-to-half-open-enabled: true
+      simulationOpenWeather:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+      simulationPvgis:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
   retry:
     instances:
       userService:
         max-attempts: 3
         wait-duration: 500ms
-  timelimiter:
-    instances:
-      userService:
-        timeout-duration: 2s
+      simulationOpenWeather:
+        max-attempts: 2
+        wait-duration: 300ms
+      simulationPvgis:
+        max-attempts: 2
+        wait-duration: 500ms
 
 # =============================
 # ZONA HORARIA
@@ -154,6 +172,8 @@ services:
     read-timeout: ${OPENWEATHER_READ_TIMEOUT:3s}
   pvgis:
     url: ${PVGIS_BASE_URL:https://re.jrc.ec.europa.eu}
+    connect-timeout: ${PVGIS_CONNECT_TIMEOUT:2s}
+    read-timeout: ${PVGIS_READ_TIMEOUT:5s}
 
 # =============================
 # SERVICE URLS (base - override en perfiles)

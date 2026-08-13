@@ -5,27 +5,79 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.shared.exception.BadRequestException;
 import com.renewsim.backend.simulation_service.create.application.port.out.PvgisSolarResourcePort;
 import com.renewsim.backend.simulation_service.infrastructure.config.PvgisProperties;
-import lombok.RequiredArgsConstructor;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
+/**
+ * Adapter for retrieving solar resource data from PVGIS.
+ *
+ * <p>Unlike location lookup, this integration must not fabricate fallback data
+ * because PVGIS output directly affects simulation results. Failures therefore
+ * stay explicit and controlled instead of degrading to synthetic profiles.</p>
+ */
 @Component
-@RequiredArgsConstructor
 public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
+
+    private static final Logger log = LoggerFactory.getLogger(PvgisSolarResourceAdapter.class);
 
     private final PvgisProperties properties;
     private final ObjectMapper objectMapper;
-    private final RestTemplateBuilder restTemplateBuilder;
+    private final RestTemplate restTemplate;
+    private final CircuitBreaker circuitBreaker;
+    private final Retry retry;
+
+    public PvgisSolarResourceAdapter(
+            PvgisProperties properties,
+            ObjectMapper objectMapper,
+            @Qualifier("pvgisRestTemplate") RestTemplate restTemplate,
+            CircuitBreakerRegistry circuitBreakerRegistry,
+            RetryRegistry retryRegistry) {
+        this.properties = properties;
+        this.objectMapper = objectMapper;
+        this.restTemplate = restTemplate;
+        this.circuitBreaker = circuitBreakerRegistry.circuitBreaker("simulationPvgis");
+        this.retry = retryRegistry.retry("simulationPvgis");
+    }
+
+    PvgisSolarResourceAdapter(PvgisProperties properties, ObjectMapper objectMapper, RestTemplate restTemplate) {
+        this(
+                properties,
+                objectMapper,
+                restTemplate,
+                CircuitBreakerRegistry.ofDefaults(),
+                RetryRegistry.ofDefaults());
+    }
 
     @Override
     public PvgisSolarResourceProfile fetchProfile(double latitude, double longitude, double systemLossPct) {
         try {
-            RestTemplate restTemplate = restTemplateBuilder.build();
+            return execute(() -> doFetchProfile(latitude, longitude, systemLossPct));
+        } catch (BadRequestException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error fetching PVGIS profile lat={} lon={} lossPct={} reason={}",
+                    latitude,
+                    longitude,
+                    systemLossPct,
+                    summarizeFailure(ex));
+            throw new IllegalStateException("Failed to fetch PVGIS solar resource data", ex);
+        }
+    }
+
+    private PvgisSolarResourceProfile doFetchProfile(double latitude, double longitude, double systemLossPct) {
+        try {
             JsonNode pvcalc = objectMapper
                     .readTree(restTemplate.getForObject(pvcalcUrl(latitude, longitude, systemLossPct), String.class));
             JsonNode tmy = objectMapper.readTree(restTemplate.getForObject(tmyUrl(latitude, longitude), String.class));
@@ -48,8 +100,15 @@ public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
         } catch (BadRequestException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new IllegalStateException("Failed to fetch PVGIS solar resource data", ex);
+            throw new IllegalStateException("Failed to parse PVGIS solar resource data", ex);
         }
+    }
+
+    private <T> T execute(Supplier<T> supplier) {
+        // Use explicit registries so resilience is exercised consistently even in direct adapter tests.
+        Supplier<T> decorated = CircuitBreaker.decorateSupplier(circuitBreaker, supplier);
+        decorated = Retry.decorateSupplier(retry, decorated);
+        return decorated.get();
     }
 
     private String pvcalcUrl(double latitude, double longitude, double systemLossPct) {
@@ -100,5 +159,13 @@ public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
             temperatures.add(counts[i] == 0 ? 0.0 : sums[i] / counts[i]);
         }
         return temperatures;
+    }
+
+    private String summarizeFailure(Throwable throwable) {
+        String message = throwable.getMessage();
+        if (message == null || message.isBlank()) {
+            return throwable.getClass().getSimpleName();
+        }
+        return throwable.getClass().getSimpleName() + ": " + message.replaceAll("[\r\n]", " ");
     }
 }
