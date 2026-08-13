@@ -75,5 +75,31 @@ class OpenWeatherMapAdapterTest {
 
         assertThat(result.name()).isEqualTo("37.3891, -5.9845");
         assertThat(result.country()).isEqualTo("Unknown");
+        assertThat(meterRegistry.counter("simulation_service_provider_calls_total", "provider", "openweather", "outcome", "fallback").count())
+                .isEqualTo(1.0d);
+    }
+
+    @Test
+    @DisplayName("resolveLocation counts null payload as fallback")
+    void resolveLocationCountsNullPayloadAsFallback() {
+        RestTemplate restTemplate = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.createServer(restTemplate);
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        OpenWeatherMapAdapter adapter = new OpenWeatherMapAdapter(
+                new WeatherServiceProperties("https://api.openweathermap.org", "test-key", null, null),
+                restTemplate,
+                new SimulationProviderTelemetry(meterRegistry));
+
+        server.expect(requestTo("https://api.openweathermap.org/data/2.5/weather?lat=37.3891&lon=-5.9845&units=metric&appid=test-key"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("null", MediaType.APPLICATION_JSON));
+
+        var result = adapter.resolveLocation(37.3891, -5.9845);
+
+        assertThat(result.name()).isEqualTo("37.3891, -5.9845");
+        assertThat(result.country()).isEqualTo("Unknown");
+        assertThat(meterRegistry.counter("simulation_service_provider_calls_total", "provider", "openweather", "outcome", "fallback").count())
+                .isEqualTo(1.0d);
+        server.verify();
     }
 }

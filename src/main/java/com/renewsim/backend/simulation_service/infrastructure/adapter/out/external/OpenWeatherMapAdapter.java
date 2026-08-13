@@ -75,7 +75,11 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
         var sample = telemetry.start();
         try {
             ResolvedLocation result = execute(() -> doResolveLocation(latitude, longitude));
-            telemetry.recordSuccess("openweather", sample);
+            if (isDegradedResolveLocation(latitude, longitude, result)) {
+                telemetry.recordFallback("openweather", sample);
+            } else {
+                telemetry.recordSuccess("openweather", sample);
+            }
             return result;
         } catch (Exception exception) {
             telemetry.recordFallback("openweather", sample);
@@ -207,6 +211,12 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
 
     private String coordinateLabel(double latitude, double longitude) {
         return String.format(Locale.ROOT, "%.4f, %.4f", latitude, longitude);
+    }
+
+    private boolean isDegradedResolveLocation(double latitude, double longitude, ResolvedLocation result) {
+        return result != null
+                && "Unknown".equals(result.country())
+                && coordinateLabel(latitude, longitude).equals(result.name());
     }
 
 }
