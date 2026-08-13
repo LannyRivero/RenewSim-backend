@@ -2,6 +2,8 @@ package com.renewsim.backend.simulation_service.history.application;
 
 import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
 import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
+import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,10 +22,12 @@ class ListSimulationsServiceTest {
     @Mock
     private SimulationHistoryQueryPort repository;
 
+    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+
     @Test
     @DisplayName("getUserSimulations maps stored summary columns for scenario-created simulations")
     void getUserSimulationsMapsStoredSummaryColumnsForScenarioCreatedSimulations() {
-        ListSimulationsService service = new ListSimulationsService(repository);
+        ListSimulationsService service = new ListSimulationsService(repository, new SimulationUseCaseTelemetry(meterRegistry));
         var simulation = completedSimulation(55L, "alice", null);
         simulation.assignScenarioId(42L);
         simulation.assignTechnologyIds(List.of(11L, 12L));

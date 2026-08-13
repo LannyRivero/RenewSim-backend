@@ -16,6 +16,8 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationEconomi
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocation;
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
+import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,13 +42,16 @@ class GetPortfolioDashboardServiceTest {
         @Mock
         private TechnologyLookupPort technologyLookupPort;
 
+        private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+
         @Test
         @DisplayName("getDashboard aggregates portfolio KPIs, recommendation and alerts")
         void getDashboardAggregatesPortfolioData() throws Exception {
                 GetPortfolioDashboardService service = new GetPortfolioDashboardService(
                                 repository,
                                 snapshotAssembler(technologyLookupPort),
-                                dashboardAggregator());
+                                dashboardAggregator(),
+                                new SimulationUseCaseTelemetry(meterRegistry));
 
                 Simulation best = completedSimulation(55L, "alice",
                                 new ObjectMapper().findAndRegisterModules().writeValueAsString(resultWithMetrics(
@@ -102,7 +107,8 @@ class GetPortfolioDashboardServiceTest {
                 GetPortfolioDashboardService service = new GetPortfolioDashboardService(
                                 repository,
                                 snapshotAssembler(technologyLookupPort),
-                                dashboardAggregator());
+                                dashboardAggregator(),
+                                new SimulationUseCaseTelemetry(meterRegistry));
 
                 Simulation partial = completedSimulation(58L, "alice", """
                                 {
@@ -131,7 +137,8 @@ class GetPortfolioDashboardServiceTest {
                 GetPortfolioDashboardService service = new GetPortfolioDashboardService(
                                 repository,
                                 snapshotAssembler(technologyLookupPort),
-                                dashboardAggregator());
+                                dashboardAggregator(),
+                                new SimulationUseCaseTelemetry(meterRegistry));
 
                 Simulation malformed = completedSimulation(59L, "alice", "{ bad json");
 

@@ -13,6 +13,7 @@ import com.renewsim.backend.simulation_service.create.application.port.out.Pvgis
 import com.renewsim.backend.simulation_service.domain.exception.InvalidConsumptionProfileException;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationCurrencyException;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
 import com.renewsim.backend.simulation_service.shared.application.port.out.ScenarioLookupPort;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
@@ -26,6 +27,7 @@ import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persis
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -377,7 +379,8 @@ class CreateSimulationFromScenarioServiceTest {
                                                 new HydroSimulationEngine()),
                                 new SimulationCompletionAssembler(
                                                 new SimulationResultSnapshotJacksonWriter(
-                                                                new ObjectMapper().findAndRegisterModules())));
+                                                                new ObjectMapper().findAndRegisterModules())),
+                                new SimulationUseCaseTelemetry(new SimpleMeterRegistry()));
         }
 
         private SimulationRecordRepositoryAdapter inMemoryPersistenceRepository(JpaSimulationRepository jpaRepository) {
