@@ -66,5 +66,7 @@ class GetSimulationServiceTest {
                 .isInstanceOf(SimulationNotFoundException.class);
         assertThat(meterRegistry.counter("simulation_service_use_case_total", "use_case", "detail", "outcome", "degraded").count())
                 .isEqualTo(1.0d);
+        assertThat(meterRegistry.counter("simulation_service_snapshot_degraded_total", "reason", "invalid_result_snapshot").count())
+                .isEqualTo(1.0d);
     }
 }

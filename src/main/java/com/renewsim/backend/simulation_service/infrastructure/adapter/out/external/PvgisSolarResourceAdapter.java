@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.shared.exception.BadRequestException;
 import com.renewsim.backend.simulation_service.create.application.port.out.PvgisSolarResourcePort;
 import com.renewsim.backend.simulation_service.infrastructure.config.PvgisProperties;
+import com.renewsim.backend.simulation_service.shared.application.SimulationProviderTelemetry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
@@ -38,6 +39,7 @@ public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
     private final RestTemplate restTemplate;
     private final CircuitBreaker circuitBreaker;
     private final Retry retry;
+    private final SimulationProviderTelemetry telemetry;
 
     @Autowired
     public PvgisSolarResourceAdapter(
@@ -45,32 +47,44 @@ public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
             ObjectMapper objectMapper,
             @Qualifier("pvgisRestTemplate") RestTemplate restTemplate,
             CircuitBreakerRegistry circuitBreakerRegistry,
-            RetryRegistry retryRegistry) {
+            RetryRegistry retryRegistry,
+            SimulationProviderTelemetry telemetry) {
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.restTemplate = restTemplate;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker("simulationPvgis");
         this.retry = retryRegistry.retry("simulationPvgis");
+        this.telemetry = telemetry;
     }
 
-    PvgisSolarResourceAdapter(PvgisProperties properties, ObjectMapper objectMapper, RestTemplate restTemplate) {
+    PvgisSolarResourceAdapter(
+            PvgisProperties properties,
+            ObjectMapper objectMapper,
+            RestTemplate restTemplate,
+            SimulationProviderTelemetry telemetry) {
         this(
                 properties,
                 objectMapper,
                 restTemplate,
                 CircuitBreakerRegistry.ofDefaults(),
-                RetryRegistry.ofDefaults());
+                RetryRegistry.ofDefaults(),
+                telemetry);
     }
 
     @Override
     public PvgisSolarResourceProfile fetchProfile(double latitude, double longitude, double systemLossPct) {
+        var sample = telemetry.start();
         try {
             String pvcalcRaw = execute(() -> fetchRaw(pvcalcUrl(latitude, longitude, systemLossPct)));
             String tmyRaw = execute(() -> fetchRaw(tmyUrl(latitude, longitude)));
-            return doFetchProfile(pvcalcRaw, tmyRaw);
+            PvgisSolarResourceProfile profile = doFetchProfile(pvcalcRaw, tmyRaw);
+            telemetry.recordSuccess("pvgis", sample);
+            return profile;
         } catch (BadRequestException ex) {
+            telemetry.recordError("pvgis", sample);
             throw ex;
         } catch (Exception ex) {
+            telemetry.recordError("pvgis", sample);
             log.error("Error fetching PVGIS profile lossPct={} reason={}",
                     systemLossPct,
                     summarizeFailure(ex));

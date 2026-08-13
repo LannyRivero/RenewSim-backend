@@ -61,6 +61,7 @@ public class GetSimulationService implements GetRealSimulationUseCase {
             return snapshotReader.read(snapshot);
         } catch (IllegalStateException ex) {
             telemetry.recordDegraded(USE_CASE, sample);
+            telemetry.recordSnapshotDegraded("invalid_result_snapshot");
             log.warn("Simulation detail snapshot degraded requester={} simulationId={} admin={} reason={}",
                     requesterUsername,
                     id,
