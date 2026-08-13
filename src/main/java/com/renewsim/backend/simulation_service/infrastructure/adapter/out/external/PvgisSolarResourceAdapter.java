@@ -184,7 +184,7 @@ public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
     }
 
     public String profileKey(double latitude, double longitude, double systemLossPct) {
-        return String.format(Locale.ROOT, "%.4f:%.4f:%.2f", latitude, longitude, systemLossPct);
+        return Double.toString(latitude) + ':' + Double.toString(longitude) + ':' + Double.toString(systemLossPct);
     }
 
     private String summarizeFailure(Throwable throwable) {

@@ -93,6 +93,30 @@ class PvgisSolarResourceCacheTest {
         server.verify();
     }
 
+    @Test
+    @DisplayName("profileKey keeps close PVGIS inputs distinct")
+    void profileKeyKeepsCloseInputsDistinct() {
+        server.expect(requestTo("https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?lat=37.3891&lon=-5.9845&peakpower=1&loss=14.001&optimalangles=1&outputformat=json"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(pvcalcPayload(), MediaType.APPLICATION_JSON));
+        server.expect(requestTo("https://re.jrc.ec.europa.eu/api/v5_2/tmy?lat=37.3891&lon=-5.9845&outputformat=json"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(tmyPayload(), MediaType.APPLICATION_JSON));
+        server.expect(requestTo("https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?lat=37.3891&lon=-5.9845&peakpower=1&loss=14.004&optimalangles=1&outputformat=json"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(pvcalcPayload(), MediaType.APPLICATION_JSON));
+        server.expect(requestTo("https://re.jrc.ec.europa.eu/api/v5_2/tmy?lat=37.3891&lon=-5.9845&outputformat=json"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(tmyPayload(), MediaType.APPLICATION_JSON));
+
+        var first = pvgisSolarResourceAdapter.fetchProfile(37.3891, -5.9845, 14.001d);
+        var second = pvgisSolarResourceAdapter.fetchProfile(37.3891, -5.9845, 14.004d);
+
+        assertThat(first.climatePeriod()).isEqualTo("2005-2020");
+        assertThat(second.climatePeriod()).isEqualTo("2005-2020");
+        server.verify();
+    }
+
     private String pvcalcPayload() {
         return """
                 {

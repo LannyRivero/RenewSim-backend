@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -54,6 +55,7 @@ class LocationLookupCacheTest {
         if (cache != null) {
             cache.clear();
         }
+        reset(locationLookupProvider);
     }
 
     @Test
@@ -82,5 +84,28 @@ class LocationLookupCacheTest {
         assertThat(first).containsExactlyElementsOf(expected);
         assertThat(second).containsExactlyElementsOf(expected);
         verify(locationLookupProvider, times(1)).searchLocations("sevilla", 5);
+    }
+
+    @Test
+    @DisplayName("searchLocations does not cache degraded empty fallback results")
+    void searchLocationsDoesNotCacheDegradedEmptyFallbackResults() {
+        when(locationLookupProvider.searchLocations("sevilla", 5)).thenReturn(List.of());
+
+        locationLookupService.searchLocations("sevilla", 5);
+        locationLookupService.searchLocations("sevilla", 5);
+
+        verify(locationLookupProvider, times(2)).searchLocations("sevilla", 5);
+    }
+
+    @Test
+    @DisplayName("resolveLocation does not cache degraded unknown fallback results")
+    void resolveLocationDoesNotCacheDegradedUnknownFallbackResults() {
+        ResolvedLocation degraded = new ResolvedLocation("37.3891, -5.9845", "Unknown");
+        when(locationLookupProvider.resolveLocation(37.3891, -5.9845)).thenReturn(degraded);
+
+        locationLookupService.resolveLocation(37.3891, -5.9845);
+        locationLookupService.resolveLocation(37.3891, -5.9845);
+
+        verify(locationLookupProvider, times(2)).resolveLocation(37.3891, -5.9845);
     }
 }
