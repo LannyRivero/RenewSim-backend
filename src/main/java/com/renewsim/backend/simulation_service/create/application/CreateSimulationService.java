@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashSet;
@@ -47,12 +49,7 @@ public class CreateSimulationService implements CreateRealSimulationUseCase {
             simulation.complete(completionAssembler.toCompletion(result, technologyIds));
             repository.save(simulation);
 
-            telemetry.recordSuccess(USE_CASE, sample);
-            log.info("Simulation create succeeded user={} simulationId={} energyType={} scenarioOrigin={}",
-                    command.createdBy(),
-                    result.id(),
-                    command.technology().value(),
-                    command.scenarioId() != null);
+            recordCreateSuccess(command, result, sample);
 
             return result;
         } catch (RuntimeException ex) {
@@ -64,6 +61,44 @@ public class CreateSimulationService implements CreateRealSimulationUseCase {
                     ex.getClass().getSimpleName());
             throw ex;
         }
+    }
+
+    private void recordCreateSuccess(
+            CreateRealSimulationCommand command,
+            SimulationDetailsResult result,
+            Timer.Sample sample) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            telemetry.recordSuccess(USE_CASE, sample);
+            log.info("Simulation create succeeded user={} simulationId={} energyType={} scenarioOrigin={}",
+                    command.createdBy(),
+                    result.id(),
+                    command.technology().value(),
+                    command.scenarioId() != null);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                telemetry.recordSuccess(USE_CASE, sample);
+                log.info("Simulation create succeeded user={} simulationId={} energyType={} scenarioOrigin={}",
+                        command.createdBy(),
+                        result.id(),
+                        command.technology().value(),
+                        command.scenarioId() != null);
+            }
+
+            @Override
+            public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) {
+                    telemetry.recordError(USE_CASE, sample);
+                    log.warn("Simulation create rolled back user={} energyType={} scenarioOrigin={}",
+                            command.createdBy(),
+                            command.technology().value(),
+                            command.scenarioId() != null);
+                }
+            }
+        });
     }
 
     private Simulation persistDraft(CreateRealSimulationCommand command, List<Long> technologyIds) {

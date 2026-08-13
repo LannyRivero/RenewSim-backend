@@ -36,18 +36,10 @@ public class GetSimulationService implements GetRealSimulationUseCase {
                 throw new SimulationNotFoundException(id);
             }
 
-            SimulationDetailsResult result = snapshotReader.read(simulation.getResultSnapshot());
+            SimulationDetailsResult result = readSnapshotOrDegrade(id, simulation.getResultSnapshot(), requesterUsername, isAdmin, sample);
             telemetry.recordSuccess(USE_CASE, sample);
             log.info("Simulation detail retrieved requester={} simulationId={} admin={}", requesterUsername, id, isAdmin);
             return result;
-        } catch (IllegalStateException ex) {
-            telemetry.recordDegraded(USE_CASE, sample);
-            log.warn("Simulation detail snapshot degraded requester={} simulationId={} admin={} reason={}",
-                    requesterUsername,
-                    id,
-                    isAdmin,
-                    ex.getClass().getSimpleName());
-            throw new SimulationNotFoundException(id);
         } catch (RuntimeException ex) {
             telemetry.recordError(USE_CASE, sample);
             log.info("Simulation detail rejected requester={} simulationId={} admin={} reason={}",
@@ -56,6 +48,25 @@ public class GetSimulationService implements GetRealSimulationUseCase {
                     isAdmin,
                     ex.getClass().getSimpleName());
             throw ex;
+        }
+    }
+
+    private SimulationDetailsResult readSnapshotOrDegrade(
+            Long id,
+            String snapshot,
+            String requesterUsername,
+            boolean isAdmin,
+            Timer.Sample sample) {
+        try {
+            return snapshotReader.read(snapshot);
+        } catch (IllegalStateException ex) {
+            telemetry.recordDegraded(USE_CASE, sample);
+            log.warn("Simulation detail snapshot degraded requester={} simulationId={} admin={} reason={}",
+                    requesterUsername,
+                    id,
+                    isAdmin,
+                    ex.getClass().getSimpleName());
+            throw new SimulationNotFoundException(id);
         }
     }
 
