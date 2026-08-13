@@ -14,12 +14,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Supplier;
 
 /**
@@ -72,6 +74,7 @@ public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
     }
 
     @Override
+    @Cacheable(value = "simulationSolarResourceProfiles", key = "#root.target.profileKey(#latitude, #longitude, #systemLossPct)")
     public PvgisSolarResourceProfile fetchProfile(double latitude, double longitude, double systemLossPct) {
         var sample = telemetry.start();
         try {
@@ -178,6 +181,10 @@ public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
             temperatures.add(counts[i] == 0 ? 0.0 : sums[i] / counts[i]);
         }
         return temperatures;
+    }
+
+    public String profileKey(double latitude, double longitude, double systemLossPct) {
+        return Double.toString(latitude) + ':' + Double.toString(longitude) + ':' + Double.toString(systemLossPct);
     }
 
     private String summarizeFailure(Throwable throwable) {

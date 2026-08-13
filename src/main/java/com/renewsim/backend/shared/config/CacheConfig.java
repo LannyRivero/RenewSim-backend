@@ -15,7 +15,12 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("products", "users", "technologies");
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager(
+                "products",
+                "users",
+                "technologies",
+                "simulationLocationLookup",
+                "simulationSolarResourceProfiles");
         cacheManager.setCaffeine(Caffeine.newBuilder()
                 .recordStats()
                 .expireAfterWrite(10, TimeUnit.MINUTES) 
