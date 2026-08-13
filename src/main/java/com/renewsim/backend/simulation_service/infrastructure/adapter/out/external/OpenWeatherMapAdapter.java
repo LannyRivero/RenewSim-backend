@@ -8,6 +8,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -41,6 +42,7 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
     private final CircuitBreaker circuitBreaker;
     private final Retry retry;
 
+    @Autowired
     public OpenWeatherMapAdapter(
             WeatherServiceProperties weatherProperties,
             @Qualifier("openWeatherRestTemplate") RestTemplate restTemplate,
@@ -65,9 +67,7 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
         try {
             return execute(() -> doResolveLocation(latitude, longitude));
         } catch (Exception exception) {
-            log.warn("OpenWeather fallback for resolveLocation lat={} lon={} reason={}",
-                    latitude,
-                    longitude,
+            log.warn("OpenWeather fallback for resolveLocation reason={}",
                     summarizeFailure(exception));
             return new ResolvedLocation(coordinateLabel(latitude, longitude), "Unknown");
         }

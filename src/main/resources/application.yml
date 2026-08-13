@@ -141,6 +141,8 @@ resilience4j:
         wait-duration-in-open-state: 20s
         permitted-number-of-calls-in-half-open-state: 3
         automatic-transition-from-open-to-half-open-enabled: true
+        ignore-exceptions:
+          - com.renewsim.backend.shared.exception.BadRequestException
   retry:
     instances:
       userService:
@@ -152,6 +154,8 @@ resilience4j:
       simulationPvgis:
         max-attempts: 2
         wait-duration: 500ms
+        ignore-exceptions:
+          - com.renewsim.backend.shared.exception.BadRequestException
 
 # =============================
 # ZONA HORARIA

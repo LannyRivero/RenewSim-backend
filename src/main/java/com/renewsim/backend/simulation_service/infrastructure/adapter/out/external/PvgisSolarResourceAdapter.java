@@ -11,6 +11,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -38,6 +39,7 @@ public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
     private final CircuitBreaker circuitBreaker;
     private final Retry retry;
 
+    @Autowired
     public PvgisSolarResourceAdapter(
             PvgisProperties properties,
             ObjectMapper objectMapper,
@@ -63,24 +65,23 @@ public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
     @Override
     public PvgisSolarResourceProfile fetchProfile(double latitude, double longitude, double systemLossPct) {
         try {
-            return execute(() -> doFetchProfile(latitude, longitude, systemLossPct));
+            String pvcalcRaw = execute(() -> fetchRaw(pvcalcUrl(latitude, longitude, systemLossPct)));
+            String tmyRaw = execute(() -> fetchRaw(tmyUrl(latitude, longitude)));
+            return doFetchProfile(pvcalcRaw, tmyRaw);
         } catch (BadRequestException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error fetching PVGIS profile lat={} lon={} lossPct={} reason={}",
-                    latitude,
-                    longitude,
+            log.error("Error fetching PVGIS profile lossPct={} reason={}",
                     systemLossPct,
                     summarizeFailure(ex));
             throw new IllegalStateException("Failed to fetch PVGIS solar resource data", ex);
         }
     }
 
-    private PvgisSolarResourceProfile doFetchProfile(double latitude, double longitude, double systemLossPct) {
+    private PvgisSolarResourceProfile doFetchProfile(String pvcalcRaw, String tmyRaw) {
         try {
-            JsonNode pvcalc = objectMapper
-                    .readTree(restTemplate.getForObject(pvcalcUrl(latitude, longitude, systemLossPct), String.class));
-            JsonNode tmy = objectMapper.readTree(restTemplate.getForObject(tmyUrl(latitude, longitude), String.class));
+            JsonNode pvcalc = objectMapper.readTree(pvcalcRaw);
+            JsonNode tmy = objectMapper.readTree(tmyRaw);
 
             List<Double> monthlyGeneration = readMonthlyValues(pvcalc.path("outputs").path("monthly").path("fixed"),
                     "E_m");
@@ -109,6 +110,10 @@ public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
         Supplier<T> decorated = CircuitBreaker.decorateSupplier(circuitBreaker, supplier);
         decorated = Retry.decorateSupplier(retry, decorated);
         return decorated.get();
+    }
+
+    private String fetchRaw(String url) {
+        return restTemplate.getForObject(url, String.class);
     }
 
     private String pvcalcUrl(double latitude, double longitude, double systemLossPct) {
@@ -166,6 +171,13 @@ public class PvgisSolarResourceAdapter implements PvgisSolarResourcePort {
         if (message == null || message.isBlank()) {
             return throwable.getClass().getSimpleName();
         }
-        return throwable.getClass().getSimpleName() + ": " + message.replaceAll("[\r\n]", " ");
+        return throwable.getClass().getSimpleName() + ": " + sanitize(message);
+    }
+
+    private String sanitize(String value) {
+        return value
+                .replaceAll("[\r\n]", " ")
+                .replaceAll("lat=[^&\\s]+", "lat=<redacted>")
+                .replaceAll("lon=[^&\\s]+", "lon=<redacted>");
     }
 }
