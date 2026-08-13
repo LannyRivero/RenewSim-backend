@@ -3,6 +3,8 @@ package com.renewsim.backend.simulation_service.infrastructure.config;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.external.OpenWeatherMapAdapter;
 import com.renewsim.backend.simulation_service.location_lookup.application.LocationLookupService;
 import com.renewsim.backend.simulation_service.location_lookup.application.port.out.LocationLookupProvider;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.retry.RetryRegistry;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +21,9 @@ class ClimateProviderWiringTest {
                     RestTemplateAutoConfiguration.class,
                     OpenWeatherClientConfig.class,
                     LocationLookupService.class,
-                    OpenWeatherMapAdapter.class));
+                    OpenWeatherMapAdapter.class))
+            .withBean(CircuitBreakerRegistry.class, CircuitBreakerRegistry::ofDefaults)
+            .withBean(RetryRegistry.class, RetryRegistry::ofDefaults);
 
     @Test
     @DisplayName("missing provider does not instantiate a location lookup provider")
