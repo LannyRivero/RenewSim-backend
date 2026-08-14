@@ -1,6 +1,5 @@
 package com.renewsim.backend.simulation_service.create.application;
 
-import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.SimulationCompletion;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationResultSnapshotWriterPort;

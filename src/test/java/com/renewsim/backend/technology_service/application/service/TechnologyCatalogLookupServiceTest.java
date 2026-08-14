@@ -1,7 +1,6 @@
 package com.renewsim.backend.technology_service.application.service;
 
 import com.renewsim.backend.technology_service.application.port.out.TechnologyRepositoryPort;
-import com.renewsim.backend.technology_service.domain.factory.TechnologyFactory;
 import com.renewsim.backend.technology_service.domain.model.Technology;
 import com.renewsim.backend.technology_service.domain.model.vo.CapacityFactor;
 import com.renewsim.backend.technology_service.domain.model.vo.Co2Reduction;
