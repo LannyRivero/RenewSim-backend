@@ -11,7 +11,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.Set;
 
 @Component("simulationService")
@@ -40,7 +39,7 @@ public class SimulationServiceHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        String provider = normalize(climateProperties.provider());
+        String provider = SimulationHealthSupport.normalize(climateProperties.provider());
         boolean strictProfile = STRICT_PROFILES.stream()
                 .anyMatch(profile -> environment.acceptsProfiles(Profiles.of(profile)));
 
@@ -48,7 +47,7 @@ public class SimulationServiceHealthIndicator implements HealthIndicator {
                 .withDetail("climateProvider", provider.isBlank() ? "unset" : provider)
                 .withDetail("strictProfile", strictProfile)
                 .withDetail("locationLookupProviderPresent", locationLookupProvider.getIfAvailable() != null)
-                .withDetail("pvgisConfigured", hasValidUri(pvgisProperties.url()));
+                .withDetail("pvgisConfigured", SimulationHealthSupport.hasValidHttpUri(pvgisProperties.url()));
 
         if (!provider.isBlank() && !provider.equals("dummy") && !provider.equals("openweathermap")) {
             return builder.down()
@@ -62,43 +61,24 @@ public class SimulationServiceHealthIndicator implements HealthIndicator {
                         .withDetail("reason", "missing_location_lookup_provider")
                         .build();
             }
-            if (!hasValidUri(weatherProperties.url())) {
+            if (!SimulationHealthSupport.hasValidHttpUri(weatherProperties.url())) {
                 return builder.down()
                         .withDetail("reason", "invalid_openweather_url")
                         .build();
             }
-            if (strictProfile && isMissingOrDummy(weatherProperties.key())) {
+            if (strictProfile && SimulationHealthSupport.isMissingOrDummy(weatherProperties.key())) {
                 return builder.down()
                         .withDetail("reason", "missing_openweather_api_key")
                         .build();
             }
         }
 
-        if (!hasValidUri(pvgisProperties.url())) {
+        if (!SimulationHealthSupport.hasValidHttpUri(pvgisProperties.url())) {
             return builder.down()
                     .withDetail("reason", "invalid_pvgis_url")
                     .build();
         }
 
         return builder.build();
-    }
-
-    private boolean hasValidUri(String value) {
-        try {
-            URI uri = URI.create(value);
-            String scheme = normalize(uri.getScheme());
-            return (scheme.equals("http") || scheme.equals("https")) && uri.getHost() != null;
-        } catch (Exception ex) {
-            return false;
-        }
-    }
-
-    private boolean isMissingOrDummy(String key) {
-        String normalized = normalize(key);
-        return normalized.isBlank() || normalized.equals("dummy-key");
-    }
-
-    private String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase();
     }
 }

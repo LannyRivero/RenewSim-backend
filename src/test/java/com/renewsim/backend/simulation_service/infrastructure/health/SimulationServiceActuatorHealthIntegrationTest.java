@@ -51,6 +51,24 @@ class SimulationServiceActuatorHealthIntegrationTest {
                 .andExpect(jsonPath("$.details.pvgisConfigured").value(true));
     }
 
+    @Test
+    @DisplayName("local actuator exposes pvgis health contributor details")
+    void actuatorHealthExposesPvgisContributor() throws Exception {
+        mvc.perform(get("/actuator/health/pvgisSimulation"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.details.provider").value("pvgis"));
+    }
+
+    @Test
+    @DisplayName("local actuator exposes openweather contributor as unknown when provider is inactive")
+    void actuatorHealthExposesOpenWeatherContributorAsUnknown() throws Exception {
+        mvc.perform(get("/actuator/health/openWeatherSimulation"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UNKNOWN"))
+                .andExpect(jsonPath("$.details.reason").value("provider_not_active"));
+    }
+
     @SpringBootConfiguration
     @EnableAutoConfiguration(exclude = {
             DataSourceAutoConfiguration.class,
@@ -58,7 +76,8 @@ class SimulationServiceActuatorHealthIntegrationTest {
             FlywayAutoConfiguration.class
     })
     @Import({ ActuatorSecurityConfig.class, SecurityHeadersFilter.class, CorrelationIdFilter.class,
-            SimulationServiceHealthIndicator.class })
+            SimulationServiceHealthIndicator.class, OpenWeatherSimulationHealthIndicator.class,
+            PvgisSimulationHealthIndicator.class })
     static class TestApp {
 
         @Bean

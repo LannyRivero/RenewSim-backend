@@ -1,10 +1,8 @@
 package com.renewsim.backend.simulation_service.domain.policy;
 
-import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
