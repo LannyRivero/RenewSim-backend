@@ -86,7 +86,8 @@ public class SimulationServiceHealthIndicator implements HealthIndicator {
     private boolean hasValidUri(String value) {
         try {
             URI uri = URI.create(value);
-            return uri.getScheme() != null && uri.getHost() != null;
+            String scheme = normalize(uri.getScheme());
+            return (scheme.equals("http") || scheme.equals("https")) && uri.getHost() != null;
         } catch (Exception ex) {
             return false;
         }

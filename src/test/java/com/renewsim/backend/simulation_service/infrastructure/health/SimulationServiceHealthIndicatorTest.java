@@ -69,6 +69,22 @@ class SimulationServiceHealthIndicatorTest {
         assertThat(health.getDetails()).containsEntry("reason", "invalid_pvgis_url");
     }
 
+    @Test
+    @DisplayName("health is down for unsupported weather url scheme")
+    void healthIsDownForUnsupportedWeatherUrlScheme() {
+        SimulationServiceHealthIndicator indicator = new SimulationServiceHealthIndicator(
+                new SimulationClimateProperties("openweathermap"),
+                new WeatherServiceProperties("ftp://api.openweathermap.org", "real-key", Duration.ofSeconds(2), Duration.ofSeconds(3)),
+                new PvgisProperties("https://re.jrc.ec.europa.eu", null, null),
+                providerOf(mock(LocationLookupProvider.class)),
+                new MockEnvironment().withProperty("spring.profiles.active", "local"));
+
+        Health health = indicator.health();
+
+        assertThat(health.getStatus()).isEqualTo(Status.DOWN);
+        assertThat(health.getDetails()).containsEntry("reason", "invalid_openweather_url");
+    }
+
     private ObjectProvider<LocationLookupProvider> providerOf(LocationLookupProvider provider) {
         return new ObjectProvider<>() {
             @Override
