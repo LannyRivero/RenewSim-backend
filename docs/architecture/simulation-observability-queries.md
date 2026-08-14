@@ -89,6 +89,8 @@ sum by (reason) (
 
 This is the cleanest query to explain historical snapshot quality problems.
 
+> Note: in the current implementation, a degraded detail read also finishes as a `SimulationNotFoundException`, so `detail` degradation can increment both `simulation_service_snapshot_degraded_total` and the generic `simulation_service_use_case_total{use_case="detail", outcome="error"}` series. Treat the snapshot degradation metric as the precise source of truth for invalid historical snapshots.
+
 ### Snapshot degradation rate per minute
 
 ```promql
