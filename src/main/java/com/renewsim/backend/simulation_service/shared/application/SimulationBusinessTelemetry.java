@@ -52,7 +52,7 @@ public class SimulationBusinessTelemetry {
                     .increment();
         }
 
-        if (roiPercent == null || paybackYears == null) {
+        if (roiPercent == null && paybackYears == null) {
             counter("simulation_service_business_attention_total",
                     "technology", normalize(technology),
                     "reason", "incomplete_financials")

@@ -27,17 +27,26 @@ class SimulationBusinessTelemetryTest {
     }
 
     @Test
-    @DisplayName("recordAttention tracks incomplete financials when payback is missing")
-    void recordAttentionTracksIncompleteFinancialsWhenPaybackMissing() {
+    @DisplayName("recordAttention does not treat no-payback results as incomplete financials")
+    void recordAttentionDoesNotTreatNoPaybackResultsAsIncompleteFinancials() {
         telemetry.recordAttention("solar", resultWith(8.0, null));
+
+        assertThat(registry.counter("simulation_service_business_attention_total", "technology", "solar", "reason", "incomplete_financials").count())
+                .isEqualTo(0.0d);
+    }
+
+    @Test
+    @DisplayName("recordAttention tracks incomplete financials only when roi and payback are both missing")
+    void recordAttentionTracksIncompleteFinancialsOnlyWhenRoiAndPaybackAreBothMissing() {
+        telemetry.recordAttention("solar", resultWith(null, null));
 
         assertThat(registry.counter("simulation_service_business_attention_total", "technology", "solar", "reason", "incomplete_financials").count())
                 .isEqualTo(1.0d);
     }
 
-    private SimulationDetailsResult resultWith(double roiPercent, Double paybackYears) {
-        double capex = 100.0;
-        double annualBenefit = roiPercent;
+    private SimulationDetailsResult resultWith(Double roiPercent, Double paybackYears) {
+        double capex = roiPercent == null ? 0.0 : 100.0;
+        double annualBenefit = roiPercent == null ? 0.0 : roiPercent;
 
         return new SimulationDetailsResult(
                 "55",
