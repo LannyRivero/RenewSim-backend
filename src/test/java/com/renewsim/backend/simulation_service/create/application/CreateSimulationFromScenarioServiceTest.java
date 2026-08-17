@@ -13,6 +13,7 @@ import com.renewsim.backend.simulation_service.create.application.port.out.Pvgis
 import com.renewsim.backend.simulation_service.domain.exception.InvalidConsumptionProfileException;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationCurrencyException;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.shared.application.SimulationBusinessTelemetry;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
 import com.renewsim.backend.simulation_service.shared.application.port.out.ScenarioLookupPort;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
@@ -95,6 +96,8 @@ class CreateSimulationFromScenarioServiceTest {
 
                 assertThat(response.id()).isEqualTo("60");
                 assertThat(response.input().technology()).isEqualTo("solar");
+                assertThat(registry.counter("simulation_service_business_created_total", "technology", "solar", "origin", "scenario").count())
+                                .isEqualTo(1.0d);
 
                 ArgumentCaptor<Simulation> captor = ArgumentCaptor.forClass(Simulation.class);
                 verify(repository, atLeastOnce()).save(captor.capture());
@@ -380,8 +383,11 @@ class CreateSimulationFromScenarioServiceTest {
                                 new SimulationCompletionAssembler(
                                                 new SimulationResultSnapshotJacksonWriter(
                                                                 new ObjectMapper().findAndRegisterModules())),
-                                new SimulationUseCaseTelemetry(new SimpleMeterRegistry()));
+                                new SimulationUseCaseTelemetry(registry),
+                                new SimulationBusinessTelemetry(registry));
         }
+
+        private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
 
         private SimulationRecordRepositoryAdapter inMemoryPersistenceRepository(JpaSimulationRepository jpaRepository) {
                 Map<Long, SimulationEntity> store = new HashMap<>();

@@ -5,6 +5,7 @@ import com.renewsim.backend.simulation_service.create.application.port.in.Create
 import com.renewsim.backend.simulation_service.create.application.port.out.CreateSimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationTechnologyException;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.simulation_service.shared.application.SimulationBusinessTelemetry;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
@@ -34,6 +35,7 @@ public class CreateSimulationService implements CreateRealSimulationUseCase {
     private final List<SimulationEngine> simulationEngines;
     private final SimulationCompletionAssembler completionAssembler;
     private final SimulationUseCaseTelemetry telemetry;
+    private final SimulationBusinessTelemetry businessTelemetry;
 
     @Override
     public SimulationDetailsResult createSimulation(CreateRealSimulationCommand command) {
@@ -69,6 +71,7 @@ public class CreateSimulationService implements CreateRealSimulationUseCase {
             Timer.Sample sample) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             telemetry.recordSuccess(USE_CASE, sample);
+            recordBusinessMetrics(command, result);
             log.info("Simulation create succeeded user={} simulationId={} energyType={} scenarioOrigin={}",
                     command.createdBy(),
                     result.id(),
@@ -81,6 +84,7 @@ public class CreateSimulationService implements CreateRealSimulationUseCase {
             @Override
             public void afterCommit() {
                 telemetry.recordSuccess(USE_CASE, sample);
+                recordBusinessMetrics(command, result);
                 log.info("Simulation create succeeded user={} simulationId={} energyType={} scenarioOrigin={}",
                         command.createdBy(),
                         result.id(),
@@ -99,6 +103,12 @@ public class CreateSimulationService implements CreateRealSimulationUseCase {
                 }
             }
         });
+    }
+
+    private void recordBusinessMetrics(CreateRealSimulationCommand command, SimulationDetailsResult result) {
+        businessTelemetry.recordCreated(command.technology().value(), command.scenarioId() != null);
+        businessTelemetry.recordRecommendation(command.technology().value(), result.summary().recommendation());
+        businessTelemetry.recordAttention(command.technology().value(), result);
     }
 
     private Simulation persistDraft(CreateRealSimulationCommand command, List<Long> technologyIds) {

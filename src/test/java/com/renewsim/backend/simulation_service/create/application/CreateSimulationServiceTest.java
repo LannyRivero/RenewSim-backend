@@ -12,6 +12,7 @@ import com.renewsim.backend.simulation_service.domain.model.SimulationId;
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationResultSnapshotJacksonWriter;
+import com.renewsim.backend.simulation_service.shared.application.SimulationBusinessTelemetry;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
@@ -75,6 +76,11 @@ class CreateSimulationServiceTest {
                 assertThat(captor.getAllValues().get(1).getTechnologyIds()).containsExactly(1L, 2L);
                 verify(technologyLookupPort).recommendActiveTechnologyIdsByEnergyType("solar");
                 assertThat(meterRegistry().counter("simulation_service_use_case_total", "use_case", "create", "outcome", "success").count())
+                                .isEqualTo(1.0d);
+                assertThat(meterRegistry().counter("simulation_service_business_created_total", "technology", "solar", "origin", "direct").count())
+                                .isEqualTo(1.0d);
+                assertThat(meterRegistry().counter("simulation_service_business_recommendation_total", "technology", "solar",
+                                "recommendation", response.summary().recommendation()).count())
                                 .isEqualTo(1.0d);
         }
 
@@ -197,7 +203,8 @@ class CreateSimulationServiceTest {
                                 engines(resourcePort),
                                 new SimulationCompletionAssembler(
                                                 new SimulationResultSnapshotJacksonWriter(objectMapper)),
-                                new SimulationUseCaseTelemetry(meterRegistry()));
+                                new SimulationUseCaseTelemetry(meterRegistry()),
+                                new SimulationBusinessTelemetry(meterRegistry()));
         }
 
         private SimpleMeterRegistry meterRegistry() {
