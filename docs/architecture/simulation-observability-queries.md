@@ -17,6 +17,9 @@ This guide turns the `simulation_service` metrics already exposed through `/actu
 | `simulation_service_snapshot_degraded_total` | How often detail degraded because the stored result snapshot was invalid |
 | `simulation_service_provider_calls_total` | How OpenWeather/PVGIS behave: success, fallback, or error |
 | `simulation_service_provider_call_duration_seconds_*` | How long each provider call takes |
+| `simulation_service_business_created_total` | How many simulations were actually created by technology and origin |
+| `simulation_service_business_recommendation_total` | Which recommendation mix the creation flow is producing |
+| `simulation_service_business_attention_total` | How many created simulations raised executive attention signals |
 
 ## Available labels
 
@@ -25,6 +28,51 @@ This guide turns the `simulation_service` metrics already exposed through `/actu
 | `simulation_service_use_case_*` | `use_case`, `outcome` |
 | `simulation_service_snapshot_degraded_total` | `reason` |
 | `simulation_service_provider_*` | `provider`, `outcome` |
+| `simulation_service_business_created_total` | `technology`, `origin` |
+| `simulation_service_business_recommendation_total` | `technology`, `recommendation` |
+| `simulation_service_business_attention_total` | `technology`, `reason` |
+
+## Business metrics
+
+These counters are intentionally separate from the base operational telemetry.
+
+- They only increment after a successful committed create flow.
+- They do not increment on `detail`, `history`, or `dashboard` reads.
+- They avoid high-cardinality labels such as user IDs, simulation IDs, or free-form warning messages.
+
+### Created simulations by origin
+
+```promql
+sum by (technology, origin) (
+  simulation_service_business_created_total
+)
+```
+
+Use this to explain how much simulation volume comes from direct creation versus scenario-driven flows.
+
+### Recommendation mix by technology
+
+```promql
+sum by (technology, recommendation) (
+  simulation_service_business_recommendation_total
+)
+```
+
+Use this to show whether the engine is mostly producing `recommended`, `viable_with_reservations`, or `not_recommended` outcomes.
+
+### Attention signals by technology
+
+```promql
+sum by (technology, reason) (
+  simulation_service_business_attention_total
+)
+```
+
+Current reasons are:
+
+- `negative_roi`
+- `long_payback`
+- `incomplete_financials`
 
 ## Use-case throughput
 
@@ -199,6 +247,7 @@ Finish with average latency queries for use cases and providers if you want to t
 - Use-case outcomes stay low-cardinality and explainable.
 - Snapshot degradation is visible as its own technical signal.
 - Provider behavior lines up with the resilience model already implemented in `simulation_service`.
+- Business counters reflect committed domain events instead of read traffic.
 - No query depends on user IDs, simulation IDs, coordinates, or exception messages.
 
 ## Verification checklist
@@ -208,11 +257,15 @@ Finish with average latency queries for use cases and providers if you want to t
 - [ ] `simulation_service_snapshot_degraded_total` appears in `/actuator/prometheus`
 - [ ] `simulation_service_provider_calls_total` appears in `/actuator/prometheus`
 - [ ] `simulation_service_provider_call_duration` appears in `/actuator/prometheus`
-- [ ] The only labels relied on here are `use_case`, `outcome`, `provider`, and `reason`
+- [ ] `simulation_service_business_created_total` appears in `/actuator/prometheus`
+- [ ] `simulation_service_business_recommendation_total` appears in `/actuator/prometheus`
+- [ ] `simulation_service_business_attention_total` appears in `/actuator/prometheus`
+- [ ] The only labels relied on here are `use_case`, `outcome`, `provider`, `reason`, `technology`, `origin`, and `recommendation`
 
 ## Relevant files
 
 - `src/main/java/com/renewsim/backend/simulation_service/shared/application/SimulationUseCaseTelemetry.java`
+- `src/main/java/com/renewsim/backend/simulation_service/shared/application/SimulationBusinessTelemetry.java`
 - `src/main/java/com/renewsim/backend/simulation_service/shared/application/SimulationProviderTelemetry.java`
 - `src/main/java/com/renewsim/backend/simulation_service/create/application/CreateSimulationService.java`
 - `src/main/java/com/renewsim/backend/simulation_service/detail/application/GetSimulationService.java`
