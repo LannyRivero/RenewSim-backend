@@ -22,6 +22,19 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+/**
+ * Use case that creates a real simulation from a client command.
+ *
+ * <p>Orchestrates the create flow: validates the requested technology against the catalog,
+ * resolves the matching {@link SimulationEngine}, persists the simulation in draft state,
+ * runs the engine to compute results, and completes the aggregate with those results before
+ * persisting again. The draft-then-complete persistence keeps the stored snapshot aligned
+ * with the created (non-terminal) state.</p>
+ *
+ * <p>Success telemetry and business metrics are deliberately recorded only after the enclosing
+ * transaction commits (or immediately when no transaction is active). This prevents counters
+ * from counting simulations that later roll back, keeping the operational metrics honest.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional

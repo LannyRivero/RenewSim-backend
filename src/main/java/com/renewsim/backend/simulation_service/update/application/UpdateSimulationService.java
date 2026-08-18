@@ -29,6 +29,18 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.LinkedHashSet;
 import java.util.List;
 
+/**
+ * Use case that edits an existing simulation and recomputes its results.
+ *
+ * <p>Only the simulation owner or an admin may edit; terminal states reject the update with
+ * {@link InvalidSimulationStatusTransitionException}. Because the {@code Simulation} aggregate
+ * keeps its core attributes final, the edit rebuilds the aggregate preserving the original
+ * id, scenario origin and creator, then reuses the same {@link SimulationEngine} contract as
+ * creation so updated results stay comparable to the original snapshot.</p>
+ *
+ * <p>Like {@code CreateSimulationService}, success telemetry and business metrics are recorded
+ * only after commit so rolled-back edits are never counted.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional

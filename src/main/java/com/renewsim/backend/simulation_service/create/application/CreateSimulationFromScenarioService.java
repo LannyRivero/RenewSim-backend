@@ -14,6 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Use case that turns a predefined scenario into a real simulation.
+ *
+ * <p>Resolves the active scenario, derives its energy type from the referenced technology,
+ * recommends the matching technology ids, and adapts the scenario inputs into a
+ * {@code CreateRealSimulationCommand} before delegating to the standard create use case. This
+ * keeps the real-simulation flow as the single place where engines and persistence run.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional

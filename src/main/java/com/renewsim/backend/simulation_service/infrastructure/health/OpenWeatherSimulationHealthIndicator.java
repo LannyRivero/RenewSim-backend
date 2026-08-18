@@ -10,6 +10,14 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Component;
 
+/**
+ * Health indicator for the OpenWeather integration (actuator name {@code openWeatherSimulation}).
+ *
+ * <p>Reports UNKNOWN when OpenWeather is not the active climate provider, so the indicator never
+ * fails a module that intentionally runs on the dummy provider. When active, it validates the
+ * location lookup provider, the weather service URL, and — only on strict profiles — that the API
+ * key is actually configured rather than a placeholder.</p>
+ */
 @Component("openWeatherSimulation")
 public class OpenWeatherSimulationHealthIndicator implements HealthIndicator {
 

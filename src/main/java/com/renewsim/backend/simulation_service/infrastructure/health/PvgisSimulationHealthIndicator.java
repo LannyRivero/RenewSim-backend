@@ -5,6 +5,13 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
+/**
+ * Health indicator for the PVGIS solar resource integration (actuator name {@code pvgisSimulation}).
+ *
+ * <p>PVGIS has no API key, so the only meaningful configuration check is that the configured URL is
+ * a valid HTTP/HTTPS endpoint; anything else keeps the indicator UP, leaving availability checks to
+ * the calling service.</p>
+ */
 @Component("pvgisSimulation")
 public class PvgisSimulationHealthIndicator implements HealthIndicator {
 

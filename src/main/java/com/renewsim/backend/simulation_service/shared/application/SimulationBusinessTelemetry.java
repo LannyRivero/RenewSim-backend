@@ -8,6 +8,15 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * Business-level metrics for simulation outcomes, separate from the technical counters.
+ *
+ * <p>Tracks created simulations by {@code technology} and {@code origin}, recommendation mix by
+ * {@code technology}, and bounded attention signals ({@code negative_roi}, {@code long_payback},
+ * {@code incomplete_financials}). All labels stay low-cardinality on purpose: values are
+ * normalized to lowercase and attention reasons come from a fixed set so the metrics remain
+ * queryable in Prometheus. Emitted only from committed create/update flows, never from reads.</p>
+ */
 @Component
 public class SimulationBusinessTelemetry {
 

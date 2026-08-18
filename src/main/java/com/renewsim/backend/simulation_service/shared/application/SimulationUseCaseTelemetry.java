@@ -8,6 +8,15 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * Technical counters and timers for simulation use cases.
+ *
+ * <p>Exposes low-cardinality {@code simulation_service_use_case_total} counters and
+ * {@code simulation_service_use_case_duration} timers tagged by {@code use_case} and
+ * {@code outcome} ({@code success}/{@code error}/{@code degraded}). Meter instances are cached
+ * per tag combination to avoid re-registering the same meter on every call. Callers decide when
+ * to record; the create/update services only record success after the transaction commits.</p>
+ */
 @Component
 public class SimulationUseCaseTelemetry {
 
