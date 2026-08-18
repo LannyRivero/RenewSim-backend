@@ -106,6 +106,63 @@ class SimulationTest {
                 .hasMessageContaining("complete");
     }
 
+    @Test
+    @DisplayName("update recomputes status and result fields on an existing simulation")
+    void updateRecomputesStatusAndResultFields() {
+        Simulation simulation = validSimulation();
+        simulation.complete(new SimulationCompletion(
+                "{\"result\":\"old\"}",
+                1000.0,
+                100.0,
+                50.0,
+                5.0,
+                "old",
+                List.of(11L, 12L)));
+
+        simulation.update(new SimulationCompletion(
+                "{\"result\":\"new\"}",
+                457200.0,
+                82000.0,
+                121500.0,
+                14.2,
+                "recommended",
+                List.of(21L, 22L)));
+
+        assertThat(simulation.getStatus()).isEqualTo(SimulationStatus.COMPLETED);
+        assertThat(simulation.getResultSnapshot()).isEqualTo("{\"result\":\"new\"}");
+        assertThat(simulation.getRecommendation()).isEqualTo("recommended");
+        assertThat(simulation.getTechnologyIds()).containsExactly(21L, 22L);
+        assertThat(simulation.getUpdatedAt()).isAfterOrEqualTo(simulation.getCreatedAt());
+    }
+
+    @Test
+    @DisplayName("update rejects null completion")
+    void updateRejectsNullCompletion() {
+        Simulation simulation = validSimulation();
+
+        assertThatThrownBy(() -> simulation.update(null))
+                .isInstanceOf(InvalidSimulationCompletionException.class)
+                .hasMessageContaining("required");
+    }
+
+    @Test
+    @DisplayName("update rejects deleted simulations")
+    void updateRejectsDeletedSimulations() {
+        Simulation simulation = validSimulation();
+        simulation.delete();
+
+        assertThatThrownBy(() -> simulation.update(new SimulationCompletion(
+                "{\"result\":true}",
+                457200.0,
+                82000.0,
+                121500.0,
+                14.2,
+                "recommended",
+                List.of(21L, 22L))))
+                .isInstanceOf(InvalidSimulationStatusTransitionException.class)
+                .hasMessageContaining("update");
+    }
+
     private Simulation validSimulation() {
         return Simulation.create(
                 "Solar - Sevilla",

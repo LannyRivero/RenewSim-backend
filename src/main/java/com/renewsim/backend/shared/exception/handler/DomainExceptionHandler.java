@@ -5,6 +5,7 @@ import com.renewsim.backend.scenario_service.domain.exception.ScenarioNotFoundEx
 import com.renewsim.backend.scenario_service.domain.exception.ScenarioTechnologyNotFoundException;
 import com.renewsim.backend.shared.dto.ErrorResponse;
 import com.renewsim.backend.shared.exception.*;
+import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationStatusTransitionException;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
 import com.renewsim.backend.technology_service.domain.exception.DuplicateTechnologyNameException;
 import com.renewsim.backend.technology_service.domain.exception.TechnologyNotFoundException;
@@ -50,7 +51,8 @@ public class DomainExceptionHandler extends BaseExceptionHandler {
             RoleAlreadyExistsException.class,
             DuplicateTechnologyNameException.class,
             LastAdminRemovalException.class,
-            ResourceConflictException.class
+            ResourceConflictException.class,
+            InvalidSimulationStatusTransitionException.class
     })
     public ResponseEntity<ErrorResponse> handleConflict(RuntimeException ex, HttpServletRequest req) {
         return buildError(
