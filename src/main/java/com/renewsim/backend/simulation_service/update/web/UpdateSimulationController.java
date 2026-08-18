@@ -7,6 +7,12 @@ import com.renewsim.backend.simulation_service.update.application.port.in.Update
 import com.renewsim.backend.shared.security.AuthenticatedRequestContext;
 import com.renewsim.backend.shared.security.AuthenticatedRequestContextFactory;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,11 +38,19 @@ public class UpdateSimulationController {
     private final SimulationDetailsWebMapper detailsWebMapper = new SimulationDetailsWebMapper();
     private final AuthenticatedRequestContextFactory requestContextFactory;
 
-    @Operation(summary = "Update a simulation", description = "Edits an existing simulation owned by the caller and recomputes its results. Only simulations that are not deleted can be updated.")
+    @Operation(summary = "Update a simulation", description = "Edits an existing simulation owned by the caller and recomputes its results. Only simulations that are not deleted can be updated.", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Simulation updated", content = @Content(schema = @Schema(implementation = SimulationDetailsResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthenticated", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Not the owner and not admin, or missing write scope", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Simulation not found", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Simulation is in a terminal state and cannot be updated", content = @Content)
+    })
     @PreAuthorize("hasAuthority('SCOPE_write:simulations') or hasRole('ADMIN')")
     @PutMapping("/{id:\\d+}")
     public ResponseEntity<SimulationDetailsResponseDTO> updateSimulation(
-            @PathVariable Long id,
+            @Parameter(description = "Simulation unique identifier", required = true) @PathVariable Long id,
             @Valid @RequestBody CreateSimulationRequestDTO request,
             Authentication auth) {
         AuthenticatedRequestContext requestContext = requestContextFactory.from(auth);
