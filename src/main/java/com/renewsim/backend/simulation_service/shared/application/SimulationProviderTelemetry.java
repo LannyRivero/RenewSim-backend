@@ -8,6 +8,15 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * Counters and timers for outbound provider calls (OpenWeather, PVGIS, location lookup).
+ *
+ * <p>Exposes {@code simulation_service_provider_calls_total} counters and
+ * {@code simulation_service_provider_call_duration} timers tagged by {@code provider} and
+ * {@code outcome} ({@code success}/{@code fallback}/{@code error}). The {@code fallback} outcome
+ * is reserved for degradations where the provider is replaced by a snapshot-backed response
+ * instead of failing the request.</p>
+ */
 @Component
 public class SimulationProviderTelemetry {
 

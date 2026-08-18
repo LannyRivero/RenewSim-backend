@@ -13,6 +13,15 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
+/**
+ * Aggregate health indicator for {@code simulation_service} (actuator name {@code simulationService}).
+ *
+ * <p>Reports a single overall status for the module: an unsupported climate provider, a missing
+ * location lookup provider, an invalid provider URL, or a missing API key on strict profiles
+ * ({@code stage}/{@code prod}) all bring the indicator DOWN with a machine-readable
+ * {@code reason} detail. Per-provider indicators ({@code openWeatherSimulation},
+ * {@code pvgisSimulation}) exist alongside this one for drill-down visibility.</p>
+ */
 @Component("simulationService")
 public class SimulationServiceHealthIndicator implements HealthIndicator {
 
