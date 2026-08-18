@@ -61,5 +61,6 @@ Thumbs.db
 .opencode/
 .atl/
 .claude/
+.codegraph/
 .env
 .env.stage
