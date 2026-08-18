@@ -26,7 +26,7 @@ public record OperationResponse<T>(
                 message,
                 data,
                 Instant.now(),
-                TraceUtils.currentTraceId(),
+                TraceUtils.currentCorrelationId(),
                 SecurityUtils.currentUsername()
         );
     }
@@ -38,7 +38,7 @@ public record OperationResponse<T>(
                 message,
                 data,
                 Instant.now(),
-                TraceUtils.currentTraceId(),
+                TraceUtils.currentCorrelationId(),
                 SecurityUtils.currentUsername()
         );
     }
@@ -50,7 +50,7 @@ public record OperationResponse<T>(
                 message,
                 null,
                 Instant.now(),
-                TraceUtils.currentTraceId(),
+                TraceUtils.currentCorrelationId(),
                 SecurityUtils.currentUsername()
         );
     }
@@ -62,7 +62,7 @@ public record OperationResponse<T>(
                 message,
                 null,
                 Instant.now(),
-                TraceUtils.currentTraceId(),
+                TraceUtils.currentCorrelationId(),
                 SecurityUtils.currentUsername()
         );
     }

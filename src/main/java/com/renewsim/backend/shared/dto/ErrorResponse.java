@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Represents a standardized error response structure used across all RenewSim
  * services.
- * Includes observability (traceId), timestamp, actor (current user), and
+ * Includes observability (correlationId), timestamp, actor (current user), and
  * validation details.
  * 
  * Envelope structure:

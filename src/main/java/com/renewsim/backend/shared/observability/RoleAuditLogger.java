@@ -2,7 +2,6 @@ package com.renewsim.backend.shared.observability;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 public final class RoleAuditLogger {
 
@@ -26,8 +25,7 @@ public final class RoleAuditLogger {
     }
 
     private static String currentCorrelationId() {
-        String c = MDC.get("traceId");
-        return c == null ? "-" : c;
+        return TraceUtils.currentCorrelationId();
     }
 
     private static String safe(Object v) {
