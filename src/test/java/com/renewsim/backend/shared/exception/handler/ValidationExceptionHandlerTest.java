@@ -2,8 +2,10 @@ package com.renewsim.backend.shared.exception.handler;
 
 import com.renewsim.backend.shared.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.AfterEach;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.MDC;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,11 @@ class ValidationExceptionHandlerTest {
         handler = new ValidationExceptionHandler();
         request = mock(HttpServletRequest.class);
         when(request.getRequestURI()).thenReturn("/api/v1/test");
+    }
+
+    @AfterEach
+    void tearDown() {
+        MDC.clear();
     }
 
     @Test
@@ -94,5 +101,18 @@ class ValidationExceptionHandlerTest {
         ResponseEntity<ErrorResponse> response = handler.handleValidation(ex, request);
 
         assertThat(response.getBody().getActor()).isEqualTo("anonymous");
+    }
+
+    @Test
+    @DisplayName("should use current correlation id in the error response")
+    void testCorrelationIdUsesCurrentCorrelationId() {
+        MDC.put("correlationId", "corr-123");
+        BindingResult bindingResult = mock(BindingResult.class);
+        when(bindingResult.getFieldErrors()).thenReturn(List.of());
+        MethodArgumentNotValidException ex = new MethodArgumentNotValidException(null, bindingResult);
+
+        ResponseEntity<ErrorResponse> response = handler.handleValidation(ex, request);
+
+        assertThat(response.getBody().getCorrelationId()).isEqualTo("corr-123");
     }
 }

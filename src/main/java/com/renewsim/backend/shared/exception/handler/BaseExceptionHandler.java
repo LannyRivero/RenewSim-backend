@@ -47,7 +47,7 @@ public abstract class BaseExceptionHandler {
                 .message(message)
                 .path(req.getRequestURI())
                 .timestamp(Instant.now())
-                .correlationId(TraceUtils.currentTraceId())
+                .correlationId(TraceUtils.currentCorrelationId())
                 .actor(currentActor != null ? currentActor : ANONYMOUS_ACTOR)
                 .fieldErrors(fields)
                 .build();
