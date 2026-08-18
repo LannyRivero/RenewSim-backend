@@ -131,6 +131,26 @@ public class Simulation {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void update(SimulationCompletion completion) {
+        if (status.isTerminal()) {
+            throw new InvalidSimulationStatusTransitionException("update", status);
+        }
+        if (completion == null) {
+            throw new InvalidSimulationCompletionException("Simulation completion is required");
+        }
+        this.resultSnapshot = completion.resultSnapshot();
+        this.annualGenerationKwh = completion.annualGenerationKwh();
+        this.annualSavings = completion.annualSavings();
+        this.npv = completion.npv();
+        this.irrPct = completion.irrPct();
+        this.recommendation = completion.recommendation();
+        if (completion.technologyIds() != null) {
+            this.technologyIds = new ArrayList<>(completion.technologyIds());
+        }
+        this.status = SimulationStatus.COMPLETED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     // ========== QUERIES ==========
 
     public boolean isOwnedBy(String username) {
