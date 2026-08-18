@@ -24,7 +24,7 @@ The module already has the observability layer that solves today's actual proble
 `simulation_service` already exposes useful operational signals:
 
 - Prometheus metrics for use cases, providers, degradation, and business counters
-- Actuator health indicators for the bounded context and external dependencies
+- Actuator indicators for bounded-context health and external dependency configuration readiness
 - Correlation id propagation through `X-Correlation-Id`
 - MDC-enriched logs with request and user context
 - Explicit provider-level logging in the simulation flows
@@ -48,6 +48,8 @@ Relevant evidence in the repo:
 - two outbound provider calls via `RestTemplate`
 
 That is operationally interesting, but it is not yet a broad service mesh or event-driven chain where span trees would unlock a step change in diagnosis.
+
+Also, the current actuator indicators are not remote reachability probes. `PvgisSimulationHealthIndicator` validates URI configuration, and `OpenWeatherSimulationHealthIndicator` validates configuration plus required wiring. They are useful readiness signals, but they should not be interpreted as proof that PVGIS or OpenWeather are reachable at runtime.
 
 ### 2. The current questions are already answerable
 
@@ -81,7 +83,13 @@ The application already uses two different correlation concepts:
 - `correlationId` from `CorrelationIdFilter`
 - `traceId` generated manually in `LoggingMDCFilter`
 
-This is acceptable for the current logging model, but it would become confusing if real distributed tracing were added without cleanup. A future tracing slice should first decide whether:
+This is not only a future tracing concern, it is already a baseline inconsistency today:
+
+- `CorrelationIdFilter` returns `X-Correlation-Id` to clients
+- `BaseExceptionHandler` writes the manual `traceId` into `ErrorResponse.correlationId`
+- `logback-spring.xml` emits `traceId`, not `correlationId`, in the main MDC pattern
+
+That means clients can receive one public correlation value in headers and a different one in error bodies, while provider logs are easier to find through `traceId`. Before any real distributed tracing is introduced, this baseline must be consolidated. A future tracing slice should first decide whether:
 
 - `correlationId` remains the public request id, and
 - framework-managed `traceId` / `spanId` become the tracing identifiers
@@ -105,8 +113,9 @@ If tracing becomes necessary, the next slice should stay small:
 1. add Micrometer Tracing with OpenTelemetry bridge
 2. export only in `local` or `stage` first
 3. instrument the `simulation_service` request path plus outbound provider calls
-4. standardize log correlation on framework-managed `traceId` and `spanId`
-5. verify one concrete troubleshooting scenario end to end
+4. fix the current `correlationId` versus `traceId` inconsistency first
+5. standardize log correlation on framework-managed `traceId` and `spanId`
+6. verify one concrete troubleshooting scenario end to end
 
 That slice should prove diagnostic value before tracing expands to the rest of the platform.
 
@@ -122,12 +131,16 @@ That slice should prove diagnostic value before tracing expands to the rest of t
 - [ ] The reason is cost/benefit, not personal preference
 - [ ] The current observability baseline is documented
 - [ ] The future trigger for revisiting tracing is concrete
-- [ ] The doc calls out the `correlationId` vs hand-generated `traceId` caveat
+- [ ] The doc calls out the `correlationId` vs hand-generated `traceId` inconsistency as a current baseline issue
+- [ ] The doc does not overstate configuration-readiness health indicators as runtime dependency reachability
 
 ## Relevant files
 
 - `pom.xml`
+- `src/main/java/com/renewsim/backend/shared/exception/handler/BaseExceptionHandler.java`
 - `src/main/java/com/renewsim/backend/shared/observability/CorrelationIdFilter.java`
 - `src/main/java/com/renewsim/backend/shared/observability/LoggingMDCFilter.java`
+- `src/main/java/com/renewsim/backend/simulation_service/infrastructure/health/OpenWeatherSimulationHealthIndicator.java`
+- `src/main/java/com/renewsim/backend/simulation_service/infrastructure/health/PvgisSimulationHealthIndicator.java`
 - `src/main/resources/logback-spring.xml`
 - `docs/architecture/simulation-observability-queries.md`
