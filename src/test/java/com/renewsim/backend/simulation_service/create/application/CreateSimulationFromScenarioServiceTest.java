@@ -1,7 +1,7 @@
 package com.renewsim.backend.simulation_service.create.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.renewsim.backend.scenario_service.domain.exception.ScenarioNotFoundException;
+import com.renewsim.backend.shared.exception.BadRequestException;
 import com.renewsim.backend.simulation_service.create.application.command.CreateSimulationFromScenarioCommand;
 import com.renewsim.backend.simulation_service.create.application.port.in.CreateRealSimulationUseCase;
 import com.renewsim.backend.simulation_service.create.application.port.out.CreateSimulationRepositoryPort;
@@ -12,8 +12,11 @@ import com.renewsim.backend.simulation_service.create.application.technology.win
 import com.renewsim.backend.simulation_service.create.application.port.out.PvgisSolarResourcePort;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidConsumptionProfileException;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationCurrencyException;
+import com.renewsim.backend.simulation_service.domain.exception.SimulationScenarioNotFoundException;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.application.SimulationBusinessTelemetry;
+import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
+import com.renewsim.backend.simulation_service.shared.application.SimulationTechnologySupport;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
 import com.renewsim.backend.simulation_service.shared.application.port.out.ScenarioLookupPort;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
@@ -182,11 +185,12 @@ class CreateSimulationFromScenarioServiceTest {
 
                 Simulation firstSimulation = persistenceRepository.findById(Long.valueOf(firstResponse.id()))
                                 .orElseThrow();
-                Simulation secondSimulation = persistenceRepository.findByCreatedByOrderByCreatedAtDesc("alice")
+                SimulationReadModel secondReadModel = persistenceRepository.findByCreatedByOrderByCreatedAtDesc("alice")
                                 .stream()
-                                .filter(simulation -> "Simulation 2".equals(simulation.getName()))
+                                .filter(simulation -> "Simulation 2".equals(simulation.name()))
                                 .findFirst()
                                 .orElseThrow();
+                Simulation secondSimulation = persistenceRepository.findById(secondReadModel.id()).orElseThrow();
 
                 assertThat(firstSimulation.getSystem().installedCapacityKw()).isEqualTo(5.0);
                 assertThat(firstSimulation.getDemand().annualConsumptionKwh()).isEqualTo(6000.0);
@@ -249,7 +253,7 @@ class CreateSimulationFromScenarioServiceTest {
                                                                 "Spain",
                                                                 CountryCode.of("ES")),
                                                 "alice")))
-                                .isInstanceOf(ScenarioNotFoundException.class);
+                                .isInstanceOf(SimulationScenarioNotFoundException.class);
 
                 verify(technologyLookupPort, never()).findActiveEnergyTypeByTechnologyId(any());
                 verify(repository, never()).save(any());
@@ -274,7 +278,8 @@ class CreateSimulationFromScenarioServiceTest {
                                                                 "Spain",
                                                                 CountryCode.of("ES")),
                                                 "alice")))
-                                .isInstanceOf(ScenarioNotFoundException.class);
+                                .isInstanceOf(BadRequestException.class)
+                                .hasMessage("UNSUPPORTED_SCENARIO_TECHNOLOGY: technologyId '1' is not registered or is inactive in the technology catalog");
 
                 verify(repository, never()).save(any());
         }
@@ -371,20 +376,22 @@ class CreateSimulationFromScenarioServiceTest {
                 return realCreateService(repository);
         }
 
-        private CreateRealSimulationUseCase realCreateService(CreateSimulationRepositoryPort simulationRepository) {
+        private CreateRealSimulationUseCase realCreateService(
+                        com.renewsim.backend.simulation_service.create.application.port.out.CreateSimulationRepositoryPort simulationRepository) {
                 return new CreateSimulationService(
                                 simulationRepository,
-                                technologyLookupPort,
-                                List.of(
-                                                new SolarSimulationEngine(resourcePort,
-                                                                new SolarSimulationAssessmentPolicy()),
-                                                new WindSimulationEngine(),
-                                                new HydroSimulationEngine()),
                                 new SimulationCompletionAssembler(
                                                 new SimulationResultSnapshotJacksonWriter(
                                                                 new ObjectMapper().findAndRegisterModules())),
                                 new SimulationUseCaseTelemetry(registry),
-                                new SimulationBusinessTelemetry(registry));
+                                new SimulationBusinessTelemetry(registry),
+                                new SimulationTechnologySupport(
+                                                technologyLookupPort,
+                                                List.of(
+                                                                new SolarSimulationEngine(resourcePort,
+                                                                                new SolarSimulationAssessmentPolicy()),
+                                                                new WindSimulationEngine(),
+                                                                new HydroSimulationEngine())));
         }
 
         private final SimpleMeterRegistry registry = new SimpleMeterRegistry();

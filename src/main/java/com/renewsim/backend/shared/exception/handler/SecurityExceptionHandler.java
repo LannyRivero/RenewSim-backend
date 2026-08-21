@@ -2,6 +2,7 @@ package com.renewsim.backend.shared.exception.handler;
 
 import com.renewsim.backend.shared.dto.ErrorResponse;
 import com.renewsim.backend.shared.exception.AuthenticationException;
+import com.renewsim.backend.shared.exception.ForbiddenException;
 import com.renewsim.backend.shared.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.Ordered;
@@ -35,6 +36,17 @@ public class SecurityExceptionHandler extends BaseExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest req) {
+        return buildError(
+                HttpStatus.FORBIDDEN,
+                "ACCESS_DENIED",
+                "Access denied",
+                ex.getMessage(),
+                req,
+                null);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex, HttpServletRequest req) {
         return buildError(
                 HttpStatus.FORBIDDEN,
                 "ACCESS_DENIED",
