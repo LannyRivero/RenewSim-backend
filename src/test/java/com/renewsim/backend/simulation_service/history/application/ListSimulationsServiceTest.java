@@ -40,7 +40,29 @@ class ListSimulationsServiceTest {
                 new SimulationUseCaseTelemetry(meterRegistry));
         String snapshot;
         try {
-            snapshot = new ObjectMapper().findAndRegisterModules().writeValueAsString(minimalResult());
+            var baseline = minimalResult();
+            var custom = new com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult(
+                    baseline.id(),
+                    baseline.status(),
+                    baseline.createdAt(),
+                    baseline.updatedAt(),
+                    "solar-interview-v2",
+                    baseline.technology(),
+                    baseline.location(),
+                    baseline.summary(),
+                    baseline.input(),
+                    baseline.technical(),
+                    baseline.financial(),
+                    new com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult.Assumptions(
+                            baseline.assumptions().discountRatePct(),
+                            baseline.assumptions().projectLifetimeYears(),
+                            baseline.assumptions().degradationRateAnnualPct(),
+                            baseline.assumptions().electricityPurchasePricePerKwh(),
+                            baseline.assumptions().exportPricePerKwh(),
+                            "INTERVIEW_SOURCE",
+                            baseline.assumptions().climatePeriod()),
+                    baseline.warnings());
+            snapshot = new ObjectMapper().findAndRegisterModules().writeValueAsString(custom);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -67,7 +89,7 @@ class ListSimulationsServiceTest {
         assertThat(response.total()).isEqualTo(1);
         assertThat(response.items().getFirst().annualSavings()).isEqualTo(68700.0);
         assertThat(response.items().getFirst().technology()).isEqualTo("solar");
-        assertThat(response.items().getFirst().modelVersion()).isEqualTo("solar-spain-v1");
-        assertThat(response.items().getFirst().resourceSource()).isEqualTo("PVGIS");
+        assertThat(response.items().getFirst().modelVersion()).isEqualTo("solar-interview-v2");
+        assertThat(response.items().getFirst().resourceSource()).isEqualTo("INTERVIEW_SOURCE");
     }
 }
