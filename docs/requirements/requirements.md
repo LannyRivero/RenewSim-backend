@@ -4,7 +4,7 @@
 
 RenewSim es una plataforma profesional de simulación de energías renovables que permite a los usuarios modelar, analizar y comparar instalaciones de energía renovable (solar, eólica, hidroeléctrica) mediante simulaciones personalizadas y escenarios predefinidos. La plataforma calcula la producción energética, métricas financieras (ROI, VAN, TIR, período de recuperación) e impacto ambiental (reducción de CO₂), y presenta los resultados a través de dashboards interactivos e informes exportables.
 
-El sistema está construido sobre un backend Java 21 / Spring Boot 3.2.1 siguiendo Arquitectura Hexagonal (Puertos y Adaptadores) con DDD Táctico, y un frontend React con TypeScript. Sirve a estudiantes, hogares, pequeñas empresas, gobiernos y empresas energéticas. Es simultáneamente un producto enterprise listo para producción y un proyecto final de Máster (entrega: 15 de abril de 2026).
+El sistema está construido sobre un backend Java 21 / Spring Boot siguiendo Arquitectura Hexagonal (Puertos y Adaptadores) con DDD Táctico. La visión completa del producto contempla frontend, capacidades avanzadas y despliegues evolutivos, pero este repositorio concentra el backend real actualmente implementado y endurecido. Sirve a estudiantes, hogares, pequeñas empresas, gobiernos y empresas energéticas como plataforma de simulación y análisis de proyectos renovables.
 
 ---
 
@@ -17,7 +17,7 @@ El sistema está construido sobre un backend Java 21 / Spring Boot 3.2.1 siguien
 - **Technology_Service**: El bounded context responsable del catálogo de tecnologías de energía renovable
 - **Simulation_Service**: El bounded context principal responsable de la creación, cálculo, ciclo de vida e informes de simulaciones
 - **Simulation_Engine**: El componente de dominio dentro de Simulation_Service que ejecuta los cálculos energéticos, financieros y ambientales
-- **AI_Service**: El componente responsable de sugerencias, predicciones y asistencia conversacional impulsadas por IA
+- **AI_Service**: Capacidad de producto planificada para sugerencias, predicciones y asistencia conversacional impulsadas por IA. No forma parte del baseline implementado actual de este repositorio.
 - **Usuario**: Un actor humano autenticado que interactúa con la plataforma
 - **Admin**: Un Usuario con el rol ADMIN, autorizado para gestionar datos del catálogo y roles
 - **Analista**: Un Usuario con el rol ANALYST, autorizado para acceder a analíticas avanzadas
@@ -28,7 +28,7 @@ El sistema está construido sobre un backend Java 21 / Spring Boot 3.2.1 siguien
 - **Dinero**: Un value object que representa un monto monetario con moneda (por defecto: USD)
 - **DatosEnergia**: Un value object que representa la generación anual de energía en kWh/año
 - **DatosClimaticos**: Un value object que encapsula datos de irradiación solar, velocidad del viento y temperatura
-- **SimulationStatus**: Un enum con estados DRAFT → COMPLETED → ARCHIVED
+- **SimulationStatus**: Un enum con estados DRAFT → COMPLETED → DELETED
 - **EnergyType**: Un enum con valores SOLAR, WIND, HYDRO, BIOMASS, GEOTHERMAL
 - **JWT**: JSON Web Token utilizado para autenticación sin estado
 - **ROI**: Retorno sobre la Inversión — ganancia porcentual relativa a la inversión inicial
@@ -44,7 +44,7 @@ El sistema está construido sobre un backend Java 21 / Spring Boot 3.2.1 siguien
 
 ## Requerimientos
 
-### Requerimiento 1: Registro de Usuario y Activación de Cuenta
+### Requerimiento 1: Registro de Usuario y Verificación de Cuenta
 
 **Historia de Usuario:** Como nuevo visitante, quiero registrar una cuenta con mi email y contraseña, para poder acceder a la plataforma de simulación.
 
@@ -54,88 +54,61 @@ El sistema está construido sobre un backend Java 21 / Spring Boot 3.2.1 siguien
 2. CUANDO se envía una solicitud de registro, EL User_Service DEBERÁ enviar un email de activación que contenga un token de activación con tiempo limitado (válido por 24 horas).
 3. SI una solicitud de registro contiene un email que ya existe en el sistema, ENTONCES EL User_Service DEBERÁ retornar una respuesta de error HTTP 409 con un mensaje descriptivo.
 4. SI una solicitud de registro contiene una contraseña de menos de 8 caracteres o sin letra mayúscula, dígito o símbolo especial, ENTONCES EL User_Service DEBERÁ retornar un error HTTP 400 con un mensaje de validación a nivel de campo.
-5. CUANDO se envía un token de activación mediante POST /api/v1/users/activate, EL User_Service DEBERÁ transicionar la cuenta de usuario correspondiente de estado INACTIVE a ACTIVE.
+5. CUANDO se envía un token de verificación mediante POST /api/v1/auth/email-verification/verify, EL sistema DEBERÁ validar el token y permitir que la cuenta continúe el flujo de acceso previsto.
 6. SI un token de activación está expirado o no se encuentra, ENTONCES EL User_Service DEBERÁ retornar un error HTTP 400 con un mensaje descriptivo.
 7. EL User_Service DEBERÁ almacenar todas las contraseñas como hashes BCrypt con factor de fuerza 12 y NUNCA persistirá ni registrará contraseñas en texto plano.
 
 ---
 
-### Requerimiento 2: Autenticación en Dos Pasos con OTP por Email (2FA)
+### Requerimiento 2: Autenticación con JWT y Refresh Token
 
-**Historia de Usuario:** Como usuario registrado, quiero iniciar sesión en dos pasos — primero con mis credenciales y luego con un código enviado a mi email — para garantizar que solo yo pueda acceder a mi cuenta.
+**Historia de Usuario:** Como usuario registrado, quiero iniciar sesión con mis credenciales y obtener un access token más un refresh token seguro, para acceder a la plataforma sin depender de estado de sesión en servidor.
 
-#### Flujo Completo
+#### Flujo Actual
 
 ```
-PASO 1 — Credenciales:
-  Usuario → POST /api/v1/auth/login/step1 (email + password)
-  Sistema valida credenciales → genera OTP 6 dígitos (válido 5 min) → envía por email
-  Respuesta: { message: "Código enviado a tu email" }
+LOGIN:
+  Usuario → POST /api/v1/auth/login (email + password)
+  Sistema valida credenciales y estado de cuenta
+  Respuesta: { accessToken, tokenType, expiresIn, user... } + refresh token en cookie HttpOnly
 
-PASO 2 — Verificación OTP:
-  Usuario → POST /api/v1/auth/login/step2 (email + otp_code)
-  Sistema valida OTP (correcto + no expirado + usuario ACTIVE)
-  Respuesta: { accessToken, refreshToken, user: { id, email, roles } }
+REFRESH:
+  Usuario → POST /api/v1/auth/refresh
+  Sistema rota refresh token y emite nuevo access token
+
+LOGOUT:
+  Usuario → POST /api/v1/auth/logout
+  Sistema revoca refresh tokens e invalida el access token
 ```
 
 #### Criterios de Aceptación
 
-1. CUANDO se envía POST /api/v1/auth/login/step1 con email y password válidos de una cuenta ACTIVE, EL Auth_Service DEBERÁ generar un código OTP de 6 dígitos numéricos, almacenarlo hasheado en la tabla `otp_codes` con expiración de 5 minutos, enviarlo al email del usuario y retornar HTTP 200 con el mensaje "Código enviado a tu email" sin revelar si el email existe o no.
-2. SI las credenciales del paso 1 son inválidas, ENTONCES EL Auth_Service DEBERÁ incrementar el contador de intentos fallidos y retornar HTTP 401 sin indicar cuál campo es incorrecto.
-3. MIENTRAS una cuenta haya acumulado 5 o más intentos fallidos consecutivos en el paso 1, EL Auth_Service DEBERÁ bloquear el acceso durante 15 minutos y retornar HTTP 429.
-4. CUANDO se envía POST /api/v1/auth/login/step2 con el código OTP correcto, no expirado y no utilizado previamente, EL Auth_Service DEBERÁ marcar el OTP como usado, generar un access token JWT (expiración: 1 hora) y un refresh token (expiración: 7 días), y retornarlos junto con los datos básicos del usuario (id, email, roles).
-5. SI el código OTP del paso 2 es incorrecto o está expirado, ENTONCES EL Auth_Service DEBERÁ retornar HTTP 401 e incrementar el contador de intentos OTP fallidos para ese usuario.
-6. MIENTRAS una cuenta haya acumulado 3 o más intentos OTP fallidos, EL Auth_Service DEBERÁ invalidar el OTP activo, bloquear nuevos intentos durante 15 minutos y retornar HTTP 429.
-7. CUANDO se envía POST /api/v1/auth/resend-otp con un email válido de cuenta ACTIVE, EL Auth_Service DEBERÁ invalidar el OTP anterior, generar uno nuevo y enviarlo por email, respetando un rate limit de máximo 3 reenvíos en 15 minutos por usuario.
-8. SI se solicita reenvío de OTP superando el rate limit, ENTONCES EL Auth_Service DEBERÁ retornar HTTP 429 con el tiempo de espera restante.
-9. CUANDO se envía un refresh token válido a POST /api/v1/auth/refresh, EL Auth_Service DEBERÁ emitir un nuevo access token sin requerir nuevo OTP, siempre que la cuenta permanezca ACTIVE.
-10. SI un refresh token está expirado o invalidado, ENTONCES EL Auth_Service DEBERÁ retornar HTTP 401.
-11. CUANDO se envía POST /api/v1/auth/logout con un access token válido, EL Auth_Service DEBERÁ añadir el access token a la blacklist hasta su expiración natural e invalidar permanentemente el refresh token asociado.
-12. EL Auth_Service DEBERÁ registrar en el log de auditoría todos los eventos: intento de login paso 1, envío de OTP, verificación OTP exitosa/fallida, logout y refresh — sin incluir passwords, códigos OTP ni valores completos de tokens.
-13. EL Auth_Service DEBERÁ validar el secreto JWT al arranque mediante @PostConstruct y rechazar el inicio si el secreto está ausente o tiene menos de 32 caracteres.
-14. EL Sistema DEBERÁ limpiar automáticamente los registros de OTP expirados mediante un job programado para evitar crecimiento indefinido de la tabla `otp_codes`.
+1. CUANDO se envía POST /api/v1/auth/login con credenciales válidas de una cuenta habilitada, EL Auth_Service DEBERÁ emitir un access token JWT y un refresh token, retornando HTTP 200.
+2. SI las credenciales son inválidas, ENTONCES EL Auth_Service DEBERÁ retornar HTTP 401 sin revelar cuál campo es incorrecto.
+3. MIENTRAS una cuenta o combinación IP/usuario supere el umbral configurado de intentos fallidos, EL sistema DEBERÁ retornar HTTP 429.
+4. CUANDO se invoca POST /api/v1/auth/refresh con un refresh token válido, EL Auth_Service DEBERÁ emitir un nuevo access token y rotar el refresh token.
+5. SI el refresh token está expirado o invalidado, ENTONCES EL Auth_Service DEBERÁ retornar HTTP 401.
+6. CUANDO se invoca POST /api/v1/auth/logout con un access token válido, EL Auth_Service DEBERÁ invalidar el access token y revocar los refresh tokens asociados.
+7. EL Auth_Service DEBERÁ registrar en el log de auditoría los eventos relevantes de login, refresh y logout sin incluir contraseñas ni tokens completos.
+8. EL Auth_Service DEBERÁ validar el secreto JWT al arranque y rechazar el inicio si el secreto está ausente o no cumple el mínimo de seguridad configurado.
 
 #### Reglas de Negocio
 
-- OTP: 6 dígitos numéricos, generado criptográficamente, válido 5 minutos, uso único
-- Rate limiting login paso 1: 5 intentos fallidos → bloqueo 15 minutos
-- Rate limiting OTP: 3 intentos fallidos → bloqueo 15 minutos + invalidar OTP activo
-- Rate limiting reenvío OTP: máximo 3 reenvíos en 15 minutos
 - JWT: firmado con HS512, access token 1h, refresh token 7 días
-- Los OTPs se almacenan hasheados (BCrypt o SHA-256), nunca en texto plano
-- El refresh token NO requiere nuevo OTP (solo el login inicial)
-
-#### Tabla de Base de Datos Adicional
-
-```sql
-CREATE TABLE otp_codes (
-    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id     BIGINT NOT NULL,
-    code_hash   VARCHAR(255) NOT NULL,
-    expires_at  TIMESTAMP NOT NULL,
-    used        BOOLEAN DEFAULT FALSE,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_expires (user_id, expires_at)
-);
-```
+- El refresh token se rota mediante cookie HttpOnly
+- El rate limiting de login se aplica en el flujo actual sin dependencias de OTP
 
 #### Endpoints
 
 | Método | Endpoint | Acceso | Descripción |
 |--------|----------|--------|-------------|
-| POST | /api/v1/auth/login/step1 | Público | Valida email + password, envía OTP |
-| POST | /api/v1/auth/login/step2 | Público | Valida OTP, retorna tokens JWT |
-| POST | /api/v1/auth/resend-otp | Público | Reenvía código OTP |
+| POST | /api/v1/auth/login | Público | Valida credenciales y retorna JWT + refresh token |
 | POST | /api/v1/auth/refresh | Refresh token | Renueva access token |
 | POST | /api/v1/auth/logout | JWT | Invalida tokens |
 
 #### Roadmap Futuro (Fases)
 
-- Fase 2: TOTP con Google Authenticator como alternativa al email OTP
-- Fase 3: 2FA por SMS
-- Fase 4: Elección de método 2FA preferido por el usuario
-- Fase 5: Social login (Google, Microsoft) con 2FA opcional
+- Fase futura: MFA/TOTP si el producto evoluciona hacia requisitos regulatorios o mayor sensibilidad de credenciales
 
 ---
 
@@ -213,9 +186,9 @@ CREATE TABLE otp_codes (
 2. SI una solicitud de consulta referencia una simulación que no pertenece al usuario solicitante, ENTONCES EL Simulation_Service DEBERÁ retornar un error HTTP 403.
 3. CUANDO un usuario autenticado envía GET /api/v1/simulations/my-simulations, EL Simulation_Service DEBERÁ retornar la lista paginada de todas las simulaciones no archivadas pertenecientes a ese usuario.
 4. CUANDO un usuario autenticado envía PUT /api/v1/simulations/{id} para una simulación en estado DRAFT, EL Simulation_Service DEBERÁ actualizar los parámetros, disparar el recálculo y retornar la simulación actualizada.
-5. SI una solicitud de actualización apunta a una simulación en estado COMPLETED o ARCHIVED, ENTONCES EL Simulation_Service DEBERÁ retornar un error HTTP 409 indicando que la simulación no puede modificarse en su estado actual.
-6. CUANDO un usuario autenticado envía DELETE /api/v1/simulations/{id}, EL Simulation_Service DEBERÁ realizar un soft delete transicionando la simulación a estado ARCHIVED sin eliminar el registro.
-7. EL Simulation_Service DEBERÁ aplicar la máquina de estados: DRAFT → COMPLETED → ARCHIVED, rechazando cualquier transición que no siga esta secuencia con un error HTTP 409.
+5. SI una solicitud de actualización apunta a una simulación en estado DELETED, ENTONCES EL Simulation_Service DEBERÁ retornar un error HTTP 409 indicando que la simulación no puede modificarse en su estado actual.
+6. CUANDO un usuario autenticado envía DELETE /api/v1/simulations/{id}, EL Simulation_Service DEBERÁ realizar un soft delete transicionando la simulación a estado DELETED sin eliminar físicamente el registro.
+7. EL Simulation_Service DEBERÁ aplicar la máquina de estados actual del baseline: DRAFT → COMPLETED → DELETED, rechazando cualquier transición inválida con un error HTTP 409.
 8. CUANDO un usuario autenticado envía POST /api/v1/simulations/{id}/clone, EL Simulation_Service DEBERÁ crear una nueva Simulación en estado DRAFT con los mismos parámetros que la simulación origen y retornar el nuevo ID.
 
 ---
@@ -226,11 +199,11 @@ CREATE TABLE otp_codes (
 
 #### Criterios de Aceptación
 
-1. CUANDO cualquier usuario autenticado envía GET /api/v1/scenarios, EL Simulation_Service DEBERÁ retornar la lista de todos los escenarios predefinidos disponibles con sus descripciones y parámetros pre-rellenados.
-2. CUANDO cualquier usuario autenticado envía GET /api/v1/scenarios/{id}, EL Simulation_Service DEBERÁ retornar el detalle completo del escenario solicitado.
-3. SI una solicitud de detalle de escenario referencia un ID inexistente, ENTONCES EL Simulation_Service DEBERÁ retornar un error HTTP 404.
-4. CUANDO un usuario autenticado envía POST /api/v1/simulations/from-scenario/{scenarioId}, EL Simulation_Service DEBERÁ crear una nueva Simulación en estado DRAFT pre-poblada con los parámetros del escenario y retornar el ID con HTTP 201.
-5. CUANDO un Admin envía POST /api/v1/scenarios con datos de escenario válidos, EL Simulation_Service DEBERÁ crear el escenario y retornarlo con HTTP 201.
+1. CUANDO cualquier usuario autenticado envía GET /api/v1/scenarios, EL Scenario_Service DEBERÁ retornar la lista de escenarios predefinidos disponibles con sus descripciones y parámetros pre-rellenados.
+2. CUANDO cualquier usuario autenticado envía GET /api/v1/scenarios/{id}, EL Scenario_Service DEBERÁ retornar el detalle completo del escenario solicitado.
+3. SI una solicitud de detalle de escenario referencia un ID inexistente, ENTONCES EL Scenario_Service DEBERÁ retornar un error HTTP 404.
+4. CUANDO un usuario autenticado envía POST /api/v1/simulations/from-scenario con un `scenarioId` válido en el cuerpo de la solicitud, EL Simulation_Service DEBERÁ crear una nueva Simulación pre-poblada con los parámetros del escenario y retornar el resultado con HTTP 201.
+5. CUANDO un Admin envía POST /api/v1/scenarios con datos de escenario válidos, EL Scenario_Service DEBERÁ crear el escenario y retornarlo con HTTP 201.
 
 ---
 
@@ -241,7 +214,7 @@ CREATE TABLE otp_codes (
 #### Criterios de Aceptación
 
 1. CUANDO un usuario autenticado envía GET /api/v1/simulations/{id}/report para una simulación en estado COMPLETED, EL Simulation_Service DEBERÁ retornar un reporte estructurado con todos los parámetros de entrada, resultados calculados (energía, ROI, payback, VAN, TIR, CO₂) y desglose mensual de producción energética.
-2. SI una solicitud de reporte apunta a una simulación en estado DRAFT o ARCHIVED, ENTONCES EL Simulation_Service DEBERÁ retornar un error HTTP 409 indicando que el reporte solo está disponible para simulaciones COMPLETED.
+2. SI una solicitud de reporte apunta a una simulación en estado DRAFT o DELETED, ENTONCES EL Simulation_Service DEBERÁ retornar un error HTTP 409 indicando que el reporte solo está disponible para simulaciones COMPLETED.
 3. CUANDO se solicita exportación PDF mediante el header Accept: application/pdf, EL Simulation_Service DEBERÁ retornar un reporte PDF con formato profesional.
 4. EL Simulation_Service DEBERÁ generar el reporte PDF en menos de 5 segundos para el 95% de las solicitudes.
 
@@ -278,14 +251,14 @@ CREATE TABLE otp_codes (
 
 #### Criterios de Aceptación
 
-1. CUANDO un usuario autenticado envía GET /api/v1/dashboard, EL Sistema DEBERÁ retornar estadísticas agregadas incluyendo total de simulaciones, producción energética anual estimada total, reducción de CO₂ total estimada y ahorros anuales totales estimados.
+1. CUANDO un usuario autenticado envía GET /api/v1/simulations/dashboard, EL Simulation_Service DEBERÁ retornar estadísticas agregadas incluyendo total de simulaciones, producción energética anual estimada total, reducción de CO₂ total estimada y ahorros anuales totales estimados.
 2. CUANDO un usuario autenticado envía GET /api/v1/simulations/{id}/energy-chart, EL Sistema DEBERÁ retornar datos de producción energética mensual de la simulación formateados para renderizado de gráficos.
 3. CUANDO un usuario autenticado envía GET /api/v1/simulations/map-data, EL Sistema DEBERÁ retornar las coordenadas geográficas y datos de resumen de todas las simulaciones no archivadas del usuario para renderizado de mapa.
 4. EL Frontend DEBERÁ renderizar el dashboard con estados de carga para cada sección de datos y DEBERÁ mostrar estados vacíos significativos cuando no existan simulaciones.
 
 ---
 
-### Requerimiento 13: Sugerencias de Configuración con IA
+### Requerimiento 13: Sugerencias de Configuración con IA (Roadmap de producto)
 
 **Historia de Usuario:** Como usuario sin conocimiento técnico profundo, quiero que la plataforma sugiera configuraciones óptimas de simulación basadas en mi ubicación y perfil, para tomar decisiones mejor informadas.
 
@@ -297,7 +270,7 @@ CREATE TABLE otp_codes (
 
 ---
 
-### Requerimiento 14: Análisis Predictivo de Rendimiento con IA
+### Requerimiento 14: Análisis Predictivo de Rendimiento con IA (Roadmap de producto)
 
 **Historia de Usuario:** Como usuario, quiero que la plataforma prediga el rendimiento futuro de mi simulación en un horizonte temporal configurable, para planificar inversiones energéticas a largo plazo.
 
@@ -309,7 +282,7 @@ CREATE TABLE otp_codes (
 
 ---
 
-### Requerimiento 15: Asistente Conversacional con IA
+### Requerimiento 15: Asistente Conversacional con IA (Roadmap de producto)
 
 **Historia de Usuario:** Como usuario sin experiencia técnica, quiero interactuar con un asistente de IA sobre temas de energía renovable y mis simulaciones, para recibir orientación guiada sin salir de la plataforma.
 
@@ -322,7 +295,7 @@ CREATE TABLE otp_codes (
 
 ---
 
-### Requerimiento 16: Generación Automática de Reportes con IA
+### Requerimiento 16: Generación Automática de Reportes con IA (Roadmap de producto)
 
 **Historia de Usuario:** Como usuario que completó una simulación, quiero que la IA genere un resumen narrativo de mis resultados, para incluir análisis escrito profesional en mis reportes.
 
@@ -352,10 +325,10 @@ CREATE TABLE otp_codes (
 
 #### Criterios de Aceptación
 
-1. EL Sistema DEBERÁ requerir un JWT válido en todos los endpoints excepto POST /api/v1/auth/login/step1, POST /api/v1/auth/login/step2, POST /api/v1/auth/resend-otp, POST /api/v1/users/register, POST /api/v1/users/activate y URLs públicas de compartición.
+1. EL Sistema DEBERÁ requerir un JWT válido en todos los endpoints excepto los endpoints públicos de registro/login/verificación/refresh definidos por el baseline actual y cualquier URL pública de compartición o health que se exponga explícitamente.
 2. EL Auth_Service DEBERÁ firmar los JWTs usando el algoritmo HS512 con un secreto de al menos 32 caracteres.
 3. EL Sistema DEBERÁ aplicar rate limiting de 100 solicitudes por minuto por dirección IP en todos los endpoints API y DEBERÁ retornar HTTP 429 cuando se supere el límite.
-4. EL Sistema NUNCA DEBERÁ incluir PII, contraseñas, códigos OTP ni valores completos de JWT en los logs de aplicación.
+4. EL Sistema NUNCA DEBERÁ incluir PII, contraseñas ni valores completos de JWT en los logs de aplicación.
 5. EL Sistema DEBERÁ aplicar headers de seguridad (HSTS, X-Content-Type-Options, X-Frame-Options, CSP) en todas las respuestas HTTP.
 
 ---
@@ -465,17 +438,16 @@ CREATE TABLE otp_codes (
 
 ### RF-FE-002: Sistema de Autenticación Frontend
 
-**Historia de Usuario:** Como usuario, quiero un flujo de autenticación en dos pasos fluido en el frontend, para iniciar sesión de forma segura con feedback claro en cada etapa.
+**Historia de Usuario:** Como usuario, quiero un flujo de autenticación claro en el frontend, para iniciar sesión de forma segura con feedback directo sobre credenciales, verificación de cuenta y refresh de sesión.
 
 #### Criterios de Aceptación
 
-1. EL Frontend DEBERÁ implementar la página de login con dos pantallas secuenciales: formulario de credenciales (paso 1) y formulario de código OTP (paso 2), sin recargar la página entre pasos.
-2. EL Frontend DEBERÁ mostrar un contador regresivo de 5 minutos para el código OTP y un botón de reenvío que se habilite al expirar el contador o al agotarse los intentos.
-3. EL Frontend DEBERÁ almacenar el access token en memoria (no en localStorage) y el refresh token en una cookie HttpOnly mediante el backend.
-4. EL Frontend DEBERÁ implementar un interceptor que detecte respuestas HTTP 401 y ejecute automáticamente el flujo de refresh token antes de reintentar la solicitud original.
-5. EL Frontend DEBERÁ redirigir al usuario a `/login` al detectar que el refresh token ha expirado o ha sido invalidado, limpiando el estado de autenticación.
-6. EL Frontend DEBERÁ implementar rutas protegidas (`ProtectedRoute`) que redirijan a `/login` si el usuario no está autenticado.
-7. EL Frontend DEBERÁ mostrar mensajes de error específicos para cada caso: credenciales inválidas, cuenta inactiva, OTP incorrecto, cuenta bloqueada (con tiempo de espera restante).
+1. EL Frontend DEBERÁ implementar una pantalla de login basada en email y password contra `POST /api/v1/auth/login`.
+2. EL Frontend DEBERÁ almacenar el access token en memoria (no en localStorage) y el refresh token en una cookie HttpOnly mediante el backend.
+3. EL Frontend DEBERÁ implementar un interceptor que detecte respuestas HTTP 401 y ejecute automáticamente el flujo de refresh token antes de reintentar la solicitud original.
+4. EL Frontend DEBERÁ redirigir al usuario a `/login` al detectar que el refresh token ha expirado o ha sido invalidado, limpiando el estado de autenticación.
+5. EL Frontend DEBERÁ implementar rutas protegidas (`ProtectedRoute`) que redirijan a `/login` si el usuario no está autenticado.
+6. EL Frontend DEBERÁ mostrar mensajes de error claros para credenciales inválidas, cuenta no verificada/deshabilitada y sesión expirada.
 
 ---
 
@@ -521,7 +493,7 @@ CREATE TABLE otp_codes (
 3. EL Frontend DEBERÁ renderizar un gráfico de líneas con la proyección de flujo de caja acumulado a lo largo de la vida útil del proyecto, marcando el punto de payback.
 4. EL Frontend DEBERÁ mostrar una sección de análisis ambiental con la equivalencia de CO₂ evitado en términos comprensibles (ej: "equivalente a plantar X árboles").
 5. EL Frontend DEBERÁ permitir exportar el reporte como PDF mediante un botón que llame al endpoint `/report` con el header `Accept: application/pdf`.
-6. EL Frontend DEBERÁ mostrar el estado de la simulación (DRAFT / COMPLETED / ARCHIVED) con un badge de color y las acciones disponibles según el estado.
+6. EL Frontend DEBERÁ mostrar el estado de la simulación (DRAFT / COMPLETED / DELETED) con un badge de color y las acciones disponibles según el estado.
 
 ---
 
@@ -742,6 +714,9 @@ CREATE TABLE token_blacklist (
     INDEX idx_blacklist_expires (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Legacy residual table from the removed OTP flow.
+-- It may still exist in historical migrations, but it is not part of the
+-- current authentication baseline described in Requerimiento 2.
 CREATE TABLE otp_codes (
     id          BIGINT          PRIMARY KEY AUTO_INCREMENT,
     user_id     BIGINT          NOT NULL,
@@ -810,7 +785,7 @@ CREATE TABLE simulations (
     user_id                     BIGINT          NOT NULL,
     technology_id               BIGINT          NOT NULL,
     name                        VARCHAR(255)    NOT NULL,
-    status                      ENUM('DRAFT','COMPLETED','ARCHIVED') NOT NULL DEFAULT 'DRAFT',
+    status                      ENUM('DRAFT','COMPLETED','DELETED') NOT NULL DEFAULT 'DRAFT',
 
     -- Parámetros de entrada
     latitude                    DECIMAL(10,8)   NOT NULL,
@@ -867,11 +842,11 @@ INSERT INTO roles (name, description) VALUES
 
 ---
 
-## Anexo E — Especificación Técnica de Integración con LLMs
+## Anexo E — Especificación Técnica de Integración con LLMs (Roadmap de producto)
 
 ### E.1 Arquitectura de Integración
 
-El AI_Service se implementa como un bounded context independiente dentro del backend Spring Boot, siguiendo la misma arquitectura hexagonal. Se comunica con proveedores LLM externos (OpenAI, Anthropic, Google) a través de un puerto de salida (`LLMProviderPort`) con múltiples adaptadores intercambiables.
+El siguiente diseño describe una capacidad de producto planificada. No forma parte del baseline implementado actual del backend, pero documenta una dirección técnica coherente para una futura integración con LLMs.
 
 ```
 AI_Service
@@ -1123,7 +1098,7 @@ GOOGLE_AI_API_KEY=...
 AI_PROVIDER=openai
 AI_FALLBACK_PROVIDER=anthropic
 
-# Email (para OTP y activación)
+# Email (para verificación de cuenta y notificaciones)
 MAIL_HOST=smtp.sendgrid.net
 MAIL_PORT=587
 MAIL_USERNAME=apikey
