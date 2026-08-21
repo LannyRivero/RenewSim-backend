@@ -77,7 +77,8 @@ class SimulationRecordRepositoryAdapterTest {
         SimulationEntity second = new SimulationEntity();
         Simulation firstSimulation = existingSimulation(55L);
         Simulation secondSimulation = existingSimulation(56L);
-        when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(first, second));
+        when(repository.findByCreatedByAndStatusNotOrderByCreatedAtDesc("alice", "DELETED"))
+                .thenReturn(List.of(first, second));
         when(entityMapper.toReadModel(first)).thenReturn(toReadModel(firstSimulation));
         when(entityMapper.toReadModel(second)).thenReturn(toReadModel(secondSimulation));
 
@@ -85,21 +86,71 @@ class SimulationRecordRepositoryAdapterTest {
         List<SimulationReadModel> result = adapter.findByCreatedByOrderByCreatedAtDesc("alice");
 
         assertThat(result).containsExactly(toReadModel(firstSimulation), toReadModel(secondSimulation));
-        verify(repository).findByCreatedByOrderByCreatedAtDesc("alice");
+        verify(repository).findByCreatedByAndStatusNotOrderByCreatedAtDesc("alice", "DELETED");
         verify(entityMapper).toReadModel(first);
         verify(entityMapper).toReadModel(second);
     }
 
     @Test
-    @DisplayName("delete methods delegate directly to repository")
-    void deleteMethodsDelegateDirectlyToRepository() {
+    @DisplayName("findActiveByCreatedBy maps only non-deleted simulations")
+    void findActiveByCreatedByMapsOnlyNonDeletedSimulations() {
+        SimulationEntity first = new SimulationEntity();
+        SimulationEntity second = new SimulationEntity();
+        Simulation firstSimulation = existingSimulation(55L);
+        Simulation secondSimulation = existingSimulation(56L);
+        when(repository.findByCreatedByAndStatusNotOrderByCreatedAtDesc("alice", "DELETED"))
+                .thenReturn(List.of(first, second));
+        when(entityMapper.toDomain(first)).thenReturn(firstSimulation);
+        when(entityMapper.toDomain(second)).thenReturn(secondSimulation);
+
         SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
 
-        adapter.deleteById(55L);
-        adapter.deleteAllByCreatedBy("alice");
+        List<Simulation> result = adapter.findActiveByCreatedBy("alice");
 
-        verify(repository).deleteById(55L);
-        verify(repository).deleteAllByCreatedBy("alice");
+        assertThat(result).containsExactly(firstSimulation, secondSimulation);
+        verify(repository).findByCreatedByAndStatusNotOrderByCreatedAtDesc("alice", "DELETED");
+        verify(entityMapper).toDomain(first);
+        verify(entityMapper).toDomain(second);
+    }
+
+    @Test
+    @DisplayName("history/dashboard reads exclude deleted simulations")
+    void readModelsExcludeDeletedSimulations() {
+        SimulationEntity first = new SimulationEntity();
+        SimulationEntity second = new SimulationEntity();
+        Simulation firstSimulation = existingSimulation(55L);
+        Simulation secondSimulation = existingSimulation(56L);
+        when(repository.findByCreatedByAndStatusNotOrderByCreatedAtDesc("alice", "DELETED"))
+                .thenReturn(List.of(first, second));
+        when(entityMapper.toReadModel(first)).thenReturn(toReadModel(firstSimulation));
+        when(entityMapper.toReadModel(second)).thenReturn(toReadModel(secondSimulation));
+
+        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
+
+        List<SimulationReadModel> result = adapter.findByCreatedByOrderByCreatedAtDesc("alice");
+
+        assertThat(result).containsExactly(toReadModel(firstSimulation), toReadModel(secondSimulation));
+        verify(repository).findByCreatedByAndStatusNotOrderByCreatedAtDesc("alice", "DELETED");
+    }
+
+    @Test
+    @DisplayName("save persists a soft-deleted simulation instead of deleting the row")
+    void savePersistsSoftDeletedSimulation() {
+        Simulation simulation = existingSimulation(55L);
+        simulation.delete();
+        SimulationEntity entity = new SimulationEntity();
+        SimulationEntity saved = new SimulationEntity();
+        saved.setId(55L);
+
+        when(entityMapper.toEntity(simulation)).thenReturn(entity);
+        when(repository.save(entity)).thenReturn(saved);
+
+        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
+
+        adapter.save(simulation);
+
+        verify(entityMapper).toEntity(simulation);
+        verify(repository).save(entity);
     }
 
     private Simulation draftSimulation() {

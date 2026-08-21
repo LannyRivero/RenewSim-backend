@@ -20,12 +20,15 @@ public class DeleteSimulationService implements DeleteRealSimulationUseCase {
     public void deleteSimulation(Long id, String requesterUsername, boolean isAdmin) {
         Simulation simulation = getAccessibleSimulation(id, requesterUsername, isAdmin);
         simulation.delete();
-        repository.deleteById(simulation.getId().value());
+        repository.save(simulation);
     }
 
     @Override
     public void deleteAllUserSimulations(String username) {
-        repository.deleteAllByCreatedBy(username);
+        repository.findActiveByCreatedBy(username).forEach(simulation -> {
+            simulation.delete();
+            repository.save(simulation);
+        });
     }
 
     private Simulation getAccessibleSimulation(Long id, String requesterUsername, boolean isAdmin) {

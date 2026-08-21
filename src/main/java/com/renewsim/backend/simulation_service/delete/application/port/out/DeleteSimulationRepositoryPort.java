@@ -2,13 +2,14 @@ package com.renewsim.backend.simulation_service.delete.application.port.out;
 
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface DeleteSimulationRepositoryPort {
 
     Optional<Simulation> findById(Long id);
 
-    void deleteById(Long id);
+    List<Simulation> findActiveByCreatedBy(String createdBy);
 
-    void deleteAllByCreatedBy(String createdBy);
+    Simulation save(Simulation simulation);
 }
