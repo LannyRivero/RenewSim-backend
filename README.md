@@ -133,8 +133,8 @@ La base quedará disponible en:
 Linux/macOS:
 
 ```bash
-export JWT_SECRET_BASE64=<base64-secret>
-export OPENWEATHER_API_KEY=<api-key-opcional>
+export JWT_SECRET_BASE64="<base64-secret>"
+export OPENWEATHER_API_KEY="<api-key-opcional>"
 ```
 
 Windows PowerShell:
@@ -149,12 +149,14 @@ $env:OPENWEATHER_API_KEY="<api-key-opcional>"
 Linux/macOS:
 
 ```bash
+export SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3307/renewsim?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
 Windows PowerShell:
 
 ```powershell
+$env:SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3307/renewsim?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"
 ```
 
