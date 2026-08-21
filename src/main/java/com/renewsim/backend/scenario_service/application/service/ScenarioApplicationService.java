@@ -6,6 +6,7 @@ import com.renewsim.backend.scenario_service.application.command.UpdateScenarioC
 import com.renewsim.backend.scenario_service.application.mapper.ScenarioDtoMapper;
 import com.renewsim.backend.scenario_service.application.port.in.CreateScenarioUseCase;
 import com.renewsim.backend.scenario_service.application.port.in.GetScenarioUseCase;
+import com.renewsim.backend.scenario_service.application.port.in.ScenarioCatalogLookupUseCase;
 import com.renewsim.backend.scenario_service.application.port.in.UpdateScenarioUseCase;
 import com.renewsim.backend.scenario_service.application.port.out.ScenarioRepositoryPort;
 import com.renewsim.backend.scenario_service.application.result.ScenarioResponseDTO;
@@ -19,7 +20,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class ScenarioApplicationService implements GetScenarioUseCase, CreateScenarioUseCase, UpdateScenarioUseCase {
+public class ScenarioApplicationService implements GetScenarioUseCase, CreateScenarioUseCase, UpdateScenarioUseCase,
+        ScenarioCatalogLookupUseCase {
 
     private final ScenarioRepositoryPort repository;
     private final ScenarioDtoMapper dtoMapper;
@@ -36,6 +38,22 @@ public class ScenarioApplicationService implements GetScenarioUseCase, CreateSce
     public ScenarioResponseDTO getScenarioById(GetScenarioByIdCommand command) {
         Scenario scenario = validator.getExistingActiveScenario(command.id());
         return dtoMapper.toResponse(scenario);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Optional<ScenarioCatalogSnapshot> findActiveScenarioById(Long scenarioId) {
+        return repository.findById(scenarioId)
+                .filter(Scenario::isActive)
+                .map(scenario -> new ScenarioCatalogSnapshot(
+                        scenario.getId(),
+                        scenario.getName(),
+                        scenario.getTechnologyId(),
+                        scenario.getDefaultCapacityKw(),
+                        scenario.getDefaultInvestment().amount().doubleValue(),
+                        scenario.getDefaultInvestment().currency(),
+                        scenario.getDefaultTariff(),
+                        scenario.getDefaultConsumption()));
     }
 
     @Override

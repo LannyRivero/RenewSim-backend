@@ -4,8 +4,8 @@ import com.renewsim.backend.simulation_service.delete.application.port.in.Delete
 import com.renewsim.backend.simulation_service.delete.application.port.out.DeleteSimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.shared.exception.ForbiddenException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +32,7 @@ public class DeleteSimulationService implements DeleteRealSimulationUseCase {
         Simulation simulation = repository.findById(id)
                 .orElseThrow(() -> new SimulationNotFoundException(id));
         if (!isAdmin && !simulation.isOwnedBy(requesterUsername)) {
-            throw new AccessDeniedException("Not owner of simulation");
+            throw new ForbiddenException("Not owner of simulation");
         }
         return simulation;
     }

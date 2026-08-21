@@ -124,6 +124,25 @@ class SimulationRecordEntityMapperTest {
         assertThat(rebuilt.getScenarioId()).isEqualTo(42L);
     }
 
+    @Test
+    @DisplayName("toReadModel prefers annual energy over legacy total energy")
+    void toReadModelPrefersAnnualEnergyOverLegacyTotalEnergy() {
+        SimulationEntity entity = new SimulationEntity();
+        entity.setId(91L);
+        entity.setName("Solar - Legacy");
+        entity.setEnergyType("solar");
+        entity.setLocation("Sevilla, Andalucia, ES");
+        entity.setStatus("COMPLETED");
+        entity.setAnnualEnergyGenerated(457200.0);
+        entity.setEnergyGenerated(9_144_000.0);
+        entity.setEstimatedEnergy(0.0);
+        entity.setCreatedAt(LocalDateTime.parse("2026-06-30T14:00:00"));
+
+        var readModel = mapper.toReadModel(entity);
+
+        assertThat(readModel.annualGenerationKwh()).isEqualTo(457200.0);
+    }
+
     private Simulation completedSimulation() {
         return Simulation.reconstitute(
                 55L,

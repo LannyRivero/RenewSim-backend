@@ -58,6 +58,9 @@ public class SimulationEntity {
     @Column(name = "energy_generated", insertable = false, updatable = false)
     private Double energyGenerated;
 
+    @Column(name = "annual_energy_generated", insertable = false, updatable = false)
+    private Double annualEnergyGenerated;
+
     @Column(name = "climate_data")
     private String climateData;
 

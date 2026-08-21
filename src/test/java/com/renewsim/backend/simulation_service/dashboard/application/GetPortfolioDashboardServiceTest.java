@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.simulation_service.dashboard.application.port.out.PortfolioDashboardQueryPort;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardRiskAlert;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardResult;
+import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
@@ -85,14 +86,15 @@ class GetPortfolioDashboardServiceTest {
                 draft.assignScenarioId(44L);
                 draft.assignTechnologyIds(List.of(11L));
 
-                when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(best, risky, draft));
+                when(repository.findByCreatedByOrderByCreatedAtDesc("alice"))
+                                .thenReturn(List.of(toReadModel(best), toReadModel(risky), toReadModel(draft)));
                 when(technologyLookupPort.findActiveCo2ReductionFactorByEnergyType("solar"))
                                 .thenReturn(Optional.of(0.45));
 
                 PortfolioDashboardResult response = service.getDashboard("alice");
 
                 assertThat(response.summary().totalSimulations()).isEqualTo(3);
-        assertThat(response.summary().atRiskCount()).isEqualTo(2);
+                assertThat(response.summary().atRiskCount()).isEqualTo(2);
                 assertThat(response.recommendedScenario()).isNotNull();
                 assertThat(response.recommendedScenario().id()).isEqualTo("55");
                 assertThat(response.prioritizedScenarios()).hasSize(3);
@@ -121,7 +123,7 @@ class GetPortfolioDashboardServiceTest {
                                 }
                                 """);
 
-                when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(partial));
+                when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(toReadModel(partial)));
 
                 PortfolioDashboardResult response = service.getDashboard("alice");
 
@@ -142,7 +144,8 @@ class GetPortfolioDashboardServiceTest {
 
                 Simulation malformed = completedSimulation(59L, "alice", "{ bad json");
 
-                when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(malformed));
+                when(repository.findByCreatedByOrderByCreatedAtDesc("alice"))
+                                .thenReturn(List.of(toReadModel(malformed)));
 
                 PortfolioDashboardResult response = service.getDashboard("alice");
 
@@ -150,5 +153,22 @@ class GetPortfolioDashboardServiceTest {
                 assertThat(response.summary().atRiskCount()).isEqualTo(1);
                 assertThat(response.prioritizedScenarios()).hasSize(1);
                 assertThat(response.prioritizedScenarios().getFirst().priority()).isEqualTo("REVIEW");
+        }
+
+        private SimulationReadModel toReadModel(Simulation simulation) {
+                return new SimulationReadModel(
+                                simulation.getId().value(),
+                                simulation.getName(),
+                                simulation.getTechnology() != null ? simulation.getTechnology().value() : null,
+                                simulation.getStatus() != null ? simulation.getStatus().name() : null,
+                                simulation.getLocation().label(),
+                                simulation.getAnnualGenerationKwh(),
+                                simulation.getAnnualSavings(),
+                                simulation.getNpv(),
+                                simulation.getIrrPct(),
+                                simulation.getRecommendation(),
+                                simulation.getEconomics() != null ? simulation.getEconomics().capexTotal() : null,
+                                simulation.getResultSnapshot(),
+                                simulation.getCreatedAt());
         }
 }

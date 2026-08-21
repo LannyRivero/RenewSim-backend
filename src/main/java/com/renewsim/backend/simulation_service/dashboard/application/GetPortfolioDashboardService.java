@@ -1,9 +1,10 @@
 package com.renewsim.backend.simulation_service.dashboard.application;
 
-import com.renewsim.backend.simulation_service.dashboard.application.port.out.PortfolioDashboardQueryPort;
 import com.renewsim.backend.simulation_service.dashboard.application.port.in.GetPortfolioDashboardUseCase;
+import com.renewsim.backend.simulation_service.dashboard.application.port.out.PortfolioDashboardQueryPort;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.PortfolioDashboardResult;
 import com.renewsim.backend.simulation_service.dashboard.application.projection.ScenarioSnapshot;
+import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -35,14 +36,17 @@ public class GetPortfolioDashboardService implements GetPortfolioDashboardUseCas
         public PortfolioDashboardResult getDashboard(String username) {
                 Timer.Sample sample = telemetry.start();
                 try {
-                        List<ScenarioSnapshot> snapshots = repository.findByCreatedByOrderByCreatedAtDesc(username).stream()
+                        List<SimulationReadModel> simulations = repository
+                                        .findByCreatedByOrderByCreatedAtDesc(username);
+                        List<ScenarioSnapshot> snapshots = simulations.stream()
                                         .map(snapshotAssembler::toSnapshot)
                                         .toList();
 
                         List<ScenarioSnapshot> ranked = snapshots.stream()
                                         .sorted(Comparator.comparingInt(ScenarioSnapshot::score).reversed()
                                                         .thenComparing(ScenarioSnapshot::createdAt,
-                                                                        Comparator.nullsLast(Comparator.reverseOrder())))
+                                                                        Comparator.nullsLast(
+                                                                                        Comparator.reverseOrder())))
                                         .toList();
 
                         PortfolioDashboardResult result = dashboardAggregator.buildDashboard(snapshots, ranked);
@@ -54,7 +58,8 @@ public class GetPortfolioDashboardService implements GetPortfolioDashboardUseCas
                         return result;
                 } catch (RuntimeException ex) {
                         telemetry.recordError(USE_CASE, sample);
-                        log.warn("Simulation dashboard failed user={} reason={}", username, ex.getClass().getSimpleName());
+                        log.warn("Simulation dashboard failed user={} reason={}", username,
+                                        ex.getClass().getSimpleName());
                         throw ex;
                 }
         }

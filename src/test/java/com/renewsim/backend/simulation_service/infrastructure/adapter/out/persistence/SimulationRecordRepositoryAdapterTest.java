@@ -11,6 +11,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocatio
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
+import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,16 +78,16 @@ class SimulationRecordRepositoryAdapterTest {
         Simulation firstSimulation = existingSimulation(55L);
         Simulation secondSimulation = existingSimulation(56L);
         when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(first, second));
-        when(entityMapper.toDomain(first)).thenReturn(firstSimulation);
-        when(entityMapper.toDomain(second)).thenReturn(secondSimulation);
+        when(entityMapper.toReadModel(first)).thenReturn(toReadModel(firstSimulation));
+        when(entityMapper.toReadModel(second)).thenReturn(toReadModel(secondSimulation));
 
         SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
-        List<Simulation> result = adapter.findByCreatedByOrderByCreatedAtDesc("alice");
+        List<SimulationReadModel> result = adapter.findByCreatedByOrderByCreatedAtDesc("alice");
 
-        assertThat(result).containsExactly(firstSimulation, secondSimulation);
+        assertThat(result).containsExactly(toReadModel(firstSimulation), toReadModel(secondSimulation));
         verify(repository).findByCreatedByOrderByCreatedAtDesc("alice");
-        verify(entityMapper).toDomain(first);
-        verify(entityMapper).toDomain(second);
+        verify(entityMapper).toReadModel(first);
+        verify(entityMapper).toReadModel(second);
     }
 
     @Test
@@ -139,5 +140,22 @@ class SimulationRecordRepositoryAdapterTest {
                 "alice",
                 LocalDateTime.parse("2026-06-30T14:00:00"),
                 LocalDateTime.parse("2026-06-30T14:30:00"));
+    }
+
+    private SimulationReadModel toReadModel(Simulation simulation) {
+        return new SimulationReadModel(
+                simulation.getId().value(),
+                simulation.getName(),
+                simulation.getTechnology().value(),
+                simulation.getStatus().name(),
+                simulation.getLocation().label(),
+                simulation.getAnnualGenerationKwh(),
+                simulation.getAnnualSavings(),
+                simulation.getNpv(),
+                simulation.getIrrPct(),
+                simulation.getRecommendation(),
+                simulation.getEconomics().capexTotal(),
+                simulation.getResultSnapshot(),
+                simulation.getCreatedAt());
     }
 }

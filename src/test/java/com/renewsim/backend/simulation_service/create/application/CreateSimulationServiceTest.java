@@ -2,7 +2,6 @@ package com.renewsim.backend.simulation_service.create.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.shared.exception.BadRequestException;
-import com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand;
 import com.renewsim.backend.simulation_service.create.application.port.out.CreateSimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.create.application.port.out.PvgisSolarResourcePort;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
@@ -13,6 +12,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfil
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationResultSnapshotJacksonWriter;
 import com.renewsim.backend.simulation_service.shared.application.SimulationBusinessTelemetry;
+import com.renewsim.backend.simulation_service.shared.application.SimulationTechnologySupport;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
@@ -50,7 +50,7 @@ class CreateSimulationServiceTest {
         @DisplayName("createSimulation computes and stores the real contract snapshots")
         void createSimulationComputesAndStoresRealContractSnapshots() {
                 CreateSimulationService service = newCreateSimulationService();
-                CreateRealSimulationCommand command = validCommand();
+                com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand command = validCommand();
 
                 when(technologyLookupPort.existsActiveByEnergyType("solar")).thenReturn(true);
                 when(technologyLookupPort.recommendActiveTechnologyIdsByEnergyType("solar"))
@@ -75,12 +75,16 @@ class CreateSimulationServiceTest {
                 assertThat(captor.getAllValues().get(1).getResultSnapshot()).isNotBlank();
                 assertThat(captor.getAllValues().get(1).getTechnologyIds()).containsExactly(1L, 2L);
                 verify(technologyLookupPort).recommendActiveTechnologyIdsByEnergyType("solar");
-                assertThat(meterRegistry().counter("simulation_service_use_case_total", "use_case", "create", "outcome", "success").count())
+                assertThat(meterRegistry().counter("simulation_service_use_case_total", "use_case", "create", "outcome",
+                                "success").count())
                                 .isEqualTo(1.0d);
-                assertThat(meterRegistry().counter("simulation_service_business_created_total", "technology", "solar", "origin", "direct").count())
+                assertThat(meterRegistry().counter("simulation_service_business_created_total", "technology", "solar",
+                                "origin", "direct").count())
                                 .isEqualTo(1.0d);
-                assertThat(meterRegistry().counter("simulation_service_business_recommendation_total", "technology", "solar",
-                                "recommendation", response.summary().recommendation()).count())
+                assertThat(meterRegistry()
+                                .counter("simulation_service_business_recommendation_total", "technology", "solar",
+                                                "recommendation", response.summary().recommendation())
+                                .count())
                                 .isEqualTo(1.0d);
         }
 
@@ -89,7 +93,7 @@ class CreateSimulationServiceTest {
         void createSimulationRejectsNotImplementedWindBeforePersisting() {
                 CreateSimulationService service = newCreateSimulationService();
 
-                CreateRealSimulationCommand command = new CreateRealSimulationCommand(
+                com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand command = new com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand(
                                 validCommand().name(),
                                 Technology.of("wind"),
                                 validCommand().location(),
@@ -114,7 +118,7 @@ class CreateSimulationServiceTest {
         void createSimulationRejectsCallerSuppliedTechnologyIdsThatAreInactive() {
                 CreateSimulationService service = newCreateSimulationService();
 
-                CreateRealSimulationCommand command = new CreateRealSimulationCommand(
+                com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand command = new com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand(
                                 validCommand().name(),
                                 validCommand().technology(),
                                 validCommand().location(),
@@ -140,7 +144,7 @@ class CreateSimulationServiceTest {
         void createSimulationRejectsCallerSuppliedTechnologyIdsThatDoNotMatchTheSimulationEnergyType() {
                 CreateSimulationService service = newCreateSimulationService();
 
-                CreateRealSimulationCommand command = new CreateRealSimulationCommand(
+                com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand command = new com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand(
                                 validCommand().name(),
                                 validCommand().technology(),
                                 validCommand().location(),
@@ -166,7 +170,7 @@ class CreateSimulationServiceTest {
         void createSimulationRejectsCallerSuppliedTechnologyIdsThatAreDuplicated() {
                 CreateSimulationService service = newCreateSimulationService();
 
-                CreateRealSimulationCommand command = new CreateRealSimulationCommand(
+                com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand command = new com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand(
                                 validCommand().name(),
                                 validCommand().technology(),
                                 validCommand().location(),
@@ -198,13 +202,12 @@ class CreateSimulationServiceTest {
         private CreateSimulationService newCreateSimulationService() {
                 ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
                 return new CreateSimulationService(
-                                repository,
-                                technologyLookupPort,
-                                engines(resourcePort),
+                                this.repository,
                                 new SimulationCompletionAssembler(
                                                 new SimulationResultSnapshotJacksonWriter(objectMapper)),
                                 new SimulationUseCaseTelemetry(meterRegistry()),
-                                new SimulationBusinessTelemetry(meterRegistry()));
+                                new SimulationBusinessTelemetry(meterRegistry()),
+                                new SimulationTechnologySupport(technologyLookupPort, engines(resourcePort)));
         }
 
         private SimpleMeterRegistry meterRegistry() {

@@ -4,7 +4,7 @@ import com.renewsim.backend.simulation_service.history.application.port.in.ListU
 import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
 import com.renewsim.backend.simulation_service.history.application.result.SimulationHistoryRowResult;
 import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
-import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -50,19 +50,19 @@ public class ListSimulationsService implements ListUserRealSimulationsUseCase {
         }
     }
 
-    private SimulationHistoryRowResult toHistoryRow(Simulation simulation) {
+    private SimulationHistoryRowResult toHistoryRow(SimulationReadModel simulation) {
         return new SimulationHistoryRowResult(
-                String.valueOf(simulation.getId()),
-                simulation.getName(),
-                simulation.getTechnology() != null ? simulation.getTechnology().value() : null,
-                simulation.getStatus() != null ? simulation.getStatus().name().toLowerCase() : "completed",
-                formatDate(simulation.getCreatedAt()),
-                simulation.getLocation().label(),
-                defaultNumber(simulation.getAnnualGenerationKwh()),
-                defaultNumber(simulation.getAnnualSavings()),
-                defaultNumber(simulation.getNpv()),
-                simulation.getIrrPct(),
-                simulation.getRecommendation(),
+                String.valueOf(simulation.id()),
+                simulation.name(),
+                simulation.technology(),
+                simulation.status() != null ? simulation.status().toLowerCase() : "completed",
+                formatDate(simulation.createdAt()),
+                simulation.locationLabel(),
+                defaultNumber(simulation.annualGenerationKwh()),
+                defaultNumber(simulation.annualSavings()),
+                defaultNumber(simulation.npv()),
+                simulation.irrPct(),
+                simulation.recommendation(),
                 MODEL_VERSION,
                 RESOURCE_SOURCE);
     }

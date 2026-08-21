@@ -21,6 +21,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationResultSnapshotJacksonWriter;
 import com.renewsim.backend.simulation_service.shared.application.SimulationBusinessTelemetry;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
+import com.renewsim.backend.simulation_service.shared.application.SimulationTechnologySupport;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
 import com.renewsim.backend.simulation_service.shared.application.port.out.TechnologyLookupPort;
 import com.renewsim.backend.simulation_service.update.application.command.UpdateSimulationCommand;
@@ -31,7 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.access.AccessDeniedException;
+import com.renewsim.backend.shared.exception.ForbiddenException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -87,7 +88,8 @@ class UpdateSimulationServiceTest {
         assertThat(saved.getTechnologyIds()).containsExactly(1L, 2L);
 
         verify(detailQueryPort).findById(55L);
-        assertThat(meterRegistry().counter("simulation_service_use_case_total", "use_case", "update", "outcome", "success").count())
+        assertThat(meterRegistry()
+                .counter("simulation_service_use_case_total", "use_case", "update", "outcome", "success").count())
                 .isEqualTo(1.0d);
         assertThat(meterRegistry().counter("simulation_service_business_recommendation_total", "technology", "solar",
                 "recommendation", response.summary().recommendation()).count())
@@ -115,7 +117,7 @@ class UpdateSimulationServiceTest {
         when(detailQueryPort.findById(55L)).thenReturn(Optional.of(existingSimulation()));
 
         assertThatThrownBy(() -> service.updateSimulation(validUpdateCommand(), "mallory", false))
-                .isInstanceOf(AccessDeniedException.class);
+                .isInstanceOf(ForbiddenException.class);
 
         verify(repository, never()).save(any());
     }
@@ -155,12 +157,11 @@ class UpdateSimulationServiceTest {
         return new UpdateSimulationService(
                 detailQueryPort,
                 repository,
-                technologyLookupPort,
-                engines(resourcePort),
                 new SimulationCompletionAssembler(
                         new SimulationResultSnapshotJacksonWriter(objectMapper)),
                 new SimulationUseCaseTelemetry(meterRegistry()),
-                new SimulationBusinessTelemetry(meterRegistry()));
+                new SimulationBusinessTelemetry(meterRegistry()),
+                new SimulationTechnologySupport(technologyLookupPort, engines(resourcePort)));
     }
 
     private UpdateSimulationCommand validUpdateCommand() {

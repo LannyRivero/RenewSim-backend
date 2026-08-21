@@ -4,6 +4,7 @@ import com.renewsim.backend.simulation_service.detail.application.port.in.GetRea
 import com.renewsim.backend.simulation_service.detail.application.port.out.SimulationDetailQueryPort;
 import com.renewsim.backend.simulation_service.domain.exception.SimulationNotFoundException;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.shared.exception.ForbiddenException;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
 import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationResultSnapshotReaderPort;
@@ -11,7 +12,6 @@ import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,9 +36,11 @@ public class GetSimulationService implements GetRealSimulationUseCase {
                 throw new SimulationNotFoundException(id);
             }
 
-            SimulationDetailsResult result = readSnapshotOrDegrade(id, simulation.getResultSnapshot(), requesterUsername, isAdmin, sample);
+            SimulationDetailsResult result = readSnapshotOrDegrade(id, simulation.getResultSnapshot(),
+                    requesterUsername, isAdmin, sample);
             telemetry.recordSuccess(USE_CASE, sample);
-            log.info("Simulation detail retrieved requester={} simulationId={} admin={}", requesterUsername, id, isAdmin);
+            log.info("Simulation detail retrieved requester={} simulationId={} admin={}", requesterUsername, id,
+                    isAdmin);
             return result;
         } catch (RuntimeException ex) {
             telemetry.recordError(USE_CASE, sample);
@@ -79,7 +81,7 @@ public class GetSimulationService implements GetRealSimulationUseCase {
         Simulation simulation = repository.findById(id)
                 .orElseThrow(() -> new SimulationNotFoundException(id));
         if (!isAdmin && !simulation.isOwnedBy(requesterUsername)) {
-            throw new AccessDeniedException("Not owner of simulation");
+            throw new ForbiddenException("Not owner of simulation");
         }
         return simulation;
     }
