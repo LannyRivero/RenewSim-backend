@@ -10,6 +10,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Simulation {
 
@@ -131,7 +132,46 @@ public class Simulation {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public Simulation rebuildForUpdate(
+            String name,
+            Technology technology,
+            SimulationLocation location,
+            SimulationSystem system,
+            ConsumptionProfile demand,
+            SimulationEconomics economics,
+            List<Long> technologyIds,
+            LocalDateTime editTimestamp) {
+        if (status.isTerminal()) {
+            throw new InvalidSimulationStatusTransitionException("update", status);
+        }
+
+        return new Simulation(
+                id,
+                name,
+                technology,
+                location,
+                system,
+                demand,
+                economics,
+                SimulationStatus.DRAFT,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                technologyIds,
+                scenarioId,
+                createdBy,
+                createdAt,
+                Objects.requireNonNull(editTimestamp, "editTimestamp is required"));
+    }
+
     public void update(SimulationCompletion completion) {
+        update(completion, LocalDateTime.now());
+    }
+
+    public void update(SimulationCompletion completion, LocalDateTime updatedAt) {
         if (status.isTerminal()) {
             throw new InvalidSimulationStatusTransitionException("update", status);
         }
@@ -148,7 +188,7 @@ public class Simulation {
             this.technologyIds = new ArrayList<>(completion.technologyIds());
         }
         this.status = SimulationStatus.COMPLETED;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt is required");
     }
 
     // ========== QUERIES ==========

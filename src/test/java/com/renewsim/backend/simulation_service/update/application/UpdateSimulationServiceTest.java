@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.renewsim.backend.simulation_service.support.SimulationCreateTestFixtures.engines;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationFormatUtils.formatDate;
 import static com.renewsim.backend.simulation_service.support.SimulationCreateTestFixtures.profile;
 import static com.renewsim.backend.simulation_service.support.SimulationCreateTestFixtures.validCommand;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -83,9 +84,12 @@ class UpdateSimulationServiceTest {
         Simulation saved = captor.getValue();
         assertThat(saved.getId().value()).isEqualTo(55L);
         assertThat(saved.getCreatedBy()).isEqualTo("alice");
+        assertThat(saved.getCreatedAt()).isEqualTo(LocalDateTime.parse("2026-06-30T14:00:00"));
         assertThat(saved.getStatus()).isEqualTo(SimulationStatus.COMPLETED);
         assertThat(saved.getResultSnapshot()).isNotBlank();
         assertThat(saved.getTechnologyIds()).containsExactly(1L, 2L);
+        assertThat(saved.getUpdatedAt()).isNotNull();
+        assertThat(response.updatedAt()).isEqualTo(formatDate(saved.getUpdatedAt()));
 
         verify(detailQueryPort).findById(55L);
         assertThat(meterRegistry()
@@ -202,8 +206,8 @@ class UpdateSimulationServiceTest {
                 List.of(11L, 12L),
                 null,
                 "alice",
-                LocalDateTime.now(),
-                LocalDateTime.now());
+                LocalDateTime.parse("2026-06-30T14:00:00"),
+                LocalDateTime.parse("2026-06-30T14:30:00"));
     }
 
     private SimpleMeterRegistry meterRegistry() {
