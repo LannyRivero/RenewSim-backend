@@ -414,9 +414,10 @@ class CreateSimulationFromScenarioServiceTest {
                         SimulationEntity stored = store.get(id);
                         return Optional.ofNullable(stored == null ? null : copyEntity(stored));
                 });
-                when(jpaRepository.findByCreatedByOrderByCreatedAtDesc("alice")).thenAnswer(invocation -> store.values()
+                when(jpaRepository.findByCreatedByAndStatusNotOrderByCreatedAtDesc("alice", "DELETED")).thenAnswer(invocation -> store.values()
                                 .stream()
                                 .filter(entity -> "alice".equals(entity.getCreatedBy()))
+                                .filter(entity -> !"DELETED".equalsIgnoreCase(entity.getStatus()))
                                 .sorted((left, right) -> right.getCreatedAt().compareTo(left.getCreatedAt()))
                                 .map(this::copyEntity)
                                 .toList());
