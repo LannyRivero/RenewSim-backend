@@ -1,555 +1,336 @@
-# RenewSim - Renewable Energy Simulation Platform 🌞⚡💧
+# RenewSim Backend
 
-![Status](https://img.shields.io/badge/status-in%20development-yellow)
-![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen?logo=springboot)
-![React](https://img.shields.io/badge/React-18-blue?logo=react)
-![Coverage](https://img.shields.io/badge/coverage-0%25-red?logo=codecov)
+Servicio backend de **RenewSim**, construido con **Spring Boot** y **MySQL**.
 
-[![CI - Backend](https://github.com/YOUR_USERNAME/renewsim-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/renewsim-platform/actions/workflows/ci.yml)
+Este README está pensado para que puedas entender rápido qué hace el proyecto, cómo levantarlo en local y qué partes del backend ya están realmente defendibles.
 
----
+## Descripción básica
 
-## 📋 Descripción
+- API REST en **Java 21 / Spring Boot 3.5**
+- Persistencia con **Spring Data JPA + Hibernate + MySQL**
+- Documentación de API con **Swagger / OpenAPI**
+- Salud y métricas con **Spring Boot Actuator + Micrometer + Prometheus**
+- Seguridad con **Spring Security + JWT + refresh token**
+- Testing con **JUnit 5, Mockito, Testcontainers y jqwik**
 
-**RenewSim** es una plataforma profesional de simulación de proyectos de energías renovables que permite evaluar la **viabilidad técnica, económica y ambiental** de instalaciones solares, eólicas e hidroeléctricas, con análisis predictivo impulsado por **Inteligencia Artificial**.
+## Arquitectura y módulos
 
----
+El backend está organizado por bounded contexts y sigue una arquitectura hexagonal pragmática.
 
-## 🎯 Características Principales
+### Módulos principales
 
-### **💡 Simulación Energética Avanzada**
-- Cálculo de generación anual de energía (kWh/año)
-- ROI (Return on Investment) y periodo de retorno (payback)
-- VAN (Valor Actual Neto) y TIR (Tasa Interna de Retorno)
-- Reducción de emisiones de CO₂ (toneladas/año)
-- Factores climáticos por tipo de energía (solar, eólica, hidráulica)
+- `auth_service`: login, refresh token, logout, rate limiting, verificación de email
+- `user_service`: perfil de usuario, actualización de datos y cambio de contraseña
+- `role_service`: roles, permisos y asignaciones
+- `technology_service`: catálogo de tecnologías y estimaciones técnicas base
+- `scenario_service`: escenarios predefinidos
+- `simulation_service`: create, detail, history, dashboard, update, delete y location lookup
+- `shared`: seguridad, errores, OpenAPI, observabilidad y utilidades transversales
 
-### **🔒 Seguridad Empresarial**
-- Autenticación 2FA con Email OTP (6 dígitos, 5 min)
-- JWT stateless (access 1h + refresh 7d en HttpOnly cookie)
-- Rate limiting (5 intentos → 15 min block)
-- Token blacklist para revocación inmediata (JTI)
-- Roles y permisos (USER, ADMIN, ANALYST)
+### Estructura por capas
 
-### **🤖 Inteligencia Artificial**
-- Sugerencias de configuración basadas en ubicación y presupuesto
-- Predicción de rendimiento a N años con degradación
-- Generación de reportes narrativos multiidioma (ES/EN)
-- Chatbot conversacional sobre energías renovables
-- Fallback automático OpenAI → Anthropic (circuit breaker)
+- `web`: controladores REST, DTOs y validación HTTP
+- `application`: casos de uso, commands y orquestación
+- `domain`: aggregates, value objects, policies y excepciones
+- `infrastructure`: adapters JPA/HTTP, config, health y wiring técnico
 
-### **📊 Gestión y Colaboración**
-- Dashboard con métricas agregadas y mapa interactivo
-- Comparación de hasta 5 simulaciones (tabla + radar chart)
-- Compartición pública con tokens de 30 días
-- Generación de reportes PDF profesionales
-- Escenarios predefinidos para inicio rápido
+Patrón principal: **ports/use-cases + adapters**. Los casos de uso dependen de puertos, no de infraestructura concreta.
 
----
+## Funcionalidades
 
-## 🏗️ Arquitectura
+### Auth y seguridad
 
-### **Stack Tecnológico**
+- registro de usuario
+- login de un paso con JWT
+- refresh token en cookie HttpOnly
+- logout con revocación
+- rate limiting para auth
+- jerarquía de roles y scopes
+- verificación de email
 
-| Capa | Tecnología | Versión |
-|------|-----------|---------|
-| **Backend** | Java + Spring Boot | 21 + 3.2.1 |
-| **Frontend** | React + TypeScript + Vite | 18 + 5.x + 5.x |
-| **Base de Datos** | MySQL | 8.0 |
-| **Inteligencia Artificial** | OpenAI GPT-4o / Anthropic Claude 3.5 | Latest |
-| **Cache** | Caffeine | Latest |
-| **Resiliencia** | Resilience4j | Latest |
-| **Testing** | jUnit 5 + jqwik + Testcontainers | Latest |
-| **Despliegue** | Docker + Docker Compose | Latest |
+### Usuarios y roles
 
-### **Patrón Arquitectónico: Hexagonal (Ports & Adapters)**
+- perfil del usuario autenticado
+- actualización de perfil
+- cambio de contraseña
+- gestión de roles y permisos
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   WEB LAYER                         │
-│         Controllers + DTOs + Validation             │
-├─────────────────────────────────────────────────────┤
-│                APPLICATION LAYER                    │
-│      Use Cases + Commands + Mappers (Ports In)     │
-├─────────────────────────────────────────────────────┤
-│                  DOMAIN LAYER                       │
-│  Aggregates + VOs + Domain Services (Pure Java)    │
-├─────────────────────────────────────────────────────┤
-│              INFRASTRUCTURE LAYER                   │
-│  JPA Adapters + LLM Clients + Email (Ports Out)    │
-└─────────────────────────────────────────────────────┘
-```
+### Catálogo y escenarios
 
-### **6 Bounded Contexts (DDD)**
-1. **auth_service** - Autenticación 2FA + JWT
-2. **user_service** - Gestión de usuarios y perfiles
-3. **role_service** - Roles y permisos
-4. **technology_service** - Catálogo de tecnologías renovables
-5. **simulation_service** - Motor de cálculo y CRUD de simulaciones
-6. **ai_service** - Integración con LLMs (OpenAI + Anthropic)
+- catálogo de tecnologías
+- detalle de tecnologías
+- estimación técnica base
+- escenarios predefinidos
+- detalle y administración de escenarios
 
----
+### Simulation service
 
-## 📁 Estructura del Proyecto
+- crear simulaciones reales
+- crear simulaciones desde escenario predefinido
+- obtener detalle por id
+- listar simulaciones del usuario
+- dashboard agregado
+- update con recálculo
+- soft delete individual y masivo
+- reverse geocoding y búsqueda de ubicaciones
 
-```
-renewsim-platform/
-│
-├── docs/                                # Documentación técnica
-│   ├── requirements/
-│   │   └── requirements.md              # 24 RF + 8 RNF
-│   ├── design/
-│   │   ├── 01-architecture-overview.md  # Hexagonal + 6 ADRs
-│   │   ├── 02-domain-model.md           # Aggregates + VOs + Services
-│   │   ├── 03-database-design.md        # ERD + migraciones Flyway
-│   │   ├── 04-api-design.md             # 42 endpoints REST
-│   │   ├── 05-sequence-diagrams.md      # 5 flujos principales
-│   │   ├── 06-frontend-architecture.md  # React + TanStack Query
-│   │   ├── 07-design-patterns.md        # 13 patrones documentados
-│   │   ├── 08-testing-strategy.md       # PBT + Integration + E2E
-│   │   ├── 09-security-design.md        # Amenazas + mitigaciones
-│   │   └── 10-deployment-architecture.md # Docker + CI/CD
-│   └── implementation/
-│       └── IMPLEMENTATION_PLAN.md       # 8 fases, 123 tasks
-│
-├── backend/                             # Spring Boot 3.2.1 + Java 21
-│   ├── src/main/java/com/renewsim/backend/
-│   │   ├── auth_service/
-│   │   │   ├── domain/              # OtpCode, RefreshToken (pure Java)
-│   │   │   ├── application/         # LoginUseCase, commands
-│   │   │   ├── infrastructure/      # JwtTokenProvider, JPA adapters
-│   │   │   └── web/                 # AuthController, DTOs
-│   │   ├── user_service/
-│   │   │   ├── domain/              # User aggregate, UserRepository port
-│   │   │   ├── application/         # RegisterUserUseCase
-│   │   │   ├── infrastructure/      # UserJpaRepository adapter
-│   │   │   └── web/                 # UserController
-│   │   ├── role_service/
-│   │   ├── technology_service/
-│   │   ├── simulation_service/
-│   │   │   ├── domain/              # Simulation, SimulationEngine, calculators
-│   │   │   ├── application/         # CreateSimulationUseCase
-│   │   │   ├── infrastructure/      # SimulationJpaRepository, PdfGenerator
-│   │   │   └── web/                 # SimulationController
-│   │   ├── ai_service/
-│   │   │   ├── domain/              # LLMProviderPort (interface)
-│   │   │   ├── application/         # ChatUseCase, SuggestConfigurationUseCase
-│   │   │   ├── infrastructure/      # OpenAIAdapter, AnthropicAdapter
-│   │   │   └── web/                 # AIController
-│   │   └── shared/
-│   │       ├── domain/              # Email, Location, Money (VOs)
-│   │       ├── infrastructure/      # GlobalExceptionHandler, CacheConfig
-│   │       └── web/
-│   ├── src/main/resources/
-│   │   ├── db/migration/            # Flyway migrations V1-V8
-│   │   └── application.yml          # Perfiles: local, docker, prod
-│   ├── src/test/                    # Tests unitarios + integración
-│   ├── pom.xml                      # Maven dependencies
-│   └── Dockerfile                   # Multi-stage build (JDK 21 → JRE 21)
-│├── .github/workflows/
-│   └── ci.yml                       # GitHub Actions: backend-tests + frontend-tests
-│
-├── docker-compose.yml               # Backend + Frontend + MySQL
-├── .gitignore
-└── README.md
-```
+### Slice más endurecido hoy
 
----
+El módulo más trabajado del backend es `simulation_service`.
 
-## 🚀 Inicio Rápido
+Actualmente ya quedó reforzado con:
 
-### **Prerrequisitos**
+- update real de simulaciones
+- OpenAPI consistente
+- JavaDoc dirigido en piezas sensibles
+- métricas de negocio y observabilidad
+- health indicators por dependencia
+- soft delete coherente
+- mejor separación read/write
+- menor leakage de framework en application
+- defaults de scenario externalizados a una policy explícita
 
-- ☕ **Java 21** (Eclipse Temurin recomendado)
-- 📦 **Maven 3.9+**
-- 🟢 **Node.js 20+** (para frontend)
-- 🐳 **Docker + Docker Compose**
-- 🗄️ **MySQL 8.0** (o via Docker)
+## Requisitos previos (desarrollo)
 
-### **Instalación**
+Asegúrate de tener instalado:
+
+- **Git**
+- **Docker** y **Docker Compose**
+- **Java 21**
+- (Opcional) **Maven**
+  - si no lo tienes, puedes usar el wrapper: `./mvnw` o `./mvnw.cmd`
+
+## Entorno local
+
+Para desarrollo local normalmente solo necesitas definir unas pocas variables de entorno:
+
+- `JWT_SECRET_BASE64`
+- `OPENWEATHER_API_KEY` (opcional si no estás validando integración real)
+
+Puedes exportarlas desde tu shell o cargarlas desde un archivo local no versionado si trabajas así en tu entorno.
+
+## Puesta en marcha rápida
+
+### 1. Clonar el repositorio
 
 ```bash
-# Clonar repositorio
-git clone https://github.com/YOUR_USERNAME/renewsim-platform.git
-cd renewsim-platform
+git clone https://github.com/LannyRivero/RenewSim-backend.git
+cd RenewSim-backend
 ```
 
-### **Opción 1: Desarrollo Local**
-
-#### **Backend**
+### 2. Levantar la base de datos
 
 ```bash
-cd backend
-
-# Configurar variables de entorno
-export SPRING_PROFILES_ACTIVE=local
-export JWT_SECRET=your-secret-key-minimum-64-chars-long-for-hs512-signing-security
-export OPENWEATHER_API_KEY=your-real-openweather-api-key
-export DATABASE_URL=jdbc:mysql://localhost:3306/renewsim
-export DATABASE_USERNAME=root
-export DATABASE_PASSWORD=password
-
-# Ejecutar migraciones Flyway
-./mvnw flyway:migrate
-
-# Arrancar aplicación
-./mvnw spring-boot:run
+docker compose up -d mysql
 ```
 
-**Backend disponible en:** http://localhost:8080  
-**Swagger UI:** http://localhost:8080/swagger-ui.html  
-**Actuator Health:** http://localhost:8080/actuator/health
+La base quedará disponible en:
 
-#### **Frontend** (Fase 8)
+- `localhost:3307`
+
+### 3. Configurar variables mínimas
+
+Linux/macOS:
 
 ```bash
-cd frontend
-
-# Instalar dependencias
-npm install
-
-# Arrancar desarrollo
-npm run dev
+export JWT_SECRET_BASE64="<base64-secret>"
+export OPENWEATHER_API_KEY="<api-key-opcional>"
 ```
 
-**Frontend disponible en:** http://localhost:5173
+Windows PowerShell:
 
----
+```powershell
+$env:JWT_SECRET_BASE64="<base64-secret>"
+$env:OPENWEATHER_API_KEY="<api-key-opcional>"
+```
 
-### **Opción 2: Docker Compose (Recomendado)**
+### 4. Levantar el backend
+
+Linux/macOS:
 
 ```bash
-# Arrancar todos los servicios
-docker compose up
-
-# O en modo detached
-docker compose up -d
-
-# Ver logs
-docker compose logs -f backend
-
-# Detener servicios
-docker compose down
+export SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3307/renewsim?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-**Servicios:**
-- 🌐 **Frontend:** http://localhost:80
-- 🚀 **Backend API:** http://localhost:8080
-- 📊 **Swagger UI:** http://localhost:8080/swagger-ui.html
-- 🗄️ **MySQL:** localhost:3306 (usuario: `renewsim`, contraseña: `renewsim123`)
+Windows PowerShell:
 
----
-
-## 🧪 Testing
-
-### **Estrategia de Testing**
-
-```
-         /\
-        /  \       10% E2E (RestAssured + Playwright)
-       /____\
-      /      \     30% Integration (Testcontainers)
-     /________\
-    /          \   60% Unit (jUnit 5 + Mockito + jqwik)
-   /____________\
+```powershell
+$env:SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3307/renewsim?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"
 ```
 
-**Objetivo de cobertura:** ≥70% (enforcement con JaCoCo)
+La aplicación quedará disponible en:
 
-### **Ejecutar Tests**
+- `http://localhost:8080`
+
+### 5. Opción Docker Compose completa
+
+Si prefieres levantar backend + base de datos desde Docker Compose:
 
 ```bash
-cd backend
+docker compose up --build
+```
 
-# Tests unitarios
+Servicios:
+
+- Backend API: `http://localhost:8080`
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- MySQL: `localhost:3307`
+
+## Ejecutar tests
+
+Las pruebas de integración usan Testcontainers y el proyecto también tiene tests unitarios, tests web y property-based tests en partes del motor.
+
+```bash
 ./mvnw test
-
-# Tests de integración (requiere Docker)
-./mvnw verify -Dspring.profiles.active=testcontainers
-
-# Verificar cobertura ≥70%
-./mvnw jacoco:check
-
-# Generar reporte HTML
-./mvnw jacoco:report
-# Reporte disponible en: target/site/jacoco/index.html
 ```
 
-### **Property-Based Testing (jqwik)**
+Ejemplos útiles:
 
-18 propiedades formales para validar invariantes del motor de simulación:
-
-- ✅ **Prop 9:** Energía generada siempre > 0
-- ✅ **Prop 10:** Monotonicidad (duplicar capacidad → duplicar energía)
-- ✅ **Prop 11:** CO₂ siempre > 0
-- ✅ **Prop 12:** Payback siempre > 0
-- ✅ **Prop 13:** IRR round-trip con NPV ≈ 0
-- ✅ **Prop 14:** NPV positivo para proyectos rentables
-- ✅ **Prop 15:** Validación de parámetros (capacityKw ∈ [1, 10000])
-- ✅ **Prop 16:** Máquina de estados (transiciones inválidas lanzan excepción)
-
-### **Tests de Integración (Testcontainers)**
-
-```java
-@SpringBootTest
-@Testcontainers
-class SimulationLifecycleIntegrationTest {
-    @Container
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
-    
-    @Test
-    void shouldCreateSimulationAndPersistResults() {
-        // Flujo: POST /simulations → GET → PUT → DELETE
-    }
-}
+```bash
+./mvnw verify
+./mvnw test "-Dtest=*Simulation*"
 ```
 
-### **Tests E2E (RestAssured)**
+## Endpoints útiles (dev)
 
-```java
-@Test
-void fullUserJourney_fromRegistrationToSimulation() {
-    // POST /register → POST /activate → POST /login/step1 
-    // → POST /login/step2 → POST /simulations 
-    // → GET /simulations/{id} → POST /logout
-}
-```
+### Actuator
 
----
+- `http://localhost:8080/actuator`
+- `http://localhost:8080/actuator/health`
+- `http://localhost:8080/actuator/metrics`
+- `http://localhost:8080/actuator/prometheus`
 
-## 🚀 Estado del Desarrollo
+### Swagger / OpenAPI
 
-### **Fases Completadas**
-- [x] **Fase 0.1:** Especificación de Requisitos (24 RF + 8 RNF)
-- [x] **Fase 0.2:** Diseño Arquitectónico Completo (10 documentos)
-- [x] **Fase 0.3:** Plan de Implementación (8 fases, 123 tasks)
+- UI → `http://localhost:8080/swagger-ui.html`
+- Docs → `http://localhost:8080/v3/api-docs`
 
-### **Fases en Progreso**
-- [ ] **Fase 1:** Backend Foundation (0/10 tasks) - 3 días
-- [ ] **Fase 2:** User & Auth Service (0/27 tasks) - 4 días
-- [ ] **Fase 3:** Technology & Scenario (0/11 tasks) - 2 días
-- [ ] **Fase 4:** Simulation Engine (0/14 tasks) - 5 días
-- [ ] **Fase 5:** Simulation CRUD (0/13 tasks) - 3 días
-- [ ] **Fase 6:** Advanced Features (0/10 tasks) - 2 días
-- [ ] **Fase 7:** AI Service (0/17 tasks) - 3 días
-- [ ] **Fase 8:** Frontend (0/21 tasks) - 5 días
+### Endpoints principales
 
-**Progreso global:** 0% (0/123 tasks completadas)  
-**Estimación:** 27 días (6 días de buffer hasta 15 abril 2026)
+#### Auth
 
----
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/email-verification/verify`
 
-## 📖 Documentación
+#### Users y roles
 
-### **Especificación de Requisitos**
-- [requirements.md](docs/requirements/requirements.md) - 24 requisitos funcionales + 8 no funcionales
+- `GET /api/v1/users/me`
+- `PUT /api/v1/users/me`
+- `PUT /api/v1/users/me/password`
+- `GET /api/v1/roles`
+- `POST /api/v1/roles/manage`
 
-### **Documentos de Diseño (10 archivos)**
-1. [Visión Arquitectónica General](docs/design/01-architecture-overview.md) - Hexagonal + 6 ADRs
-2. [Modelo de Dominio](docs/design/02-domain-model.md) - DDD táctico (Aggregates + VOs + Services)
-3. [Diseño de Base de Datos](docs/design/03-database-design.md) - ERD + índices + migraciones Flyway V1-V8
-4. [Diseño de API REST](docs/design/04-api-design.md) - 42 endpoints con contratos completos
-5. [Diagramas de Secuencia](docs/design/05-sequence-diagrams.md) - 5 flujos principales (Mermaid)
-6. [Arquitectura Frontend](docs/design/06-frontend-architecture.md) - React + TanStack Query + Zustand
-7. [Patrones de Diseño](docs/design/07-design-patterns.md) - 13 patrones con ejemplos de código
-8. [Estrategia de Testing](docs/design/08-testing-strategy.md) - Pirámide + PBT + ejemplos
-9. [Diseño de Seguridad](docs/design/09-security-design.md) - 6 amenazas + mitigaciones + Spring Security
-10. [Arquitectura de Despliegue](docs/design/10-deployment-architecture.md) - Dockerfiles + CI/CD + env vars
+#### Catálogo
 
-### **Plan de Implementación**
-- [IMPLEMENTATION_PLAN.md](docs/implementation/IMPLEMENTATION_PLAN.md) - 8 fases detalladas con 123 tasks
+- `GET /api/v1/technologies`
+- `GET /api/v1/technologies/{id}`
+- `GET /api/v1/scenarios`
+- `GET /api/v1/scenarios/{id}`
 
----
+#### Simulation service
 
-## 🌐 API REST - Endpoints Principales
+- `POST /api/v1/simulations`
+- `POST /api/v1/simulations/from-scenario`
+- `GET /api/v1/simulations/{id}`
+- `GET /api/v1/simulations/my-simulations`
+- `GET /api/v1/simulations/dashboard`
+- `PUT /api/v1/simulations/{id}`
+- `DELETE /api/v1/simulations/{id}`
+- `DELETE /api/v1/simulations/user`
+- `GET /api/v1/simulations/locations/reverse`
+- `GET /api/v1/simulations/locations/search`
 
-### **Autenticación (auth_service)**
-| Método | Endpoint | Descripción | Auth |
-|--------|----------|-------------|------|
-| POST | `/api/v1/auth/login/step1` | Validar email + password → enviar OTP | No |
-| POST | `/api/v1/auth/login/step2` | Validar OTP → retornar JWT | No |
-| POST | `/api/v1/auth/refresh` | Renovar access token | Refresh cookie |
-| POST | `/api/v1/auth/logout` | Blacklist JTI + revocar refresh | JWT |
+## Cuenta de prueba (seed)
 
-### **Usuarios (user_service)**
-| Método | Endpoint | Descripción | Auth |
-|--------|----------|-------------|------|
-| POST | `/api/v1/users/register` | Registro de usuario → email activación | No |
-| POST | `/api/v1/users/activate` | Activar cuenta con token | No |
-| GET | `/api/v1/users/me` | Perfil del usuario autenticado | JWT |
-| PUT | `/api/v1/users/me` | Actualizar nombre, teléfono | JWT |
+El proyecto incluye una migración con un usuario administrador de desarrollo:
 
-### **Tecnologías (technology_service)**
-| Método | Endpoint | Descripción | Auth |
-|--------|----------|-------------|------|
-| GET | `/api/v1/technologies` | Listar tecnologías (paginado, cache 10 min) | JWT |
-| GET | `/api/v1/technologies/{id}` | Detalle de tecnología | JWT |
-| POST | `/api/v1/technologies` | Crear tecnología (solo ADMIN) | JWT |
+- Email: `admin@renewsim.com`
+- Password: `admin123`
 
-### **Simulaciones (simulation_service)**
-| Método | Endpoint | Descripción | Auth |
-|--------|----------|-------------|------|
-| POST | `/api/v1/simulations` | Crear simulación → calcular → COMPLETED | JWT |
-| GET | `/api/v1/simulations/{id}` | Detalle (solo owner o ADMIN) | JWT |
-| GET | `/api/v1/simulations/my-simulations` | Mis simulaciones (paginado) | JWT |
-| PUT | `/api/v1/simulations/{id}` | Actualizar (solo DRAFT) | JWT |
-| DELETE | `/api/v1/simulations/{id}` | Archivar (soft delete) | JWT |
-| POST | `/api/v1/simulations/compare` | Comparar 2-5 simulaciones | JWT |
-| POST | `/api/v1/simulations/{id}/share` | Generar token compartición | JWT |
-| GET | `/api/v1/shared/{token}` | Vista pública simulación | No |
-| GET | `/api/v1/dashboard` | Métricas agregadas + mapa | JWT |
+Referencia:
 
-### **Inteligencia Artificial (ai_service)**
-| Método | Endpoint | Descripción | Auth |
-|--------|----------|-------------|------|
-| POST | `/api/v1/ai/suggest-configuration` | Sugerencias IA según ubicación | JWT |
-| POST | `/api/v1/ai/predict-performance/{id}` | Proyecciones a N años | JWT |
-| POST | `/api/v1/ai/generate-report/{id}` | Reporte narrativo multiidioma | JWT |
-| POST | `/api/v1/ai/chat` | Chatbot conversacional | JWT |
+- `src/main/resources/db/migration/V9__seed_admin_user.sql`
 
-**Total:** 42 endpoints documentados en [04-api-design.md](docs/design/04-api-design.md)
+Estas credenciales existen solo para facilitar el desarrollo local. No deben usarse fuera de desarrollo.
 
----
+## Observabilidad
 
-## 🔒 Seguridad
+El backend expone observabilidad operativa y de negocio.
 
-### **Autenticación 2FA**
-1. **Paso 1:** POST `/auth/login/step1` (email + password) → valida credenciales → genera OTP 6 dígitos → envía email
-2. **Paso 2:** POST `/auth/login/step2` (email + OTP) → valida OTP (5 min) → retorna JWT access + refresh
+Hoy podés medir, entre otras cosas:
 
-### **JWT Tokens**
-- **Access Token:** 1 hora, en header `Authorization: Bearer {token}`, claims: sub, jti, roles
-- **Refresh Token:** 7 días, en cookie `HttpOnly; Secure; SameSite=Strict`, rotación en cada refresh
+- latencia y outcome por use case de `simulation_service`
+- llamadas a providers externos
+- métricas de negocio de creación y recomendación de simulaciones
+- degradaciones de snapshots y fallback paths
+- health por dependencia (`simulationService`, `openWeatherSimulation`, `pvgisSimulation`)
 
-### **Rate Limiting (Caffeine)**
-- 5 intentos de login fallidos → bloqueo 15 minutos
-- 3 intentos de OTP fallidos → bloqueo 15 minutos
+Para detalle fino:
 
-### **Token Blacklist (JTI)**
-- Revocación inmediata en `/logout`
-- Verificación en `JwtAuthenticationFilter` con cache Caffeine
+- `docs/architecture/simulation-observability-queries.md`
+- `docs/architecture/simulation-observability-local-stack.md`
 
-### **Headers de Seguridad**
-```yaml
-HSTS: max-age=31536000; includeSubDomains
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-Content-Security-Policy: default-src 'self'
-```
+## Calidad y CI
 
-### **Validación de API Keys**
-```java
-@PostConstruct
-void validateApiKey() {
-    if (apiKey == null || apiKey.isEmpty() || apiKey.equals("sk-...")) {
-        throw new IllegalStateException("API key is not configured");
-    }
-}
-```
+El backend está pensado para evolucionar con una base razonable de control técnico.
 
----
+Actualmente ya cuenta con:
 
-## 🐳 CI/CD con GitHub Actions
+- tests unitarios de domain y application
+- web/controller tests
+- repository/adapters tests
+- integration tests con Testcontainers
+- property-based testing con jqwik en partes del motor
+- OpenAPI visible para revisar contratos
+- observabilidad y métricas para validar comportamiento operativo
 
-### **Pipeline de CI**
+## Documentación técnica relevante
 
-```yaml
-name: CI - Backend Tests
+- `docs/design/01-architecture-overview.md`
+- `docs/requirements/requirements.md`
+- `docs/adr/ADR-011-otp-removal-simplified-login.md`
+- `docs/adr/ADR-012-simulation-external-resilience-and-fallbacks.md`
+- `docs/architecture/simulation-phase7-flows.md`
+- `docs/architecture/simulation-observability-queries.md`
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+## Qué no promete este README
 
-jobs:
-  backend-tests:
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_DATABASE: renewsim_test
-          MYSQL_ROOT_PASSWORD: test
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-      - name: Run tests
-        run: ./mvnw clean test
-      - name: Check coverage ≥70%
-        run: ./mvnw jacoco:check
-```
+Para evitar desalineaciones, este README no presenta como baseline actual:
 
-**Status:** [![CI](https://github.com/LannyRivero/renewsim-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/LannyRivero/renewsim-platform/actions/workflows/ci.yml)
+- 2FA por OTP en el login
+- frontend funcional dentro de este repo
+- una URL pública ya desplegada
+- un chatbot/IA listo para demo como parte central del backend defendible
 
----
+Esas piezas pueden existir en roadmap, en otros repos o en visión de producto, pero no forman parte del baseline actual de este backend.
 
-## 📊 Fórmulas del Motor de Simulación
+## Estado actual
 
-### **Generación de Energía**
-```
-energyGenerated = capacity × efficiency × 8760 × climateFactor
-```
+El backend no está en fase de maqueta. El estado real hoy es:
 
-**Climate Factors:**
-- SOLAR: `avgSolarIrradiation × 365 / 24`
-- WIND: `(avgWindSpeed / 12)³ × 0.593`
-- HYDRO: `0.85` (constante)
+- backend funcional y defendible
+- `simulation_service` endurecido a nivel funcional, documental y arquitectónico
+- documentación técnica útil ya existente
+- empaquetado final del proyecto todavía mejorable
 
-### **Retorno de Inversión (ROI)**
-```
-ROI = ((totalRevenue - initialInvestment) / initialInvestment) × 100
-```
+Lo siguiente con más valor ya no es más refactor fino, sino:
 
-### **Periodo de Retorno (Payback)**
-```
-payback = initialInvestment / annualSavings
-```
+1. alinear `requirements.md` con el sistema real
+2. cerrar la narrativa técnica y oral del proyecto
+3. preparar mejor packaging, despliegue y material de presentación
 
-### **Reducción de CO₂**
-```
-co2Reduction = energyGenerated × 0.5 / 1000  (toneladas/año)
-```
+## Autor
 
-### **Valor Actual Neto (NPV)**
-```
-NPV = Σ[cashFlow_t / (1 + discountRate)^t] - initialInvestment
-```
+**Lanny Rivero Canino**
 
-### **Tasa Interna de Retorno (IRR)**
-```
-IRR se calcula iterativamente con Newton-Raphson donde NPV(IRR) = 0
-```
+- LinkedIn: `https://www.linkedin.com/in/lannyriverocanino/`
+- GitHub: `https://github.com/LannyRivero`
 
----
+## Licencia
 
-## 👨‍💻 Autor
-
-**Lanny Rivero Canino**  
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Lanny%20Rivero-blue?logo=linkedin)](https://www.linkedin.com/in/lannyriverocanino/)  
-[![GitHub](https://img.shields.io/badge/GitHub-YOUR_USERNAME-black?logo=github)](https://github.com/YOUR_USERNAME)
-
----
-
-## 📄 Licencia
-
-Este proyecto está bajo la licencia [MIT](LICENSE).
----
-
-## 🙏 Agradecimientos
-
-- **OpenAI** y **Anthropic** por las APIs de LLM
-- **Spring Boot Team** por el framework
-- **Testcontainers** por facilitar testing de integración
-- **Comunidad Open Source** por las librerías utilizadas
-
----
-
-**⭐ Si este proyecto te resulta útil para tu investigación o aprendizaje, considera darle una estrella en GitHub**
----
-
+Proyecto bajo licencia MIT.
