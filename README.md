@@ -1,73 +1,84 @@
 # RenewSim Backend
 
-Backend real de una plataforma de simulación de proyectos de energía renovable.
+Servicio backend de **RenewSim**, construido con **Spring Boot** y **MySQL**.
 
-Este repositorio contiene el **backend Spring Boot** del proyecto RenewSim. Su foco principal es modelar simulaciones de energía renovable, gestionar su ciclo de vida, exponer una API documentada y sostener una arquitectura defendible para un backend serio y evolutivo.
+Este README está pensado para que puedas entender rápido qué hace el proyecto, cómo levantarlo en local y qué partes del backend ya están realmente defendibles.
 
-## Quick path
+## Descripción básica
 
-1. Levanta MySQL (`docker compose up -d mysql`) o usa una instancia local.
-2. Define `JWT_SECRET_BASE64` y, si hace falta, `OPENWEATHER_API_KEY`.
-3. Arranca la app con `./mvnw spring-boot:run -Dspring-boot.run.profiles=local`.
-4. Abre Swagger en `http://localhost:8080/swagger-ui.html`.
+- API REST en **Java 21 / Spring Boot 3.5**
+- Persistencia con **Spring Data JPA + Hibernate + MySQL**
+- Documentación de API con **Swagger / OpenAPI**
+- Salud y métricas con **Spring Boot Actuator + Micrometer + Prometheus**
+- Seguridad con **Spring Security + JWT + refresh token**
+- Testing con **JUnit 5, Mockito, Testcontainers y jqwik**
 
-## Qué es este repo
-
-Este repo es **backend-only**. La visión completa del producto puede incluir frontend, despliegues públicos y otras piezas de experiencia, pero este repositorio concentra el backend Java/Spring Boot real que hoy existe.
-
-La historia correcta del repo es:
-
-- hay una base backend funcional y documentada
-- `simulation_service` fue endurecido intencionalmente a nivel funcional, documental y arquitectónico
-- el valor principal del proyecto está en la calidad del módulo de simulación y en la evolución de sus decisiones técnicas
-
-## Stack real
-
-| Área | Tecnología |
-|------|------------|
-| Runtime | Java 21 |
-| Framework | Spring Boot 3.5.8 |
-| Persistencia | Spring Data JPA + Hibernate |
-| Base de datos | MySQL 8 |
-| Seguridad | Spring Security + JWT |
-| Documentación API | SpringDoc OpenAPI |
-| Observabilidad | Actuator + Micrometer + Prometheus |
-| Resiliencia | Resilience4j |
-| HTTP cross-context | OpenFeign |
-| Testing | JUnit 5 + Mockito + Testcontainers + jqwik |
-| Build | Maven Wrapper |
-| Contenedores | Docker + Docker Compose |
-
-## Arquitectura
+## Arquitectura y módulos
 
 El backend está organizado por bounded contexts y sigue una arquitectura hexagonal pragmática.
 
-### Contextos principales
+### Módulos principales
 
-| Contexto | Responsabilidad |
-|----------|------------------|
-| `auth_service` | login JWT, refresh token, logout, rate limiting |
-| `user_service` | perfil de usuario y gestión base |
-| `role_service` | roles y permisos |
-| `technology_service` | catálogo de tecnologías |
-| `scenario_service` | escenarios predefinidos |
-| `simulation_service` | creación, update, detail, history, dashboard, delete, location lookup |
-| `shared` | seguridad, errores, OpenAPI, observabilidad, utilidades transversales |
+- `auth_service`: login, refresh token, logout, rate limiting, verificación de email
+- `user_service`: perfil de usuario, actualización de datos y cambio de contraseña
+- `role_service`: roles, permisos y asignaciones
+- `technology_service`: catálogo de tecnologías y estimaciones técnicas base
+- `scenario_service`: escenarios predefinidos
+- `simulation_service`: create, detail, history, dashboard, update, delete y location lookup
+- `shared`: seguridad, errores, OpenAPI, observabilidad y utilidades transversales
 
-### Capas del módulo
+### Estructura por capas
 
-```text
-web/              controllers + DTOs + validación HTTP
-application/      use cases + commands + orchestration
-domain/           aggregate roots, value objects, policies, exceptions
-infrastructure/   adapters JPA, HTTP clients, config, health
-```
+- `web`: controladores REST, DTOs y validación HTTP
+- `application`: casos de uso, commands y orquestación
+- `domain`: aggregates, value objects, policies y excepciones
+- `infrastructure`: adapters JPA/HTTP, config, health y wiring técnico
 
-### Punto fuerte actual
+Patrón principal: **ports/use-cases + adapters**. Los casos de uso dependen de puertos, no de infraestructura concreta.
 
-El módulo más trabajado del proyecto es `simulation_service`.
+## Funcionalidades
 
-En esta etapa ya quedó endurecido con:
+### Auth y seguridad
+
+- registro de usuario
+- login de un paso con JWT
+- refresh token en cookie HttpOnly
+- logout con revocación
+- rate limiting para auth
+- jerarquía de roles y scopes
+- verificación de email
+
+### Usuarios y roles
+
+- perfil del usuario autenticado
+- actualización de perfil
+- cambio de contraseña
+- gestión de roles y permisos
+
+### Catálogo y escenarios
+
+- catálogo de tecnologías
+- detalle de tecnologías
+- estimación técnica base
+- escenarios predefinidos
+- detalle y administración de escenarios
+
+### Simulation service
+
+- crear simulaciones reales
+- crear simulaciones desde escenario predefinido
+- obtener detalle por id
+- listar simulaciones del usuario
+- dashboard agregado
+- update con recálculo
+- soft delete individual y masivo
+- reverse geocoding y búsqueda de ubicaciones
+
+### Slice más endurecido hoy
+
+El módulo más trabajado del backend es `simulation_service`.
+
+Actualmente ya quedó reforzado con:
 
 - update real de simulaciones
 - OpenAPI consistente
@@ -79,104 +90,81 @@ En esta etapa ya quedó endurecido con:
 - menor leakage de framework en application
 - defaults de scenario externalizados a una policy explícita
 
-## Funcionalidad implementada que sí podés defender
+## Requisitos previos (desarrollo)
 
-### Auth y seguridad
+Asegúrate de tener instalado:
 
-- login de un paso con JWT
-- refresh token en cookie HttpOnly
-- logout con revocación
-- rate limiting para auth
-- jerarquía de roles y scopes
-- email verification endpoints
+- **Git**
+- **Docker** y **Docker Compose**
+- **Java 21**
+- (Opcional) **Maven**
+  - si no lo tienes, puedes usar el wrapper: `./mvnw` o `./mvnw.cmd`
 
-### Simulation service
+## Entorno local
 
-- crear simulaciones reales
-- crear simulaciones desde escenario predefinido
-- obtener detalle por id
-- listar simulaciones del usuario
-- dashboard agregado
-- update con recálculo
-- soft delete individual y masivo
-- location lookup / reverse geocoding
+Para desarrollo local normalmente solo necesitas definir unas pocas variables de entorno:
 
-### Calidad operativa
+- `JWT_SECRET_BASE64`
+- `OPENWEATHER_API_KEY` (opcional si no estás validando integración real)
 
-- OpenAPI documentada
-- health endpoints de dependencias
-- métricas de use case, provider y negocio
-- tests unitarios, slices web y pruebas con Testcontainers
+Puedes exportarlas desde tu shell o cargarlas desde un archivo local no versionado si trabajas así en tu entorno.
 
-## Qué no promete este README
+## Puesta en marcha rápida
 
-Para evitar desalineaciones, este README **no** presenta como baseline actual:
+### 1. Clonar el repositorio
 
-- 2FA por OTP en el login
-- frontend funcional dentro de este repo
-- una URL publica ya desplegada
-- un chatbot/IA listo para demo como parte central del backend defendible
-
-Esas piezas pueden existir en roadmap, en otros repos o en visión de producto, pero no forman parte del baseline actual de este backend.
-
-## Estructura real del repo
-
-```text
-.
-├── src/
-│   ├── main/java/com/renewsim/backend/
-│   │   ├── auth_service/
-│   │   ├── role_service/
-│   │   ├── scenario_service/
-│   │   ├── simulation_service/
-│   │   ├── technology_service/
-│   │   ├── user_service/
-│   │   └── shared/
-│   ├── main/resources/
-│   │   ├── db/migration/
-│   │   ├── application.yml
-│   │   ├── application-local.yml
-│   │   ├── application-docker.yml
-│   │   ├── application-stage.yml
-│   │   └── application-prod.yml
-│   └── test/
-├── docs/
-├── docker-compose.yml
-├── Dockerfile
-├── pom.xml
-└── README.md
+```bash
+git clone https://github.com/LannyRivero/RenewSim-backend.git
+cd RenewSim-backend
 ```
 
-## Ejecución local
-
-### Prerrequisitos
-
-- Java 21
-- Docker Desktop o MySQL 8 local
-- Maven Wrapper (`mvnw` / `mvnw.cmd`)
-
-### Opción 1: Docker Compose
+### 2. Levantar la base de datos
 
 ```bash
 docker compose up -d mysql
+```
 
-# define tus variables
+La base quedará disponible en:
+
+- `localhost:3307`
+
+### 3. Configurar variables mínimas
+
+Linux/macOS:
+
+```bash
 export JWT_SECRET_BASE64=<base64-secret>
 export OPENWEATHER_API_KEY=<api-key-opcional>
+```
 
+Windows PowerShell:
+
+```powershell
+$env:JWT_SECRET_BASE64="<base64-secret>"
+$env:OPENWEATHER_API_KEY="<api-key-opcional>"
+```
+
+### 4. Levantar el backend
+
+Linux/macOS:
+
+```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-En Windows PowerShell:
+Windows PowerShell:
 
 ```powershell
-docker compose up -d mysql
-$env:JWT_SECRET_BASE64="<base64-secret>"
-$env:OPENWEATHER_API_KEY="<api-key-opcional>"
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"
 ```
 
-### Opción 2: todo por Docker Compose
+La aplicación quedará disponible en:
+
+- `http://localhost:8080`
+
+### 5. Opción Docker Compose completa
+
+Si prefieres levantar backend + base de datos desde Docker Compose:
 
 ```bash
 docker compose up --build
@@ -188,49 +176,91 @@ Servicios:
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - MySQL: `localhost:3307`
 
-## Credenciales de prueba
+## Ejecutar tests
 
-Migración incluida:
-
-- usuario: `admin@renewsim.com`
-- password: `admin123`
-
-Referencia: `src/main/resources/db/migration/V9__seed_admin_user.sql`
-
-## Testing
-
-### Comandos útiles
+Las pruebas de integración usan Testcontainers y el proyecto también tiene tests unitarios, tests web y property-based tests en partes del motor.
 
 ```bash
-# suite completa
 ./mvnw test
+```
 
-# con integración / verify
+Ejemplos útiles:
+
+```bash
 ./mvnw verify
-
-# test focalizado de simulation_service
 ./mvnw test "-Dtest=*Simulation*"
 ```
 
-### Qué hay hoy
+## Endpoints útiles (dev)
 
-- unit tests de dominio y application
-- web/controller tests
-- repository/adapters tests
-- integration tests con Testcontainers
-- property-based testing con jqwik en partes del motor
+### Actuator
+
+- `http://localhost:8080/actuator`
+- `http://localhost:8080/actuator/health`
+- `http://localhost:8080/actuator/metrics`
+- `http://localhost:8080/actuator/prometheus`
+
+### Swagger / OpenAPI
+
+- UI → `http://localhost:8080/swagger-ui.html`
+- Docs → `http://localhost:8080/v3/api-docs`
+
+### Endpoints principales
+
+#### Auth
+
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/email-verification/verify`
+
+#### Users y roles
+
+- `GET /api/v1/users/me`
+- `PUT /api/v1/users/me`
+- `PUT /api/v1/users/me/password`
+- `GET /api/v1/roles`
+- `POST /api/v1/roles/manage`
+
+#### Catálogo
+
+- `GET /api/v1/technologies`
+- `GET /api/v1/technologies/{id}`
+- `GET /api/v1/scenarios`
+- `GET /api/v1/scenarios/{id}`
+
+#### Simulation service
+
+- `POST /api/v1/simulations`
+- `POST /api/v1/simulations/from-scenario`
+- `GET /api/v1/simulations/{id}`
+- `GET /api/v1/simulations/my-simulations`
+- `GET /api/v1/simulations/dashboard`
+- `PUT /api/v1/simulations/{id}`
+- `DELETE /api/v1/simulations/{id}`
+- `DELETE /api/v1/simulations/user`
+- `GET /api/v1/simulations/locations/reverse`
+- `GET /api/v1/simulations/locations/search`
+
+## Cuenta de prueba (seed)
+
+El proyecto incluye una migración con un usuario administrador de desarrollo:
+
+- Email: `admin@renewsim.com`
+- Password: `admin123`
+
+Referencia:
+
+- `src/main/resources/db/migration/V9__seed_admin_user.sql`
+
+Estas credenciales existen solo para facilitar el desarrollo local. No deben usarse fuera de desarrollo.
 
 ## Observabilidad
 
-El backend expone observabilidad operativa y de negocio a través de Spring Boot Actuator y Micrometer.
+El backend expone observabilidad operativa y de negocio.
 
-### Endpoints útiles
-
-- health: `http://localhost:8080/actuator/health`
-- metrics index: `http://localhost:8080/actuator/metrics`
-- prometheus scrape: `http://localhost:8080/actuator/prometheus`
-
-### Qué podés medir hoy
+Hoy podés medir, entre otras cosas:
 
 - latencia y outcome por use case de `simulation_service`
 - llamadas a providers externos
@@ -238,10 +268,24 @@ El backend expone observabilidad operativa y de negocio a través de Spring Boot
 - degradaciones de snapshots y fallback paths
 - health por dependencia (`simulationService`, `openWeatherSimulation`, `pvgisSimulation`)
 
-### Dónde mirar el detalle
+Para detalle fino:
 
 - `docs/architecture/simulation-observability-queries.md`
 - `docs/architecture/simulation-observability-local-stack.md`
+
+## Calidad y CI
+
+El backend está pensado para evolucionar con una base razonable de control técnico.
+
+Actualmente ya cuenta con:
+
+- tests unitarios de domain y application
+- web/controller tests
+- repository/adapters tests
+- integration tests con Testcontainers
+- property-based testing con jqwik en partes del motor
+- OpenAPI visible para revisar contratos
+- observabilidad y métricas para validar comportamiento operativo
 
 ## Documentación técnica relevante
 
@@ -252,16 +296,27 @@ El backend expone observabilidad operativa y de negocio a través de Spring Boot
 - `docs/architecture/simulation-phase7-flows.md`
 - `docs/architecture/simulation-observability-queries.md`
 
+## Qué no promete este README
+
+Para evitar desalineaciones, este README no presenta como baseline actual:
+
+- 2FA por OTP en el login
+- frontend funcional dentro de este repo
+- una URL pública ya desplegada
+- un chatbot/IA listo para demo como parte central del backend defendible
+
+Esas piezas pueden existir en roadmap, en otros repos o en visión de producto, pero no forman parte del baseline actual de este backend.
+
 ## Estado actual
 
 El backend no está en fase de maqueta. El estado real hoy es:
 
-- backend serio y funcional
-- `simulation_service` bastante endurecido y defendible
-- documentación técnica parcial ya existente
-- empaquetado de producto/documentación todavía mejorable
+- backend funcional y defendible
+- `simulation_service` endurecido a nivel funcional, documental y arquitectónico
+- documentación técnica útil ya existente
+- empaquetado final del proyecto todavía mejorable
 
-Lo siguiente con más valor no es más refactor fino, sino:
+Lo siguiente con más valor ya no es más refactor fino, sino:
 
 1. alinear `requirements.md` con el sistema real
 2. cerrar la narrativa técnica y oral del proyecto
