@@ -5,7 +5,7 @@ import com.renewsim.backend.simulation_service.dashboard.application.projection.
 import com.renewsim.backend.simulation_service.dashboard.application.projection.ScenarioSnapshot;
 import com.renewsim.backend.simulation_service.dashboard.application.ScenarioSnapshotMetricsResolver.ScenarioSnapshotMetrics;
 import com.renewsim.backend.simulation_service.dashboard.application.ScenarioSnapshotNarrativeResolver.ScenarioSnapshotNarrative;
-import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -23,8 +23,8 @@ public final class ScenarioSnapshotAssembler {
         private final ScenarioSnapshotMetricsResolver metricsResolver;
         private final ScenarioSnapshotNarrativeResolver narrativeResolver;
 
-        public ScenarioSnapshot toSnapshot(Simulation simulation) {
-                DashboardSnapshotData details = readDetails(simulation.getResultSnapshot());
+        public ScenarioSnapshot toSnapshot(SimulationReadModel simulation) {
+                DashboardSnapshotData details = readDetails(simulation.resultSnapshot());
                 DashboardSnapshotData.Financial financial = details != null ? details.financial() : null;
                 DashboardSnapshotData.Technical technical = details != null ? details.technical() : null;
                 DashboardSnapshotData.Summary summary = details != null ? details.summary() : null;
@@ -35,13 +35,11 @@ public final class ScenarioSnapshotAssembler {
                 int score = scoringPolicy.computeScore(details, metrics.roiPercent(), metrics.paybackYears());
 
                 return new ScenarioSnapshot(
-                                String.valueOf(simulation.getId().value()),
-                                simulation.getName(),
-                                normalizeLabel(simulation.getTechnology() != null ? simulation.getTechnology().value()
-                                                : "unknown"),
-                                normalizeLabel(simulation.getStatus() != null ? simulation.getStatus().name()
-                                                : "draft"),
-                                simulation.getLocation().label(),
+                                String.valueOf(simulation.id()),
+                                simulation.name(),
+                                normalizeLabel(simulation.technology() != null ? simulation.technology() : "unknown"),
+                                normalizeLabel(simulation.status() != null ? simulation.status() : "draft"),
+                                simulation.locationLabel(),
                                 metrics.roiPercent(),
                                 metrics.paybackYears(),
                                 metrics.capex(),
@@ -54,7 +52,7 @@ public final class ScenarioSnapshotAssembler {
                                 narrative.nextStep(),
                                 scoringPolicy.priorityFor(score, hasCompleteDetails),
                                 score,
-                                simulation.getCreatedAt(),
+                                simulation.createdAt(),
                                 !hasCompleteDetails,
                                 narrativeResolver.needsReview(narrative, hasCompleteDetails),
                                 scoringPolicy.hasNegativeRoi(metrics.roiPercent()),

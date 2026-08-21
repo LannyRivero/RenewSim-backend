@@ -2,6 +2,7 @@ package com.renewsim.backend.simulation_service.history.application;
 
 import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
 import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
+import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
@@ -27,11 +28,25 @@ class ListSimulationsServiceTest {
     @Test
     @DisplayName("getUserSimulations maps stored summary columns for scenario-created simulations")
     void getUserSimulationsMapsStoredSummaryColumnsForScenarioCreatedSimulations() {
-        ListSimulationsService service = new ListSimulationsService(repository, new SimulationUseCaseTelemetry(meterRegistry));
+        ListSimulationsService service = new ListSimulationsService(repository,
+                new SimulationUseCaseTelemetry(meterRegistry));
         var simulation = completedSimulation(55L, "alice", null);
         simulation.assignScenarioId(42L);
         simulation.assignTechnologyIds(List.of(11L, 12L));
-        when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(simulation));
+        when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(new SimulationReadModel(
+                simulation.getId().value(),
+                simulation.getName(),
+                simulation.getTechnology().value(),
+                simulation.getStatus().name(),
+                simulation.getLocation().label(),
+                simulation.getAnnualGenerationKwh(),
+                simulation.getAnnualSavings(),
+                simulation.getNpv(),
+                simulation.getIrrPct(),
+                simulation.getRecommendation(),
+                simulation.getEconomics().capexTotal(),
+                simulation.getResultSnapshot(),
+                simulation.getCreatedAt())));
 
         UserSimulationListResult response = service.getUserSimulations("alice");
 

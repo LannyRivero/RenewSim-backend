@@ -6,8 +6,9 @@ import com.renewsim.backend.simulation_service.dashboard.application.port.out.Po
 import com.renewsim.backend.simulation_service.delete.application.port.out.DeleteSimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.detail.application.port.out.SimulationDetailQueryPort;
 import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
-import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.domain.model.SimulationId;
+import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -54,10 +55,10 @@ public class SimulationRecordRepositoryAdapter
     }
 
     @Override
-    public List<Simulation> findByCreatedByOrderByCreatedAtDesc(String createdBy) {
+    public List<SimulationReadModel> findByCreatedByOrderByCreatedAtDesc(String createdBy) {
         return repository.findByCreatedByOrderByCreatedAtDesc(createdBy)
                 .stream()
-                .map(entityMapper::toDomain)
+                .map(entityMapper::toReadModel)
                 .toList();
     }
 

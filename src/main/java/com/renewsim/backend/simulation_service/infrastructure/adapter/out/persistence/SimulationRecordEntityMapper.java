@@ -10,6 +10,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationEconomi
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocation;
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
+import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationInputSnapshotCodec.SimulationInputData;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 
@@ -102,6 +103,30 @@ final class SimulationRecordEntityMapper {
                 entity.getCreatedBy(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());
+    }
+
+    SimulationReadModel toReadModel(SimulationEntity entity) {
+        return new SimulationReadModel(
+                entity.getId(),
+                entity.getName(),
+                entity.getEnergyType(),
+                parseStatus(entity.getStatus()).name(),
+                entity.getLocation(),
+                annualGeneration(entity),
+                entity.getAnnualSavings(),
+                entity.getNpv(),
+                entity.getIrrPct(),
+                entity.getRecommendation(),
+                entity.getBudget(),
+                entity.getResultSnapshot(),
+                entity.getCreatedAt());
+    }
+
+    private Double annualGeneration(SimulationEntity entity) {
+        if (entity.getEnergyGenerated() != null) {
+            return entity.getEnergyGenerated();
+        }
+        return entity.getEstimatedEnergy();
     }
 
     private SimulationStatus parseStatus(String status) {

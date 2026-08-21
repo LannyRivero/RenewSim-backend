@@ -1,10 +1,10 @@
 package com.renewsim.backend.simulation_service.history.application.port.out;
 
-import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 
 import java.util.List;
 
 public interface SimulationHistoryQueryPort {
 
-    List<Simulation> findByCreatedByOrderByCreatedAtDesc(String createdBy);
+    List<SimulationReadModel> findByCreatedByOrderByCreatedAtDesc(String createdBy);
 }
