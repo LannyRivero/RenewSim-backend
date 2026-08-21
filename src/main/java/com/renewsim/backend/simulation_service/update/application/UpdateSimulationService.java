@@ -25,6 +25,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 /**
  * Use case that edits an existing simulation and recomputes its results.
@@ -59,16 +60,17 @@ public class UpdateSimulationService implements UpdateSimulationUseCase {
         Timer.Sample sample = telemetry.start();
         try {
             Simulation existing = getEditableSimulation(command.simulationId(), requesterUsername, isAdmin);
+            LocalDateTime editTimestamp = LocalDateTime.now();
             SimulationTechnologySupport.ResolvedTechnologyContext resolved = technologySupport.resolve(
                     command.technology(),
                     command.technologyIds());
             SimulationEngine simulationEngine = resolved.engine();
             List<Long> technologyIds = resolved.technologyIds();
-            Simulation updated = toUpdatedSimulation(command, existing, technologyIds);
+            Simulation updated = toUpdatedSimulation(command, existing, technologyIds, editTimestamp);
 
             SimulationDetailsResult result = simulationEngine.simulate(updated,
                     toEngineCommand(command, existing, technologyIds));
-            updated.update(completionAssembler.toCompletion(result, technologyIds));
+            updated.update(completionAssembler.toCompletion(result, technologyIds), editTimestamp);
             repository.save(updated);
 
             recordUpdateSuccess(command, result, sample);
@@ -138,7 +140,7 @@ public class UpdateSimulationService implements UpdateSimulationUseCase {
     }
 
     private Simulation toUpdatedSimulation(UpdateSimulationCommand command, Simulation existing,
-            List<Long> technologyIds) {
+            List<Long> technologyIds, LocalDateTime editTimestamp) {
         return existing.rebuildForUpdate(
                 command.name(),
                 command.technology(),
@@ -146,7 +148,8 @@ public class UpdateSimulationService implements UpdateSimulationUseCase {
                 command.system(),
                 command.demand(),
                 command.economics(),
-                technologyIds);
+                technologyIds,
+                editTimestamp);
     }
 
     private CreateRealSimulationCommand toEngineCommand(

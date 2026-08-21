@@ -10,6 +10,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Simulation {
 
@@ -138,7 +139,8 @@ public class Simulation {
             SimulationSystem system,
             ConsumptionProfile demand,
             SimulationEconomics economics,
-            List<Long> technologyIds) {
+            List<Long> technologyIds,
+            LocalDateTime editTimestamp) {
         if (status.isTerminal()) {
             throw new InvalidSimulationStatusTransitionException("update", status);
         }
@@ -162,10 +164,14 @@ public class Simulation {
                 scenarioId,
                 createdBy,
                 createdAt,
-                updatedAt);
+                Objects.requireNonNull(editTimestamp, "editTimestamp is required"));
     }
 
     public void update(SimulationCompletion completion) {
+        update(completion, LocalDateTime.now());
+    }
+
+    public void update(SimulationCompletion completion, LocalDateTime updatedAt) {
         if (status.isTerminal()) {
             throw new InvalidSimulationStatusTransitionException("update", status);
         }
@@ -182,7 +188,7 @@ public class Simulation {
             this.technologyIds = new ArrayList<>(completion.technologyIds());
         }
         this.status = SimulationStatus.COMPLETED;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt is required");
     }
 
     // ========== QUERIES ==========

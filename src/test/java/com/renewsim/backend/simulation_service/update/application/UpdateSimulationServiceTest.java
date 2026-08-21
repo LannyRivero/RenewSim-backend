@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.renewsim.backend.simulation_service.support.SimulationCreateTestFixtures.engines;
+import static com.renewsim.backend.simulation_service.shared.application.SimulationFormatUtils.formatDate;
 import static com.renewsim.backend.simulation_service.support.SimulationCreateTestFixtures.profile;
 import static com.renewsim.backend.simulation_service.support.SimulationCreateTestFixtures.validCommand;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,6 +88,8 @@ class UpdateSimulationServiceTest {
         assertThat(saved.getStatus()).isEqualTo(SimulationStatus.COMPLETED);
         assertThat(saved.getResultSnapshot()).isNotBlank();
         assertThat(saved.getTechnologyIds()).containsExactly(1L, 2L);
+        assertThat(saved.getUpdatedAt()).isNotNull();
+        assertThat(response.updatedAt()).isEqualTo(formatDate(saved.getUpdatedAt()));
 
         verify(detailQueryPort).findById(55L);
         assertThat(meterRegistry()
