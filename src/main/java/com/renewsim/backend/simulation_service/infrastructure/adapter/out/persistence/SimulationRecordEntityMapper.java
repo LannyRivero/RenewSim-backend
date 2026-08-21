@@ -123,8 +123,8 @@ final class SimulationRecordEntityMapper {
     }
 
     private Double annualGeneration(SimulationEntity entity) {
-        if (entity.getEnergyGenerated() != null) {
-            return entity.getEnergyGenerated();
+        if (entity.getAnnualEnergyGenerated() != null) {
+            return entity.getAnnualEnergyGenerated();
         }
         return entity.getEstimatedEnergy();
     }
