@@ -4,8 +4,10 @@ import com.renewsim.backend.simulation_service.history.application.port.in.ListU
 import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
 import com.renewsim.backend.simulation_service.history.application.result.SimulationHistoryRowResult;
 import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
+import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
+import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationResultSnapshotReaderPort;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -24,11 +26,10 @@ import static com.renewsim.backend.simulation_service.shared.application.Simulat
 public class ListSimulationsService implements ListUserRealSimulationsUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(ListSimulationsService.class);
-    private static final String MODEL_VERSION = "solar-spain-v1";
-    private static final String RESOURCE_SOURCE = "PVGIS";
     private static final String USE_CASE = "history";
 
     private final SimulationHistoryQueryPort repository;
+    private final SimulationResultSnapshotReaderPort snapshotReader;
     private final SimulationUseCaseTelemetry telemetry;
 
     @Override
@@ -51,6 +52,7 @@ public class ListSimulationsService implements ListUserRealSimulationsUseCase {
     }
 
     private SimulationHistoryRowResult toHistoryRow(SimulationReadModel simulation) {
+        SimulationMetadata metadata = metadataFor(simulation.resultSnapshot());
         return new SimulationHistoryRowResult(
                 String.valueOf(simulation.id()),
                 simulation.name(),
@@ -63,7 +65,30 @@ public class ListSimulationsService implements ListUserRealSimulationsUseCase {
                 defaultNumber(simulation.npv()),
                 simulation.irrPct(),
                 simulation.recommendation(),
-                MODEL_VERSION,
-                RESOURCE_SOURCE);
+                metadata.modelVersion(),
+                metadata.resourceSource());
+    }
+
+    private SimulationMetadata metadataFor(String resultSnapshot) {
+        try {
+            SimulationDetailsResult details = snapshotReader.read(resultSnapshot);
+            if (details == null) {
+                return SimulationMetadata.empty();
+            }
+            String resourceSource = details.assumptions() != null && details.assumptions().climateSource() != null
+                    ? details.assumptions().climateSource()
+                    : details.technical() != null && details.technical().resource() != null
+                            ? details.technical().resource().source()
+                            : null;
+            return new SimulationMetadata(details.modelVersion(), resourceSource);
+        } catch (IllegalStateException ex) {
+            return SimulationMetadata.empty();
+        }
+    }
+
+    private record SimulationMetadata(String modelVersion, String resourceSource) {
+        private static SimulationMetadata empty() {
+            return new SimulationMetadata(null, null);
+        }
     }
 }
