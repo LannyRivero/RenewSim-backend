@@ -3,30 +3,22 @@ package com.renewsim.backend.simulation_service.create.application;
 import com.renewsim.backend.simulation_service.create.application.command.CreateRealSimulationCommand;
 import com.renewsim.backend.simulation_service.create.application.command.CreateSimulationFromScenarioCommand;
 import com.renewsim.backend.simulation_service.domain.exception.InvalidConsumptionProfileException;
-import com.renewsim.backend.simulation_service.domain.exception.InvalidSimulationCurrencyException;
 import com.renewsim.backend.simulation_service.domain.model.vo.ConsumptionProfile;
-import com.renewsim.backend.simulation_service.domain.model.vo.Currency;
-import com.renewsim.backend.simulation_service.domain.model.vo.ProjectLifetime;
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationEconomics;
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.shared.application.port.out.ScenarioLookupPort;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class ScenarioSimulationCommandFactory {
 
-    private static final double DEFAULT_PERFORMANCE_RATIO = 0.81;
-    private static final double DEFAULT_DEGRADATION_RATE_ANNUAL_PCT = 0.5;
-    private static final double DEFAULT_AVAILABILITY_PCT = 99.0;
-    private static final int DEFAULT_PROJECT_LIFETIME_YEARS = 20;
-    private static final double DEFAULT_OPEX_ANNUAL = 0.0;
-    private static final double DEFAULT_EXPORT_PRICE_PER_KWH = 0.07;
-    private static final double DEFAULT_DISCOUNT_RATE_PCT = 8.0;
-    private static final String SUPPORTED_SIMULATION_CURRENCY = "EUR";
+    private final ScenarioSimulationDefaultsPolicy defaultsPolicy;
 
     public CreateRealSimulationCommand fromScenario(
             CreateSimulationFromScenarioCommand command,
@@ -50,12 +42,7 @@ public class ScenarioSimulationCommandFactory {
     }
 
     private SimulationSystem buildSystem(ScenarioLookupPort.ScenarioSnapshot scenario) {
-        return new SimulationSystem(
-                scenario.defaultCapacityKw(),
-                DEFAULT_PERFORMANCE_RATIO,
-                DEFAULT_DEGRADATION_RATE_ANNUAL_PCT,
-                DEFAULT_AVAILABILITY_PCT,
-                new SimulationSystem.LossesPct(2.0, 6.0, 1.0, 3.0, 1.0));
+        return defaultsPolicy.buildSystem(scenario.defaultCapacityKw());
     }
 
     private ConsumptionProfile buildDemand(ScenarioLookupPort.ScenarioSnapshot scenario) {
@@ -72,21 +59,9 @@ public class ScenarioSimulationCommandFactory {
     }
 
     private SimulationEconomics buildEconomics(ScenarioLookupPort.ScenarioSnapshot scenario) {
-        return new SimulationEconomics(
-                Currency.of(resolveSimulationCurrency(scenario.defaultInvestmentCurrency())),
+        return defaultsPolicy.buildEconomics(
                 scenario.defaultInvestmentAmount(),
-                DEFAULT_OPEX_ANNUAL,
-                scenario.defaultTariff(),
-                DEFAULT_EXPORT_PRICE_PER_KWH,
-                DEFAULT_DISCOUNT_RATE_PCT,
-                ProjectLifetime.of(DEFAULT_PROJECT_LIFETIME_YEARS));
-    }
-
-    private String resolveSimulationCurrency(String scenarioCurrency) {
-        if (!SUPPORTED_SIMULATION_CURRENCY.equalsIgnoreCase(scenarioCurrency == null ? null : scenarioCurrency.trim())) {
-            throw new InvalidSimulationCurrencyException(
-                    "VALIDATION_ERROR: scenario defaultInvestmentCurrency must be " + SUPPORTED_SIMULATION_CURRENCY);
-        }
-        return SUPPORTED_SIMULATION_CURRENCY;
+                scenario.defaultInvestmentCurrency(),
+                scenario.defaultTariff());
     }
 }

@@ -63,7 +63,8 @@ class CreateSimulationFromScenarioServiceTest {
         @Mock
         private PvgisSolarResourcePort resourcePort;
 
-        private final ScenarioSimulationCommandFactory scenarioSimulationCommandFactory = new ScenarioSimulationCommandFactory();
+        private final ScenarioSimulationCommandFactory scenarioSimulationCommandFactory = new ScenarioSimulationCommandFactory(
+                        new ScenarioSimulationDefaultsPolicy());
 
         @Test
         @DisplayName("createSimulationFromScenario resolves scenario defaults and delegates to the real flow")
