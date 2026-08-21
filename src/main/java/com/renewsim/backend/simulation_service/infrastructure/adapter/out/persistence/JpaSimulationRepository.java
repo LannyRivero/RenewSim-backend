@@ -10,5 +10,7 @@ public interface JpaSimulationRepository extends JpaRepository<SimulationEntity,
 
     List<SimulationEntity> findByCreatedByOrderByCreatedAtDesc(String createdBy);
 
+    List<SimulationEntity> findByCreatedByAndStatusNotOrderByCreatedAtDesc(String createdBy, String status);
+
     void deleteAllByCreatedBy(String createdBy);
 }

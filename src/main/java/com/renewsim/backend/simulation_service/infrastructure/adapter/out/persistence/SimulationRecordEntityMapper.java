@@ -93,7 +93,7 @@ final class SimulationRecordEntityMapper {
                 location, system, demand, economics,
                 parseStatus(entity.getStatus()),
                 entity.getResultSnapshot(),
-                null,
+                annualGeneration(entity),
                 entity.getAnnualSavings(),
                 entity.getNpv(),
                 entity.getIrrPct(),

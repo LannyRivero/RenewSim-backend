@@ -55,20 +55,18 @@ public class SimulationRecordRepositoryAdapter
     }
 
     @Override
-    public List<SimulationReadModel> findByCreatedByOrderByCreatedAtDesc(String createdBy) {
-        return repository.findByCreatedByOrderByCreatedAtDesc(createdBy)
+    public List<Simulation> findActiveByCreatedBy(String createdBy) {
+        return repository.findByCreatedByAndStatusNotOrderByCreatedAtDesc(createdBy, "DELETED")
                 .stream()
-                .map(entityMapper::toReadModel)
+                .map(entityMapper::toDomain)
                 .toList();
     }
 
     @Override
-    public void deleteById(Long id) {
-        repository.deleteById(id);
-    }
-
-    @Override
-    public void deleteAllByCreatedBy(String createdBy) {
-        repository.deleteAllByCreatedBy(createdBy);
+    public List<SimulationReadModel> findByCreatedByOrderByCreatedAtDesc(String createdBy) {
+        return repository.findByCreatedByAndStatusNotOrderByCreatedAtDesc(createdBy, "DELETED")
+                .stream()
+                .map(entityMapper::toReadModel)
+                .toList();
     }
 }

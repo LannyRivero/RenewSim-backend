@@ -66,6 +66,8 @@ class SimulationRecordEntityMapperTest {
         entity.setProjectSize(300.0);
         entity.setBudget(315000.0);
         entity.setEstimatedEnergy(120000.0);
+        entity.setAnnualEnergyGenerated(457200.0);
+        entity.setEnergyGenerated(9144000.0);
         entity.setCreatedBy("alice");
         entity.setCreatedAt(LocalDateTime.parse("2026-06-30T14:00:00"));
         entity.setUpdatedAt(LocalDateTime.parse("2026-06-30T14:30:00"));
@@ -106,6 +108,7 @@ class SimulationRecordEntityMapperTest {
         assertThat(simulation.getLocation().country()).isEqualTo("Spain");
         assertThat(simulation.getDemand().annualConsumptionKwh()).isEqualTo(120000.0);
         assertThat(simulation.getEconomics().capexTotal()).isEqualTo(315000.0);
+        assertThat(simulation.getAnnualGenerationKwh()).isEqualTo(457200.0);
         assertThat(simulation.getRecommendation()).isEqualTo("viable_with_reservations");
         assertThat(simulation.getTechnologyIds()).containsExactly(11L, 12L);
         assertThat(simulation.getScenarioId()).isNull();
