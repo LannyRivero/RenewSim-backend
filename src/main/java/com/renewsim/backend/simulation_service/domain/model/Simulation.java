@@ -131,6 +131,40 @@ public class Simulation {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public Simulation rebuildForUpdate(
+            String name,
+            Technology technology,
+            SimulationLocation location,
+            SimulationSystem system,
+            ConsumptionProfile demand,
+            SimulationEconomics economics,
+            List<Long> technologyIds) {
+        if (status.isTerminal()) {
+            throw new InvalidSimulationStatusTransitionException("update", status);
+        }
+
+        return new Simulation(
+                id,
+                name,
+                technology,
+                location,
+                system,
+                demand,
+                economics,
+                SimulationStatus.DRAFT,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                technologyIds,
+                scenarioId,
+                createdBy,
+                createdAt,
+                updatedAt);
+    }
+
     public void update(SimulationCompletion completion) {
         if (status.isTerminal()) {
             throw new InvalidSimulationStatusTransitionException("update", status);

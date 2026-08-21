@@ -83,6 +83,7 @@ class UpdateSimulationServiceTest {
         Simulation saved = captor.getValue();
         assertThat(saved.getId().value()).isEqualTo(55L);
         assertThat(saved.getCreatedBy()).isEqualTo("alice");
+        assertThat(saved.getCreatedAt()).isEqualTo(LocalDateTime.parse("2026-06-30T14:00:00"));
         assertThat(saved.getStatus()).isEqualTo(SimulationStatus.COMPLETED);
         assertThat(saved.getResultSnapshot()).isNotBlank();
         assertThat(saved.getTechnologyIds()).containsExactly(1L, 2L);
@@ -202,8 +203,8 @@ class UpdateSimulationServiceTest {
                 List.of(11L, 12L),
                 null,
                 "alice",
-                LocalDateTime.now(),
-                LocalDateTime.now());
+                LocalDateTime.parse("2026-06-30T14:00:00"),
+                LocalDateTime.parse("2026-06-30T14:30:00"));
     }
 
     private SimpleMeterRegistry meterRegistry() {

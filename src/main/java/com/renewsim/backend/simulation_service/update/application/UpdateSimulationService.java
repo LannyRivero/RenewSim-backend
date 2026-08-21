@@ -139,18 +139,14 @@ public class UpdateSimulationService implements UpdateSimulationUseCase {
 
     private Simulation toUpdatedSimulation(UpdateSimulationCommand command, Simulation existing,
             List<Long> technologyIds) {
-        Simulation updated = Simulation.create(
+        return existing.rebuildForUpdate(
                 command.name(),
                 command.technology(),
                 command.location(),
                 command.system(),
                 command.demand(),
                 command.economics(),
-                technologyIds,
-                existing.getScenarioId(),
-                existing.getCreatedBy());
-        updated.assignId(existing.getId());
-        return updated;
+                technologyIds);
     }
 
     private CreateRealSimulationCommand toEngineCommand(
