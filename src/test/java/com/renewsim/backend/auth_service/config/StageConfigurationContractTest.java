@@ -53,8 +53,16 @@ class StageConfigurationContractTest {
     void loggingEmailAdapterSupportsStageProfile() throws IOException {
         String content = Files.readString(Path.of("src/main/java/com/renewsim/backend/auth_service/infrastructure/email/LoggingEmailAdapter.java"));
 
-        assertThat(content).contains("@Profile({ \"test\", \"local\", \"stage\" })");
+        assertThat(content).contains("@Profile({ \"test\", \"local\" })");
         assertThat(content).contains("${app.frontend.url:http://localhost:3000}");
+    }
+
+    @Test
+    void stageProfileUsesNoopEmailAdapterForShowcase() throws IOException {
+        String content = Files.readString(Path.of("src/main/java/com/renewsim/backend/auth_service/infrastructure/email/StageNoopEmailAdapter.java"));
+
+        assertThat(content).contains("@Profile(\"stage\")");
+        assertThat(content).contains("without exposing verification or reset tokens in logs");
     }
 
     @Test

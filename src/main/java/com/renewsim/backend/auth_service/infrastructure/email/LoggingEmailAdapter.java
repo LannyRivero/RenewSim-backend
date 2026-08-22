@@ -7,10 +7,10 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
- * No-op email adapter for local, stage/showcase and automated tests.
+ * No-op email adapter for local development and automated tests.
  *
  * <p>
- * Active on non-production showcase profiles. Instead of sending real emails it writes
+ * Active on local/test profiles. Instead of sending real emails it writes
  * a clearly-marked log line at WARN level so developers can copy verification
  * and reset links directly from the console.
  *
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@Profile({ "test", "local", "stage" })
+@Profile({ "test", "local" })
 public class LoggingEmailAdapter implements EmailPort {
 
     private static final String SEP = "=".repeat(60);

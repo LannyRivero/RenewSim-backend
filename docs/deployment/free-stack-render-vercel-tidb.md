@@ -88,8 +88,8 @@ For the first public demo, the backend does **not** need a live email provider t
 Recommended baseline:
 
 - public login via JWT
-- register flow available
-- stage/showcase verification and reset links emitted through the logging email adapter
+- demo access through seeded accounts
+- register endpoints can remain present, but email delivery is intentionally disabled in `stage`
 - real outbound email deferred until a later production-oriented slice
 
 If you later want a stricter production deployment with `SPRING_PROFILES_ACTIVE=prod`, you will need two extra decisions outside the scope of this first demo guide:
@@ -128,9 +128,9 @@ This is useful for validating the deployment shape before publishing a public de
 
 `stage` is intentionally suitable for showcase use:
 
-- it can behave like local development for auth/register flows
-- it does not require Brevo to demonstrate login/register
+- it does not require Brevo to demonstrate the main product flow
 - it keeps the public demo focused on JWT auth, simulations and observability
+- it avoids logging raw verification or reset tokens in a remotely hosted environment
 
 ## Smoke test checklist after deploy
 
