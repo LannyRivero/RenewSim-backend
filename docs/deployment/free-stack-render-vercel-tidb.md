@@ -28,6 +28,15 @@ TiDB Serverless / MySQL-compatible database
 
 ## Backend on Render
 
+For the **first public demo / interview deployment**, the recommended profile is `stage`, not `prod`.
+
+Why:
+
+- `stage` is already aligned with MySQL
+- `stage` can use the logging email adapter for verification/reset flows
+- `prod` still assumes PostgreSQL-oriented defaults unless you override extra datasource settings
+- `prod` also needs a single explicit production email adapter decision before it becomes the fastest path to a demo
+
 ### 1. Create the database first
 
 Create a free MySQL-compatible database.
@@ -58,16 +67,16 @@ Render will build directly from the existing `Dockerfile`.
 Set these in Render:
 
 ```text
-SPRING_PROFILES_ACTIVE=prod
+SPRING_PROFILES_ACTIVE=stage
 SPRING_DATASOURCE_URL=<jdbc-url>
 SPRING_DATASOURCE_USERNAME=<db-user>
 SPRING_DATASOURCE_PASSWORD=<db-password>
 
-JWT_SECRET_BASE64=<base64-secret>
-SECURITY_JWT_ISSUER=renewsim-auth
-SECURITY_JWT_AUDIENCE=renewsim-app
+SECURITY_JWT_SECRET_BASE64=<base64-secret>
+SECURITY_JWT_ISSUER=renewsim-auth-stage
+SECURITY_JWT_AUDIENCE=renewsim-app-stage
 
-OPENWEATHER_API_KEY=<optional-but-recommended>
+OPENWEATHER_API_KEY=<required>
 OPENWEATHER_BASE_URL=https://api.openweathermap.org
 
 APP_FRONTEND_URL=<vercel-url>
@@ -82,6 +91,11 @@ Recommended baseline:
 - register flow available
 - stage/showcase verification and reset links emitted through the logging email adapter
 - real outbound email deferred until a later production-oriented slice
+
+If you later want a stricter production deployment with `SPRING_PROFILES_ACTIVE=prod`, you will need two extra decisions outside the scope of this first demo guide:
+
+1. Override the PostgreSQL-oriented defaults in `application-prod.yml` with MySQL-compatible datasource settings.
+2. Select a single production `EmailPort` adapter instead of relying on the current dual `docker|prod` wiring.
 
 ## Frontend on Vercel
 
