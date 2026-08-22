@@ -45,7 +45,24 @@ class StageConfigurationContractTest {
 
         assertThat(content).contains("SECURITY_JWT_SECRET_BASE64: ${SECURITY_JWT_SECRET_BASE64:?SECURITY_JWT_SECRET_BASE64 is required}");
         assertThat(content).contains("OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:?OPENWEATHER_API_KEY is required}");
-        assertThat(content).contains("EMAIL_BREVO_API_KEY: ${EMAIL_BREVO_API_KEY:?EMAIL_BREVO_API_KEY is required}");
+        assertThat(content).contains("APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:3000}");
+        assertThat(content).doesNotContain("EMAIL_BREVO_API_KEY: ${EMAIL_BREVO_API_KEY:?EMAIL_BREVO_API_KEY is required}");
+    }
+
+    @Test
+    void loggingEmailAdapterSupportsStageProfile() throws IOException {
+        String content = Files.readString(Path.of("src/main/java/com/renewsim/backend/auth_service/infrastructure/email/LoggingEmailAdapter.java"));
+
+        assertThat(content).contains("@Profile({ \"test\", \"local\" })");
+        assertThat(content).contains("${app.frontend.url:http://localhost:3000}");
+    }
+
+    @Test
+    void stageProfileUsesNoopEmailAdapterForShowcase() throws IOException {
+        String content = Files.readString(Path.of("src/main/java/com/renewsim/backend/auth_service/infrastructure/email/StageNoopEmailAdapter.java"));
+
+        assertThat(content).contains("@Profile(\"stage\")");
+        assertThat(content).contains("without exposing verification or reset tokens in logs");
     }
 
     @Test

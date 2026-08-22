@@ -275,6 +275,20 @@ Para detalle fino:
 - `docs/architecture/simulation-observability-queries.md`
 - `docs/architecture/simulation-observability-local-stack.md`
 
+## Despliegue
+
+La ruta más simple para una demo pública coherente con el stack actual es:
+
+- frontend en **Vercel**
+- backend en **Render**
+- base de datos **MySQL-compatible**
+
+Guía recomendada:
+
+- `docs/deployment/free-stack-render-vercel-tidb.md`
+
+Para la primera demo pública, el backend está pensado para desplegarse con perfil `stage`, no `prod`, de modo que login/register se puedan demostrar sin depender todavía de un proveedor real de email.
+
 ## Calidad y CI
 
 El backend está pensado para evolucionar con una base razonable de control técnico.
@@ -297,6 +311,7 @@ Actualmente ya cuenta con:
 - `docs/adr/ADR-012-simulation-external-resilience-and-fallbacks.md`
 - `docs/architecture/simulation-phase7-flows.md`
 - `docs/architecture/simulation-observability-queries.md`
+- `docs/deployment/free-stack-render-vercel-tidb.md`
 
 ## Qué no promete este README
 
