@@ -297,6 +297,7 @@ Actualmente ya cuenta con:
 - `docs/adr/ADR-012-simulation-external-resilience-and-fallbacks.md`
 - `docs/architecture/simulation-phase7-flows.md`
 - `docs/architecture/simulation-observability-queries.md`
+- `docs/deployment/free-stack-render-vercel-tidb.md`
 
 ## Qué no promete este README
 

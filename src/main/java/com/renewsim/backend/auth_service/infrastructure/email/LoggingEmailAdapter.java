@@ -2,14 +2,15 @@ package com.renewsim.backend.auth_service.infrastructure.email;
 
 import com.renewsim.backend.auth_service.application.port.out.EmailPort;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
- * No-op email adapter for local development and automated tests.
+ * No-op email adapter for local, stage/showcase and automated tests.
  *
  * <p>
- * Active on profile {@code test}. Instead of sending real emails it writes
+ * Active on non-production showcase profiles. Instead of sending real emails it writes
  * a clearly-marked log line at WARN level so developers can copy verification
  * and reset links directly from the console.
  *
@@ -26,10 +27,16 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@Profile({ "test", "local" })
+@Profile({ "test", "local", "stage" })
 public class LoggingEmailAdapter implements EmailPort {
 
     private static final String SEP = "=".repeat(60);
+
+    private final String frontendUrl;
+
+    public LoggingEmailAdapter(@Value("${app.frontend.url:http://localhost:3000}") String frontendUrl) {
+        this.frontendUrl = frontendUrl;
+    }
 
     @Override
     public void sendVerificationEmail(String toEmail, String username, String verificationToken) {
@@ -37,7 +44,7 @@ public class LoggingEmailAdapter implements EmailPort {
         validateNotBlank(username, "username");
         validateNotBlank(verificationToken, "verificationToken");
 
-        String url = "http://localhost:3000/verify-email?token=" + verificationToken;
+        String url = frontendUrl + "/verify-email?token=" + verificationToken;
 
         log.warn("""
                 {}
@@ -55,7 +62,7 @@ public class LoggingEmailAdapter implements EmailPort {
         validateNotBlank(username, "username");
         validateNotBlank(resetToken, "resetToken");
 
-        String url = "http://localhost:3000/reset-password?token=" + resetToken;
+        String url = frontendUrl + "/reset-password?token=" + resetToken;
 
         log.warn("""
                 {}
