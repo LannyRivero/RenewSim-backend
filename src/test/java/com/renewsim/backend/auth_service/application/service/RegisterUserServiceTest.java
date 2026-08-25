@@ -176,7 +176,7 @@ class RegisterUserServiceTest {
             RegisterResult result = service.execute(VALID_COMMAND);
 
             assertThat(result.status()).isEqualTo(AuthUserStatus.ACTIVE);
-            assertThat(result.message()).containsIgnoringCase("local");
+            assertThat(result.message()).containsIgnoringCase("log in immediately");
         }
 
         @Test
@@ -263,6 +263,22 @@ class RegisterUserServiceTest {
 
             assertThat(result.status()).isEqualTo(AuthUserStatus.INACTIVE);
             verify(userAccountGateway, never()).activateUser(any());
+        }
+
+        @Test
+        @DisplayName("production should auto-activate like local")
+        void productionShouldAutoActivateLikeLocal() {
+            when(environment.getActiveProfiles()).thenReturn(new String[] { "production" });
+            when(userAccountGateway.existsByEmail(any())).thenReturn(false);
+            when(userAccountGateway.createUser(any(), any(), any(), any(), any()))
+                    .thenReturn(ACTIVE_SNAPSHOT);
+
+            RegisterResult result = service.execute(VALID_COMMAND);
+
+            assertThat(result.status()).isEqualTo(AuthUserStatus.ACTIVE);
+            verify(userAccountGateway).activateUser(1L);
+            verifyNoInteractions(emailPort);
+            verifyNoInteractions(emailVerificationTokenRepository);
         }
 
         @Test

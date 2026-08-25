@@ -6,15 +6,16 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
- * Stage/showcase adapter that intentionally avoids delivering or logging raw tokens.
+ * Stage/production adapter that intentionally avoids delivering or logging raw tokens.
  *
- * <p>For the first public demo we rely on seeded accounts and JWT login rather than
- * email-driven verification flows. This adapter keeps the application context complete
- * on the {@code stage} profile without exposing verification or reset tokens in logs.</p>
+ * <p>For environments without email delivery we rely on seeded accounts and JWT login
+ * rather than email-driven verification flows. This adapter keeps the application context
+ * complete on the {@code stage} and {@code production} profiles without exposing
+ * verification or reset tokens in logs.</p>
  */
 @Slf4j
 @Component
-@Profile("stage")
+@Profile({ "stage", "production" })
 public class StageNoopEmailAdapter implements EmailPort {
 
     @Override

@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
- * SMTP email adapter for {@code docker} and {@code prod} profiles.
+ * SMTP email adapter reserved for the explicit {@code smtp} profile.
  *
  * <p>
  * <strong>Status: STUB — NOT YET IMPLEMENTED (Phase 5 / D2-01-smtp)</strong>
@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@Profile({ "docker", "prod" })
+@Profile("smtp")
 public class SmtpEmailAdapter implements EmailPort {
 
     @Override

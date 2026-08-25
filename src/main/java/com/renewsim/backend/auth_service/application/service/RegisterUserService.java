@@ -71,20 +71,21 @@ public class RegisterUserService implements RegisterUserUseCase {
                 command.email(),
                 DEFAULT_ROLES);
 
-        // In local profile: auto-activate so developers can log in immediately
-        // without email verification. Never active on docker or prod.
-        if (isLocalProfile()) {
+        // In local and production profiles: auto-activate so users can log in immediately
+        // without email verification.
+        if (shouldAutoActivate()) {
             userAccountGateway.activateUser(userSnapshot.id());
-            log.info("Local profile: user auto-activated userId={}", userSnapshot.id());
+            log.info("Auto-activated user after registration userId={} profiles={}",
+                    userSnapshot.id(), Arrays.toString(environment.getActiveProfiles()));
             return new RegisterResult(
                     userSnapshot.id(),
                     userSnapshot.email(),
                     userSnapshot.fullName(),
                     AuthUserStatus.ACTIVE,
-                    "Registration successful. You can log in immediately (local profile).");
+                    "Registration successful. You can log in immediately.");
         }
 
-        // Production/docker path: require email verification
+        // Non-local/non-production path: require email verification
         String verificationToken = generateSecureToken();
         LocalDateTime expiresAt = LocalDateTime.now().plusHours(verificationExpirationHours);
 
@@ -106,8 +107,9 @@ public class RegisterUserService implements RegisterUserUseCase {
                 "Registration successful. Please check your email to verify your account.");
     }
 
-    private boolean isLocalProfile() {
-        return Arrays.asList(environment.getActiveProfiles()).contains("local");
+    private boolean shouldAutoActivate() {
+        return Arrays.stream(environment.getActiveProfiles())
+                .anyMatch(profile -> "local".equals(profile) || "production".equals(profile));
     }
 
     private String generateSecureToken() {

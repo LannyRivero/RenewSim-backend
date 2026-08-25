@@ -15,7 +15,7 @@ import org.springframework.security.web.context.SecurityContextHolderFilter;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
-@Profile({ "prod", "stage" })
+@Profile({ "prod", "production", "stage" })
 @RequiredArgsConstructor
 public class ActuatorSecurityConfigProd {
 

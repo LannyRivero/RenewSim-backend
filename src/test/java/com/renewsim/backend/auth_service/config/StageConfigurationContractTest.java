@@ -61,8 +61,8 @@ class StageConfigurationContractTest {
     void stageProfileUsesNoopEmailAdapterForShowcase() throws IOException {
         String content = Files.readString(Path.of("src/main/java/com/renewsim/backend/auth_service/infrastructure/email/StageNoopEmailAdapter.java"));
 
-        assertThat(content).contains("@Profile(\"stage\")");
-        assertThat(content).contains("without exposing verification or reset tokens in logs");
+        assertThat(content).contains("@Profile({ \"stage\", \"production\" })");
+        assertThat(content).contains("Stage/production adapter");
     }
 
     @Test
