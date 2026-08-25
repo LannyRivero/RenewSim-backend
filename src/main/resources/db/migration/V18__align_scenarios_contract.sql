@@ -4,11 +4,21 @@
 -- =====================================================
 
 ALTER TABLE scenarios
-    ADD COLUMN default_capacity_kw DECIMAL(10,2) NULL AFTER technology_id,
-    ADD COLUMN default_investment_amount DECIMAL(15,2) NULL AFTER default_capacity_kw,
-    ADD COLUMN default_investment_currency VARCHAR(10) NULL AFTER default_investment_amount,
-    ADD COLUMN default_tariff DECIMAL(10,4) NULL AFTER default_investment_currency,
-    ADD COLUMN default_consumption DECIMAL(15,2) NULL AFTER default_tariff,
+    ADD COLUMN default_capacity_kw DECIMAL(10,2) NULL AFTER technology_id;
+
+ALTER TABLE scenarios
+    ADD COLUMN default_investment_amount DECIMAL(15,2) NULL AFTER default_capacity_kw;
+
+ALTER TABLE scenarios
+    ADD COLUMN default_investment_currency VARCHAR(10) NULL AFTER default_investment_amount;
+
+ALTER TABLE scenarios
+    ADD COLUMN default_tariff DECIMAL(10,4) NULL AFTER default_investment_currency;
+
+ALTER TABLE scenarios
+    ADD COLUMN default_consumption DECIMAL(15,2) NULL AFTER default_tariff;
+
+ALTER TABLE scenarios
     ADD COLUMN is_active BOOLEAN NULL DEFAULT TRUE AFTER climate_profile;
 
 UPDATE scenarios s
