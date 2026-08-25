@@ -16,11 +16,21 @@ ALTER TABLE simulations
 
 -- 2) Add the baseline columns expected by SimulationEntity/SimulationMapper.
 ALTER TABLE simulations
-    ADD COLUMN location VARCHAR(255) NULL AFTER technology_id,
-    ADD COLUMN energy_type VARCHAR(32) NULL AFTER location,
-    ADD COLUMN project_size DOUBLE NULL AFTER energy_type,
-    ADD COLUMN budget DOUBLE NULL AFTER project_size,
-    ADD COLUMN estimated_energy DOUBLE NOT NULL DEFAULT 0 AFTER budget,
+    ADD COLUMN location VARCHAR(255) NULL AFTER technology_id;
+
+ALTER TABLE simulations
+    ADD COLUMN energy_type VARCHAR(32) NULL AFTER location;
+
+ALTER TABLE simulations
+    ADD COLUMN project_size DOUBLE NULL AFTER energy_type;
+
+ALTER TABLE simulations
+    ADD COLUMN budget DOUBLE NULL AFTER project_size;
+
+ALTER TABLE simulations
+    ADD COLUMN estimated_energy DOUBLE NOT NULL DEFAULT 0 AFTER budget;
+
+ALTER TABLE simulations
     ADD COLUMN created_by VARCHAR(100) NOT NULL DEFAULT 'system' AFTER co2_reduction;
 
 -- 3) Add many-to-many storage used by SimulationEntity.technologyIds.
