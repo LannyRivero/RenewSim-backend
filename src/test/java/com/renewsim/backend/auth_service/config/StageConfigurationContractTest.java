@@ -30,6 +30,15 @@ class StageConfigurationContractTest {
     }
 
     @Test
+    void productionYamlImportsProdConfiguration() throws IOException {
+        String content = Files.readString(Path.of("src/main/resources/application-production.yml"));
+
+        assertThat(content).contains("spring:");
+        assertThat(content).contains("config:");
+        assertThat(content).contains("import: classpath:application-prod.yml");
+    }
+
+    @Test
     void stageComposeRequiresExplicitDatabaseSecrets() throws IOException {
         String content = Files.readString(Path.of("docker-compose.stage.yml"));
 
