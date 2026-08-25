@@ -39,6 +39,13 @@ class StageConfigurationContractTest {
     }
 
     @Test
+    void simulationMigrationAlignsAnnualEnergyWithDoubleMapping() throws IOException {
+        String content = Files.readString(Path.of("src/main/resources/db/migration/V28__align_simulation_annual_energy_type.sql"));
+
+        assertThat(content).contains("MODIFY COLUMN annual_energy_generated DOUBLE NULL");
+    }
+
+    @Test
     void stageComposeRequiresExplicitDatabaseSecrets() throws IOException {
         String content = Files.readString(Path.of("docker-compose.stage.yml"));
 
