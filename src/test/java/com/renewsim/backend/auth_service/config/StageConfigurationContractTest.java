@@ -46,6 +46,16 @@ class StageConfigurationContractTest {
     }
 
     @Test
+    void simulationMigrationAlignsRemainingLegacyNumericColumns() throws IOException {
+        String content = Files.readString(Path.of("src/main/resources/db/migration/V29__align_simulation_legacy_numeric_columns.sql"));
+
+        assertThat(content).contains("MODIFY COLUMN location_lat DOUBLE NOT NULL");
+        assertThat(content).contains("MODIFY COLUMN location_lng DOUBLE NOT NULL");
+        assertThat(content).contains("MODIFY COLUMN capacity_kw DOUBLE NOT NULL");
+        assertThat(content).contains("MODIFY COLUMN energy_generated DOUBLE NOT NULL DEFAULT 0");
+    }
+
+    @Test
     void stageComposeRequiresExplicitDatabaseSecrets() throws IOException {
         String content = Files.readString(Path.of("docker-compose.stage.yml"));
 
