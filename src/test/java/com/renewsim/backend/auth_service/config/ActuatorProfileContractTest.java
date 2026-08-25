@@ -22,6 +22,6 @@ class ActuatorProfileContractTest {
         Profile profile = ActuatorSecurityConfigProd.class.getAnnotation(Profile.class);
 
         assertThat(profile).isNotNull();
-        assertThat(profile.value()).containsExactly("prod", "stage");
+        assertThat(profile.value()).containsExactly("prod", "production", "stage");
     }
 }
