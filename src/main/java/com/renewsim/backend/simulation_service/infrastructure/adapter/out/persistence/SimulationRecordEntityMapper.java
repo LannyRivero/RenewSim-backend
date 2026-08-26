@@ -36,7 +36,10 @@ final class SimulationRecordEntityMapper {
         entity.setLocationLat(simulation.getLocation().lat());
         entity.setLocationLng(simulation.getLocation().lng());
         entity.setProjectSize(simulation.getSystem().installedCapacityKw());
+        entity.setCapacityKw(simulation.getSystem().installedCapacityKw());
         entity.setBudget(simulation.getEconomics().capexTotal());
+        entity.setInitialInvestment(simulation.getEconomics().capexTotal());
+        entity.setTotalCost(simulation.getEconomics().capexTotal());
         entity.setEstimatedEnergy(
                 simulation.getAnnualGenerationKwh() != null ? simulation.getAnnualGenerationKwh() : 0.0);
         entity.setCreatedBy(simulation.getCreatedBy());

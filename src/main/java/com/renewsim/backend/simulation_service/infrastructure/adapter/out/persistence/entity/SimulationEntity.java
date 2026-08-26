@@ -40,16 +40,16 @@ public class SimulationEntity {
     @Column(name = "project_size", nullable = false)
     private Double projectSize;
 
-    @Column(name = "capacity_kw", insertable = false, updatable = false)
+    @Column(name = "capacity_kw", nullable = false)
     private Double capacityKw;
 
     @Column(nullable = false)
     private Double budget;
 
-    @Column(name = "initial_investment", insertable = false, updatable = false)
+    @Column(name = "initial_investment", nullable = false)
     private Double initialInvestment;
 
-    @Column(name = "total_cost", insertable = false, updatable = false)
+    @Column(name = "total_cost", nullable = false)
     private Double totalCost;
 
     @Column(name = "estimated_energy", nullable = false)
