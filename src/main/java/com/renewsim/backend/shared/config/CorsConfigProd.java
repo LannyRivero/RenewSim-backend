@@ -17,7 +17,7 @@ public class CorsConfigProd {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("https://renewsim.vercel.app/")
+                        .allowedOrigins("https://renewsim-frontend.vercel.app", "https://renewsim.vercel.app")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
