@@ -12,12 +12,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class CorsConfigProd {
 
     @Bean
-    public WebMvcConfigurer corsConfigurerProd() {
+    public WebMvcConfigurer corsConfigurerProd(CorsProperties props) {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("https://renewsim-frontend.vercel.app", "https://renewsim.vercel.app")
+                        .allowedOriginPatterns(props.getAllowedOrigins().toArray(String[]::new))
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
