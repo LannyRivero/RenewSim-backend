@@ -39,6 +39,13 @@ class StageConfigurationContractTest {
     }
 
     @Test
+    void prodYamlTargetsRenewsimFlywaySchemaByDefault() throws IOException {
+        String content = Files.readString(Path.of("src/main/resources/application-prod.yml"));
+
+        assertThat(content).contains("schemas: ${FLYWAY_SCHEMA:renewsim}");
+    }
+
+    @Test
     void simulationMigrationAlignsAnnualEnergyWithDoubleMapping() throws IOException {
         String content = Files.readString(Path.of("src/main/resources/db/migration/V28__align_simulation_annual_energy_type.sql"));
 
@@ -53,6 +60,22 @@ class StageConfigurationContractTest {
         assertThat(content).contains("MODIFY COLUMN location_lng DOUBLE NOT NULL");
         assertThat(content).contains("MODIFY COLUMN capacity_kw DOUBLE NOT NULL");
         assertThat(content).contains("MODIFY COLUMN energy_generated DOUBLE NOT NULL DEFAULT 0");
+    }
+
+    @Test
+    void simulationMigrationAlignsLegacyFinancialNumericColumns() throws IOException {
+        String content = Files.readString(Path.of("src/main/resources/db/migration/V30__align_simulation_financial_numeric_columns.sql"));
+
+        assertThat(content).contains("MODIFY COLUMN initial_investment DOUBLE NOT NULL");
+        assertThat(content).contains("MODIFY COLUMN total_cost DOUBLE NOT NULL");
+    }
+
+    @Test
+    void simulationMigrationAlignsProfitabilityColumns() throws IOException {
+        String content = Files.readString(Path.of("src/main/resources/db/migration/V31__align_simulation_profitability_numeric_columns.sql"));
+
+        assertThat(content).contains("MODIFY COLUMN npv DOUBLE NULL");
+        assertThat(content).contains("MODIFY COLUMN irr_pct DOUBLE NULL");
     }
 
     @Test
