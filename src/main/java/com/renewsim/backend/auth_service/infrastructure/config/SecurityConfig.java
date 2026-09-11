@@ -118,12 +118,10 @@ public class SecurityConfig {
 
     @Bean
     public RoleHierarchy roleHierarchy() {
-        RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
-        hierarchy.setHierarchy("""
+        return RoleHierarchyImpl.fromHierarchy("""
                 ROLE_ADMIN > ROLE_ANALYST
                 ROLE_ANALYST > ROLE_USER
                 """);
-        return hierarchy;
     }
 
 }    

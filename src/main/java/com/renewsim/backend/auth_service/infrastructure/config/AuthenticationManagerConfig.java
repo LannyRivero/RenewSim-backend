@@ -19,8 +19,7 @@ public class AuthenticationManagerConfig {
     public DaoAuthenticationProvider authenticationProvider(
             UserDetailsService customUserDetailsService,
             PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(customUserDetailsService);
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(customUserDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }

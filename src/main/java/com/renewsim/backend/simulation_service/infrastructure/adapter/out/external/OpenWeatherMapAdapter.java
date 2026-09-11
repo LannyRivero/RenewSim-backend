@@ -126,7 +126,7 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
     }
 
     private List<ResolvedLocation> doSearchLocations(String query, int requestedLimit) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl() + "/geo/1.0/direct")
+        String url = UriComponentsBuilder.fromUriString(baseUrl() + "/geo/1.0/direct")
                 .queryParam("q", query)
                 .queryParam("limit", Math.max(requestedLimit * 5, 10))
                 .queryParam("appid", apiKey())
@@ -168,7 +168,7 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
     }
 
     private Map<?, ?> fetchWeatherResponse(double latitude, double longitude) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl() + "/data/2.5/weather")
+        String url = UriComponentsBuilder.fromUriString(baseUrl() + "/data/2.5/weather")
                 .queryParam("lat", latitude)
                 .queryParam("lon", longitude)
                 .queryParam("units", "metric")

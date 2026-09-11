@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserJpaRepositoryIT {
 
     @Container
+    @SuppressWarnings("resource")
     static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("renewsim_test")
             .withUsername("test")

@@ -1,11 +1,11 @@
 package com.renewsim.backend.user_service.application.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.renewsim.backend.shared.exception.InvalidUserDataException;
 import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort;
@@ -14,6 +14,7 @@ import com.renewsim.backend.user_service.application.port.out.UserRepositoryPort
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ExistsUserServiceTest {
 
     @Mock
@@ -21,11 +22,6 @@ class ExistsUserServiceTest {
 
     @InjectMocks
     private ExistsUserService service;
-
-    @BeforeEach
-    void setup() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     @Test
     @DisplayName("should return true when user exists by username")

@@ -4,12 +4,14 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.AuthenticationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+@ExtendWith(MockitoExtension.class)
 class CustomAuthFailureHandlerTest {
 
     private CustomAuthFailureHandler failureHandler;
@@ -25,7 +27,6 @@ class CustomAuthFailureHandlerTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         failureHandler = new CustomAuthFailureHandler();
     }
 

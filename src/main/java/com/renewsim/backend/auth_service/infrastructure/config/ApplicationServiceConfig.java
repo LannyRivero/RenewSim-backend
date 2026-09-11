@@ -27,15 +27,13 @@ public class ApplicationServiceConfig {
             TokenBlacklistPort tokenBlacklistPort,
             RefreshTokenRepositoryPort refreshTokenRepositoryPort,
             UserAccountGateway userAccountGateway,
-            TransactionalPort transactionalPort,
-            TimeProvider timeProvider) {
+            TransactionalPort transactionalPort) {
         return new LogoutService(
                 tokenProvider,
                 tokenBlacklistPort,
                 refreshTokenRepositoryPort,
                 userAccountGateway,
-                transactionalPort,
-                timeProvider.getClock());
+                transactionalPort);
     }
 
     @Bean

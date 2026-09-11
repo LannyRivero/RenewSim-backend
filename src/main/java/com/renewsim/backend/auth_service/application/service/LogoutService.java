@@ -10,8 +10,6 @@ import com.renewsim.backend.auth_service.application.port.out.TransactionalPort;
 import com.renewsim.backend.auth_service.application.port.out.UserAccountGateway;
 import com.renewsim.backend.auth_service.application.result.LogoutResult;
 
-import java.time.Clock;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,21 +22,18 @@ public class LogoutService implements LogoutUseCase {
     private final RefreshTokenRepositoryPort refreshTokenRepositoryPort;
     private final UserAccountGateway userAccountGateway;
     private final TransactionalPort transactionalPort;
-    private final Clock clock;
 
     public LogoutService(
             TokenProvider tokenProvider,
             TokenBlacklistPort tokenBlacklistPort,
             RefreshTokenRepositoryPort refreshTokenRepositoryPort,
             UserAccountGateway userAccountGateway,
-            TransactionalPort transactionalPort,
-            Clock clock) {
+            TransactionalPort transactionalPort) {
         this.tokenProvider = tokenProvider;
         this.tokenBlacklistPort = tokenBlacklistPort;
         this.refreshTokenRepositoryPort = refreshTokenRepositoryPort;
         this.userAccountGateway = userAccountGateway;
         this.transactionalPort = transactionalPort;
-        this.clock = clock;
     }
 
     @Override

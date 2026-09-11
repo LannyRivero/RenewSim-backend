@@ -41,6 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RolePersistenceAdapterIT {
 
     @Container
+    @SuppressWarnings("resource")
     static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("renewsim")
             .withUsername("test")
