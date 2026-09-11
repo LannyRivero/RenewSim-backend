@@ -134,3 +134,8 @@ management:
     web:
       exposure:
         include: "health,info,flyway,metrics,prometheus"
+
+demo:
+  bootstrap:
+    enabled: ${DEMO_BOOTSTRAP_ENABLED:true}
+    password: ${DEMO_BOOTSTRAP_PASSWORD:DemoPass123!}

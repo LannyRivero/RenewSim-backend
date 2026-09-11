@@ -38,3 +38,8 @@ logging:
   level:
     root: INFO
     com.renewsim: INFO
+
+demo:
+  bootstrap:
+    enabled: ${DEMO_BOOTSTRAP_ENABLED:true}
+    password: ${DEMO_BOOTSTRAP_PASSWORD:DemoPass123!}
