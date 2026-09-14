@@ -1,38 +1,11 @@
 spring:
-  datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
+  config:
+    import: classpath:application-prod.yml
 
 security:
   jwt:
     issuer: ${SECURITY_JWT_ISSUER:renewsim-auth-stage}
     audience: ${SECURITY_JWT_AUDIENCE:renewsim-app-stage}
-    secret-base64: ${SECURITY_JWT_SECRET_BASE64}
-  rate-limiting:
-    max-attempts: 5
-    window: 300s
-    retry-after: 900s
-
-app:
-  frontend:
-    url: ${APP_FRONTEND_URL}
-  email:
-    verification:
-      expiration-hours: ${APP_EMAIL_VERIFICATION_EXPIRATION_HOURS}
-
-email:
-  brevo:
-    api-key: ${EMAIL_BREVO_API_KEY}
-    sender-email: ${EMAIL_BREVO_SENDER_EMAIL}
-    sender-name: ${EMAIL_BREVO_SENDER_NAME}
 
 logging:
   level:
