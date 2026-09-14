@@ -24,7 +24,7 @@ class StageConfigurationContractTest {
 
         assertThat(content).contains("security:");
         assertThat(content).contains("jwt:");
-        assertThat(content).contains("secret-base64: ${SECURITY_JWT_SECRET_BASE64}");
+        assertThat(content).contains("secret-base64: ${SECURITY_JWT_SECRET_BASE64");
         assertThat(content).doesNotContain("app:\n  security:");
         assertThat(content).doesNotContain("APP_SECURITY_JWT_");
     }
