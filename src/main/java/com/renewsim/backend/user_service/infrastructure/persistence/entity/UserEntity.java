@@ -141,7 +141,7 @@ public class UserEntity {
     }
 
     public void setRoles(Set<RoleEntity> roles) {
-        this.roles = roles;
+        this.roles = roles == null ? new HashSet<>() : new HashSet<>(roles);
     }
 
     public boolean isEmailVerified() {
