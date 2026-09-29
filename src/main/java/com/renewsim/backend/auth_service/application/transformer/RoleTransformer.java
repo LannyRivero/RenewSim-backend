@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 /**
  * Transformer para convertir roles de dominio a representación de seguridad.
  *
- * Extrae la lógica duplicada que existía en LoginStep2Service y RefreshTokenService.
+ * Centralizes role mapping shared by login and refresh-token flows.
  * Proporciona métodos estáticos para transformación de roles.
  */
 public final class RoleTransformer {

@@ -40,8 +40,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String p = request.getRequestURI();
         return p.startsWith("/api/v1/auth/login")
                 || p.startsWith("/api/v1/auth/register")
-                || p.startsWith("/api/v1/auth/activate")
-                || p.startsWith("/api/v1/auth/resend-otp")
+                || p.startsWith("/api/v1/auth/refresh")
+                || p.startsWith("/api/v1/auth/email-verification")
                 || p.startsWith("/actuator/health");
     }
 
