@@ -20,9 +20,9 @@ graph TB
     subgraph "Backend — Spring Boot 3.2.1 / Java 21"
         subgraph "auth_service"
             AC[AuthController]
-            AS[AuthServiceImpl]
+            AS[Login / Register / Refresh Use Cases]
             JWT[JwtTokenProvider]
-            OTP[OtpService]
+            EMAIL[EmailVerificationController]
         end
 
         subgraph "user_service"
@@ -72,8 +72,7 @@ graph TB
     HTTP --> TC
     HTTP --> SC
     AS --> JWT
-    AS --> OTP
-    OTP --> MAIL
+    EMAIL --> MAIL
     SE --> ROI
     SE --> CO2
     SE --> NPV
@@ -221,20 +220,20 @@ com.renewsim.backend.{context}/
 
 ---
 
-## ADR-005: Email OTP vs TOTP (Google Authenticator) para 2FA
+## ADR-005: Login simplificado y MFA futuro
 
-**Decisión:** Email OTP como método principal de 2FA
+**Decisión:** El login vigente es de un solo paso con JWT (`POST /api/v1/auth/login`). El flujo OTP/2FA por email fue eliminado y la decisión vigente queda documentada en `docs/adr/ADR-011-otp-removal-simplified-login.md`.
 
-**Contexto:** El sistema sirve a usuarios no técnicos (hogares, pequeñas empresas) que pueden no tener apps de autenticación instaladas.
+**Contexto:** El flujo OTP añadía complejidad operacional sin aportar valor demostrable en la fase actual: endpoints en dos pasos, tabla `otp_codes`, limpieza programada y dependencias de email para completar login.
 
 **Consecuencias positivas:**
-- Cero fricción de onboarding: no requiere instalar apps adicionales
-- El email ya es un canal verificado (usado también para activación de cuenta)
-- Roadmap claro: TOTP como alternativa en Fase 2
+- Login real más simple y defendible: credenciales válidas → access token + refresh token HttpOnly
+- Menor superficie de seguridad obsoleta: sin `/login/step1`, `/login/step2` ni `/auth/resend-otp`
+- Email queda reservado para verificación de cuenta, no para OTP de login
 
 **Consecuencias negativas:**
-- Dependencia del servicio de email (mitigado con retry + fallback SMTP)
-- Menor seguridad que TOTP si el email del usuario es comprometido
+- No hay MFA en la fase actual
+- Si el producto requiere MFA futuro, se debe implementar TOTP/OIDC de forma explícita en lugar de reintroducir OTP por email
 
 ---
 

@@ -224,15 +224,39 @@ class JwtAuthenticationFilterTest extends UnitTestBase {
     }
 
     @Test
-    @DisplayName("ShouldNotFilter: skip JWT validation on public endpoints (e.g., /auth/login)")
+    @DisplayName("ShouldNotFilter: skip JWT validation on current public auth endpoints")
     void shouldSkipOnPublicEndpoints() throws Exception {
-        req.setRequestURI("/auth/login");
-        req.addHeader("Authorization", "Bearer whatever");
+        for (String publicPath : List.of(
+                "/api/v1/auth/login",
+                "/api/v1/auth/register",
+                "/api/v1/auth/refresh",
+                "/api/v1/auth/email-verification/verify",
+                "/api/v1/auth/email-verification/resend")) {
+            SecurityContextHolder.clearContext();
+            req = new MockHttpServletRequest();
+            res = new MockHttpServletResponse();
+            req.setRequestURI(publicPath);
+            req.addHeader("Authorization", "Bearer whatever");
+
+            filter.doFilter(req, res, chain);
+
+            assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        }
+        verifyNoInteractions(tokenProvider, tokenBlacklistPort);
+        verify(chain, times(5)).doFilter(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should not skip JWT validation for removed OTP endpoint")
+    void shouldNotSkipRemovedOtpEndpoint() throws Exception {
+        req.setRequestURI("/api/v1/auth/resend-otp");
+        req.addHeader("Authorization", "Bearer removed-otp-token");
+        when(tokenProvider.validate("removed-otp-token")).thenReturn(Optional.empty());
 
         filter.doFilter(req, res, chain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-        verifyNoInteractions(tokenBlacklistPort);
+        verify(tokenProvider).validate("removed-otp-token");
         verify(chain).doFilter(req, res);
     }
 
