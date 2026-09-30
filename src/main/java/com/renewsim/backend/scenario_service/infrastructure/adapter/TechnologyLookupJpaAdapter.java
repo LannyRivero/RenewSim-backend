@@ -1,7 +1,7 @@
 package com.renewsim.backend.scenario_service.infrastructure.adapter;
 
 import com.renewsim.backend.scenario_service.application.port.out.ScenarioTechnologyLookupPort;
-import com.renewsim.backend.technology_service.application.port.in.TechnologyCatalogLookupUseCase;
+import com.renewsim.backend.technology_service.application.contract.TechnologyCatalogReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TechnologyLookupJpaAdapter implements ScenarioTechnologyLookupPort {
 
-    private final TechnologyCatalogLookupUseCase technologyCatalogLookupUseCase;
+    private final TechnologyCatalogReader technologyCatalogReader;
 
     @Override
     public boolean existsActiveTechnology(Long technologyId) {
-        return technologyCatalogLookupUseCase.existsActiveTechnology(technologyId);
+        return technologyCatalogReader.existsActiveTechnology(technologyId);
     }
 }

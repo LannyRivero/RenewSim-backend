@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence;
 
-import com.renewsim.backend.scenario_service.application.port.in.ScenarioCatalogLookupUseCase;
+import com.renewsim.backend.scenario_service.application.contract.ScenarioCatalogReader;
 import com.renewsim.backend.simulation_service.shared.application.port.out.ScenarioLookupPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -11,11 +11,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ScenarioLookupJpaAdapter implements ScenarioLookupPort {
 
-    private final ScenarioCatalogLookupUseCase scenarioCatalogLookupUseCase;
+    private final ScenarioCatalogReader scenarioCatalogReader;
 
     @Override
     public Optional<ScenarioSnapshot> findActiveScenarioById(Long scenarioId) {
-        return scenarioCatalogLookupUseCase.findActiveScenarioById(scenarioId)
+        return scenarioCatalogReader.findActiveScenarioById(scenarioId)
                 .map(scenario -> new ScenarioSnapshot(
                         scenario.id(),
                         scenario.name(),

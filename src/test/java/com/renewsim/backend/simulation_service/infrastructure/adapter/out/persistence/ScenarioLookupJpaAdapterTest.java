@@ -1,6 +1,6 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence;
 
-import com.renewsim.backend.scenario_service.application.port.in.ScenarioCatalogLookupUseCase;
+import com.renewsim.backend.scenario_service.application.contract.ScenarioCatalogReader;
 import com.renewsim.backend.simulation_service.shared.application.port.out.ScenarioLookupPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,13 +17,13 @@ import static org.mockito.Mockito.when;
 class ScenarioLookupJpaAdapterTest {
 
     @Mock
-    private ScenarioCatalogLookupUseCase scenarioCatalogLookupUseCase;
+    private ScenarioCatalogReader scenarioCatalogReader;
 
     @Test
     @DisplayName("findActiveScenarioById maps the active scenario snapshot")
     void findActiveScenarioByIdMapsTheActiveScenarioSnapshot() {
-        when(scenarioCatalogLookupUseCase.findActiveScenarioById(7L))
-                .thenReturn(Optional.of(new ScenarioCatalogLookupUseCase.ScenarioCatalogSnapshot(
+        when(scenarioCatalogReader.findActiveScenarioById(7L))
+                .thenReturn(Optional.of(new ScenarioCatalogReader.ScenarioCatalogSnapshot(
                         7L,
                         "Hogar solar - Sevilla",
                         1L,
@@ -33,7 +33,7 @@ class ScenarioLookupJpaAdapterTest {
                         0.15,
                         6000.0)));
 
-        ScenarioLookupJpaAdapter adapter = new ScenarioLookupJpaAdapter(scenarioCatalogLookupUseCase);
+        ScenarioLookupJpaAdapter adapter = new ScenarioLookupJpaAdapter(scenarioCatalogReader);
 
         Optional<ScenarioLookupPort.ScenarioSnapshot> result = adapter.findActiveScenarioById(7L);
 
@@ -52,9 +52,9 @@ class ScenarioLookupJpaAdapterTest {
     @Test
     @DisplayName("findActiveScenarioById returns empty when the scenario does not exist or is inactive")
     void findActiveScenarioByIdReturnsEmptyWhenTheScenarioDoesNotExistOrIsInactive() {
-        when(scenarioCatalogLookupUseCase.findActiveScenarioById(7L)).thenReturn(Optional.empty());
+        when(scenarioCatalogReader.findActiveScenarioById(7L)).thenReturn(Optional.empty());
 
-        ScenarioLookupJpaAdapter adapter = new ScenarioLookupJpaAdapter(scenarioCatalogLookupUseCase);
+        ScenarioLookupJpaAdapter adapter = new ScenarioLookupJpaAdapter(scenarioCatalogReader);
 
         assertThat(adapter.findActiveScenarioById(7L)).isEmpty();
     }
