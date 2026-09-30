@@ -96,6 +96,17 @@ graph TB
 | Infrastructure | Implementa puertos, no contiene lógica de negocio | Acoplamiento entre dominio e infraestructura |
 | Web | Solo traduce HTTP ↔ Application, no contiene lógica | Lógica duplicada en controllers |
 
+### Contratos de lectura entre bounded contexts
+
+Cuando un bounded context necesita consultar datos de catálogo de otro context, debe depender de un contrato de lectura explícito del producer context, no de sus `port.in` de casos de uso.
+
+| Caso | Contrato permitido | Evitar |
+|------|--------------------|--------|
+| `simulation_service` → `scenario_service` | `ScenarioCatalogReader` | `ScenarioCatalogLookupUseCase` |
+| `simulation_service` / `scenario_service` → `technology_service` | `TechnologyCatalogReader` | `TechnologyCatalogLookupUseCase` |
+
+Tradeoff: estos contratos siguen siendo in-process porque RenewSim es un monolito modular. No son una ACL distribuida con HTTP/eventos, pero sí localizan la traducción cross-context en adapters y reducen el impacto de cambios en los inbound ports de aplicación.
+
 ---
 
 ## Stack Tecnológico
