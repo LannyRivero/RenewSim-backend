@@ -23,11 +23,7 @@ class ScenarioSimulationCommandFactoryTest {
         @Test
         @DisplayName("fromScenario maps scenario defaults into a real simulation command")
         void fromScenarioMapsScenarioDefaultsIntoRealSimulationCommand() {
-                CreateRealSimulationCommand command = factory.fromScenario(
-                                request(null),
-                                scenario("EUR", 6000.0),
-                                "solar",
-                                List.of(1L, 2L));
+                CreateRealSimulationCommand command = fromScenario(null, "EUR", 6000.0);
 
                 assertThat(command.name()).isEqualTo("Hogar solar - Sevilla");
                 assertThat(command.technology().value()).isEqualTo("solar");
@@ -44,11 +40,7 @@ class ScenarioSimulationCommandFactoryTest {
         @Test
         @DisplayName("fromScenario keeps request name when provided")
         void fromScenarioKeepsRequestNameWhenProvided() {
-                CreateRealSimulationCommand command = factory.fromScenario(
-                                request("Mi simulacion personalizada"),
-                                scenario("EUR", 6000.0),
-                                "solar",
-                                List.of(1L, 2L));
+                CreateRealSimulationCommand command = fromScenario("Mi simulacion personalizada", "EUR", 6000.0);
 
                 assertThat(command.name()).isEqualTo("Mi simulacion personalizada");
         }
@@ -56,11 +48,7 @@ class ScenarioSimulationCommandFactoryTest {
         @Test
         @DisplayName("fromScenario falls back to scenario name when request name is blank")
         void fromScenarioFallsBackToScenarioNameWhenRequestNameIsBlank() {
-                CreateRealSimulationCommand command = factory.fromScenario(
-                                request("   "),
-                                scenario("EUR", 6000.0),
-                                "solar",
-                                List.of(1L, 2L));
+                CreateRealSimulationCommand command = fromScenario("   ", "EUR", 6000.0);
 
                 assertThat(command.name()).isEqualTo("Hogar solar - Sevilla");
         }
@@ -68,11 +56,7 @@ class ScenarioSimulationCommandFactoryTest {
         @Test
         @DisplayName("fromScenario fails when scenario consumption is not positive")
         void fromScenarioFailsWhenScenarioConsumptionIsNotPositive() {
-                assertThatThrownBy(() -> factory.fromScenario(
-                                request(null),
-                                scenario("EUR", 0.0),
-                                "solar",
-                                List.of(1L, 2L)))
+                assertThatThrownBy(() -> fromScenario(null, "EUR", 0.0))
                                 .isInstanceOf(InvalidConsumptionProfileException.class)
                                 .hasMessage("VALIDATION_ERROR: scenario defaultConsumption must be positive");
         }
@@ -80,11 +64,7 @@ class ScenarioSimulationCommandFactoryTest {
         @Test
         @DisplayName("fromScenario rejects unsupported scenario currency")
         void fromScenarioRejectsUnsupportedScenarioCurrency() {
-                assertThatThrownBy(() -> factory.fromScenario(
-                                request(null),
-                                scenario("USD", 6000.0),
-                                "solar",
-                                List.of(1L, 2L)))
+                assertThatThrownBy(() -> fromScenario(null, "USD", 6000.0))
                                 .isInstanceOf(InvalidSimulationCurrencyException.class)
                                 .hasMessage("VALIDATION_ERROR: scenario defaultInvestmentCurrency must be EUR");
         }
@@ -92,13 +72,13 @@ class ScenarioSimulationCommandFactoryTest {
         @Test
         @DisplayName("fromScenario accepts supported scenario currency with surrounding whitespace")
         void fromScenarioAcceptsSupportedScenarioCurrencyWithWhitespace() {
-                CreateRealSimulationCommand command = factory.fromScenario(
-                                request(null),
-                                scenario(" EUR ", 6000.0),
-                                "solar",
-                                List.of(1L, 2L));
+                CreateRealSimulationCommand command = fromScenario(null, " EUR ", 6000.0);
 
                 assertThat(command.economics().currency().value()).isEqualTo("EUR");
+        }
+
+        private CreateRealSimulationCommand fromScenario(String name, String currency, double consumption) {
+                return factory.fromScenario(request(name), scenario(currency, consumption), "solar", List.of(1L, 2L));
         }
 
         private CreateSimulationFromScenarioCommand request(String name) {
