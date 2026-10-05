@@ -153,6 +153,20 @@ class SimulationRecordRepositoryAdapterTest {
         verify(repository).save(entity);
     }
 
+    @Test
+    @DisplayName("purgeDeletedOlderThan delegates physical deletion to the JPA repository")
+    void purgeDeletedOlderThanDelegatesPhysicalDeletionToJpaRepository() {
+        LocalDateTime cutoff = LocalDateTime.parse("2026-09-01T10:00:00");
+        when(repository.deleteDeletedOlderThan(cutoff)).thenReturn(4);
+
+        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
+
+        int purged = adapter.purgeDeletedOlderThan(cutoff);
+
+        assertThat(purged).isEqualTo(4);
+        verify(repository).deleteDeletedOlderThan(cutoff);
+    }
+
     private Simulation draftSimulation() {
         return Simulation.create(
                 "Solar - Sevilla",

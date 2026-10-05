@@ -8,18 +8,20 @@ import com.renewsim.backend.simulation_service.detail.application.port.out.Simul
 import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
 import com.renewsim.backend.simulation_service.domain.model.SimulationId;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
+import com.renewsim.backend.simulation_service.purge.application.port.out.PurgeDeletedSimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public class SimulationRecordRepositoryAdapter
         implements CreateSimulationRepositoryPort, SimulationDetailQueryPort, SimulationHistoryQueryPort,
-        DeleteSimulationRepositoryPort, PortfolioDashboardQueryPort {
+        DeleteSimulationRepositoryPort, PortfolioDashboardQueryPort, PurgeDeletedSimulationRepositoryPort {
 
     private final JpaSimulationRepository repository;
     private final SimulationRecordEntityMapper entityMapper;
@@ -68,5 +70,10 @@ public class SimulationRecordRepositoryAdapter
                 .stream()
                 .map(entityMapper::toReadModel)
                 .toList();
+    }
+
+    @Override
+    public int purgeDeletedOlderThan(LocalDateTime cutoff) {
+        return repository.deleteDeletedOlderThan(cutoff);
     }
 }
