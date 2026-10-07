@@ -56,7 +56,7 @@ public class UserController {
         @GetMapping("/me")
         public ResponseEntity<OperationResponse<UserResponse>> getMe(
                         @AuthenticationPrincipal AuthenticatedUser principal) {
-                var user = getUserUseCase.getDomainUserByUsernameOrEmail(null, principal.username());
+                var user = getUserUseCase.getDomainUserByUsernameOrEmail(principal.username(), null);
                 var response = getMyProfileUseCase.getMyProfile(user.getId());
                 return ResponseEntity.ok(ApiResponseFactory.ok(response, "Profile retrieved successfully"));
         }

@@ -157,7 +157,7 @@ class UserControllerRoleManagementTest {
                 null,
                 null);
 
-        when(getUserUseCase.getDomainUserByUsernameOrEmail(null, "user")).thenReturn(user);
+        when(getUserUseCase.getDomainUserByUsernameOrEmail("user", null)).thenReturn(user);
         when(getMyProfileUseCase.getMyProfile(7L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/users/me")
