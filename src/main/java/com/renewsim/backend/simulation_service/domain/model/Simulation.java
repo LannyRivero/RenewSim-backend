@@ -125,11 +125,15 @@ public class Simulation {
     }
 
     public void delete() {
+        delete(LocalDateTime.now());
+    }
+
+    public void delete(LocalDateTime deletedAt) {
         if (status.isTerminal()) {
             throw new InvalidSimulationStatusTransitionException("delete", status);
         }
         this.status = SimulationStatus.DELETED;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Objects.requireNonNull(deletedAt, "deletedAt is required");
     }
 
     public Simulation rebuildForUpdate(
