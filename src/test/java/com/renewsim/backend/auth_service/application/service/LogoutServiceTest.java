@@ -66,11 +66,11 @@ class LogoutServiceTest {
                 when(tokenProvider.extractJti("valid-token")).thenReturn(Optional.of("jti-123"));
                 when(tokenProvider.extractExpirationEpochSeconds("valid-token"))
                                 .thenReturn(Optional.of(9999999L));
-                when(userAccountGateway.findByEmail("john@example.com"))
+                when(userAccountGateway.findByUsername("john"))
                                 .thenReturn(Optional.of(activeUser));
 
                 LogoutResult result = service.execute(
-                                new LogoutCommand("valid-token", "john@example.com"));
+                                new LogoutCommand("valid-token", "john"));
 
                 assertThat(result.message()).isEqualTo("Logged out successfully");
                 verify(tokenBlacklistPort).blacklist("jti-123", 1L, 9999999L);
@@ -81,11 +81,11 @@ class LogoutServiceTest {
         @DisplayName("token without JTI -> skips blacklist but still revokes refresh tokens")
         void execute_tokenWithoutJti_skipsBl­acklist() {
                 when(tokenProvider.extractJti("no-jti-token")).thenReturn(Optional.empty());
-                when(userAccountGateway.findByEmail("john@example.com"))
+                when(userAccountGateway.findByUsername("john"))
                                 .thenReturn(Optional.of(activeUser));
 
                 LogoutResult result = service.execute(
-                                new LogoutCommand("no-jti-token", "john@example.com"));
+                                new LogoutCommand("no-jti-token", "john"));
 
                 assertThat(result.message()).isEqualTo("Logged out successfully");
                 verifyNoInteractions(tokenBlacklistPort);
@@ -98,11 +98,13 @@ class LogoutServiceTest {
                 when(tokenProvider.extractJti("valid-token")).thenReturn(Optional.of("jti-456"));
                 when(tokenProvider.extractExpirationEpochSeconds("valid-token"))
                                 .thenReturn(Optional.of(9999999L));
-                when(userAccountGateway.findByEmail("unknown@example.com"))
+                when(userAccountGateway.findByUsername("unknown"))
+                                .thenReturn(Optional.empty());
+                when(userAccountGateway.findByEmail("unknown"))
                                 .thenReturn(Optional.empty());
 
                 LogoutResult result = service.execute(
-                                new LogoutCommand("valid-token", "unknown@example.com"));
+                                new LogoutCommand("valid-token", "unknown"));
 
                 assertThat(result.message()).isEqualTo("Logged out successfully");
                 verify(tokenBlacklistPort).blacklist("jti-456", null, 9999999L);
@@ -115,18 +117,49 @@ class LogoutServiceTest {
                 when(tokenProvider.extractJti("valid-token")).thenReturn(Optional.of("jti-789"));
                 when(tokenProvider.extractExpirationEpochSeconds("valid-token"))
                                 .thenReturn(Optional.empty());
+                when(userAccountGateway.findByUsername("john"))
+                                .thenReturn(Optional.of(activeUser));
+
+                service.execute(new LogoutCommand("valid-token", "john"));
+
+                verify(tokenBlacklistPort).blacklist("jti-789", 1L, 0L);
+        }
+
+        @Test
+        @DisplayName("username subject differing from email -> resolves user and revokes refresh tokens")
+        void execute_usernameSubjectDifferingFromEmail_revokesRefreshTokens() {
+                when(tokenProvider.extractJti("valid-token")).thenReturn(Optional.of("jti-username"));
+                when(tokenProvider.extractExpirationEpochSeconds("valid-token"))
+                                .thenReturn(Optional.of(9999999L));
+                when(userAccountGateway.findByUsername("john"))
+                                .thenReturn(Optional.of(activeUser));
+
+                service.execute(new LogoutCommand("valid-token", "john"));
+
+                verify(tokenBlacklistPort).blacklist("jti-username", 1L, 9999999L);
+                verify(refreshTokenRepositoryPort).revokeAllByUserId(1L);
+                verify(userAccountGateway, never()).findByEmail("john");
+        }
+
+        @Test
+        @DisplayName("email subject remains supported as fallback")
+        void execute_emailSubject_resolvesFallbackAndRevokesRefreshTokens() {
+                when(tokenProvider.extractJti("valid-token")).thenReturn(Optional.empty());
+                when(userAccountGateway.findByUsername("john@example.com"))
+                                .thenReturn(Optional.empty());
                 when(userAccountGateway.findByEmail("john@example.com"))
                                 .thenReturn(Optional.of(activeUser));
 
                 service.execute(new LogoutCommand("valid-token", "john@example.com"));
 
-                verify(tokenBlacklistPort).blacklist("jti-789", 1L, 0L);
+                verify(refreshTokenRepositoryPort).revokeAllByUserId(1L);
         }
 
         @Test
         @DisplayName("always returns success message regardless of token state")
         void execute_alwaysReturnsSuccess() {
                 when(tokenProvider.extractJti(anyString())).thenReturn(Optional.empty());
+                when(userAccountGateway.findByUsername(anyString())).thenReturn(Optional.empty());
                 when(userAccountGateway.findByEmail(anyString())).thenReturn(Optional.empty());
 
                 LogoutResult result = service.execute(

@@ -43,7 +43,8 @@ public class LogoutService implements LogoutUseCase {
 
     private LogoutResult executeInternal(LogoutCommand command) {
 
-        Long userId = userAccountGateway.findByEmail(command.username())
+        Long userId = userAccountGateway.findByUsername(command.username())
+                .or(() -> userAccountGateway.findByEmail(command.username()))
                 .map(UserSnapshot::id)
                 .orElse(null);
 

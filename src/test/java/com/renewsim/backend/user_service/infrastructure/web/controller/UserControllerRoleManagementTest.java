@@ -5,6 +5,7 @@ import com.renewsim.backend.auth_service.infrastructure.security.JwtTokenProvide
 import com.renewsim.backend.auth_service.infrastructure.security.LoginRateLimitingFilter;
 import com.renewsim.backend.config.TestSecurityConfig;
 import com.renewsim.backend.shared.exception.ResourceNotFoundException;
+import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.user_service.application.port.in.ActivateUserUseCase;
 import com.renewsim.backend.user_service.application.port.in.AssignUserRoleUseCase;
 import com.renewsim.backend.user_service.application.port.in.ChangeMyPasswordUseCase;
@@ -17,6 +18,9 @@ import com.renewsim.backend.user_service.application.port.in.ListUsersUseCase;
 import com.renewsim.backend.user_service.application.port.in.RemoveUserRoleUseCase;
 import com.renewsim.backend.user_service.application.port.in.UpdateMyProfileUseCase;
 import com.renewsim.backend.user_service.application.port.in.UpdateUserRolesUseCase;
+import com.renewsim.backend.user_service.domain.model.User;
+import com.renewsim.backend.user_service.domain.model.UserStatus;
+import com.renewsim.backend.user_service.web.dto.UserResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -29,21 +33,25 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 import java.util.Set;
+import java.time.LocalDateTime;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -99,6 +107,7 @@ class UserControllerRoleManagementTest {
 
     private static final String ADMIN_TOKEN = "admin-token";
     private static final String USER_TOKEN = "user-token";
+    private static final String VALID_PASSWORD_HASH = new BCryptPasswordEncoder(12).encode("StrongPass1");
 
     @BeforeEach
     void setUp() throws Exception {
@@ -115,11 +124,46 @@ class UserControllerRoleManagementTest {
 
         when(jwtTokenProvider.validate(USER_TOKEN))
                 .thenReturn(Optional.of(new AuthenticatedUser(
-                        "user@renewsim.com", Set.of("USER"), Set.of())));
+                        "user", Set.of("USER"), Set.of())));
     }
 
     private static String bearer(String token) {
         return "Bearer " + token;
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/users/me resolves username subject even when email differs")
+    void getMe_usernameSubjectDifferingFromEmail_returnsProfile() throws Exception {
+        User user = User.reconstitute(
+                7L,
+                "user@renewsim.com",
+                VALID_PASSWORD_HASH,
+                "RenewSim User",
+                null,
+                UserStatus.ACTIVE,
+                Set.of(RoleName.USER),
+                LocalDateTime.parse("2026-01-01T00:00:00"),
+                LocalDateTime.parse("2026-01-01T00:00:00"),
+                true,
+                LocalDateTime.parse("2026-01-01T00:00:00"));
+        UserResponse response = new UserResponse(
+                7L,
+                "user",
+                "user@renewsim.com",
+                "RenewSim User",
+                null,
+                "ACTIVE",
+                Set.of("USER"),
+                null,
+                null);
+
+        when(getUserUseCase.getDomainUserByUsernameOrEmail("user", null)).thenReturn(user);
+        when(getMyProfileUseCase.getMyProfile(7L)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/users/me")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(USER_TOKEN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.email").value("user@renewsim.com"));
     }
 
     @Nested
