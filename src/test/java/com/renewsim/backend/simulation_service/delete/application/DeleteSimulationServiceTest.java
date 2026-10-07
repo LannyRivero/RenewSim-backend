@@ -21,7 +21,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,13 +39,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class DeleteSimulationServiceTest {
 
+    private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-09-01T10:15:30Z"), ZoneOffset.UTC);
+    private static final LocalDateTime FIXED_DELETION_TIMESTAMP = LocalDateTime.ofInstant(FIXED_CLOCK.instant(), FIXED_CLOCK.getZone());
+
     @Mock
     private DeleteSimulationRepositoryPort repository;
 
     @Test
     @DisplayName("deleteSimulation persists the DELETED status instead of hard deleting the row")
     void deleteSimulationPersistsDeletedStatus() {
-        DeleteSimulationService service = new DeleteSimulationService(repository);
+        DeleteSimulationService service = new DeleteSimulationService(repository, FIXED_CLOCK);
         Simulation simulation = existingSimulation(55L, "alice", SimulationStatus.COMPLETED);
 
         when(repository.findById(55L)).thenReturn(Optional.of(simulation));
@@ -53,12 +59,13 @@ class DeleteSimulationServiceTest {
         ArgumentCaptor<Simulation> captor = ArgumentCaptor.forClass(Simulation.class);
         verify(repository).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(SimulationStatus.DELETED);
+        assertThat(captor.getValue().getUpdatedAt()).isEqualTo(FIXED_DELETION_TIMESTAMP);
     }
 
     @Test
     @DisplayName("deleteSimulation rejects a requester that is not the owner and not admin")
     void deleteSimulationRejectsNotOwner() {
-        DeleteSimulationService service = new DeleteSimulationService(repository);
+        DeleteSimulationService service = new DeleteSimulationService(repository, FIXED_CLOCK);
 
         when(repository.findById(55L))
                 .thenReturn(Optional.of(existingSimulation(55L, "alice", SimulationStatus.COMPLETED)));
@@ -72,7 +79,7 @@ class DeleteSimulationServiceTest {
     @Test
     @DisplayName("deleteSimulation rejects missing simulations")
     void deleteSimulationRejectsMissingSimulation() {
-        DeleteSimulationService service = new DeleteSimulationService(repository);
+        DeleteSimulationService service = new DeleteSimulationService(repository, FIXED_CLOCK);
 
         when(repository.findById(55L)).thenReturn(Optional.empty());
 
@@ -85,7 +92,7 @@ class DeleteSimulationServiceTest {
     @Test
     @DisplayName("deleteSimulation rejects simulations already deleted")
     void deleteSimulationRejectsAlreadyDeletedSimulation() {
-        DeleteSimulationService service = new DeleteSimulationService(repository);
+        DeleteSimulationService service = new DeleteSimulationService(repository, FIXED_CLOCK);
 
         when(repository.findById(55L))
                 .thenReturn(Optional.of(existingSimulation(55L, "alice", SimulationStatus.DELETED)));
@@ -99,7 +106,7 @@ class DeleteSimulationServiceTest {
     @Test
     @DisplayName("deleteAllUserSimulations soft deletes every active simulation of the user")
     void deleteAllUserSimulationsSoftDeletesEveryActiveSimulation() {
-        DeleteSimulationService service = new DeleteSimulationService(repository);
+        DeleteSimulationService service = new DeleteSimulationService(repository, FIXED_CLOCK);
         Simulation first = existingSimulation(55L, "alice", SimulationStatus.COMPLETED);
         Simulation second = existingSimulation(56L, "alice", SimulationStatus.DRAFT);
 
@@ -111,6 +118,8 @@ class DeleteSimulationServiceTest {
         verify(repository, times(2)).save(any(Simulation.class));
         assertThat(first.getStatus()).isEqualTo(SimulationStatus.DELETED);
         assertThat(second.getStatus()).isEqualTo(SimulationStatus.DELETED);
+        assertThat(first.getUpdatedAt()).isEqualTo(FIXED_DELETION_TIMESTAMP);
+        assertThat(second.getUpdatedAt()).isEqualTo(FIXED_DELETION_TIMESTAMP);
     }
 
     private Simulation existingSimulation(Long id, String owner, SimulationStatus status) {
