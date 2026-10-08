@@ -109,7 +109,9 @@ public class RegisterUserService implements RegisterUserUseCase {
 
     private boolean shouldAutoActivate() {
         return Arrays.stream(environment.getActiveProfiles())
-                .anyMatch(profile -> "local".equals(profile) || "production".equals(profile));
+                .anyMatch(profile -> "local".equals(profile)
+                        || "docker".equals(profile)
+                        || "production".equals(profile));
     }
 
     private String generateSecureToken() {
