@@ -251,7 +251,7 @@ class RegisterUserServiceTest {
     class ProfileDetection {
 
         @ParameterizedTest(name = "profile ''{0}'' should NOT auto-activate")
-        @ValueSource(strings = { "prod", "docker", "staging", "test" })
+        @ValueSource(strings = { "prod", "staging", "test" })
         @DisplayName("non-local profiles should require email verification")
         void nonLocalProfilesShouldRequireVerification(String profile) {
             when(environment.getActiveProfiles()).thenReturn(new String[] { profile });
@@ -269,6 +269,22 @@ class RegisterUserServiceTest {
         @DisplayName("production should auto-activate like local")
         void productionShouldAutoActivateLikeLocal() {
             when(environment.getActiveProfiles()).thenReturn(new String[] { "production" });
+            when(userAccountGateway.existsByEmail(any())).thenReturn(false);
+            when(userAccountGateway.createUser(any(), any(), any(), any(), any()))
+                    .thenReturn(ACTIVE_SNAPSHOT);
+
+            RegisterResult result = service.execute(VALID_COMMAND);
+
+            assertThat(result.status()).isEqualTo(AuthUserStatus.ACTIVE);
+            verify(userAccountGateway).activateUser(1L);
+            verifyNoInteractions(emailPort);
+            verifyNoInteractions(emailVerificationTokenRepository);
+        }
+
+        @Test
+        @DisplayName("docker should auto-activate like local")
+        void dockerShouldAutoActivateLikeLocal() {
+            when(environment.getActiveProfiles()).thenReturn(new String[] { "docker" });
             when(userAccountGateway.existsByEmail(any())).thenReturn(false);
             when(userAccountGateway.createUser(any(), any(), any(), any(), any()))
                     .thenReturn(ACTIVE_SNAPSHOT);
