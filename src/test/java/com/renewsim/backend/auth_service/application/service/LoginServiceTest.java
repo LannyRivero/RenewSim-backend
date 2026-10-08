@@ -11,6 +11,7 @@ import com.renewsim.backend.auth_service.application.result.LoginResult;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
+import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.exception.UnauthorizedException;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,7 +66,6 @@ class LoginServiceTest {
     private static final String PASSWORD_HASH = "$2a$10$hashedvalue";
     private static final String USERNAME = "testuser";
     private static final String ACCESS_TOKEN = "access.jwt.token";
-    private static final String REFRESH_TOKEN = "refresh.jwt.token";
     private static final long EXPIRES_IN = 3600L;
 
     private static final Set<RoleName> ROLES = Set.of(RoleName.USER);
@@ -103,14 +103,14 @@ class LoginServiceTest {
 
             when(userAccountGateway.findByEmail(EMAIL)).thenReturn(Optional.of(activeUser));
             when(tokenProvider.generate(any(AuthenticatedUser.class))).thenReturn(ACCESS_TOKEN);
-            when(tokenProvider.generate(any(AuthenticatedUser.class), anyLong())).thenReturn(REFRESH_TOKEN);
             when(tokenTimeService.getAccessTokenValiditySeconds()).thenReturn(EXPIRES_IN);
 
             LoginResult result = loginService.execute(command);
 
             assertThat(result).isNotNull();
             assertThat(result.accessToken()).isEqualTo(ACCESS_TOKEN);
-            assertThat(result.refreshToken()).isEqualTo(REFRESH_TOKEN);
+            assertThat(result.refreshToken()).isNotBlank();
+            assertThat(result.refreshToken()).doesNotContain(".");
             assertThat(result.tokenType()).isEqualTo("Bearer");
             assertThat(result.expiresIn()).isEqualTo(EXPIRES_IN);
             assertThat(result.userId()).isEqualTo(USER_ID);
@@ -127,17 +127,18 @@ class LoginServiceTest {
 
             when(userAccountGateway.findByEmail(EMAIL)).thenReturn(Optional.of(activeUser));
             when(tokenProvider.generate(any(AuthenticatedUser.class))).thenReturn(ACCESS_TOKEN);
-            when(tokenProvider.generate(any(AuthenticatedUser.class), anyLong())).thenReturn(REFRESH_TOKEN);
             when(tokenTimeService.getAccessTokenValiditySeconds()).thenReturn(EXPIRES_IN);
 
-            loginService.execute(command);
+            LoginResult result = loginService.execute(command);
 
             ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
             verify(refreshTokenRepository).save(captor.capture());
 
             RefreshToken saved = captor.getValue();
             assertThat(saved.getUserId()).isEqualTo(USER_ID);
-            assertThat(saved.getTokenHash()).isEqualTo(REFRESH_TOKEN);
+            assertThat(saved.getTokenHash()).isEqualTo(TokenHasher.hash(result.refreshToken()));
+            assertThat(saved.getTokenHash()).isNotEqualTo(result.refreshToken());
+            verify(tokenProvider, never()).generate(any(AuthenticatedUser.class), anyLong());
         }
 
         @Test
@@ -149,7 +150,6 @@ class LoginServiceTest {
 
             when(userAccountGateway.findByEmail(EMAIL)).thenReturn(Optional.of(activeUser));
             when(tokenProvider.generate(any(AuthenticatedUser.class))).thenReturn(ACCESS_TOKEN);
-            when(tokenProvider.generate(any(AuthenticatedUser.class), anyLong())).thenReturn(REFRESH_TOKEN);
             when(tokenTimeService.getAccessTokenValiditySeconds()).thenReturn(EXPIRES_IN);
 
             loginService.execute(command);
@@ -169,7 +169,6 @@ class LoginServiceTest {
 
             when(userAccountGateway.findByEmail(EMAIL)).thenReturn(Optional.of(activeUser));
             when(tokenProvider.generate(any(AuthenticatedUser.class))).thenReturn(ACCESS_TOKEN);
-            when(tokenProvider.generate(any(AuthenticatedUser.class), anyLong())).thenReturn(REFRESH_TOKEN);
             when(tokenTimeService.getAccessTokenValiditySeconds()).thenReturn(EXPIRES_IN);
 
             loginService.execute(command);
@@ -254,7 +253,6 @@ class LoginServiceTest {
 
             when(userAccountGateway.findByEmail(EMAIL)).thenReturn(Optional.of(adminUser));
             when(tokenProvider.generate(any(AuthenticatedUser.class))).thenReturn(ACCESS_TOKEN);
-            when(tokenProvider.generate(any(AuthenticatedUser.class), anyLong())).thenReturn(REFRESH_TOKEN);
             when(tokenTimeService.getAccessTokenValiditySeconds()).thenReturn(EXPIRES_IN);
 
             LoginResult result = loginService.execute(command);

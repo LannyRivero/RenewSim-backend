@@ -12,6 +12,7 @@ import com.renewsim.backend.auth_service.application.result.RefreshTokenResult;
 import com.renewsim.backend.auth_service.application.validator.UserAccountValidator;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
+import com.renewsim.backend.auth_service.domain.service.RefreshTokenGenerator;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class RefreshTokenService implements RefreshTokenUseCase {
@@ -83,13 +83,17 @@ public class RefreshTokenService implements RefreshTokenUseCase {
         Set<String> scopes = scopePolicy.getScopes(user.roles());
 
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(
-                user.email(), roleNames, scopes);
+                user.username(), roleNames, scopes);
 
         String newAccessToken = tokenProvider.generate(authenticatedUser);
 
-        String newRawRefreshToken = UUID.randomUUID().toString();
+        String newRawRefreshToken = RefreshTokenGenerator.generate();
         String newHashedRefreshToken = TokenHasher.hash(newRawRefreshToken);
-        RefreshToken newRefreshToken = RefreshToken.issue(existing.getUserId(), newHashedRefreshToken, clock);
+        RefreshToken newRefreshToken = RefreshToken.issue(
+                existing.getUserId(),
+                newHashedRefreshToken,
+                clock,
+                tokenProvider.refreshExpiresInSeconds());
         refreshTokenRepositoryPort.save(newRefreshToken);
 
         log.info("AUDIT: Refresh token rotated for userId={}, oldTokenId={}, newTokenId={}, ipAddress={}", 
@@ -99,7 +103,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
                 newAccessToken,
                 "Bearer",
                 tokenProvider.expiresInSeconds(),
-                user.email(),
+                user.username(),
                 roleNames,
                 newRawRefreshToken);
     }
