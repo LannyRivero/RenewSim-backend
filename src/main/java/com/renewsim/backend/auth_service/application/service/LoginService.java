@@ -12,6 +12,8 @@ import com.renewsim.backend.auth_service.application.result.LoginResult;
 import com.renewsim.backend.auth_service.application.validator.CredentialsValidator;
 import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
+import com.renewsim.backend.auth_service.domain.service.RefreshTokenGenerator;
+import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.domain.vo.RoleName;
 import com.renewsim.backend.shared.error.ErrorMessageFactory;
 import com.renewsim.backend.shared.exception.UnauthorizedException;
@@ -112,18 +114,15 @@ public class LoginService implements LoginUseCase {
 
                 String accessToken = tokenProvider.generate(authenticatedUser);
 
-                // 7. Generate refresh token with configured TTL
-                AuthenticatedUser refreshUser = AuthenticatedUser.of(
-                                user.username(),
-                                roleNames,
-                                Set.of("refresh"));
+                // 7. Generate opaque refresh token with configured TTL
                 long refreshTtl = tokenProvider.refreshExpiresInSeconds();
-                String refreshToken = tokenProvider.generate(refreshUser, refreshTtl);
+                String refreshToken = RefreshTokenGenerator.generate();
+                String refreshTokenHash = TokenHasher.hash(refreshToken);
 
                 // 8. Store refresh token
                 RefreshToken refreshTokenEntity = RefreshToken.issue(
                                 user.id(),
-                                refreshToken,
+                                refreshTokenHash,
                                 clock,
                                 refreshTtl);
                 refreshTokenRepository.save(refreshTokenEntity);

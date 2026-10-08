@@ -49,7 +49,7 @@ class RefreshTokenServiceTest {
     private static final String TOKEN_HASH = TokenHasher.hash(RAW_TOKEN);
 
     private static final UserSnapshot ACTIVE_USER = UserSnapshot.active(
-            1L, "user@renewsim.com", "Test User", "hash",
+            1L, "testuser", "Test User", "hash",
             "user@renewsim.com", Set.of(RoleName.USER));
 
     @BeforeEach
@@ -94,6 +94,7 @@ class RefreshTokenServiceTest {
             when(userAccountGateway.findById(1L)).thenReturn(Optional.of(ACTIVE_USER));
             when(tokenProvider.generate(any(AuthenticatedUser.class))).thenReturn("new-access-token");
             when(tokenProvider.expiresInSeconds()).thenReturn(3600L);
+            when(tokenProvider.refreshExpiresInSeconds()).thenReturn(7 * 24 * 3600L);
         }
 
         @Test
@@ -112,6 +113,7 @@ class RefreshTokenServiceTest {
             RefreshTokenResult result = service.execute(new RefreshTokenCommand(RAW_TOKEN));
 
             assertThat(result.rawRefreshToken()).isNotNull().isNotBlank();
+            assertThat(result.rawRefreshToken()).doesNotContain(".");
         }
 
         @Test
@@ -130,7 +132,7 @@ class RefreshTokenServiceTest {
         @Test
         @DisplayName("should save new refresh token")
         void shouldSaveNewRefreshToken() {
-            service.execute(new RefreshTokenCommand(RAW_TOKEN));
+            RefreshTokenResult result = service.execute(new RefreshTokenCommand(RAW_TOKEN));
 
             ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
             verify(refreshTokenRepositoryPort, times(2)).save(captor.capture());
@@ -138,6 +140,8 @@ class RefreshTokenServiceTest {
             RefreshToken newToken = captor.getAllValues().get(1);
             assertThat(newToken.isRevoked()).isFalse();
             assertThat(newToken.getUserId()).isEqualTo(1L);
+            assertThat(newToken.getTokenHash()).isEqualTo(TokenHasher.hash(result.rawRefreshToken()));
+            assertThat(newToken.getTokenHash()).isNotEqualTo(result.rawRefreshToken());
         }
 
         @Test
@@ -146,7 +150,7 @@ class RefreshTokenServiceTest {
             RefreshTokenResult result = service.execute(new RefreshTokenCommand(RAW_TOKEN));
 
             assertThat(result.roles()).contains("USER");
-            assertThat(result.username()).isEqualTo("user@renewsim.com");
+            assertThat(result.username()).isEqualTo("testuser");
         }
 
         @Test
@@ -156,6 +160,7 @@ class RefreshTokenServiceTest {
 
             ArgumentCaptor<AuthenticatedUser> captor = ArgumentCaptor.forClass(AuthenticatedUser.class);
             verify(tokenProvider).generate(captor.capture());
+            assertThat(captor.getValue().username()).isEqualTo("testuser");
             assertThat(captor.getValue().scopes()).containsExactlyInAnyOrder("read:simulations", "write:simulations");
             verify(scopePolicy).getScopes(Set.of(RoleName.USER));
         }
