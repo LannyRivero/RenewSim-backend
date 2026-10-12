@@ -2,6 +2,7 @@ package com.renewsim.backend.auth_service.application.service;
 
 import com.renewsim.backend.auth_service.application.command.LoginCommand;
 import com.renewsim.backend.auth_service.application.dto.UserSnapshot;
+import com.renewsim.backend.auth_service.application.error.AuthErrorMessageFactory;
 import com.renewsim.backend.auth_service.application.port.in.LoginUseCase;
 import com.renewsim.backend.auth_service.application.port.out.ScopePolicy;
 import com.renewsim.backend.auth_service.application.port.out.RefreshTokenRepositoryPort;
@@ -15,7 +16,6 @@ import com.renewsim.backend.auth_service.domain.model.RefreshToken;
 import com.renewsim.backend.auth_service.domain.service.RefreshTokenGenerator;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.domain.vo.RoleName;
-import com.renewsim.backend.shared.error.ErrorMessageFactory;
 import com.renewsim.backend.shared.exception.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,7 +87,7 @@ public class LoginService implements LoginUseCase {
                                 .orElseThrow(() -> {
                                         log.warn("Login failed: user not found email={}", maskEmail(command.email()));
                                         return new UnauthorizedException(
-                                                        ErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS));
+                                                        AuthErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS));
                                 });
 
                 // 3. Verify password
@@ -98,7 +98,7 @@ public class LoginService implements LoginUseCase {
                         log.warn("Login failed: account disabled or email not verified userId={} email={}",
                                         user.id(), maskEmail(command.email()));
                         throw new UnauthorizedException(
-                                        ErrorMessageFactory.build(AUTH_USER_DISABLED));
+                                        AuthErrorMessageFactory.build(AUTH_USER_DISABLED));
                 }
 
                 // 6. Generate access token

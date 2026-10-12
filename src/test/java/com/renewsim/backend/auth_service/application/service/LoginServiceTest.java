@@ -13,6 +13,7 @@ import com.renewsim.backend.auth_service.domain.AuthenticatedUser;
 import com.renewsim.backend.auth_service.domain.model.RefreshToken;
 import com.renewsim.backend.auth_service.domain.service.TokenHasher;
 import com.renewsim.backend.shared.domain.vo.RoleName;
+import com.renewsim.backend.shared.exception.AuthenticationException;
 import com.renewsim.backend.shared.exception.UnauthorizedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -188,7 +189,8 @@ class LoginServiceTest {
             when(userAccountGateway.findByEmail(EMAIL)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> loginService.execute(command))
-                    .isInstanceOf(UnauthorizedException.class);
+                    .isInstanceOf(UnauthorizedException.class)
+                    .hasMessage("AUTH_INVALID_CREDENTIALS: Invalid credentials");
 
             verifyNoInteractions(tokenProvider);
             verifyNoInteractions(refreshTokenRepository);
@@ -200,18 +202,19 @@ class LoginServiceTest {
     class WrongPassword {
 
         @Test
-        @DisplayName("should throw UnauthorizedException when password does not match")
-        void execute_wrongPassword_throwsUnauthorized() {
+        @DisplayName("should propagate authentication error when password does not match")
+        void execute_wrongPassword_throwsAuthenticationError() {
             LoginCommand command = new LoginCommand(EMAIL, "WrongPassword!");
             UserSnapshot activeUser = UserSnapshot.active(
                     USER_ID, USERNAME, "Full Name", PASSWORD_HASH, EMAIL, ROLES);
 
             when(userAccountGateway.findByEmail(EMAIL)).thenReturn(Optional.of(activeUser));
-            doThrow(new UnauthorizedException("Invalid credentials"))
+            doThrow(new AuthenticationException("AUTH_INVALID_CREDENTIALS: Invalid credentials"))
                     .when(credentialsValidator).validatePassword(anyString(), anyString());
 
             assertThatThrownBy(() -> loginService.execute(command))
-                    .isInstanceOf(UnauthorizedException.class);
+                    .isInstanceOf(AuthenticationException.class)
+                    .hasMessage("AUTH_INVALID_CREDENTIALS: Invalid credentials");
 
             verifyNoInteractions(tokenProvider);
             verifyNoInteractions(refreshTokenRepository);
@@ -232,7 +235,8 @@ class LoginServiceTest {
             when(userAccountGateway.findByEmail(EMAIL)).thenReturn(Optional.of(disabledUser));
 
             assertThatThrownBy(() -> loginService.execute(command))
-                    .isInstanceOf(UnauthorizedException.class);
+                    .isInstanceOf(UnauthorizedException.class)
+                    .hasMessage("AUTH_USER_DISABLED: User account is disabled");
 
             verifyNoInteractions(tokenProvider);
             verifyNoInteractions(refreshTokenRepository);

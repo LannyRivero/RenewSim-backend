@@ -1,10 +1,10 @@
-package com.renewsim.backend.shared.error;
+package com.renewsim.backend.auth_service.application.error;
 
 import com.renewsim.backend.auth_service.domain.error.AuthErrorCode;
 
-public final class ErrorMessageFactory {
+public final class AuthErrorMessageFactory {
 
-    private ErrorMessageFactory() {}
+    private AuthErrorMessageFactory() {}
 
     public static String build(AuthErrorCode errorCode) {
         return errorCode.code() + ": " + errorCode.defaultMessage();
