@@ -1,7 +1,7 @@
 package com.renewsim.backend.auth_service.application.validator;
 
+import com.renewsim.backend.auth_service.application.error.AuthErrorMessageFactory;
 import com.renewsim.backend.auth_service.application.port.out.PasswordEncoderPort;
-import com.renewsim.backend.shared.error.ErrorMessageFactory;
 import com.renewsim.backend.shared.exception.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 
@@ -62,7 +62,7 @@ public class CredentialsValidator {
     public void validatePassword(String rawPassword, String encodedPassword) {
         if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
             throw new AuthenticationException(
-                    ErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS));
+                    AuthErrorMessageFactory.build(AUTH_INVALID_CREDENTIALS));
         }
     }
 
