@@ -77,6 +77,9 @@ public class DemoBootstrapDataRunner implements ApplicationRunner {
                 "RenewSim Demo User",
                 Set.of(userRole));
 
+        migrateSimulationOwnership(admin.getEmail(), admin.getUsername());
+        migrateSimulationOwnership(user.getEmail(), user.getUsername());
+
         TechnologyEntity solar = ensureTechnology(
                 "Solar residencial de demostración",
                 TechnologyEntity.EnergyType.SOLAR,
@@ -100,7 +103,7 @@ public class DemoBootstrapDataRunner implements ApplicationRunner {
                 "0.1800",
                 "6000.00",
                 new ClimateData(5.5, 3.2, 22.0));
-        ensureSimulation(admin.getEmail(), solarScenario, List.of(solar.getId()), simulationSeed(
+        ensureSimulation(admin.getUsername(), solarScenario, List.of(solar.getId()), simulationSeed(
                 "Solar residencial viable - Sevilla",
                 "Sevilla, España",
                 "España",
@@ -119,7 +122,7 @@ public class DemoBootstrapDataRunner implements ApplicationRunner {
                 "Viable",
                 "La producción anual cubre una parte relevante del consumo y el ahorro compensa la inversión.",
                 "El recurso solar es alto, el tamaño de la instalación está bien ajustado al consumo y el retorno financiero es positivo."));
-        ensureSimulation(admin.getEmail(), solarScenario, List.of(solar.getId()), simulationSeed(
+        ensureSimulation(admin.getUsername(), solarScenario, List.of(solar.getId()), simulationSeed(
                 "Solar viable con reservas - Valencia",
                 "Valencia, España",
                 "España",
@@ -138,7 +141,7 @@ public class DemoBootstrapDataRunner implements ApplicationRunner {
                 "Viable con reservas",
                 "El proyecto tiene buen potencial, pero depende de ajustar consumo diurno o incorporar almacenamiento.",
                 "La generación es alta, pero parte del beneficio se pierde si el consumo no coincide con las horas solares."));
-        ensureSimulation(admin.getEmail(), solarScenario, List.of(solar.getId()), simulationSeed(
+        ensureSimulation(admin.getUsername(), solarScenario, List.of(solar.getId()), simulationSeed(
                 "Solar no viable - Bilbao",
                 "Bilbao, España",
                 "España",
@@ -157,7 +160,7 @@ public class DemoBootstrapDataRunner implements ApplicationRunner {
                 "No viable",
                 "La inversión no se recupera con la producción estimada y el ahorro anual es demasiado bajo.",
                 "El coste inicial es alto frente a la generación esperada, dejando un VAN negativo y una rentabilidad insuficiente."));
-        ensureSimulation(user.getEmail(), solarScenario, List.of(solar.getId()), simulationSeed(
+        ensureSimulation(user.getUsername(), solarScenario, List.of(solar.getId()), simulationSeed(
                 "Solar con reservas - Málaga",
                 "Málaga, España",
                 "España",
@@ -176,7 +179,7 @@ public class DemoBootstrapDataRunner implements ApplicationRunner {
                 "Viable con reservas",
                 "El caso puede funcionar, pero conviene revisar almacenamiento, hábitos de consumo y coste final de instalación.",
                 "El retorno existe, aunque el margen es moderado y depende de mejorar el autoconsumo."));
-        ensureSimulation(user.getEmail(), solarScenario, List.of(solar.getId()), simulationSeed(
+        ensureSimulation(user.getUsername(), solarScenario, List.of(solar.getId()), simulationSeed(
                 "Solar no viable - Granada",
                 "Granada, España",
                 "España",
@@ -290,9 +293,7 @@ public class DemoBootstrapDataRunner implements ApplicationRunner {
             ScenarioEntity scenario,
             List<Long> technologyIds,
             SimulationSeed seed) {
-        boolean activeSimulationExists = simulationRepository.findByCreatedByOrderByCreatedAtDesc(createdBy).stream()
-                .anyMatch(simulation -> seed.name().equalsIgnoreCase(simulation.getName())
-                        && !"DELETED".equalsIgnoreCase(simulation.getStatus()));
+        boolean activeSimulationExists = activeSimulationExists(createdBy, seed.name());
         if (activeSimulationExists) {
             return;
         }
@@ -325,6 +326,25 @@ public class DemoBootstrapDataRunner implements ApplicationRunner {
         entity.setTechnologyIds(new ArrayList<>(technologyIds));
 
         simulationRepository.save(entity);
+    }
+
+    private void migrateSimulationOwnership(String legacyCreatedBy, String targetCreatedBy) {
+        if (legacyCreatedBy == null || targetCreatedBy == null || legacyCreatedBy.equalsIgnoreCase(targetCreatedBy)) {
+            return;
+        }
+
+        simulationRepository.findByCreatedByOrderByCreatedAtDesc(legacyCreatedBy).stream()
+                .filter(simulation -> !activeSimulationExists(targetCreatedBy, simulation.getName()))
+                .forEach(simulation -> {
+                    simulation.setCreatedBy(targetCreatedBy);
+                    simulationRepository.save(simulation);
+                });
+    }
+
+    private boolean activeSimulationExists(String createdBy, String name) {
+        return simulationRepository.findByCreatedByOrderByCreatedAtDesc(createdBy).stream()
+                .anyMatch(simulation -> name.equalsIgnoreCase(simulation.getName())
+                        && !"DELETED".equalsIgnoreCase(simulation.getStatus()));
     }
 
     private SimulationSeed simulationSeed(
