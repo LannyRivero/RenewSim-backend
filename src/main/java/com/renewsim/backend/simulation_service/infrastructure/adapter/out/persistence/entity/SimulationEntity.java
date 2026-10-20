@@ -25,7 +25,7 @@ public class SimulationEntity {
 
     private String location;
 
-    @Column(name = "location_search_key")
+    @Column(name = "location_search_key", columnDefinition = "TEXT")
     private String locationSearchKey;
 
     @Column(name = "location_name", insertable = false, updatable = false)
