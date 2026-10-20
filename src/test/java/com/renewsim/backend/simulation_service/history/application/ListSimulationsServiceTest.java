@@ -3,6 +3,8 @@ package com.renewsim.backend.simulation_service.history.application;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
 import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
+import com.renewsim.backend.simulation_service.history.application.query.SimulationHistoryPage;
+import com.renewsim.backend.simulation_service.history.application.query.SimulationHistoryPageRequest;
 import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationResultSnapshotReaderPort;
 import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
@@ -69,7 +71,7 @@ class ListSimulationsServiceTest {
         var simulation = completedSimulation(55L, "alice", snapshot);
         simulation.assignScenarioId(42L);
         simulation.assignTechnologyIds(List.of(11L, 12L));
-        when(repository.findByCreatedByOrderByCreatedAtDesc("alice")).thenReturn(List.of(new SimulationReadModel(
+        var readModel = new SimulationReadModel(
                 simulation.getId().value(),
                 simulation.getName(),
                 simulation.getTechnology().value(),
@@ -82,14 +84,21 @@ class ListSimulationsServiceTest {
                 simulation.getRecommendation(),
                 simulation.getEconomics().capexTotal(),
                 simulation.getResultSnapshot(),
-                simulation.getCreatedAt())));
+                simulation.getCreatedAt());
+        var pageRequest = new SimulationHistoryPageRequest(0, 20,
+                SimulationHistoryPageRequest.SortField.CREATED_AT,
+                SimulationHistoryPageRequest.SortDirection.DESC);
+        when(repository.searchByCreatedBy("alice", "malaga centro", pageRequest))
+                .thenReturn(new SimulationHistoryPage<>(List.of(readModel), 1, 0, 20, 1));
 
-        UserSimulationListResult response = service.getUserSimulations("alice");
+        UserSimulationListResult response = service.getUserSimulations("alice", "  MÁLAGA   Centro ", pageRequest);
 
         assertThat(response.total()).isEqualTo(1);
         assertThat(response.items().getFirst().annualSavings()).isEqualTo(68700.0);
         assertThat(response.items().getFirst().technology()).isEqualTo("solar");
         assertThat(response.items().getFirst().modelVersion()).isEqualTo("solar-interview-v2");
         assertThat(response.items().getFirst().resourceSource()).isEqualTo("INTERVIEW_SOURCE");
+        assertThat(response.page()).isZero();
+        assertThat(response.size()).isEqualTo(20);
     }
 }
