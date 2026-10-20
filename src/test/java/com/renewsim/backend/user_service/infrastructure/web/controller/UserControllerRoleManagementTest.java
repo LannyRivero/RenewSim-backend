@@ -125,6 +125,7 @@ class UserControllerRoleManagementTest {
         when(jwtTokenProvider.validate(USER_TOKEN))
                 .thenReturn(Optional.of(new AuthenticatedUser(
                         "user", Set.of("USER"), Set.of())));
+
     }
 
     private static String bearer(String token) {
