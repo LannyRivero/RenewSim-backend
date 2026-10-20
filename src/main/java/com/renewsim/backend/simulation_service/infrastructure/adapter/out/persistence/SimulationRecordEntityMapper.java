@@ -11,6 +11,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocatio
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
+import com.renewsim.backend.simulation_service.shared.domain.service.LocationNameNormalizer;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationInputSnapshotCodec.SimulationInputData;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 
@@ -33,6 +34,7 @@ final class SimulationRecordEntityMapper {
         entity.setName(simulation.getName());
         entity.setEnergyType(simulation.getTechnology().value());
         entity.setLocation(simulation.getLocation().label());
+        entity.setLocationSearchKey(LocationNameNormalizer.normalize(simulation.getLocation().label()));
         entity.setLocationLat(simulation.getLocation().lat());
         entity.setLocationLng(simulation.getLocation().lng());
         entity.setProjectSize(simulation.getSystem().installedCapacityKw());
