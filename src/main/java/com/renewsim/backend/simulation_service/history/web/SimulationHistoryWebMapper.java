@@ -24,6 +24,9 @@ public final class SimulationHistoryWebMapper {
                                 item.modelVersion(),
                                 item.resourceSource()))
                         .toList(),
-                result.total());
+                result.total(),
+                result.page(),
+                result.size(),
+                result.totalPages());
     }
 }
