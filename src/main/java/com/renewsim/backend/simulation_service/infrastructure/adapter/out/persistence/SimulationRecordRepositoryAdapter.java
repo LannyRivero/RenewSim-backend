@@ -6,6 +6,8 @@ import com.renewsim.backend.simulation_service.dashboard.application.port.out.Po
 import com.renewsim.backend.simulation_service.delete.application.port.out.DeleteSimulationRepositoryPort;
 import com.renewsim.backend.simulation_service.detail.application.port.out.SimulationDetailQueryPort;
 import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
+import com.renewsim.backend.simulation_service.history.application.query.SimulationHistoryPage;
+import com.renewsim.backend.simulation_service.history.application.query.SimulationHistoryPageRequest;
 import com.renewsim.backend.simulation_service.domain.model.SimulationId;
 import com.renewsim.backend.simulation_service.domain.model.Simulation;
 import com.renewsim.backend.simulation_service.purge.application.port.out.PurgeDeletedSimulationRepositoryPort;
@@ -13,6 +15,8 @@ import com.renewsim.backend.simulation_service.shared.application.SimulationRead
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -62,6 +66,26 @@ public class SimulationRecordRepositoryAdapter
                 .stream()
                 .map(entityMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public SimulationHistoryPage<SimulationReadModel> searchByCreatedBy(
+            String createdBy, String location, SimulationHistoryPageRequest pageRequest) {
+        String persistenceSortField = switch (pageRequest.sortField()) {
+            case CREATED_AT -> "createdAt";
+            case NAME -> "name";
+            case TECHNOLOGY -> "energyType";
+            case LOCATION -> "location";
+            case STATUS -> "status";
+        };
+        Sort.Direction direction = pageRequest.sortDirection() == SimulationHistoryPageRequest.SortDirection.ASC
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, persistenceSortField).and(Sort.by(Sort.Direction.DESC, "id"));
+        var page = repository.searchHistory(createdBy, location,
+                PageRequest.of(pageRequest.page(), pageRequest.size(), sort));
+        return new SimulationHistoryPage<>(page.getContent().stream().map(entityMapper::toReadModel).toList(),
+                page.getTotalElements(), page.getNumber(), page.getSize(), page.getTotalPages());
     }
 
     @Override
