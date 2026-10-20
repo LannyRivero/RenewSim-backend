@@ -4,5 +4,8 @@ import java.util.List;
 
 public record ListUserSimulationsResponseDTO(
                 List<SimulationHistoryRowDTO> items,
-                long total) {
+                long total,
+                int page,
+                int size,
+                int totalPages) {
 }
