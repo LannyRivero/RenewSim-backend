@@ -12,6 +12,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,6 +53,18 @@ class SimulationRecordRepositoryAdapterTest {
         assertThat(result.getId().value()).isEqualTo(55L);
         verify(entityMapper).toEntity(simulation);
         verify(repository).save(entity);
+    }
+
+    @Test
+    @DisplayName("entity mapping stores a normalized location search key")
+    void entityMappingStoresNormalizedLocationSearchKey() {
+        var mapper = new SimulationRecordEntityMapper(
+                new SimulationInputSnapshotCodec(new ObjectMapper().findAndRegisterModules()));
+
+        SimulationEntity entity = mapper.toEntity(draftSimulation());
+
+        assertThat(entity.getLocation()).isEqualTo("Sevilla, Andalucia, ES");
+        assertThat(entity.getLocationSearchKey()).isEqualTo("sevilla, andalucia, es");
     }
 
     @Test

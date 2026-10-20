@@ -2,5 +2,10 @@ package com.renewsim.backend.simulation_service.history.application.result;
 
 import java.util.List;
 
-public record UserSimulationListResult(List<SimulationHistoryRowResult> items, long total) {
+public record UserSimulationListResult(
+        List<SimulationHistoryRowResult> items,
+        long total,
+        int page,
+        int size,
+        int totalPages) {
 }

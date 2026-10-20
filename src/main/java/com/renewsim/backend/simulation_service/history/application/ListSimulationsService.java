@@ -4,10 +4,12 @@ import com.renewsim.backend.simulation_service.history.application.port.in.ListU
 import com.renewsim.backend.simulation_service.history.application.port.out.SimulationHistoryQueryPort;
 import com.renewsim.backend.simulation_service.history.application.result.SimulationHistoryRowResult;
 import com.renewsim.backend.simulation_service.history.application.result.UserSimulationListResult;
+import com.renewsim.backend.simulation_service.history.application.query.SimulationHistoryPageRequest;
 import com.renewsim.backend.simulation_service.shared.application.SimulationDetailsResult;
 import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import com.renewsim.backend.simulation_service.shared.application.SimulationUseCaseTelemetry;
 import com.renewsim.backend.simulation_service.shared.application.port.out.SimulationResultSnapshotReaderPort;
+import com.renewsim.backend.simulation_service.shared.domain.service.LocationNameNormalizer;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -33,14 +35,17 @@ public class ListSimulationsService implements ListUserRealSimulationsUseCase {
     private final SimulationUseCaseTelemetry telemetry;
 
     @Override
-    public UserSimulationListResult getUserSimulations(String username) {
+    public UserSimulationListResult getUserSimulations(
+            String username, String location, SimulationHistoryPageRequest pageRequest) {
         Timer.Sample sample = telemetry.start();
         try {
-            List<SimulationHistoryRowResult> items = repository.findByCreatedByOrderByCreatedAtDesc(username)
-                    .stream()
+            var resultPage = repository.searchByCreatedBy(username, normalizeLocation(location), pageRequest);
+            List<SimulationHistoryRowResult> items = resultPage.content().stream()
                     .map(this::toHistoryRow)
                     .toList();
-            UserSimulationListResult result = new UserSimulationListResult(items, items.size());
+            UserSimulationListResult result = new UserSimulationListResult(
+                    items, resultPage.totalElements(), resultPage.number(),
+                    resultPage.size(), resultPage.totalPages());
             telemetry.recordSuccess(USE_CASE, sample);
             log.info("Simulation history retrieved user={} total={}", username, result.total());
             return result;
@@ -49,6 +54,13 @@ public class ListSimulationsService implements ListUserRealSimulationsUseCase {
             log.warn("Simulation history failed user={} reason={}", username, ex.getClass().getSimpleName());
             throw ex;
         }
+    }
+
+    private String normalizeLocation(String location) {
+        if (location == null || location.isBlank()) {
+            return null;
+        }
+        return LocationNameNormalizer.normalize(location);
     }
 
     private SimulationHistoryRowResult toHistoryRow(SimulationReadModel simulation) {

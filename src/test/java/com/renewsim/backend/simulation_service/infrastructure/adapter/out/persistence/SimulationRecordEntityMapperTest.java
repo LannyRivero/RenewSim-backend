@@ -54,6 +54,17 @@ class SimulationRecordEntityMapperTest {
     }
 
     @Test
+    @DisplayName("toEntity preserves normalized location keys longer than the display label")
+    void toEntityPreservesExpandedNormalizedLocationKey() {
+        Simulation simulation = completedSimulation("\uFB03".repeat(86));
+
+        SimulationEntity entity = mapper.toEntity(simulation);
+
+        assertThat(entity.getLocation()).hasSize(86);
+        assertThat(entity.getLocationSearchKey()).isEqualTo("ffi".repeat(86));
+    }
+
+    @Test
     @DisplayName("toDomain rebuilds aggregate from a supported persisted contract")
     void toDomainRebuildsAggregateFromSupportedPersistedContract() {
         SimulationEntity entity = new SimulationEntity();
@@ -147,11 +158,15 @@ class SimulationRecordEntityMapperTest {
     }
 
     private Simulation completedSimulation() {
+        return completedSimulation("Sevilla, Andalucia, ES");
+    }
+
+    private Simulation completedSimulation(String locationLabel) {
         return Simulation.reconstitute(
                 55L,
                 "Solar - Sevilla",
                 Technology.solar(),
-                SimulationLocation.of("Sevilla, Andalucia, ES", 37.3891, -5.9845, "Spain", CountryCode.of("ES")),
+                SimulationLocation.of(locationLabel, 37.3891, -5.9845, "Spain", CountryCode.of("ES")),
                 new SimulationSystem(300.0, 0.81, 0.5, 99.0, new SimulationSystem.LossesPct(2.0, 6.0, 1.0, 3.0, 1.0)),
                 ConsumptionProfile.of(120000,
                         List.of(10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d, 10000d,

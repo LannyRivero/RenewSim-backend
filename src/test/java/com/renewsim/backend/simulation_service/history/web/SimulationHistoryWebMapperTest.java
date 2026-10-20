@@ -21,7 +21,7 @@ class SimulationHistoryWebMapperTest {
                 List.of(new SimulationHistoryRowResult("55", "Solar - Sevilla", "solar", "completed",
                         "2026-06-30T14:00:00Z", "Sevilla", 457200, 68700, 121500, 11.4, "viable_with_reservations",
                         "solar-spain-v1", "PVGIS")),
-                1));
+                1, 0, 20, 1));
 
         assertThat(listResponse.total()).isEqualTo(1);
         assertThat(listResponse.items().getFirst().technology()).isEqualTo("solar");
