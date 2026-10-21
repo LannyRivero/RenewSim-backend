@@ -53,14 +53,15 @@ class SimulationHistoryControllerTest {
         Authentication auth = authentication("alice", "ROLE_USER");
         when(requestContextFactory.from(auth)).thenReturn(new AuthenticatedRequestContext("alice", false));
         when(listUserRealSimulationsUseCase.getUserSimulations(org.mockito.ArgumentMatchers.eq("alice"),
-                org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any(SimulationHistoryPageRequest.class))).thenReturn(
+                org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.any(SimulationHistoryPageRequest.class))).thenReturn(
                 new UserSimulationListResult(
                         List.of(new SimulationHistoryRowResult("55", "Solar - Sevilla", "solar", "completed",
                                 "2026-06-30T14:00:00Z", "Sevilla, Andalucia, ES", 457200, 68700, 121500, 11.4,
                                 "viable_with_reservations", "solar-spain-v1", "PVGIS")),
                         1, 0, 20, 1));
 
-        ListUserSimulationsResponseDTO body = controller.getMySimulations(auth, null, 0, 20, "createdAt", "desc").getBody();
+        ListUserSimulationsResponseDTO body = controller.getMySimulations(auth, null, null, 0, 20, "createdAt", "desc").getBody();
 
         assertThat(body).isNotNull();
         assertThat(body.total()).isEqualTo(1);
@@ -77,6 +78,7 @@ class SimulationHistoryControllerTest {
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller, detailController).build();
 
         when(listUserRealSimulationsUseCase.getUserSimulations(org.mockito.ArgumentMatchers.eq("alice"),
+                org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any(SimulationHistoryPageRequest.class)))
                 .thenReturn(new UserSimulationListResult(List.of(), 0, 0, 20, 0));
 
@@ -84,6 +86,7 @@ class SimulationHistoryControllerTest {
                 .andExpect(status().isOk());
 
         verify(listUserRealSimulationsUseCase).getUserSimulations(org.mockito.ArgumentMatchers.eq("alice"),
+                org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any(SimulationHistoryPageRequest.class));
         verify(getRealSimulationUseCase, never()).getSimulationById(any(), any(), any(Boolean.class));
     }
@@ -94,12 +97,14 @@ class SimulationHistoryControllerTest {
         Authentication auth = authentication("alice", "ROLE_USER");
         when(requestContextFactory.from(auth)).thenReturn(new AuthenticatedRequestContext("alice", false));
         when(listUserRealSimulationsUseCase.getUserSimulations(org.mockito.ArgumentMatchers.eq("alice"),
+                org.mockito.ArgumentMatchers.eq("Solar"),
                 org.mockito.ArgumentMatchers.eq("Málaga"), org.mockito.ArgumentMatchers.any(SimulationHistoryPageRequest.class)))
                 .thenReturn(new UserSimulationListResult(List.of(), 0, 2, 5, 0));
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
         mockMvc.perform(get("/api/v1/simulations/user")
                         .principal(auth)
+                        .param("name", "Solar")
                         .param("location", "Málaga")
                         .param("page", "2")
                         .param("size", "5")
@@ -109,7 +114,8 @@ class SimulationHistoryControllerTest {
 
         var pageRequestCaptor = org.mockito.ArgumentCaptor.forClass(SimulationHistoryPageRequest.class);
         verify(listUserRealSimulationsUseCase).getUserSimulations(
-                org.mockito.ArgumentMatchers.eq("alice"), org.mockito.ArgumentMatchers.eq("Málaga"), pageRequestCaptor.capture());
+                org.mockito.ArgumentMatchers.eq("alice"), org.mockito.ArgumentMatchers.eq("Solar"),
+                org.mockito.ArgumentMatchers.eq("Málaga"), pageRequestCaptor.capture());
         assertThat(pageRequestCaptor.getValue().page()).isEqualTo(2);
         assertThat(pageRequestCaptor.getValue().size()).isEqualTo(5);
         assertThat(pageRequestCaptor.getValue().sortField()).isEqualTo(SimulationHistoryPageRequest.SortField.TECHNOLOGY);

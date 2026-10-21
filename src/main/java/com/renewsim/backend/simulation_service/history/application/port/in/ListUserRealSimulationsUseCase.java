@@ -6,7 +6,8 @@ import com.renewsim.backend.simulation_service.history.application.query.Simulat
 import java.util.List;
 
 public interface ListUserRealSimulationsUseCase {
-    UserSimulationListResult getUserSimulations(String username, String location, SimulationHistoryPageRequest pageRequest);
+    UserSimulationListResult getUserSimulations(
+            String username, String name, String location, SimulationHistoryPageRequest pageRequest);
 
     List<String> getUserLocationSuggestions(String username, String query, int limit);
 }

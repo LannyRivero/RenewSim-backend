@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -81,6 +82,21 @@ class JpaSimulationRepositoryPurgeIT {
         assertThat(countRows("simulation_share_tokens", "simulation_id", RECENT_DELETED_SIMULATION_ID)).isEqualTo(1);
         assertThat(chatSessionSimulationId(OLD_DELETED_CHAT_SESSION_ID)).isNull();
         assertThat(chatSessionSimulationId(RECENT_DELETED_CHAT_SESSION_ID)).isEqualTo(RECENT_DELETED_SIMULATION_ID);
+    }
+
+    @Test
+    @DisplayName("searchHistory applies a case-insensitive name filter before pagination")
+    void searchHistoryFiltersNamesBeforePaginating() {
+        insertUser();
+        for (int index = 0; index < 10; index++) {
+            insertSimulation(902_320L + index, "Other simulation " + index, "COMPLETED", "2026-08-01 10:00:00");
+        }
+        insertSimulation(902_330L, "Solar hidden record", "COMPLETED", "2026-08-01 10:00:00");
+
+        var result = repository.searchHistory("purge-it-user", "solar hidden", null, PageRequest.of(0, 10));
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent()).extracting(SimulationEntity::getName).containsExactly("Solar hidden record");
     }
 
     private void insertUser() {

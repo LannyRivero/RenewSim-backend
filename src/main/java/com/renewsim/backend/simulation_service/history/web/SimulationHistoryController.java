@@ -41,7 +41,7 @@ public class SimulationHistoryController {
     private final SimulationHistoryWebMapper historyWebMapper = new SimulationHistoryWebMapper();
     private final AuthenticatedRequestContextFactory requestContextFactory;
 
-    @Operation(summary = "Get authenticated user simulations", description = "Returns a page of the authenticated user's simulations. Optional location filtering ignores case and diacritics. Supports sorting by createdAt, name, technology, location, or status.", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Get authenticated user simulations", description = "Returns a page of the authenticated user's simulations. Optional name and location filters are applied before pagination. Location filtering ignores case and diacritics. Supports sorting by createdAt, name, technology, location, or status.", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Simulation list retrieved", content = @Content(schema = @Schema(implementation = ListUserSimulationsResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "Unauthenticated", content = @Content),
@@ -51,6 +51,7 @@ public class SimulationHistoryController {
     @GetMapping({ "/user", "/my-simulations" })
     public ResponseEntity<ListUserSimulationsResponseDTO> getMySimulations(
             Authentication auth,
+            @RequestParam(required = false) String name,
             @RequestParam(required = false) String location,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -65,6 +66,9 @@ public class SimulationHistoryController {
         }
         if (location != null && location.length() > 255) {
             throw new BadRequestException("Location filter must not exceed 255 characters");
+        }
+        if (name != null && name.length() > 255) {
+            throw new BadRequestException("Name filter must not exceed 255 characters");
         }
         SimulationHistoryPageRequest.SortDirection sortDirection;
         try {
@@ -83,7 +87,7 @@ public class SimulationHistoryController {
 
         ListUserSimulationsResponseDTO history = historyWebMapper.toWebList(
                 listUserRealSimulationsUseCase.getUserSimulations(
-                        requestContext.username(), location,
+                        requestContext.username(), name, location,
                         new SimulationHistoryPageRequest(page, size, sortField, sortDirection)));
         log.info("User {} retrieved {} simulations", requestContext.username(), history.total());
 

@@ -9,7 +9,7 @@ import java.util.List;
 public interface SimulationHistoryQueryPort {
 
     SimulationHistoryPage<SimulationReadModel> searchByCreatedBy(
-            String createdBy, String location, SimulationHistoryPageRequest pageRequest);
+            String createdBy, String name, String location, SimulationHistoryPageRequest pageRequest);
 
     List<String> findLocationSuggestionsByCreatedBy(String createdBy, String normalizedQuery, int limit);
 }

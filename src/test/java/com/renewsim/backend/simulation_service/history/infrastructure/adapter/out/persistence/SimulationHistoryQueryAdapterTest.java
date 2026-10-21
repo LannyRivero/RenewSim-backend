@@ -56,11 +56,11 @@ class SimulationHistoryQueryAdapterTest {
                     1, 10, SimulationHistoryPageRequest.SortField.NAME, SimulationHistoryPageRequest.SortDirection.ASC);
             var pageable = PageRequest.of(1, 10,
                     Sort.by(Sort.Direction.ASC, "name").and(Sort.by(Sort.Direction.DESC, "id")));
-            when(repository.searchHistory("alice", "sevilla", pageable))
+            when(repository.searchHistory("alice", null, "sevilla", pageable))
                     .thenReturn(new PageImpl<>(List.of(entity), pageable, 25));
             when(entityMapper.toReadModel(entity)).thenReturn(readModel);
 
-            var page = adapter.searchByCreatedBy("alice", "sevilla", request);
+            var page = adapter.searchByCreatedBy("alice", null, "sevilla", request);
 
             assertThat(page.content()).containsExactly(readModel);
             assertThat(page.totalElements()).isEqualTo(25);

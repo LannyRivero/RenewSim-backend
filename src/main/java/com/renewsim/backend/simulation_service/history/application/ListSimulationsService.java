@@ -36,10 +36,10 @@ public class ListSimulationsService implements ListUserRealSimulationsUseCase {
 
     @Override
     public UserSimulationListResult getUserSimulations(
-            String username, String location, SimulationHistoryPageRequest pageRequest) {
+            String username, String name, String location, SimulationHistoryPageRequest pageRequest) {
         Timer.Sample sample = telemetry.start();
         try {
-            var resultPage = repository.searchByCreatedBy(username, normalizeLocation(location), pageRequest);
+            var resultPage = repository.searchByCreatedBy(username, normalizeName(name), normalizeLocation(location), pageRequest);
             List<SimulationHistoryRowResult> items = resultPage.content().stream()
                     .map(this::toHistoryRow)
                     .toList();
@@ -70,6 +70,13 @@ public class ListSimulationsService implements ListUserRealSimulationsUseCase {
             return null;
         }
         return LocationNameNormalizer.normalize(location);
+    }
+
+    private String normalizeName(String name) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        return name.trim();
     }
 
     private SimulationHistoryRowResult toHistoryRow(SimulationReadModel simulation) {

@@ -22,16 +22,19 @@ public interface JpaSimulationRepository extends JpaRepository<SimulationEntity,
             select s from SimulationEntity s
             where s.createdBy = :createdBy
               and s.status <> 'DELETED'
+              and (:name is null or locate(lower(:name), lower(s.name)) > 0)
               and (:location is null or locate(:location, s.locationSearchKey) > 0)
             """,
             countQuery = """
             select count(s) from SimulationEntity s
             where s.createdBy = :createdBy
               and s.status <> 'DELETED'
+              and (:name is null or locate(lower(:name), lower(s.name)) > 0)
               and (:location is null or locate(:location, s.locationSearchKey) > 0)
             """)
     Page<SimulationEntity> searchHistory(
             @Param("createdBy") String createdBy,
+            @Param("name") String name,
             @Param("location") String location,
             Pageable pageable);
 
