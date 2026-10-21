@@ -116,6 +116,31 @@ class SimulationHistoryControllerTest {
         assertThat(pageRequestCaptor.getValue().sortDirection()).isEqualTo(SimulationHistoryPageRequest.SortDirection.ASC);
     }
 
+    @Test
+    @DisplayName("saved location suggestions are scoped to the authenticated user and bounded")
+    void savedLocationSuggestionsAreScopedToAuthenticatedUserAndBounded() {
+        Authentication auth = authentication("alice", "ROLE_USER");
+        when(requestContextFactory.from(auth)).thenReturn(new AuthenticatedRequestContext("alice", false));
+        when(listUserRealSimulationsUseCase.getUserLocationSuggestions("alice", "Sevilla", 10))
+                .thenReturn(List.of("Sevilla, ES"));
+
+        var response = controller.getUserLocationSuggestions(auth, " Sevilla ", 50);
+
+        assertThat(response.getBody()).containsExactly("Sevilla, ES");
+        verify(listUserRealSimulationsUseCase).getUserLocationSuggestions("alice", "Sevilla", 10);
+    }
+
+    @Test
+    @DisplayName("saved location suggestions return empty for queries shorter than two characters")
+    void savedLocationSuggestionsReturnEmptyForShortQueries() {
+        Authentication auth = authentication("alice", "ROLE_USER");
+
+        var response = controller.getUserLocationSuggestions(auth, " S ", 5);
+
+        assertThat(response.getBody()).isEmpty();
+        verify(listUserRealSimulationsUseCase, never()).getUserLocationSuggestions(any(), any(), any(int.class));
+    }
+
     private Authentication authentication(String username, String role) {
         AuthenticatedUser user = AuthenticatedUser.of(username, Set.of(role.replace("ROLE_", "")),
                 Set.of("read:simulations", "write:simulations"));
