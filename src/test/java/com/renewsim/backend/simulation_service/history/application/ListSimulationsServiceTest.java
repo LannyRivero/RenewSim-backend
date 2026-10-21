@@ -104,10 +104,10 @@ class ListSimulationsServiceTest {
                 var pageRequest = new SimulationHistoryPageRequest(0, 20,
                                 SimulationHistoryPageRequest.SortField.CREATED_AT,
                                 SimulationHistoryPageRequest.SortDirection.DESC);
-                when(repository.searchByCreatedBy("alice", "malaga centro", pageRequest))
+                when(repository.searchByCreatedBy("alice", "Solar", "malaga centro", pageRequest))
                                 .thenReturn(new SimulationHistoryPage<>(List.of(readModel), 1, 0, 20, 1));
 
-                UserSimulationListResult response = service.getUserSimulations("alice", "  MÁLAGA   Centro ",
+                UserSimulationListResult response = service.getUserSimulations("alice", " Solar ", "  MÁLAGA   Centro ",
                                 pageRequest);
 
                 assertThat(response.total()).isEqualTo(1);

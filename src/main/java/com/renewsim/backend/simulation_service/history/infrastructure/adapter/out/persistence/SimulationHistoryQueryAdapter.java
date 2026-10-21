@@ -22,7 +22,7 @@ public class SimulationHistoryQueryAdapter implements SimulationHistoryQueryPort
 
         @Override
         public SimulationHistoryPage<SimulationReadModel> searchByCreatedBy(
-                        String createdBy, String location, SimulationHistoryPageRequest pageRequest) {
+                        String createdBy, String name, String location, SimulationHistoryPageRequest pageRequest) {
                 String persistenceSortField = switch (pageRequest.sortField()) {
                         case CREATED_AT -> "createdAt";
                         case NAME -> "name";
@@ -34,7 +34,7 @@ public class SimulationHistoryQueryAdapter implements SimulationHistoryQueryPort
                                 ? Sort.Direction.ASC
                                 : Sort.Direction.DESC;
                 Sort sort = Sort.by(direction, persistenceSortField).and(Sort.by(Sort.Direction.DESC, "id"));
-                var page = repository.searchHistory(createdBy, location,
+                var page = repository.searchHistory(createdBy, name, location,
                                 PageRequest.of(pageRequest.page(), pageRequest.size(), sort));
                 return new SimulationHistoryPage<>(page.getContent().stream().map(entityMapper::toReadModel).toList(),
                                 page.getTotalElements(), page.getNumber(), page.getSize(), page.getTotalPages());
