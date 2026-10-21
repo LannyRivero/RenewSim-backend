@@ -15,6 +15,11 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * Verifies mapping of scenario and request values into a real-simulation
+ * command,
+ * including defaults and validation of scenario-specific input.
+ */
 class ScenarioSimulationCommandFactoryTest {
 
         private final ScenarioSimulationCommandFactory factory = new ScenarioSimulationCommandFactory(
