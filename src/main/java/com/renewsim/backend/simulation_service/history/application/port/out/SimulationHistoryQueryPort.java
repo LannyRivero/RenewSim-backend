@@ -4,8 +4,12 @@ import com.renewsim.backend.simulation_service.shared.application.SimulationRead
 import com.renewsim.backend.simulation_service.history.application.query.SimulationHistoryPage;
 import com.renewsim.backend.simulation_service.history.application.query.SimulationHistoryPageRequest;
 
+import java.util.List;
+
 public interface SimulationHistoryQueryPort {
 
     SimulationHistoryPage<SimulationReadModel> searchByCreatedBy(
             String createdBy, String location, SimulationHistoryPageRequest pageRequest);
+
+    List<String> findLocationSuggestionsByCreatedBy(String createdBy, String normalizedQuery, int limit);
 }
