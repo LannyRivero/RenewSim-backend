@@ -56,6 +56,15 @@ public class ListSimulationsService implements ListUserRealSimulationsUseCase {
         }
     }
 
+    @Override
+    public List<String> getUserLocationSuggestions(String username, String query, int limit) {
+        String normalizedQuery = normalizeLocation(query);
+        if (normalizedQuery == null || normalizedQuery.length() < 2) {
+            return List.of();
+        }
+        return repository.findLocationSuggestionsByCreatedBy(username, normalizedQuery, limit);
+    }
+
     private String normalizeLocation(String location) {
         if (location == null || location.isBlank()) {
             return null;
