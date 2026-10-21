@@ -12,6 +12,11 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
+import com.renewsim.backend.simulation_service.create.infrastructure.adapter.out.persistence.CreateSimulationRepositoryAdapter;
+import com.renewsim.backend.simulation_service.detail.infrastructure.adapter.out.persistence.SimulationDetailQueryAdapter;
+import com.renewsim.backend.simulation_service.delete.infrastructure.adapter.out.persistence.DeleteSimulationRepositoryAdapter;
+import com.renewsim.backend.simulation_service.dashboard.infrastructure.adapter.out.persistence.PortfolioDashboardQueryAdapter;
+import com.renewsim.backend.simulation_service.purge.infrastructure.adapter.out.persistence.PurgeDeletedSimulationRepositoryAdapter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +33,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SimulationRecordRepositoryAdapterTest {
+class SimulationPersistenceAdaptersTest {
 
     @Mock
     private JpaSimulationRepository repository;
@@ -47,7 +52,7 @@ class SimulationRecordRepositoryAdapterTest {
         when(entityMapper.toEntity(simulation)).thenReturn(entity);
         when(repository.save(entity)).thenReturn(saved);
 
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
+        CreateSimulationRepositoryAdapter adapter = new CreateSimulationRepositoryAdapter(repository, entityMapper);
         Simulation result = adapter.save(simulation);
 
         assertThat(result.getId().value()).isEqualTo(55L);
@@ -58,8 +63,7 @@ class SimulationRecordRepositoryAdapterTest {
     @Test
     @DisplayName("entity mapping stores a normalized location search key")
     void entityMappingStoresNormalizedLocationSearchKey() {
-        var mapper = new SimulationRecordEntityMapper(
-                new SimulationInputSnapshotCodec(new ObjectMapper().findAndRegisterModules()));
+        var mapper = new SimulationRecordEntityMapper(new ObjectMapper().findAndRegisterModules());
 
         SimulationEntity entity = mapper.toEntity(draftSimulation());
 
@@ -75,7 +79,7 @@ class SimulationRecordRepositoryAdapterTest {
         when(repository.findById(88L)).thenReturn(Optional.of(entity));
         when(entityMapper.toDomain(entity)).thenReturn(simulation);
 
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
+        SimulationDetailQueryAdapter adapter = new SimulationDetailQueryAdapter(repository, entityMapper);
         Optional<Simulation> result = adapter.findById(88L);
 
         assertThat(result).contains(simulation);
@@ -95,7 +99,7 @@ class SimulationRecordRepositoryAdapterTest {
         when(entityMapper.toReadModel(first)).thenReturn(toReadModel(firstSimulation));
         when(entityMapper.toReadModel(second)).thenReturn(toReadModel(secondSimulation));
 
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
+        PortfolioDashboardQueryAdapter adapter = new PortfolioDashboardQueryAdapter(repository, entityMapper);
         List<SimulationReadModel> result = adapter.findByCreatedByOrderByCreatedAtDesc("alice");
 
         assertThat(result).containsExactly(toReadModel(firstSimulation), toReadModel(secondSimulation));
@@ -116,7 +120,7 @@ class SimulationRecordRepositoryAdapterTest {
         when(entityMapper.toDomain(first)).thenReturn(firstSimulation);
         when(entityMapper.toDomain(second)).thenReturn(secondSimulation);
 
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
+        DeleteSimulationRepositoryAdapter adapter = new DeleteSimulationRepositoryAdapter(repository, entityMapper);
 
         List<Simulation> result = adapter.findActiveByCreatedBy("alice");
 
@@ -138,7 +142,7 @@ class SimulationRecordRepositoryAdapterTest {
         when(entityMapper.toReadModel(first)).thenReturn(toReadModel(firstSimulation));
         when(entityMapper.toReadModel(second)).thenReturn(toReadModel(secondSimulation));
 
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
+        PortfolioDashboardQueryAdapter adapter = new PortfolioDashboardQueryAdapter(repository, entityMapper);
 
         List<SimulationReadModel> result = adapter.findByCreatedByOrderByCreatedAtDesc("alice");
 
@@ -158,7 +162,7 @@ class SimulationRecordRepositoryAdapterTest {
         when(entityMapper.toEntity(simulation)).thenReturn(entity);
         when(repository.save(entity)).thenReturn(saved);
 
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
+        DeleteSimulationRepositoryAdapter adapter = new DeleteSimulationRepositoryAdapter(repository, entityMapper);
 
         adapter.save(simulation);
 
@@ -172,7 +176,7 @@ class SimulationRecordRepositoryAdapterTest {
         LocalDateTime cutoff = LocalDateTime.parse("2026-09-01T10:00:00");
         when(repository.deleteDeletedOlderThan(cutoff)).thenReturn(4);
 
-        SimulationRecordRepositoryAdapter adapter = new SimulationRecordRepositoryAdapter(repository, entityMapper);
+        PurgeDeletedSimulationRepositoryAdapter adapter = new PurgeDeletedSimulationRepositoryAdapter(repository);
 
         int purged = adapter.purgeDeletedOlderThan(cutoff);
 

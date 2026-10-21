@@ -2,7 +2,13 @@ package com.renewsim.backend.simulation_service.create.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.JpaSimulationRepository;
-import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationRecordRepositoryAdapter;
+import com.renewsim.backend.simulation_service.create.application.port.out.CreateSimulationRepositoryPort;
+import com.renewsim.backend.simulation_service.create.infrastructure.adapter.out.persistence.CreateSimulationRepositoryAdapter;
+import com.renewsim.backend.simulation_service.dashboard.application.port.out.PortfolioDashboardQueryPort;
+import com.renewsim.backend.simulation_service.dashboard.infrastructure.adapter.out.persistence.PortfolioDashboardQueryAdapter;
+import com.renewsim.backend.simulation_service.detail.application.port.out.SimulationDetailQueryPort;
+import com.renewsim.backend.simulation_service.detail.infrastructure.adapter.out.persistence.SimulationDetailQueryAdapter;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationRecordEntityMapper;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 
 import java.util.HashMap;
@@ -19,7 +25,7 @@ final class InMemorySimulationRecordRepositorySupport {
         private InMemorySimulationRecordRepositorySupport() {
         }
 
-        static SimulationRecordRepositoryAdapter create(JpaSimulationRepository jpaRepository) {
+        static InMemoryRepositories create(JpaSimulationRepository jpaRepository) {
                 Map<Long, SimulationEntity> store = new HashMap<>();
                 AtomicLong sequence = new AtomicLong(60L);
 
@@ -46,8 +52,17 @@ final class InMemorySimulationRecordRepositorySupport {
                                                 .map(InMemorySimulationRecordRepositorySupport::copyEntity)
                                                 .toList());
 
-                return new SimulationRecordRepositoryAdapter(jpaRepository,
-                                new ObjectMapper().findAndRegisterModules());
+                var entityMapper = new SimulationRecordEntityMapper(new ObjectMapper().findAndRegisterModules());
+                return new InMemoryRepositories(
+                                new CreateSimulationRepositoryAdapter(jpaRepository, entityMapper),
+                                new SimulationDetailQueryAdapter(jpaRepository, entityMapper),
+                                new PortfolioDashboardQueryAdapter(jpaRepository, entityMapper));
+        }
+
+        record InMemoryRepositories(
+                        CreateSimulationRepositoryPort createRepository,
+                        SimulationDetailQueryPort detailQuery,
+                        PortfolioDashboardQueryPort dashboardQuery) {
         }
 
         private static SimulationEntity copyEntity(SimulationEntity source) {

@@ -14,21 +14,24 @@ import com.renewsim.backend.simulation_service.shared.application.SimulationRead
 import com.renewsim.backend.simulation_service.shared.domain.service.LocationNameNormalizer;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationInputSnapshotCodec.SimulationInputData;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 
 /**
  * Maps between the simulation aggregate and its persistence entity.
  */
-final class SimulationRecordEntityMapper {
+@Component
+public class SimulationRecordEntityMapper {
 
     private final SimulationInputSnapshotCodec snapshotCodec;
 
-    SimulationRecordEntityMapper(SimulationInputSnapshotCodec snapshotCodec) {
-        this.snapshotCodec = snapshotCodec;
+    public SimulationRecordEntityMapper(ObjectMapper objectMapper) {
+        this.snapshotCodec = new SimulationInputSnapshotCodec(objectMapper);
     }
 
-    SimulationEntity toEntity(Simulation simulation) {
+    public SimulationEntity toEntity(Simulation simulation) {
         SimulationEntity entity = new SimulationEntity();
         entity.setId(simulation.getId() == null ? null : simulation.getId().value());
         entity.setName(simulation.getName());
@@ -60,7 +63,7 @@ final class SimulationRecordEntityMapper {
         return entity;
     }
 
-    Simulation toDomain(SimulationEntity entity) {
+    public Simulation toDomain(SimulationEntity entity) {
         SimulationInputData input = snapshotCodec.readNormalized(entity.getInputSnapshot(), entity);
 
         SimulationLocation location = SimulationLocation.of(
@@ -110,7 +113,7 @@ final class SimulationRecordEntityMapper {
                 entity.getUpdatedAt());
     }
 
-    SimulationReadModel toReadModel(SimulationEntity entity) {
+    public SimulationReadModel toReadModel(SimulationEntity entity) {
         return new SimulationReadModel(
                 entity.getId(),
                 entity.getName(),

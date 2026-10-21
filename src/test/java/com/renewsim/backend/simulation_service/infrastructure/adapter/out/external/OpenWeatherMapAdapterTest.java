@@ -32,7 +32,7 @@ class OpenWeatherMapAdapterTest {
         server.expect(requestTo("https://api.openweathermap.org/geo/1.0/direct?q=mendoza&limit=25&appid=test-key"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess(
-                        "[{\"name\":\"Mendoza\",\"state\":\"Mendoza\",\"country\":\"AR\",\"lat\":-32.8895,\"lon\":-68.8458},{\"name\":\"Sevilla\",\"state\":\"Andalucia\",\"country\":\"ES\",\"lat\":37.3891,\"lon\":-5.9845}]",
+                        "[{\"name\":\"Mendoza\",\"state\":\"Mendoza\",\"country\":\"AR\",\"lat\":-32.8895,\"lon\":-68.8458},{\"name\":\"Seville\",\"local_names\":{\"es\":\"Sevilla\"},\"state\":\"Andalucia\",\"country\":\"ES\",\"lat\":37.3891,\"lon\":-5.9845}]",
                         MediaType.APPLICATION_JSON));
 
         var results = adapter.searchLocations("mendoza", 5);

@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SimulationRecordEntityMapperTest {
 
     private final SimulationRecordEntityMapper mapper = new SimulationRecordEntityMapper(
-            new SimulationInputSnapshotCodec(new ObjectMapper().findAndRegisterModules()));
+            new ObjectMapper().findAndRegisterModules());
 
     @Test
     @DisplayName("toEntity persists aggregate values without recomputing co2 reduction")

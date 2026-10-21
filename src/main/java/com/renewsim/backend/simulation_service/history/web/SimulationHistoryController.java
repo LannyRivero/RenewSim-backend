@@ -7,6 +7,8 @@ import com.renewsim.backend.shared.security.AuthenticatedRequestContext;
 import com.renewsim.backend.shared.security.AuthenticatedRequestContextFactory;
 import com.renewsim.backend.shared.exception.BadRequestException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,6 +24,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 
 @Slf4j
@@ -84,5 +88,32 @@ public class SimulationHistoryController {
         log.info("User {} retrieved {} simulations", requestContext.username(), history.total());
 
         return ResponseEntity.ok(history);
+    }
+
+    @Operation(summary = "Suggest locations from the authenticated user's simulation history",
+            description = "Returns distinct saved location labels matching the query. Requires at least two characters and is scoped to the authenticated user.",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Saved location suggestions", content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class)))),
+            @ApiResponse(responseCode = "401", description = "Unauthenticated", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Access denied", content = @Content)
+    })
+    @PreAuthorize("hasAuthority('SCOPE_read:simulations') or hasRole('ADMIN')")
+    @GetMapping("/user/locations")
+    public ResponseEntity<List<String>> getUserLocationSuggestions(
+            Authentication auth,
+            @Parameter(description = "Location prefix or fragment (minimum 2 characters)", required = true)
+            @RequestParam String q,
+            @Parameter(description = "Maximum number of distinct locations (clamped to 1-10)")
+            @RequestParam(defaultValue = "5") int limit) {
+        String query = q == null ? "" : q.trim();
+        if (query.length() < 2) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        AuthenticatedRequestContext requestContext = requestContextFactory.from(auth);
+        int safeLimit = Math.min(Math.max(limit, 1), 10);
+        return ResponseEntity.ok(listUserRealSimulationsUseCase.getUserLocationSuggestions(
+                requestContext.username(), query, safeLimit));
     }
 }

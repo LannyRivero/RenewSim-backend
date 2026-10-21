@@ -154,7 +154,7 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
     }
 
     private ResolvedLocation toResolvedLocation(Map<?, ?> candidate) {
-        String name = candidate.get("name") != null ? String.valueOf(candidate.get("name")) : "Unknown";
+        String name = localizedName(candidate);
         String state = candidate.get("state") != null ? String.valueOf(candidate.get("state")) : null;
         String country = candidate.get("country") != null ? String.valueOf(candidate.get("country")) : "Unknown";
         double latitude = candidate.get("lat") instanceof Number lat ? lat.doubleValue() : 0.0;
@@ -165,6 +165,16 @@ public class OpenWeatherMapAdapter implements LocationLookupProvider {
                 : name;
 
         return new ResolvedLocation(resolvedName, country, latitude, longitude);
+    }
+
+    private String localizedName(Map<?, ?> candidate) {
+        Object localNamesValue = candidate.get("local_names");
+        if (localNamesValue instanceof Map<?, ?> localNames
+                && localNames.get("es") != null
+                && !String.valueOf(localNames.get("es")).isBlank()) {
+            return String.valueOf(localNames.get("es"));
+        }
+        return candidate.get("name") != null ? String.valueOf(candidate.get("name")) : "Unknown";
     }
 
     private Map<?, ?> fetchWeatherResponse(double latitude, double longitude) {

@@ -35,6 +35,20 @@ public interface JpaSimulationRepository extends JpaRepository<SimulationEntity,
             @Param("location") String location,
             Pageable pageable);
 
+    @Query("""
+            select distinct s.location from SimulationEntity s
+            where s.createdBy = :createdBy
+              and s.status <> 'DELETED'
+              and s.location is not null
+              and trim(s.location) <> ''
+              and locate(:query, s.locationSearchKey) > 0
+            order by s.location
+            """)
+    List<String> findLocationSuggestionsByCreatedBy(
+            @Param("createdBy") String createdBy,
+            @Param("query") String normalizedQuery,
+            Pageable pageable);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from SimulationEntity s where s.status = 'DELETED' and s.updatedAt < :cutoff")
     int deleteDeletedOlderThan(@Param("cutoff") LocalDateTime cutoff);
