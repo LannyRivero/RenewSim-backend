@@ -22,6 +22,7 @@ import static com.renewsim.backend.simulation_service.support.SimulationDetailTe
 import static com.renewsim.backend.simulation_service.support.SimulationDetailTestFixtures.minimalResult;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ListSimulationsServiceTest {
@@ -33,6 +34,21 @@ class ListSimulationsServiceTest {
             new ObjectMapper().findAndRegisterModules());
 
     private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+
+    @Test
+    @DisplayName("location suggestions normalize query and delegate to the user-scoped repository")
+    void locationSuggestionsNormalizeQueryAndDelegateToUserScopedRepository() {
+        ListSimulationsService service = new ListSimulationsService(repository,
+                snapshotReader,
+                new SimulationUseCaseTelemetry(meterRegistry));
+        when(repository.findLocationSuggestionsByCreatedBy("alice", "malaga", 5))
+                .thenReturn(List.of("Málaga, ES"));
+
+        var suggestions = service.getUserLocationSuggestions("alice", " MÁLAGA ", 5);
+
+        assertThat(suggestions).containsExactly("Málaga, ES");
+        verify(repository).findLocationSuggestionsByCreatedBy("alice", "malaga", 5);
+    }
 
     @Test
     @DisplayName("getUserSimulations maps stored summary columns for scenario-created simulations")
