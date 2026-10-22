@@ -11,6 +11,7 @@ import com.renewsim.backend.simulation_service.domain.model.vo.SimulationLocatio
 import com.renewsim.backend.simulation_service.domain.model.vo.SimulationSystem;
 import com.renewsim.backend.simulation_service.domain.model.vo.Technology;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationResultRevisionEntity;
 import com.renewsim.backend.simulation_service.shared.application.SimulationReadModel;
 import com.renewsim.backend.simulation_service.create.infrastructure.adapter.out.persistence.CreateSimulationRepositoryAdapter;
 import com.renewsim.backend.simulation_service.detail.infrastructure.adapter.out.persistence.SimulationDetailQueryAdapter;
@@ -30,6 +31,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +42,9 @@ class SimulationPersistenceAdaptersTest {
 
     @Mock
     private SimulationRecordEntityMapper entityMapper;
+
+    @Mock
+    private SimulationResultRevisionJpaRepository revisionRepository;
 
     @Test
     @DisplayName("save assigns generated id back to new simulation")
@@ -52,12 +57,47 @@ class SimulationPersistenceAdaptersTest {
         when(entityMapper.toEntity(simulation)).thenReturn(entity);
         when(repository.save(entity)).thenReturn(saved);
 
-        CreateSimulationRepositoryAdapter adapter = new CreateSimulationRepositoryAdapter(repository, entityMapper);
+        CreateSimulationRepositoryAdapter adapter = new CreateSimulationRepositoryAdapter(
+                repository, entityMapper, revisionRepository);
         Simulation result = adapter.save(simulation);
 
         assertThat(result.getId().value()).isEqualTo(55L);
         verify(entityMapper).toEntity(simulation);
         verify(repository).save(entity);
+        verifyNoInteractions(revisionRepository);
+    }
+
+    @Test
+    @DisplayName("successful execution appends an immutable revision and advances the current pointer")
+    void successfulExecutionAppendsRevisionAndAdvancesPointer() {
+        Simulation simulation = existingSimulation(88L);
+        SimulationEntity entity = new SimulationEntity();
+        entity.setId(88L);
+        entity.setInputSnapshot("{\"input\":1}");
+        entity.setResultSnapshot("{\"result\":1}");
+        when(entityMapper.toEntity(simulation)).thenReturn(entity);
+        when(repository.save(entity)).thenReturn(entity);
+        when(repository.findByIdForUpdate(88L)).thenReturn(Optional.of(entity));
+        when(revisionRepository.findHighestRevisionNumber(88L)).thenReturn(2);
+        when(revisionRepository.saveAndFlush(org.mockito.ArgumentMatchers.any(SimulationResultRevisionEntity.class)))
+                .thenAnswer(invocation -> {
+                    SimulationResultRevisionEntity revision = invocation.getArgument(0);
+                    revision.setId(901L);
+                    return revision;
+                });
+        when(repository.updateCurrentRevisionId(88L, 901L)).thenReturn(1);
+
+        CreateSimulationRepositoryAdapter adapter = new CreateSimulationRepositoryAdapter(
+                repository, entityMapper, revisionRepository);
+        adapter.save(simulation);
+
+        var revisionCaptor = org.mockito.ArgumentCaptor.forClass(SimulationResultRevisionEntity.class);
+        verify(revisionRepository).saveAndFlush(revisionCaptor.capture());
+        assertThat(revisionCaptor.getValue().getSimulationId()).isEqualTo(88L);
+        assertThat(revisionCaptor.getValue().getRevisionNumber()).isEqualTo(3);
+        assertThat(revisionCaptor.getValue().getInputSnapshot()).isEqualTo("{\"input\":1}");
+        assertThat(revisionCaptor.getValue().getResultSnapshot()).isEqualTo("{\"result\":1}");
+        verify(repository).updateCurrentRevisionId(88L, 901L);
     }
 
     @Test
@@ -69,6 +109,29 @@ class SimulationPersistenceAdaptersTest {
 
         assertThat(entity.getLocation()).isEqualTo("Sevilla, Andalucia, ES");
         assertThat(entity.getLocationSearchKey()).isEqualTo("sevilla, andalucia, es");
+    }
+
+    @Test
+    @DisplayName("read model uses the current immutable revision when available")
+    void readModelUsesCurrentRevisionSnapshot() {
+        var mapper = new SimulationRecordEntityMapper(new ObjectMapper().findAndRegisterModules());
+        SimulationEntity entity = new SimulationEntity();
+        entity.setId(7L);
+        entity.setName("Solar");
+        entity.setEnergyType("solar");
+        entity.setStatus("COMPLETED");
+        entity.setLocation("Sevilla");
+        entity.setBudget(1000.0);
+        entity.setInputSnapshot("legacy-input");
+        entity.setResultSnapshot("legacy-result");
+        SimulationResultRevisionEntity revision = new SimulationResultRevisionEntity();
+        revision.setInputSnapshot("revision-input");
+        revision.setResultSnapshot("revision-result");
+        entity.setCurrentRevision(revision);
+
+        SimulationReadModel readModel = mapper.toReadModel(entity);
+
+        assertThat(readModel.resultSnapshot()).isEqualTo("revision-result");
     }
 
     @Test

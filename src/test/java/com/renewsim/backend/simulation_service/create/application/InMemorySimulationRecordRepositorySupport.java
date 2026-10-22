@@ -9,6 +9,8 @@ import com.renewsim.backend.simulation_service.dashboard.infrastructure.adapter.
 import com.renewsim.backend.simulation_service.detail.application.port.out.SimulationDetailQueryPort;
 import com.renewsim.backend.simulation_service.detail.infrastructure.adapter.out.persistence.SimulationDetailQueryAdapter;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationRecordEntityMapper;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationResultRevisionJpaRepository;
+import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationResultRevisionEntity;
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.entity.SimulationEntity;
 
 import java.util.HashMap;
@@ -19,6 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 final class InMemorySimulationRecordRepositorySupport {
 
@@ -43,18 +46,32 @@ final class InMemorySimulationRecordRepositorySupport {
                         SimulationEntity stored = store.get(id);
                         return Optional.ofNullable(stored == null ? null : copyEntity(stored));
                 });
+                when(jpaRepository.findByIdForUpdate(any(Long.class))).thenAnswer(invocation -> {
+                        Long id = invocation.getArgument(0);
+                        SimulationEntity stored = store.get(id);
+                        return Optional.ofNullable(stored == null ? null : copyEntity(stored));
+                });
+                when(jpaRepository.updateCurrentRevisionId(any(Long.class), any(Long.class))).thenReturn(1);
                 when(jpaRepository.findByCreatedByAndStatusNotOrderByCreatedAtDesc("alice", "DELETED"))
                                 .thenAnswer(invocation -> store.values()
                                                 .stream()
                                                 .filter(entity -> "alice".equals(entity.getCreatedBy()))
                                                 .filter(entity -> !"DELETED".equalsIgnoreCase(entity.getStatus()))
-                                                .sorted((left, right) -> right.getCreatedAt().compareTo(left.getCreatedAt()))
+                                                .sorted((left, right) -> right.getCreatedAt()
+                                                                .compareTo(left.getCreatedAt()))
                                                 .map(InMemorySimulationRecordRepositorySupport::copyEntity)
                                                 .toList());
 
                 var entityMapper = new SimulationRecordEntityMapper(new ObjectMapper().findAndRegisterModules());
+                SimulationResultRevisionJpaRepository revisions = mock(SimulationResultRevisionJpaRepository.class);
+                when(revisions.findHighestRevisionNumber(any(Long.class))).thenReturn(0);
+                when(revisions.saveAndFlush(any(SimulationResultRevisionEntity.class))).thenAnswer(invocation -> {
+                        SimulationResultRevisionEntity revision = invocation.getArgument(0);
+                        revision.setId(sequence.getAndIncrement());
+                        return revision;
+                });
                 return new InMemoryRepositories(
-                                new CreateSimulationRepositoryAdapter(jpaRepository, entityMapper),
+                                new CreateSimulationRepositoryAdapter(jpaRepository, entityMapper, revisions),
                                 new SimulationDetailQueryAdapter(jpaRepository, entityMapper),
                                 new PortfolioDashboardQueryAdapter(jpaRepository, entityMapper));
         }

@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 final class SimulationMigrationAssertions {
 
-    static final String EXPECTED_FLYWAY_VERSION = "27";
+    static final String EXPECTED_FLYWAY_VERSION = "34";
 
     private SimulationMigrationAssertions() {
     }
@@ -16,6 +16,8 @@ final class SimulationMigrationAssertions {
     static void assertSchemaReadiness(Connection connection) throws Exception {
         assertThat(countMatchingColumns(connection)).isEqualTo(6);
         assertThat(tableExists(connection, "simulation_technologies")).isTrue();
+        assertThat(tableExists(connection, "simulation_result_revisions")).isTrue();
+        assertThat(columnExists(connection, "simulations", "current_revision_id")).isTrue();
         assertThat(hasSimulationTechnologiesToSimulationsForeignKey(connection)).isTrue();
     }
 
@@ -60,6 +62,19 @@ final class SimulationMigrationAssertions {
                           AND table_name = ?
                         """)) {
             statement.setString(1, tableName);
+            try (ResultSet rs = statement.executeQuery()) {
+                assertThat(rs.next()).isTrue();
+                return rs.getInt(1) == 1;
+            }
+        }
+    }
+
+    private static boolean columnExists(Connection connection, String tableName, String columnName) throws Exception {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT COUNT(*) FROM information_schema.columns "
+                        + "WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?")) {
+            statement.setString(1, tableName);
+            statement.setString(2, columnName);
             try (ResultSet rs = statement.executeQuery()) {
                 assertThat(rs.next()).isTrue();
                 return rs.getInt(1) == 1;
