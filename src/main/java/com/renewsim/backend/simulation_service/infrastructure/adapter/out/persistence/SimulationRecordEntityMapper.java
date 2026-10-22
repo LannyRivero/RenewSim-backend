@@ -64,7 +64,9 @@ public class SimulationRecordEntityMapper {
     }
 
     public Simulation toDomain(SimulationEntity entity) {
-        SimulationInputData input = snapshotCodec.readNormalized(entity.getInputSnapshot(), entity);
+        String inputSnapshot = currentInputSnapshot(entity);
+        String resultSnapshot = currentResultSnapshot(entity);
+        SimulationInputData input = snapshotCodec.readNormalized(inputSnapshot, entity);
 
         SimulationLocation location = SimulationLocation.of(
                 entity.getLocation(),
@@ -100,7 +102,7 @@ public class SimulationRecordEntityMapper {
                 Technology.of(entity.getEnergyType()),
                 location, system, demand, economics,
                 parseStatus(entity.getStatus()),
-                entity.getResultSnapshot(),
+                resultSnapshot,
                 annualGeneration(entity),
                 entity.getAnnualSavings(),
                 entity.getNpv(),
@@ -126,8 +128,20 @@ public class SimulationRecordEntityMapper {
                 entity.getIrrPct(),
                 entity.getRecommendation(),
                 entity.getBudget(),
-                entity.getResultSnapshot(),
+                currentResultSnapshot(entity),
                 entity.getCreatedAt());
+    }
+
+    private String currentInputSnapshot(SimulationEntity entity) {
+        return entity.getCurrentRevision() != null
+                ? entity.getCurrentRevision().getInputSnapshot()
+                : entity.getInputSnapshot();
+    }
+
+    private String currentResultSnapshot(SimulationEntity entity) {
+        return entity.getCurrentRevision() != null
+                ? entity.getCurrentRevision().getResultSnapshot()
+                : entity.getResultSnapshot();
     }
 
     private Double annualGeneration(SimulationEntity entity) {
