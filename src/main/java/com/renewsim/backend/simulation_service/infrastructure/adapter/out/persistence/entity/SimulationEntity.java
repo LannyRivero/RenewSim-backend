@@ -105,6 +105,13 @@ public class SimulationEntity {
     @Column(name = "result_snapshot", columnDefinition = "LONGTEXT")
     private String resultSnapshot;
 
+    @Column(name = "current_revision_id", insertable = false, updatable = false)
+    private Long currentRevisionId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_revision_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private SimulationResultRevisionEntity currentRevision;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "simulation_technologies", joinColumns = @JoinColumn(name = "simulation_id"))
     @Column(name = "technology_id")
