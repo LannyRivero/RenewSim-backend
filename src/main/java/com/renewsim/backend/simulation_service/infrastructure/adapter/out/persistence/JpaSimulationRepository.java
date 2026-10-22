@@ -1,6 +1,7 @@
 package com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,48 +12,56 @@ import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persis
 
 import java.time.LocalDateTime;
 import java.util.List;
+import jakarta.persistence.LockModeType;
 
 public interface JpaSimulationRepository extends JpaRepository<SimulationEntity, Long> {
 
-    List<SimulationEntity> findByCreatedByOrderByCreatedAtDesc(String createdBy);
+        @Lock(LockModeType.PESSIMISTIC_WRITE)
+        @Query("select s from SimulationEntity s where s.id = :id")
+        java.util.Optional<SimulationEntity> findByIdForUpdate(@Param("id") Long id);
 
-    List<SimulationEntity> findByCreatedByAndStatusNotOrderByCreatedAtDesc(String createdBy, String status);
+        @Modifying(clearAutomatically = true, flushAutomatically = true)
+        @Query("update SimulationEntity s set s.currentRevisionId = :revisionId where s.id = :simulationId")
+        int updateCurrentRevisionId(@Param("simulationId") Long simulationId, @Param("revisionId") Long revisionId);
 
-    @Query(value = """
-            select s from SimulationEntity s
-            where s.createdBy = :createdBy
-              and s.status <> 'DELETED'
-              and (:name is null or locate(lower(:name), lower(s.name)) > 0)
-              and (:location is null or locate(:location, s.locationSearchKey) > 0)
-            """,
-            countQuery = """
-            select count(s) from SimulationEntity s
-            where s.createdBy = :createdBy
-              and s.status <> 'DELETED'
-              and (:name is null or locate(lower(:name), lower(s.name)) > 0)
-              and (:location is null or locate(:location, s.locationSearchKey) > 0)
-            """)
-    Page<SimulationEntity> searchHistory(
-            @Param("createdBy") String createdBy,
-            @Param("name") String name,
-            @Param("location") String location,
-            Pageable pageable);
+        List<SimulationEntity> findByCreatedByOrderByCreatedAtDesc(String createdBy);
 
-    @Query("""
-            select distinct s.location from SimulationEntity s
-            where s.createdBy = :createdBy
-              and s.status <> 'DELETED'
-              and s.location is not null
-              and trim(s.location) <> ''
-              and locate(:query, s.locationSearchKey) > 0
-            order by s.location
-            """)
-    List<String> findLocationSuggestionsByCreatedBy(
-            @Param("createdBy") String createdBy,
-            @Param("query") String normalizedQuery,
-            Pageable pageable);
+        List<SimulationEntity> findByCreatedByAndStatusNotOrderByCreatedAtDesc(String createdBy, String status);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("delete from SimulationEntity s where s.status = 'DELETED' and s.updatedAt < :cutoff")
-    int deleteDeletedOlderThan(@Param("cutoff") LocalDateTime cutoff);
+        @Query(value = """
+                        select s from SimulationEntity s
+                        where s.createdBy = :createdBy
+                          and s.status <> 'DELETED'
+                          and (:name is null or locate(lower(:name), lower(s.name)) > 0)
+                          and (:location is null or locate(:location, s.locationSearchKey) > 0)
+                        """, countQuery = """
+                        select count(s) from SimulationEntity s
+                        where s.createdBy = :createdBy
+                          and s.status <> 'DELETED'
+                          and (:name is null or locate(lower(:name), lower(s.name)) > 0)
+                          and (:location is null or locate(:location, s.locationSearchKey) > 0)
+                        """)
+        Page<SimulationEntity> searchHistory(
+                        @Param("createdBy") String createdBy,
+                        @Param("name") String name,
+                        @Param("location") String location,
+                        Pageable pageable);
+
+        @Query("""
+                        select distinct s.location from SimulationEntity s
+                        where s.createdBy = :createdBy
+                          and s.status <> 'DELETED'
+                          and s.location is not null
+                          and trim(s.location) <> ''
+                          and locate(:query, s.locationSearchKey) > 0
+                        order by s.location
+                        """)
+        List<String> findLocationSuggestionsByCreatedBy(
+                        @Param("createdBy") String createdBy,
+                        @Param("query") String normalizedQuery,
+                        Pageable pageable);
+
+        @Modifying(clearAutomatically = true, flushAutomatically = true)
+        @Query("delete from SimulationEntity s where s.status = 'DELETED' and s.updatedAt < :cutoff")
+        int deleteDeletedOlderThan(@Param("cutoff") LocalDateTime cutoff);
 }
