@@ -6,6 +6,7 @@ import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persis
 import com.renewsim.backend.simulation_service.infrastructure.adapter.out.persistence.SimulationRecordEntityMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -16,7 +17,15 @@ public class SimulationDetailQueryAdapter implements SimulationDetailQueryPort {
     private final JpaSimulationRepository repository;
     private final SimulationRecordEntityMapper entityMapper;
 
+    /**
+     * Loads a simulation and maps its current result while the lazy revision is
+     * available.
+     *
+     * @param id simulation identifier
+     * @return the matching simulation, if present
+     */
     @Override
+    @Transactional(readOnly = true)
     public Optional<Simulation> findById(Long id) {
         return repository.findById(id).map(entityMapper::toDomain);
     }
